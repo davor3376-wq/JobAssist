@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-gray-900 antialiased font-sans;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
+           transition-all duration-200 ease-out
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed
+           active:scale-[0.98];
+  }
+  .btn-primary {
+    @apply btn bg-indigo-600 text-white
+           hover:bg-indigo-500 hover:shadow-lg
+           focus:ring-indigo-500;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-gray-700 border border-gray-200
+           hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm
+           focus:ring-indigo-500;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-600
+           hover:bg-gray-100 hover:text-gray-900
+           focus:ring-gray-400;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100/80 p-6
+           transition-all duration-200 ease-out;
+  }
+  .card-hover {
+    @apply card hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5;
+  }
+  .card-glass {
+    @apply rounded-2xl p-6 border border-white/20
+           bg-white/70 backdrop-blur-xl shadow-lg;
+  }
+
+  /* Forms */
+  .input {
+    @apply block w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm
+           bg-gray-50/50 shadow-sm
+           placeholder-gray-400
+           transition-all duration-200 ease-out
+           focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+           focus:bg-white focus:shadow-md;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-600 mb-1.5;
+  }
+
+  /* Score badges */
+  .score-high {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+  .score-mid {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+  .score-low {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: slideUp 0.4s ease-out;
+}
