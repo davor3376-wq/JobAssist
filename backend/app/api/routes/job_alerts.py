@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -6,6 +7,7 @@ import logging
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.config import settings
 from app.models.user import User
 from app.models.job_alert import JobAlert
 from app.schemas.job_alert import JobAlertCreate, JobAlertUpdate, JobAlertOut
@@ -106,6 +108,37 @@ async def run_alert_now(
 
     background_tasks.add_task(_run_and_send, alert_id, alert.keywords, alert.location, alert.job_type, alert.email)
     return {"message": "Suche gestartet. Du erhältst in Kürze eine E-Mail."}
+
+
+@router.post("/test-email", response_model=dict)
+async def test_email(current_user: User = Depends(get_current_user)):
+    """Send a test email to verify SMTP configuration."""
+    smtp_ok = bool(settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD)
+    if not smtp_ok:
+        return {
+            "ok": False,
+            "error": "SMTP not configured",
+            "smtp_host": settings.SMTP_HOST or "(not set)",
+            "smtp_user": settings.SMTP_USER or "(not set)",
+        }
+
+    fake_jobs = [
+        {"title": "Test: Software Engineer", "company": "JobAssist GmbH", "location": "Wien",
+         "full_url": "https://jobassist.app", "salary_range": "€ 50,000 – 70,000"}
+    ]
+    ok = await asyncio.to_thread(
+        send_job_alert_email,
+        to_email=current_user.email,
+        keywords="Test-Alert",
+        location="Wien",
+        jobs=fake_jobs,
+    )
+    return {
+        "ok": ok,
+        "to": current_user.email,
+        "smtp_host": settings.SMTP_HOST,
+        "smtp_user": settings.SMTP_USER,
+    }
 
 
 async def _run_and_send(alert_id: int, keywords: str, location: str, job_type: str, email: str):

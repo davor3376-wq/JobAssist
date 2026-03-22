@@ -28,7 +28,7 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
         company = html_lib.escape(job.get("company", "Unbekannt"))
         loc = html_lib.escape(job.get("location", location or ""))
         url = _safe_url(job.get("full_url", "#"))
-        salary = html_lib.escape(job.get("salary_range", ""))
+        salary = html_lib.escape(job.get("salary_range") or job.get("salary", ""))
         salary_html = f'<span style="color:#6b7280;font-size:13px;">{salary}</span>' if salary else ""
         rows += f"""
         <tr>
