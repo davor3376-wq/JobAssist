@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw, Send, SearchCheck } from "lucide-react";
+import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import { jobAlertsApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
@@ -13,7 +14,7 @@ const FREQUENCIES = [
   { value: "weekly", label: "Wöchentlich" },
 ];
 
-function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning, onDraft, isDrafting, onResearch }) {
+function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning }) {
   return (
     <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-3">
@@ -51,23 +52,6 @@ function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning, onDraft, is
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            onClick={() => onDraft(alert)}
-            disabled={isDrafting}
-            title="Brief-Entwurf öffnen"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 disabled:opacity-50 transition-colors"
-          >
-            {isDrafting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            <span className="text-xs">Brief-Entwurf</span>
-          </button>
-          <button
-            onClick={() => onResearch(alert)}
-            title="Unternehmensrecherche"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 transition-colors"
-          >
-            <SearchCheck className="w-3.5 h-3.5" />
-            <span className="text-xs">Recherche</span>
-          </button>
           <button
             onClick={() => onRunNow(alert.id)}
             disabled={isRunning}
@@ -120,7 +104,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
     });
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
@@ -216,7 +200,8 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -387,9 +372,6 @@ export default function JobAlertsPage() {
               onDelete={(id) => deleteMutation.mutate(id)}
               onRunNow={handleRunNow}
               isRunning={runningId === alert.id}
-              onDraft={handleDraftEmail}
-              isDrafting={draftingId === alert.id}
-              onResearch={handleResearch}
             />
           ))}
         </div>
