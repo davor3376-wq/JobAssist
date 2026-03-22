@@ -42,16 +42,17 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const { t, setLanguage } = useI18n();
   const fileInputRef = useRef(null);
-  const cachedProfile = (() => { try { const s = sessionStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
+  const cachedProfile = (() => { try { const s = localStorage.getItem("settings_profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const [avatar, setAvatar] = useState(cachedProfile?.avatar || null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: () => settingsApi.getProfile().then((r) => {
-      try { sessionStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
+      try { localStorage.setItem("settings_profile", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
     initialData: cachedProfile,
+    staleTime: 1000 * 60 * 3,
   });
 
   // Sync avatar if profile loads something newer than the cache
@@ -78,6 +79,7 @@ export default function SettingsPage() {
     mutationFn: settingsApi.updateProfile,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["init"] });
       toast.success(t("settings.savePreferences") + " ✓");
     },
     onError: () => toast.error("Einstellungen konnten nicht gespeichert werden"),

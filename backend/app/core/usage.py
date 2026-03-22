@@ -94,10 +94,13 @@ def require_usage(feature: str):
 
 async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]:
     """Return usage stats for all tracked features in a single query."""
+    from sqlalchemy import func as sa_func
+    from app.models.job_alert import JobAlert
+
     features = ["cv_analysis", "cover_letter", "job_alerts", "ai_chat"]
     period = _current_period_start()
 
-    # Single query to fetch all feature counts at once
+    # Fetch monthly usage counters
     rows = await db.execute(
         select(UsageRecord.feature, UsageRecord.count).where(
             UsageRecord.user_id == user_id,
@@ -107,9 +110,18 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
     )
     counts = {row.feature: row.count for row in rows}
 
+    # Job alerts usage = actual alert count (not a monthly counter)
+    alert_count_result = await db.execute(
+        select(sa_func.count()).where(JobAlert.user_id == user_id)
+    )
+    alert_count = alert_count_result.scalar() or 0
+
     result = []
     for f in features:
-        used = counts.get(f, 0)
+        if f == "job_alerts":
+            used = alert_count
+        else:
+            used = counts.get(f, 0)
         limit = get_limit(plan, f)
         result.append({
             "feature": f,
