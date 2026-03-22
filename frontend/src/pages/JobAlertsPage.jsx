@@ -39,7 +39,7 @@ function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning }) {
             )}
             {alert.job_type && (
               <span className="flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5" /> {alert.job_type}
+                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find(t => t.value === alert.job_type)?.label || alert.job_type}
               </span>
             )}
             <span className="flex items-center gap-1">

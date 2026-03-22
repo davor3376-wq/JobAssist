@@ -7,7 +7,7 @@ import useAuthStore from "../hooks/useAuthStore";
 import toast from "react-hot-toast";
 
 const FEATURE_LABELS = {
-  cv_analysis: "CV-Analysen / Monat",
+  cv_analysis: "Lebenslauf-Analysen / Monat",
   cover_letter: "Anschreiben / Monat",
   job_alerts: "Aktive Job-Alerts",
   ai_chat: "KI-Nachrichten / Monat",

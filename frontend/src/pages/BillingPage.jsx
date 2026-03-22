@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { billingApi } from "../services/api";
 
 const FEATURE_LABELS = {
-  cv_analysis: "CV-Analysen",
+  cv_analysis: "Lebenslauf-Analysen",
   cover_letter: "Anschreiben",
   job_alerts: "Job-Alerts",
   ai_chat: "KI-Nachrichten",
@@ -58,11 +58,17 @@ export default function BillingPage() {
     }
   }, [params]);
 
+  const cachedBilling = (() => { try { const s = localStorage.getItem("billing"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data, isLoading } = useQuery({
     queryKey: ["billing-overview"],
-    queryFn: () => billingApi.overview().then((r) => r.data),
+    queryFn: () => billingApi.overview().then((r) => {
+      try { localStorage.setItem("billing", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedBilling,
     staleTime: 0,
     refetchOnWindowFocus: true,
+    refetchInterval: 15000,
   });
 
   const handleManage = async () => {
@@ -80,7 +86,7 @@ export default function BillingPage() {
 
   const sub = data?.subscription;
   const usage = data?.usage || [];
-  const planName = PLAN_NAMES[sub?.plan] || "Basic (Free)";
+  const planName = PLAN_NAMES[sub?.plan] || "Basic (Gratis)";
   const isPaid = sub?.plan && sub.plan !== "basic";
 
   return (
