@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from contextlib import asynccontextmanager
 import traceback
+import re
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -40,9 +41,12 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     origin = request.headers.get("origin", "")
-    allowed = settings.allowed_origins_list
     headers = {}
-    if origin in allowed:
+    origin_allowed = (
+        origin in settings.allowed_origins_list
+        or (bool(settings.ALLOWED_ORIGIN_REGEX) and bool(re.fullmatch(settings.ALLOWED_ORIGIN_REGEX, origin)))
+    )
+    if origin_allowed:
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
     traceback.print_exc()
