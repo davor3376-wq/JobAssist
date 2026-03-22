@@ -123,14 +123,18 @@ async def create_checkout_session(
             db.add(sub)
         await db.commit()
 
-    session = stripe.checkout.Session.create(
-        customer=customer_id,
-        mode="subscription",
-        line_items=[{"price": price_id, "quantity": 1}],
-        success_url=f"{settings.FRONTEND_URL}/billing?success=true",
-        cancel_url=f"{settings.FRONTEND_URL}/billing?canceled=true",
-        metadata={"user_id": str(current_user.id), "plan": payload.plan},
-    )
+    try:
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=f"{settings.FRONTEND_URL}/billing?success=true",
+            cancel_url=f"{settings.FRONTEND_URL}/billing?canceled=true",
+            metadata={"user_id": str(current_user.id), "plan": payload.plan},
+        )
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe checkout error: {e.user_message or e}")
+        raise HTTPException(status_code=400, detail=f"Stripe error: {e.user_message or str(e)}")
 
     return CheckoutResponse(checkout_url=session.url)
 
