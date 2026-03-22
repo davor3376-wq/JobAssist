@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { TrendingUp, Target, Award, ArrowRight } from "lucide-react";
-import { resumeApi, jobApi } from "../services/api";
+import { jobApi } from "../services/api";
 
 const getMatchColorClass = (score) => {
   if (score < 30) return "bg-red-100 text-red-800";
@@ -15,9 +15,37 @@ const getMatchColorClass = (score) => {
   return "bg-green-600 text-white";
 };
 
+function StatSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="h-4 w-32 bg-gray-200 rounded mb-3" />
+          <div className="h-10 w-16 bg-gray-200 rounded" />
+        </div>
+        <div className="w-14 h-14 bg-gray-200 rounded-xl" />
+      </div>
+      <div className="h-3 w-40 bg-gray-100 rounded mt-4" />
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-  const { data: resumes } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data) });
-  const { data: jobs } = useQuery({ queryKey: ["jobs"], queryFn: () => jobApi.list().then(r => r.data) });
+  // Reuse init data (already cached by Layout with localStorage) for resumes
+  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const resumes = initData?.resumes;
+
+  // Jobs with localStorage cache for instant display
+  const cachedJobs = (() => { try { const s = localStorage.getItem("dashboard_jobs"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
+  const { data: jobs } = useQuery({
+    queryKey: ["jobs"],
+    queryFn: () => jobApi.list().then(r => {
+      try { localStorage.setItem("dashboard_jobs", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedJobs,
+    staleTime: 1000 * 60 * 2,
+  });
 
   const recentJobs = jobs?.slice(0, 5) ?? [];
   const avgScore = jobs?.length
@@ -31,6 +59,8 @@ export default function DashboardPage() {
     return "Guten Abend";
   };
 
+  const isLoading = !initData && !cachedJobs;
+
   return (
     <div className="max-w-5xl">
       {/* Welcome Header */}
@@ -41,47 +71,53 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-slide-up">
-        {/* Resumes Card */}
-        <div className="card card-hover group">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-medium mb-1">Lebensläufe hochgeladen</p>
-              <p className="text-4xl font-bold text-gray-900">{resumes?.length ?? 0}</p>
+        {isLoading ? (
+          <><StatSkeleton /><StatSkeleton /><StatSkeleton /></>
+        ) : (
+          <>
+            {/* Resumes Card */}
+            <div className="card card-hover group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm font-medium mb-1">Lebensläufe hochgeladen</p>
+                  <p className="text-4xl font-bold text-gray-900">{resumes?.length ?? 0}</p>
+                </div>
+                <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">Verwalte alle deine Dokumente</p>
             </div>
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-4">Verwalte alle deine Dokumente</p>
-        </div>
 
-        {/* Jobs Card */}
-        <div className="card card-hover group">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-medium mb-1">Stellen verfolgt</p>
-              <p className="text-4xl font-bold text-gray-900">{jobs?.length ?? 0}</p>
+            {/* Jobs Card */}
+            <div className="card card-hover group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm font-medium mb-1">Stellen verfolgt</p>
+                  <p className="text-4xl font-bold text-gray-900">{jobs?.length ?? 0}</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all duration-300">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">Behalte den Überblick über Möglichkeiten</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all duration-300">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-4">Behalte den Überblick über Möglichkeiten</p>
-        </div>
 
-        {/* Average Score Card */}
-        <div className="card card-hover group">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-medium mb-1">Match-Bewertung</p>
-              <p className="text-4xl font-bold text-gray-900">{avgScore ? `${avgScore}%` : "—"}</p>
+            {/* Average Score Card */}
+            <div className="card card-hover group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm font-medium mb-1">Match-Bewertung</p>
+                  <p className="text-4xl font-bold text-gray-900">{avgScore ? `${avgScore}%` : "—"}</p>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all duration-300">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">Qualität deiner Übereinstimmungen</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all duration-300">
-              <Award className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-4">Qualität deiner Übereinstimmungen</p>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Quick Actions */}

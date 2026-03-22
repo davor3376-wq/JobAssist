@@ -93,11 +93,23 @@ def require_usage(feature: str):
 
 
 async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]:
-    """Return usage stats for all tracked features."""
+    """Return usage stats for all tracked features in a single query."""
     features = ["cv_analysis", "cover_letter", "job_alerts", "ai_chat"]
+    period = _current_period_start()
+
+    # Single query to fetch all feature counts at once
+    rows = await db.execute(
+        select(UsageRecord.feature, UsageRecord.count).where(
+            UsageRecord.user_id == user_id,
+            UsageRecord.feature.in_(features),
+            UsageRecord.period_start == period,
+        )
+    )
+    counts = {row.feature: row.count for row in rows}
+
     result = []
     for f in features:
-        used = await get_usage_count(db, user_id, f)
+        used = counts.get(f, 0)
         limit = get_limit(plan, f)
         result.append({
             "feature": f,
