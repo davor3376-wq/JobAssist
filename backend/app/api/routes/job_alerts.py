@@ -109,9 +109,10 @@ async def run_alert_now(
 
 
 async def _run_and_send(alert_id: int, keywords: str, location: str, job_type: str, email: str):
+    import asyncio
     try:
         results = await search_jobs(keywords=keywords, location=location or "", job_type=job_type or "", page=1)
         jobs = results.get("jobs", [])
-        send_job_alert_email(to_email=email, keywords=keywords, location=location or "", jobs=jobs)
+        await asyncio.to_thread(send_job_alert_email, to_email=email, keywords=keywords, location=location or "", jobs=jobs)
     except Exception as e:
         logger.error(f"Alert run failed for alert {alert_id}: {e}", exc_info=True)
