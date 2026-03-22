@@ -47,6 +47,7 @@ async def create_job(
         company=payload.company,
         role=payload.role,
         description=payload.description,
+        url=payload.url,
         resume_id=payload.resume_id,
     )
     db.add(job)

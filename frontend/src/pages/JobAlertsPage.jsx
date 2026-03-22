@@ -4,11 +4,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
-import { jobAlertsApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
-import { generateMailtoLink } from "../utils/emailHelpers";
-import ResearchModal from "../components/ResearchModal";
+import { jobAlertsApi } from "../services/api";
 
-const JOB_TYPES = ["", "Full-time", "Part-time", "Remote", "Contract", "Internship"];
+const JOB_TYPES = [
+  { value: "", label: "Alle" },
+  { value: "Full-time", label: "Vollzeit" },
+  { value: "Part-time", label: "Teilzeit" },
+  { value: "Remote", label: "Remote" },
+  { value: "Contract", label: "Befristet" },
+  { value: "Internship", label: "Praktikum" },
+];
 const FREQUENCIES = [
   { value: "daily", label: "Täglich" },
   { value: "weekly", label: "Wöchentlich" },
@@ -145,9 +150,8 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
               onChange={e => set("job_type", e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
-              <option value="">Alle</option>
-              {JOB_TYPES.filter(Boolean).map(t => (
-                <option key={t} value={t}>{t}</option>
+              {JOB_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </div>
@@ -209,57 +213,8 @@ export default function JobAlertsPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [runningId, setRunningId] = useState(null);
-  const [draftingId, setDraftingId] = useState(null);
-  const [researchModal, setResearchModal] = useState(null);
-  const [researchData, setResearchData] = useState(null);
-  const [researchLoading, setResearchLoading] = useState(false);
-
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
-  const { data: resumes = [] } = useQuery({
-    queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then(r => r.data),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const handleDraftEmail = async (alert) => {
-    const userName = me?.full_name || me?.email?.split("@")[0] || "Bewerber";
-    setDraftingId(alert.id);
-    try {
-      const res = await motivationsschreibenApi.generate({
-        company: "",
-        role: alert.keywords,
-        job_description: `Stelle gesucht: ${alert.keywords}${alert.location ? ` in ${alert.location}` : ""}${alert.job_type ? `, ${alert.job_type}` : ""}`,
-        tone: "formell",
-        resume_id: resumes[0]?.id || null,
-        applicant_name: me?.full_name || "",
-      });
-      const text = res.data?.text || "";
-      const jobForLink = { title: alert.keywords, role: alert.keywords };
-      window.location.href = generateMailtoLink(jobForLink, text, userName);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
-    } catch {
-      toast.error("Brief-Entwurf konnte nicht generiert werden");
-    } finally {
-      setDraftingId(null);
-    }
-  };
-
-  const handleResearch = async (alert) => {
-    const company = alert.keywords; // use keywords as company hint
-    setResearchData(null);
-    setResearchModal({ companyName: company });
-    setResearchLoading(true);
-    try {
-      const res = await researchApi.research(company, "");
-      setResearchData(res.data);
-    } catch {
-      toast.error("Recherche fehlgeschlagen");
-      setResearchModal(null);
-    } finally {
-      setResearchLoading(false);
-    }
-  };
 
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
@@ -396,14 +351,6 @@ export default function JobAlertsPage() {
         />
       )}
 
-      {researchModal && (
-        <ResearchModal
-          companyName={researchModal.companyName}
-          data={researchData}
-          loading={researchLoading}
-          onClose={() => { setResearchModal(null); setResearchData(null); }}
-        />
-      )}
     </div>
   );
 }

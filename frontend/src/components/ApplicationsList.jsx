@@ -282,7 +282,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   if (jobs.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 animate-slide-up">
         <p className="text-gray-500 mb-4">Noch keine Stellen gespeichert. Starte mit der Stellensuche!</p>
       </div>
     );
