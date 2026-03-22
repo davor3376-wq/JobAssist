@@ -18,7 +18,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
-from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research
+from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research, billing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -94,6 +94,7 @@ app.include_router(motivationsschreiben.router, prefix="/api/motivationsschreibe
 app.include_router(ai_assistant.router,       prefix="/api/ai-assistant",        tags=["KI-Assistent"])
 app.include_router(job_alerts.router,         prefix="/api/job-alerts",           tags=["Job Alerts"])
 app.include_router(research.router,           prefix="/api/research",              tags=["Research"])
+app.include_router(billing.router,           prefix="/api/billing",               tags=["Billing"])
 
 @app.get("/health")
 async def health_check():
@@ -109,6 +110,7 @@ async def init(
     from sqlalchemy import select
     from app.models.user_profile import UserProfile
     from app.models.resume import Resume
+    from app.core.usage import get_user_plan, get_all_usage
 
     profile_result = await db.execute(select(UserProfile).where(UserProfile.user_id == current_user.id))
     profile = profile_result.scalar_one_or_none()
@@ -122,6 +124,9 @@ async def init(
         select(Resume).where(Resume.user_id == current_user.id).order_by(Resume.created_at.desc())
     )
     resumes = resumes_result.scalars().all()
+
+    plan = await get_user_plan(db, current_user.id)
+    usage = await get_all_usage(db, current_user.id, plan)
 
     return {
         "me": {
@@ -150,4 +155,6 @@ async def init(
             {"id": r.id, "filename": r.filename, "created_at": r.created_at}
             for r in resumes
         ],
+        "plan": plan,
+        "usage": usage,
     }

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.usage import require_usage
 from app.models.user import User
 from app.models.resume import Resume
 from app.services.claude_service import _call_groq
@@ -50,6 +51,7 @@ async def analyze_job(
     request: Request,
     payload: JobAnalyzeRequest,
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("ai_chat")),
 ):
     import json
     system = (
@@ -101,6 +103,7 @@ async def chat(
     payload: AssistantChatRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("ai_chat")),
 ):
     resume_context = ""
 
@@ -154,6 +157,7 @@ async def optimize(
     payload: OptimizeRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("ai_chat")),
 ):
     type_labels = {
         "lebenslauf": "Lebenslauf-Abschnitt",

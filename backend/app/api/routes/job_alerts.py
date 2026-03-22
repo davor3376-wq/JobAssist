@@ -8,6 +8,9 @@ import logging
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.config import settings
+from app.core.usage import get_user_plan
+from app.core.plans import get_limit
+from sqlalchemy import func as sa_func
 from app.models.user import User
 from app.models.job_alert import JobAlert
 from app.schemas.job_alert import JobAlertCreate, JobAlertUpdate, JobAlertOut
@@ -35,6 +38,27 @@ async def create_alert(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Check job alert limit based on plan
+    plan = await get_user_plan(db, current_user.id)
+    limit = get_limit(plan, "job_alerts")
+    if limit != -1:
+        count_result = await db.execute(
+            select(sa_func.count()).where(JobAlert.user_id == current_user.id)
+        )
+        current_count = count_result.scalar() or 0
+        if current_count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "usage_limit",
+                    "feature": "job_alerts",
+                    "plan": plan,
+                    "used": current_count,
+                    "limit": limit,
+                    "message": f"Du hast dein Limit für Job-Alerts erreicht ({current_count}/{limit}). Bitte upgrade deinen Plan.",
+                },
+            )
+
     alert = JobAlert(
         user_id=current_user.id,
         keywords=payload.keywords,

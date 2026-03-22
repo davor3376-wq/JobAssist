@@ -25,6 +25,9 @@ pypdf==4.3.1
 # Multipart uploads
 python-multipart==0.0.9
 
+# Payments
+stripe==8.4.0
+
 # Rate limiting
 slowapi==0.1.9
 

@@ -39,6 +39,13 @@ api.interceptors.response.use(
     return res;
   },
   async (err) => {
+    // Usage limit hit — trigger upgrade modal
+    if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") {
+      const event = new CustomEvent("usage-limit", { detail: err.response.data });
+      window.dispatchEvent(event);
+      return Promise.reject(err);
+    }
+
     const url = err.config?.url || "";
     const isAuthEndpoint =
       url.includes("/auth/login") ||
@@ -190,6 +197,14 @@ export const researchApi = {
 // --- Init (bootstrap all data in one request) ---
 export const initApi = {
   fetch: () => api.get("/init"),
+};
+
+// --- Billing ---
+export const billingApi = {
+  overview: () => api.get("/billing/overview"),
+  plans: () => api.get("/billing/plans"),
+  createCheckout: (plan) => api.post("/billing/create-checkout-session", { plan }),
+  createPortal: () => api.post("/billing/create-portal-session"),
 };
 
 // --- Settings ---

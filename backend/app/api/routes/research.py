@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from app.core.security import get_current_user
+from app.core.usage import require_usage
 from app.models.user import User
 from app.services.claude_service import generate_company_research
 from app.main import limiter
@@ -170,6 +171,7 @@ async def research_company(
     request: Request,
     payload: ResearchRequest,
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("ai_chat")),
 ):
     known = _lookup_company(payload.company_name)
     briefing = await asyncio.to_thread(

@@ -24,7 +24,13 @@
       "Bash(TMPDIR=\"C:/Users/davor/Downloads/Projects/Scripts/SaaS_Project/backend/tmp_geojson\")",
       "Bash(sleep 2 curl -s \"https://nominatim.openstreetmap.org/search?q=Stra%C3%9Fgang+Graz&format=json&polygon_geojson=1&limit=3\" -H \"User-Agent: GeoDataResearch/1.0\")",
       "Bash(del:*)",
-      "Bash(find C:UsersdavorDownloadsProjectsScriptsSaaS_Projectfrontendsrc -type f \\\\\\(-name *resume* -o -name *Resume* \\\\\\))"
+      "Bash(find C:UsersdavorDownloadsProjectsScriptsSaaS_Projectfrontendsrc -type f \\\\\\(-name *resume* -o -name *Resume* \\\\\\))",
+      "mcp__ide__getDiagnostics",
+      "Bash(\"C:\\\\Users\\\\davor\\\\Downloads\\\\Projects\\\\Scripts\\\\SaaS_Project\\\\backend\\\\railway.toml\")",
+      "Bash(\"C:\\\\Users\\\\davor\\\\Downloads\\\\Projects\\\\Scripts\\\\SaaS_Project\\\\backend\\\\Procfile\")",
+      "Bash(grep -r \"dangerouslySetInnerHTML\\\\|innerHTML\" frontend/src --include=*.jsx --include=*.js)",
+      "Bash(grep -B5 \"@router\\\\|@app\" backend/app/api/routes/*.py backend/app/main.py)",
+      "Bash(grep -n \"eval\\\\|Function\\\\|dangerously\\\\|innerHTML\" frontend/src -r --include=*.jsx --include=*.js)"
     ]
   }
 }

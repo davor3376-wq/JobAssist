@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell } from "lucide-react";
+import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell, CreditCard } from "lucide-react";
 import useAuthStore from "../../hooks/useAuthStore";
 import clsx from "clsx";
 import { useI18n } from "../../context/I18nContext";
@@ -14,6 +14,7 @@ const NAV_KEYS = [
   { to: "/ai-assistant",   tKey: "navigation.aiAssistant",  icon: Bot },
   { to: "/job-alerts",     tKey: "navigation.jobAlerts",    icon: Bell },
   { to: "/settings",       tKey: "navigation.preferences",  icon: Settings },
+  { to: "/billing",        tKey: "navigation.billing",      icon: CreditCard },
 ];
 
 export default function Layout() {

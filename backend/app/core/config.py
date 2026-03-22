@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     ADZUNA_APP_ID: str = ""
     ADZUNA_APP_KEY: str = ""
 
+    # Stripe
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_PRO: str = ""   # Stripe Price ID for Pro plan
+    STRIPE_PRICE_MAX: str = ""   # Stripe Price ID for Max plan
+    FRONTEND_URL: str = "http://localhost:5173"
+
     # Email — Brevo HTTP API (replaces SMTP, works on Railway free tier)
     BREVO_API_KEY: str = ""
     EMAILS_FROM_EMAIL: str = ""
