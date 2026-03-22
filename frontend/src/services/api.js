@@ -7,17 +7,15 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("access_token");
+  const token = localStorage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    // Debug logging (comment out in production)
     if (import.meta.env.DEV) {
       console.log(`[API] ${config.method.toUpperCase()} ${config.url} - Auth header attached`);
     }
   } else {
-    // Debug logging
     if (import.meta.env.DEV) {
-      console.warn(`[API] ${config.method.toUpperCase()} ${config.url} - No token found in sessionStorage!`);
+      console.warn(`[API] ${config.method.toUpperCase()} ${config.url} - No token found in localStorage!`);
     }
   }
   return config;
@@ -42,7 +40,7 @@ api.interceptors.response.use(
         if (import.meta.env.DEV) {
           console.error(`[API] 401 on ${url} — session expired, redirecting to login`);
         }
-        sessionStorage.removeItem("access_token");
+        localStorage.removeItem("access_token");
         window.location.href = "/login";
       }
     }
