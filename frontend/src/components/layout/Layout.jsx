@@ -23,11 +23,11 @@ export default function Layout() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  const cachedProfile = (() => { try { const s = sessionStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
+  const cachedProfile = (() => { try { const s = localStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: () => settingsApi.getProfile().then((r) => {
-      try { sessionStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
+      try { localStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
     initialData: cachedProfile,

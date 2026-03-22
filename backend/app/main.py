@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import Response, JSONResponse
 from contextlib import asynccontextmanager
 import traceback
@@ -28,6 +29,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware, # (This command attaches the CORS configuration to your application instance so the frontend can securely connect)
     allow_origins=settings.allowed_origins_list,
