@@ -4,7 +4,7 @@ import useAuthStore from "../../hooks/useAuthStore";
 import clsx from "clsx";
 import { useI18n } from "../../context/I18nContext";
 import { useQuery } from "@tanstack/react-query";
-import { initApi } from "../../services/api";
+import { initApi, authApi } from "../../services/api";
 
 const NAV_KEYS = [
   { to: "/dashboard",      tKey: "navigation.dashboard",    icon: LayoutDashboard },
@@ -37,7 +37,8 @@ export default function Layout() {
   const me = initData?.me ?? storedUser;
   const profile = initData?.profile;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch {}
     logout();
     navigate("/login");
   };

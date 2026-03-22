@@ -21,7 +21,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally
+// Silent token refresh state
+let isRefreshing = false;
+let refreshQueue = []; // callbacks waiting for new token
+
+function processQueue(error, token = null) {
+  refreshQueue.forEach((cb) => (error ? cb.reject(error) : cb.resolve(token)));
+  refreshQueue = [];
+}
+
+// Handle 401 globally — attempt silent refresh before giving up
 api.interceptors.response.use(
   (res) => {
     if (import.meta.env.DEV) {
@@ -29,21 +38,59 @@ api.interceptors.response.use(
     }
     return res;
   },
-  (err) => {
-    if (err.response?.status === 401) {
-      const url = err.config?.url || "";
-      // Login/register failures are expected — don't redirect, let the form handle it
-      const isLoginOrRegister = url.includes("/auth/login") || url.includes("/auth/register");
+  async (err) => {
+    const url = err.config?.url || "";
+    const isAuthEndpoint =
+      url.includes("/auth/login") ||
+      url.includes("/auth/register") ||
+      url.includes("/auth/refresh");
 
-      if (!isLoginOrRegister) {
-        // Any other 401 = token expired or invalid — redirect to login
-        if (import.meta.env.DEV) {
-          console.error(`[API] 401 on ${url} — session expired, redirecting to login`);
-        }
+    if (err.response?.status === 401 && !isAuthEndpoint && !err.config._retried) {
+      const refreshToken = localStorage.getItem("refresh_token");
+
+      if (!refreshToken) {
         localStorage.removeItem("access_token");
         window.location.href = "/login";
+        return Promise.reject(err);
+      }
+
+      if (isRefreshing) {
+        // Queue this request until refresh completes
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        }).then((token) => {
+          err.config.headers.Authorization = `Bearer ${token}`;
+          err.config._retried = true;
+          return api(err.config);
+        });
+      }
+
+      isRefreshing = true;
+      err.config._retried = true;
+
+      try {
+        const res = await api.post("/auth/refresh", { refresh_token: refreshToken });
+        const { access_token, refresh_token: new_refresh } = res.data;
+
+        localStorage.setItem("access_token", access_token);
+        if (new_refresh) localStorage.setItem("refresh_token", new_refresh);
+
+        // Update store without importing it (avoids circular deps)
+        // The request interceptor will pick up the new token from localStorage
+        processQueue(null, access_token);
+        err.config.headers.Authorization = `Bearer ${access_token}`;
+        return api(err.config);
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = "/login";
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
       }
     }
+
     return Promise.reject(err);
   }
 );
@@ -53,6 +100,11 @@ export const authApi = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
   me: () => api.get("/auth/me"),
+  logout: () => {
+    const refresh_token = localStorage.getItem("refresh_token");
+    if (refresh_token) return api.post("/auth/logout", { refresh_token });
+    return Promise.resolve();
+  },
 };
 
 // --- Resumes ---

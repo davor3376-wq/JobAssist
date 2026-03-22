@@ -11,15 +11,23 @@ const useAuthStore = create((set) => ({
   user: ls.get("auth_user"),
   isHydrated: false,
 
-  login: (token) => {
-    if (!token) return;
-    localStorage.setItem("access_token", token);
-    set({ token, isHydrated: true });
+  login: (accessToken, refreshToken) => {
+    if (!accessToken) return;
+    localStorage.setItem("access_token", accessToken);
+    if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+    set({ token: accessToken, isHydrated: true });
+  },
+
+  setAccessToken: (accessToken) => {
+    localStorage.setItem("access_token", accessToken);
+    set({ token: accessToken });
   },
 
   logout: () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     ls.remove("auth_user");
+    ls.remove("init");
     set({ token: null, user: null, isHydrated: true });
   },
 

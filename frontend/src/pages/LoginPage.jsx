@@ -14,7 +14,7 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     try {
       const res = await authApi.login(data);
-      login(res.data.access_token);
+      login(res.data.access_token, res.data.refresh_token);
       // Cache user immediately so sidebar never flashes on first load
       try { const meRes = await authApi.me(); setUser(meRes.data); } catch {}
       navigate("/dashboard");
