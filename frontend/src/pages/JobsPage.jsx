@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, Send, SearchCheck } from "lucide-react";
-import { jobApi, aiAssistantApi, motivationsschreibenApi, authApi, resumeApi, researchApi } from "../services/api";
+import { jobApi, aiAssistantApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
 import PipelineStats from "../components/PipelineStats";
 import ApplicationsList from "../components/ApplicationsList";
@@ -127,12 +127,8 @@ export default function JobsPage() {
   });
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
 
-  // Current user (for email subject)
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => authApi.me().then(r => r.data),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const me = initData?.me;
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then(r => r.data),

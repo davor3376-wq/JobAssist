@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { MapPin, DollarSign, Trash2, CheckCircle, Zap, FileText, Brain, ChevronDown, ChevronUp, MoreVertical, ExternalLink, Send, SearchCheck } from "lucide-react";
-import { jobApi, resumeApi, motivationsschreibenApi, authApi, researchApi } from "../services/api";
+import { jobApi, resumeApi, motivationsschreibenApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
 import ResearchModal from "./ResearchModal";
 
@@ -49,11 +49,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
 
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => authApi.me().then(r => r.data),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const me = initData?.me;
 
   // Fetch user's resumes
   const { data: resumes = [] } = useQuery({

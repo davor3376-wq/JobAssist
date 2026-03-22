@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw, Send, SearchCheck } from "lucide-react";
 import toast from "react-hot-toast";
-import { jobAlertsApi, authApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
+import { jobAlertsApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
 import ResearchModal from "../components/ResearchModal";
 
@@ -229,11 +229,8 @@ export default function JobAlertsPage() {
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
 
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => authApi.me().then(r => r.data),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const me = initData?.me;
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then(r => r.data),
