@@ -135,6 +135,11 @@ export const researchApi = {
     api.post("/research/", { company_name: companyName, job_description: jobDescription }),
 };
 
+// --- Init (bootstrap all data in one request) ---
+export const initApi = {
+  fetch: () => api.get("/init"),
+};
+
 // --- Settings ---
 export const settingsApi = {
   getProfile: () => api.get("/settings/profile"),

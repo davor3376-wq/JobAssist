@@ -7,7 +7,11 @@ import traceback
 import re
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, get_db
+from app.core.security import get_current_user
+from app.models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research
 
 @asynccontextmanager
@@ -84,3 +88,56 @@ app.include_router(research.router,           prefix="/api/research",           
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/api/init")
+async def init(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Single endpoint that returns all bootstrap data to reduce page-load round trips."""
+    from sqlalchemy import select
+    from app.models.user_profile import UserProfile
+    from app.models.resume import Resume
+
+    profile_result = await db.execute(select(UserProfile).where(UserProfile.user_id == current_user.id))
+    profile = profile_result.scalar_one_or_none()
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.add(profile)
+        await db.commit()
+        await db.refresh(profile)
+
+    resumes_result = await db.execute(
+        select(Resume).where(Resume.user_id == current_user.id).order_by(Resume.created_at.desc())
+    )
+    resumes = resumes_result.scalars().all()
+
+    return {
+        "me": {
+            "id": current_user.id,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "currency": current_user.currency,
+            "location": current_user.location,
+            "language": current_user.language,
+        },
+        "profile": {
+            "id": profile.id,
+            "user_id": profile.user_id,
+            "desired_locations": profile.desired_locations,
+            "salary_min": profile.salary_min,
+            "salary_max": profile.salary_max,
+            "job_types": profile.job_types,
+            "industries": profile.industries,
+            "experience_level": profile.experience_level,
+            "is_open_to_relocation": profile.is_open_to_relocation,
+            "avatar": profile.avatar,
+            "created_at": profile.created_at,
+            "updated_at": profile.updated_at,
+        },
+        "resumes": [
+            {"id": r.id, "filename": r.filename, "created_at": r.created_at}
+            for r in resumes
+        ],
+    }

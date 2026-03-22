@@ -4,7 +4,7 @@ import useAuthStore from "../../hooks/useAuthStore";
 import clsx from "clsx";
 import { useI18n } from "../../context/I18nContext";
 import { useQuery } from "@tanstack/react-query";
-import { settingsApi, authApi } from "../../services/api";
+import { initApi } from "../../services/api";
 
 const NAV_KEYS = [
   { to: "/dashboard",      tKey: "navigation.dashboard",    icon: LayoutDashboard },
@@ -23,22 +23,19 @@ export default function Layout() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  const cachedProfile = (() => { try { const s = localStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => settingsApi.getProfile().then((r) => {
-      try { localStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
+  const cachedInit = (() => { try { const s = localStorage.getItem("init"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
+  const { data: initData } = useQuery({
+    queryKey: ["init"],
+    queryFn: () => initApi.fetch().then((r) => {
+      try { localStorage.setItem("init", JSON.stringify(r.data)); } catch {}
+      setUser(r.data.me);
       return r.data;
     }),
-    initialData: cachedProfile,
+    initialData: cachedInit,
     staleTime: 1000 * 60 * 5,
   });
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => authApi.me().then((r) => { setUser(r.data); return r.data; }),
-    initialData: storedUser ?? undefined,
-    staleTime: 1000 * 60 * 5,
-  });
+  const me = initData?.me ?? storedUser;
+  const profile = initData?.profile;
 
   const handleLogout = () => {
     logout();
