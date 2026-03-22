@@ -5,12 +5,12 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ResumePage from "./pages/ResumePage";
-import ResumeCreatorPage from "./pages/ResumeCreatorPage";
 import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import CoverLetterPage from "./pages/CoverLetterPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
+import JobAlertsPage from "./pages/JobAlertsPage";
 
 function PrivateRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -36,11 +36,11 @@ export default function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="resume" element={<ResumePage />} />
-        <Route path="resume-creator" element={<ResumeCreatorPage />} />
         <Route path="jobs" element={<JobsPage />} />
         <Route path="jobs/:jobId" element={<JobDetailPage />} />
         <Route path="cover-letter" element={<CoverLetterPage />} />
         <Route path="ai-assistant" element={<AIAssistantPage />} />
+        <Route path="job-alerts" element={<JobAlertsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

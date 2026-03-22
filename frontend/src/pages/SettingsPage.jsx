@@ -42,14 +42,19 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const { t, setLanguage } = useI18n();
   const fileInputRef = useRef(null);
-  const [avatar, setAvatar] = useState(null);  // base64 data URL or null
+  const cachedProfile = (() => { try { const s = sessionStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
+  const [avatar, setAvatar] = useState(cachedProfile?.avatar || null);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => settingsApi.getProfile().then((r) => r.data),
+    queryFn: () => settingsApi.getProfile().then((r) => {
+      try { sessionStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedProfile,
   });
 
-  // Sync avatar from loaded profile (only on first load)
+  // Sync avatar if profile loads something newer than the cache
   useEffect(() => {
     if (profile?.avatar && !avatar) setAvatar(profile.avatar);
   }, [profile]);
@@ -96,7 +101,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (isLoading) return <p className="text-gray-500">{t("common.loading")}</p>;
+  if (!profile && !cachedProfile) return <p className="text-gray-500">{t("common.loading")}</p>;
 
   return (
     <div className="max-w-2xl animate-slide-up">

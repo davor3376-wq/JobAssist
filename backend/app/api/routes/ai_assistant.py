@@ -8,7 +8,6 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.resume import Resume
-from app.models.resume_data import ResumeData
 from app.services.claude_service import _call_groq
 
 router = APIRouter()
@@ -23,12 +22,62 @@ class AssistantChatRequest(BaseModel):
     message: str
     history: List[ChatMessage] = []
     resume_id: Optional[int] = None
-    resume_data_id: Optional[int] = None
     context: str = ""  # additional context like job description
 
 
 class AssistantChatResponse(BaseModel):
     reply: str
+
+
+class JobAnalyzeRequest(BaseModel):
+    title: str
+    company: str = ""
+    description: str
+    location: str = ""
+
+
+class JobAnalyzeResponse(BaseModel):
+    requirements: List[str]
+    nice_to_have: List[str]
+    what_to_expect: str
+    tips: List[str]
+
+
+@router.post("/analyze-job", response_model=JobAnalyzeResponse)
+async def analyze_job(
+    payload: JobAnalyzeRequest,
+    current_user: User = Depends(get_current_user),
+):
+    import json
+    system = (
+        "Du bist ein erfahrener österreichischer Karriereberater. "
+        "Analysiere Stellenanzeigen präzise und antworte ausschließlich mit gültigem JSON — kein Markdown, keine Code-Blöcke."
+    )
+    prompt = f"""Analysiere diese Stelle und gib ein JSON-Objekt mit genau diesen Schlüsseln zurück:
+- "requirements": Array mit 4-6 konkreten Muss-Anforderungen (Kenntnisse, Abschlüsse, Erfahrungen)
+- "nice_to_have": Array mit 3-4 Kann-Anforderungen / Vorteilen
+- "what_to_expect": String, 2-3 Sätze was Bewerber in dieser Rolle tatsächlich tun werden
+- "tips": Array mit 3 konkreten Bewerbungstipps speziell für diese Stelle
+
+Stelle: {payload.title}
+Unternehmen: {payload.company or 'Unbekannt'}
+Ort: {payload.location or 'Österreich'}
+Beschreibung:
+\"\"\"
+{payload.description[:2000]}
+\"\"\"
+"""
+    result = _call_groq(prompt, system=system, max_tokens=1024)
+    try:
+        parsed = json.loads(result)
+        return JobAnalyzeResponse(
+            requirements=parsed.get("requirements", []),
+            nice_to_have=parsed.get("nice_to_have", []),
+            what_to_expect=parsed.get("what_to_expect", ""),
+            tips=parsed.get("tips", []),
+        )
+    except json.JSONDecodeError:
+        return JobAnalyzeResponse(requirements=[], nice_to_have=[], what_to_expect=result, tips=[])
 
 
 class OptimizeRequest(BaseModel):
@@ -57,26 +106,6 @@ async def chat(
         resume = result.scalar_one_or_none()
         if resume and resume.raw_text:
             resume_context = f"\n\nLebenslauf des Benutzers:\n{resume.raw_text[:2000]}"
-
-    elif payload.resume_data_id:
-        result = await db.execute(
-            select(ResumeData).where(ResumeData.id == payload.resume_data_id, ResumeData.user_id == current_user.id)
-        )
-        rd = result.scalar_one_or_none()
-        if rd:
-            parts = []
-            if rd.full_name: parts.append(f"Name: {rd.full_name}")
-            if rd.summary: parts.append(f"Profil: {rd.summary}")
-            if rd.skills:
-                skills = rd.skills if isinstance(rd.skills, list) else []
-                parts.append(f"Kenntnisse: {', '.join(skills)}")
-            if rd.experience:
-                for exp in (rd.experience if isinstance(rd.experience, list) else []):
-                    parts.append(f"Erfahrung: {exp.get('title', '')} bei {exp.get('company', '')}")
-            if rd.education:
-                for edu in (rd.education if isinstance(rd.education, list) else []):
-                    parts.append(f"Bildung: {edu.get('degree', '')} - {edu.get('institution', '')}")
-            resume_context = f"\n\nLebenslauf des Benutzers:\n" + "\n".join(parts)
 
     extra_context = ""
     if payload.context:

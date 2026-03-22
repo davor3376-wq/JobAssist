@@ -15,6 +15,7 @@ class Job(Base):
     company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     # --- Category Field (For Samstagsjob / Praktikum) ---
     category: Mapped[Optional[str]] = mapped_column(String, nullable=True, default="other") 
@@ -27,6 +28,9 @@ class Job(Base):
     match_feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     cover_letter: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     interview_qa: Mapped[Optional[str]] = mapped_column(Text, nullable=True) 
+
+    # Saved research data (JSON)
+    research_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # User notes
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

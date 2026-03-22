@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FileText, Sparkles, Copy, Download, RefreshCw, Building2, Briefcase, ClipboardList } from "lucide-react";
-import { resumeApi, resumeDataApi, motivationsschreibenApi } from "../services/api";
+import { resumeApi, motivationsschreibenApi, jobApi } from "../services/api";
 
 const TONES = [
   { value: "formell", label: "Formell", desc: "Klassisch und professionell" },
@@ -11,7 +11,6 @@ const TONES = [
 ];
 
 export default function CoverLetterPage() {
-  const [selectedResumeType, setSelectedResumeType] = useState("uploaded"); // "uploaded" | "created"
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -22,6 +21,7 @@ export default function CoverLetterPage() {
   const [generatedText, setGeneratedText] = useState("");
   const [editedText, setEditedText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Fetch uploaded resumes
   const { data: uploadedResumes = [] } = useQuery({
@@ -29,10 +29,10 @@ export default function CoverLetterPage() {
     queryFn: () => resumeApi.list().then((r) => r.data),
   });
 
-  // Fetch created resumes
-  const { data: createdResumes = [] } = useQuery({
-    queryKey: ["resume-data"],
-    queryFn: () => resumeDataApi.list().then((r) => r.data),
+  // Fetch saved jobs for import
+  const { data: savedJobs = [] } = useQuery({
+    queryKey: ["jobs"],
+    queryFn: () => jobApi.list().then((r) => r.data),
   });
 
   const generateMutation = useMutation({
@@ -61,10 +61,8 @@ export default function CoverLetterPage() {
       applicant_address: applicantAddress,
     };
 
-    if (selectedResumeType === "uploaded" && selectedResumeId) {
+    if (selectedResumeId) {
       data.resume_id = selectedResumeId;
-    } else if (selectedResumeType === "created" && selectedResumeId) {
-      data.resume_data_id = selectedResumeId;
     }
 
     generateMutation.mutate(data);
@@ -76,24 +74,53 @@ export default function CoverLetterPage() {
     toast.success("In die Zwischenablage kopiert!");
   };
 
-  const handleDownload = () => {
+  const getFilename = (ext) =>
+    `Motivationsschreiben_${company || "Bewerbung"}_${new Date().toISOString().split("T")[0]}.${ext}`;
+
+  const handleDownloadTXT = () => {
     const text = isEditing ? editedText : generatedText;
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Motivationsschreiben_${company || "Bewerbung"}_${new Date().toISOString().split("T")[0]}.txt`;
+    a.download = getFilename("txt");
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Datei heruntergeladen!");
+    toast.success("TXT heruntergeladen!");
+    setShowDownloadMenu(false);
   };
 
-  const resumes = selectedResumeType === "uploaded" ? uploadedResumes : createdResumes;
+  const handleDownloadPDF = () => {
+    const text = isEditing ? editedText : generatedText;
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Motivationsschreiben</title><style>@page{margin:2cm;size:A4}body{font-family:Georgia,serif;font-size:13px;line-height:1.7;margin:0}pre{white-space:pre-wrap;font-family:inherit}</style></head><body><pre>${escaped}</pre></body></html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url);
+    win.addEventListener("load", () => { win.print(); URL.revokeObjectURL(url); });
+    toast.success("PDF-Druckdialog geöffnet!");
+    setShowDownloadMenu(false);
+  };
+
+  const handleDownloadDOCX = () => {
+    const text = isEditing ? editedText : generatedText;
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><style>body{font-family:Calibri,sans-serif;font-size:12pt;line-height:1.5}p{margin:0 0 6pt}</style></head><body><pre style="font-family:Calibri,sans-serif;font-size:12pt;white-space:pre-wrap;line-height:1.5">${escaped}</pre></body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = getFilename("doc");
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Word-Dokument heruntergeladen!");
+    setShowDownloadMenu(false);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-slide-up">
       {/* Header */}
-      <div className="mb-8 animate-slide-up">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
           Motivationsschreiben
         </h1>
@@ -112,41 +139,15 @@ export default function CoverLetterPage() {
               <h2 className="font-semibold text-gray-900">Lebenslauf auswählen</h2>
             </div>
 
-            {/* Resume type toggle */}
-            <div className="flex gap-2 mb-3">
-              <button
-                type="button"
-                onClick={() => { setSelectedResumeType("uploaded"); setSelectedResumeId(null); }}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedResumeType === "uploaded"
-                    ? "bg-blue-100 text-blue-700 border border-blue-300"
-                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
-                }`}
-              >
-                Hochgeladen
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSelectedResumeType("created"); setSelectedResumeId(null); }}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedResumeType === "created"
-                    ? "bg-blue-100 text-blue-700 border border-blue-300"
-                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
-                }`}
-              >
-                Erstellt
-              </button>
-            </div>
-
             <select
               value={selectedResumeId || ""}
               onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Lebenslauf auswählen (optional)</option>
-              {resumes.map((r) => (
+              {uploadedResumes.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name || r.full_name || `Lebenslauf ${r.id}`}
+                  {r.filename || r.name || r.full_name || `Lebenslauf ${r.id}`}
                 </option>
               ))}
             </select>
@@ -163,6 +164,29 @@ export default function CoverLetterPage() {
             </div>
 
             <div className="space-y-3">
+              {savedJobs.length > 0 && (
+                <div className="pb-3 mb-1 border-b border-gray-100 flex items-center gap-3">
+                  <label className="text-xs font-semibold text-blue-600 uppercase tracking-wide whitespace-nowrap flex-shrink-0">Stelle importieren</label>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      const job = savedJobs.find((j) => String(j.id) === e.target.value);
+                      if (!job) return;
+                      if (job.company) setCompany(job.company);
+                      if (job.role) setRole(job.role);
+                      if (job.description) setJobDescription(job.description);
+                    }}
+                    className="min-w-0 flex-1 px-3 py-1.5 border border-blue-300 bg-blue-50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 truncate"
+                  >
+                    <option value="">Auswählen...</option>
+                    {savedJobs.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {j.role || j.title} {j.company ? `– ${j.company}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Unternehmen</label>
                 <input
@@ -191,8 +215,8 @@ export default function CoverLetterPage() {
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   placeholder="Füge hier die Stellenbeschreibung ein..."
-                  rows={5}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={8}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                 />
               </div>
             </div>
@@ -276,18 +300,21 @@ export default function CoverLetterPage() {
         {/* Right: Generated Output */}
         <div className="space-y-4">
           <div className="card bg-white border border-gray-200 shadow-sm rounded-lg min-h-[600px] flex flex-col">
-            <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-y-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-green-600" />
                 <h2 className="font-semibold text-gray-900">Ergebnis</h2>
               </div>
               {generatedText && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={() => {
+                      if (isEditing) setGeneratedText(editedText);
+                      setIsEditing(!isEditing);
+                    }}
                     className="px-2.5 py-1.5 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
-                    {isEditing ? "Vorschau" : "Bearbeiten"}
+                    {isEditing ? "Speichern" : "Bearbeiten"}
                   </button>
                   <button
                     onClick={handleCopy}
@@ -296,13 +323,22 @@ export default function CoverLetterPage() {
                     <Copy className="w-3 h-3" />
                     Kopieren
                   </button>
-                  <button
-                    onClick={handleDownload}
-                    className="px-2.5 py-1.5 rounded text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" />
-                    Download
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDownloadMenu((v) => !v)}
+                      className="px-2.5 py-1.5 rounded text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </button>
+                    {showDownloadMenu && (
+                      <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[100px]">
+                        <button onClick={handleDownloadTXT} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 text-gray-700">TXT</button>
+                        <button onClick={handleDownloadPDF} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 text-gray-700">PDF</button>
+                        <button onClick={handleDownloadDOCX} className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 text-gray-700">DOCX</button>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={handleGenerate}
                     disabled={generateMutation.isPending}
@@ -329,10 +365,12 @@ export default function CoverLetterPage() {
                     className="w-full h-full min-h-[500px] px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono leading-relaxed"
                   />
                 ) : (
-                  <div className="prose prose-sm max-w-none">
-                    <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-serif">
-                      {isEditing ? editedText : generatedText}
-                    </div>
+                  <div className="text-sm text-gray-800 leading-relaxed space-y-4">
+                    {editedText.split(/\n+/).filter((p) => p.trim()).map((para, i) => (
+                      <p key={i}>
+                        {para.trim()}
+                      </p>
+                    ))}
                   </div>
                 )
               ) : (

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "mcp__vibe-annotations__read_annotations",
+      "mcp__vibe-annotations__get_annotation_screenshot",
+      "Bash(curl -s -X POST \"https://at.jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"Softwareentwickler\"\",\"\"location\"\":\"\"Wien\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s -X POST \"https://jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"Softwareentwickler\"\",\"\"location\"\":\"\"Wien\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s -X POST \"https://jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"developer\"\",\"\"location\"\":\"\"Vienna\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s -X POST \"https://jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"developer\"\",\"\"location\"\":\"\"Vienna, Austria\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s -X POST \"https://jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"Praktikum\"\",\"\"location\"\":\"\"Wien, Österreich\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s -X POST \"https://jooble.org/api/611ad24a-6eb6-4975-a5c1-1db0e8c180f6\" -H \"Content-Type: application/json\" -d \"{\"\"keywords\"\":\"\"IT Praktikum\"\",\"\"location\"\":\"\"Austria\"\",\"\"page\"\":\"\"1\"\"}\")",
+      "Bash(curl -s \"http://localhost:8000/api/jobs/search/custom?keywords=developer&location=Wien&page=1\" -H \"Authorization: Bearer test\")",
+      "mcp__vibe-annotations__delete_annotation",
+      "Bash(python3:*)",
+      "WebFetch(domain:data.wien.gv.at)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl -s -o /tmp/bezirke_995.json \"https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2021/simplified-99.5/bezirke_995_geo.json\" -w \"\\\\nHTTP_STATUS:%{http_code}\")",
+      "Bash(curl -s -o /tmp/gemeinden_995.json \"https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2021/simplified-99.5/gemeinden_995_geo.json\" -w \"\\\\nHTTP_STATUS:%{http_code}\")",
+      "Bash(curl -s -o /tmp/graz_stadtbezirke_2019.json \"https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2019/graz_stadtbezirke.geojson\" -w \"\\\\nHTTP_STATUS:%{http_code}\")",
+      "Bash(node:*)",
+      "Bash(ls /tmp/*.json)",
+      "Bash(TMPDIR=\"C:/Users/davor/Downloads/Projects/Scripts/SaaS_Project/backend/tmp_geojson\")",
+      "Bash(sleep 2 curl -s \"https://nominatim.openstreetmap.org/search?q=Stra%C3%9Fgang+Graz&format=json&polygon_geojson=1&limit=3\" -H \"User-Agent: GeoDataResearch/1.0\")",
+      "Bash(del:*)",
+      "Bash(find C:UsersdavorDownloadsProjectsScriptsSaaS_Projectfrontendsrc -type f \\\\\\(-name *resume* -o -name *Resume* \\\\\\))"
+    ]
+  }
+}

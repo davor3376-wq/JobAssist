@@ -25,7 +25,8 @@
       "jobs": "Stellen",
       "preferences": "Einstellungen",
       "coverLetter": "Motivationsschreiben",
-      "aiAssistant": "KI-Assistent"
+      "aiAssistant": "KI-Assistent",
+      "jobAlerts": "Job-Alerts"
     },
     "resume": {
       "title": "Mein Lebenslauf",

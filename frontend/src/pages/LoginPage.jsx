@@ -8,12 +8,15 @@ import AuthLayout from "../components/ui/AuthLayout";
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const login = useAuthStore((s) => s.login);
+  const setUser = useAuthStore((s) => s.setUser);
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
       const res = await authApi.login(data);
       login(res.data.access_token);
+      // Cache user immediately so sidebar never flashes on first load
+      try { const meRes = await authApi.me(); setUser(meRes.data); } catch {}
       navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.detail || "Anmeldung fehlgeschlagen");

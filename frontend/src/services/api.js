@@ -7,7 +7,7 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
+  const token = sessionStorage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
     // Debug logging (comment out in production)
@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
   } else {
     // Debug logging
     if (import.meta.env.DEV) {
-      console.warn(`[API] ${config.method.toUpperCase()} ${config.url} - No token found in localStorage!`);
+      console.warn(`[API] ${config.method.toUpperCase()} ${config.url} - No token found in sessionStorage!`);
     }
   }
   return config;
@@ -42,7 +42,7 @@ api.interceptors.response.use(
         if (import.meta.env.DEV) {
           console.error(`[API] 401 on ${url} — session expired, redirecting to login`);
         }
-        localStorage.removeItem("access_token");
+        sessionStorage.removeItem("access_token");
         window.location.href = "/login";
       }
     }
@@ -86,6 +86,8 @@ export const jobApi = {
   updateStatus: (jobId, status) => api.patch(`/jobs/${jobId}/status`, { status }),
   updateNotes: (jobId, notes) => api.patch(`/jobs/${jobId}/notes`, { notes }),
   updateDeadline: (jobId, deadline) => api.patch(`/jobs/${jobId}/deadline`, { deadline }),
+  updateUrl: (jobId, url) => api.patch(`/jobs/${jobId}/url`, { url }),
+  saveResearch: (jobId, researchData) => api.patch(`/jobs/${jobId}/research`, { research_data: JSON.stringify(researchData) }),
   getPipelineStats: () => api.get("/jobs/pipeline/stats"),
   searchRecommended: (page = 1) => api.get(`/jobs/search/recommended?page=${page}`),
   searchCustom: (keywords, location = "", jobType = "", page = 1) =>
@@ -117,6 +119,22 @@ export const interviewApi = {
 export const aiAssistantApi = {
   chat: (data) => api.post("/ai-assistant/chat", data),
   optimize: (data) => api.post("/ai-assistant/optimize", data),
+  analyzeJob: (data) => api.post("/ai-assistant/analyze-job", data),
+};
+
+// --- Job Alerts ---
+export const jobAlertsApi = {
+  list: () => api.get("/job-alerts/"),
+  create: (data) => api.post("/job-alerts/", data),
+  update: (id, data) => api.patch(`/job-alerts/${id}`, data),
+  delete: (id) => api.delete(`/job-alerts/${id}`),
+  runNow: (id) => api.post(`/job-alerts/${id}/run`),
+};
+
+// --- Research ---
+export const researchApi = {
+  research: (companyName, jobDescription = "") =>
+    api.post("/research/", { company_name: companyName, job_description: jobDescription }),
 };
 
 // --- Settings ---
@@ -127,16 +145,5 @@ export const settingsApi = {
   updatePreferences: (data) => api.put("/settings/preferences", data),
 };
 
-// --- Resume Data (Resume Creator) ---
-// NOTE: create/list use trailing slash (route is "/"), parameterized routes do NOT
-// (routes are "/{id}" and "/{id}/preview" — trailing slash would cause 307 → 401)
-export const resumeDataApi = {
-  create: (data) => api.post("/resume-data/", data),
-  list: () => api.get("/resume-data/"),
-  get: (id) => api.get(`/resume-data/${id}`),
-  update: (id, data) => api.patch(`/resume-data/${id}`, data),
-  delete: (id) => api.delete(`/resume-data/${id}`),
-  preview: (id) => api.get(`/resume-data/${id}/preview`),
-};
 
 export default api;

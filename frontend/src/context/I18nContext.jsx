@@ -17,13 +17,13 @@ export function I18nProvider({ children }) {
 
   const t = (key) => {
     const keys = key.split(".");
-    let value = translations[language];
+    let value = translations[language] ?? translations["de"];
 
     for (const k of keys) {
       if (value && typeof value === "object") {
         value = value[k];
       } else {
-        return key; // fallback to key if not found
+        return key;
       }
     }
 

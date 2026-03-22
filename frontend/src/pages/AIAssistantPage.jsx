@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2 } from "lucide-react";
-import { resumeApi, resumeDataApi, aiAssistantApi } from "../services/api";
+import { resumeApi, aiAssistantApi } from "../services/api";
 
 const SUGGESTIONS = [
   { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?" },
@@ -16,7 +16,6 @@ const SUGGESTIONS = [
 export default function AIAssistantPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [selectedResumeType, setSelectedResumeType] = useState("none");
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -24,11 +23,6 @@ export default function AIAssistantPage() {
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then((r) => r.data),
-  });
-
-  const { data: createdResumes = [] } = useQuery({
-    queryKey: ["resume-data"],
-    queryFn: () => resumeDataApi.list().then((r) => r.data),
   });
 
   const scrollToBottom = () => {
@@ -66,10 +60,8 @@ export default function AIAssistantPage() {
       history: messages.slice(-10),
     };
 
-    if (selectedResumeType === "uploaded" && selectedResumeId) {
+    if (selectedResumeId) {
       data.resume_id = selectedResumeId;
-    } else if (selectedResumeType === "created" && selectedResumeId) {
-      data.resume_data_id = selectedResumeId;
     }
 
     chatMutation.mutate(data);
@@ -87,9 +79,9 @@ export default function AIAssistantPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="max-w-4xl mx-auto flex flex-col animate-slide-up" style={{ height: "calc(100vh - 120px)" }}>
       {/* Header */}
-      <div className="mb-4 animate-slide-up flex-shrink-0">
+      <div className="mb-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
@@ -114,28 +106,17 @@ export default function AIAssistantPage() {
         <div className="mt-3 flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-500">Kontext:</span>
           <select
-            value={selectedResumeType}
-            onChange={(e) => { setSelectedResumeType(e.target.value); setSelectedResumeId(null); }}
+            value={selectedResumeId || ""}
+            onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
             className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="none">Ohne Lebenslauf</option>
-            <option value="uploaded">Hochgeladener Lebenslauf</option>
-            <option value="created">Erstellter Lebenslauf</option>
+            <option value="">Ohne Lebenslauf</option>
+            {uploadedResumes.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.filename || r.name || `Lebenslauf ${r.id}`}
+              </option>
+            ))}
           </select>
-          {selectedResumeType !== "none" && (
-            <select
-              value={selectedResumeId || ""}
-              onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-              className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Auswählen...</option>
-              {(selectedResumeType === "uploaded" ? uploadedResumes : createdResumes).map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name || r.full_name || `Lebenslauf ${r.id}`}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
       </div>
 
@@ -152,15 +133,15 @@ export default function AIAssistantPage() {
             </p>
 
             {/* Suggestion chips */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full max-w-lg">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s.label}
                   onClick={() => handleSend(s.prompt)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left"
+                  className="flex items-center gap-2 px-3 py-3 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left min-w-0"
                 >
                   <s.icon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-xs font-medium text-gray-700">{s.label}</span>
+                  <span className="text-sm font-medium text-gray-700 truncate">{s.label}</span>
                 </button>
               ))}
             </div>

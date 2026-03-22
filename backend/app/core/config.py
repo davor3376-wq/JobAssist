@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     JOOBLE_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    ADZUNA_APP_ID: str = ""
+    ADZUNA_APP_KEY: str = ""
+
+    # Email / SMTP
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_TLS: bool = True
+    EMAILS_FROM_EMAIL: str = ""
 
     # CORS
     ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "https://yourdomain.com"]
@@ -32,3 +42,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+_INSECURE_DEFAULT_KEY = "change-me-in-production"
+if settings.SECRET_KEY == _INSECURE_DEFAULT_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is set to the insecure default value. "
+        "Set a strong random SECRET_KEY in your .env file before starting the server."
+    )

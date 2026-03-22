@@ -3,6 +3,18 @@ import { Link } from "react-router-dom";
 import { TrendingUp, Target, Award, ArrowRight } from "lucide-react";
 import { resumeApi, jobApi } from "../services/api";
 
+const getMatchColorClass = (score) => {
+  if (score < 30) return "bg-red-100 text-red-800";
+  if (score < 40) return "bg-orange-100 text-orange-800";
+  if (score < 50) return "bg-amber-100 text-amber-800";
+  if (score < 60) return "bg-yellow-100 text-yellow-800";
+  if (score < 70) return "bg-green-100 text-green-700";
+  if (score < 80) return "bg-green-200 text-green-800";
+  if (score < 90) return "bg-green-300 text-green-900";
+  if (score < 100) return "bg-green-400 text-white";
+  return "bg-green-600 text-white";
+};
+
 export default function DashboardPage() {
   const { data: resumes } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data) });
   const { data: jobs } = useQuery({ queryKey: ["jobs"], queryFn: () => jobApi.list().then(r => r.data) });
@@ -61,7 +73,7 @@ export default function DashboardPage() {
         <div className="card card-hover group">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-gray-500 text-sm font-medium mb-1">Ø Match-Bewertung</p>
+              <p className="text-gray-500 text-sm font-medium mb-1">Match-Bewertung</p>
               <p className="text-4xl font-bold text-gray-900">{avgScore ? `${avgScore}%` : "—"}</p>
             </div>
             <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-xl group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all duration-300">
@@ -119,11 +131,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 truncate">{job.company || "Unbekanntes Unternehmen"}</p>
                   </div>
                   {job.match_score != null && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 whitespace-nowrap ${
-                      job.match_score >= 75 ? "score-high" :
-                      job.match_score >= 50 ? "score-mid" :
-                      "score-low"
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 whitespace-nowrap ${getMatchColorClass(job.match_score)}`}>
                       {job.match_score}%
                     </span>
                   )}

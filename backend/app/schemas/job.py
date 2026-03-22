@@ -7,6 +7,7 @@ class JobCreate(BaseModel):
     company: Optional[str] = None
     role: Optional[str] = None
     description: str
+    url: Optional[str] = None
     resume_id: Optional[int] = None
 
 
@@ -15,11 +16,13 @@ class JobOut(BaseModel):
     company: Optional[str]
     role: Optional[str]
     description: str
+    url: Optional[str]
     status: str  # bookmarked, applied, interviewing, offered, rejected
     match_score: Optional[float]
     match_feedback: Optional[str]
     cover_letter: Optional[str]
     interview_qa: Optional[str]
+    research_data: Optional[str] = None
     notes: Optional[str]
     deadline: Optional[datetime]
     created_at: datetime
@@ -28,23 +31,24 @@ class JobOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class JobResearchUpdate(BaseModel):
+    research_data: Optional[str] = None
+
+
 class MatchRequest(BaseModel):
     job_id: int
-    resume_id: Optional[int] = None        # uploaded resume
-    resume_data_id: Optional[int] = None   # Resume Creator resume
+    resume_id: Optional[int] = None
 
 
 class CoverLetterRequest(BaseModel):
     job_id: int
     resume_id: Optional[int] = None
-    resume_data_id: Optional[int] = None
     tone: Optional[str] = "professional"  # professional, enthusiastic, concise
 
 
 class InterviewPrepRequest(BaseModel):
     job_id: int
     resume_id: Optional[int] = None
-    resume_data_id: Optional[int] = None
     num_questions: int = 10
 
 
@@ -58,6 +62,10 @@ class JobNotesUpdate(BaseModel):
 
 class JobDeadlineUpdate(BaseModel):
     deadline: Optional[datetime] = None
+
+
+class JobUrlUpdate(BaseModel):
+    url: Optional[str] = None
 
 
 class PipelineStats(BaseModel):

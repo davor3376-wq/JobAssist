@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, resume_data, motivationsschreiben, ai_assistant
+from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,26 +21,41 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
     redirect_slashes=True, # Allow both /api/route and /api/route/ to work
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
 app.add_middleware(
     CORSMiddleware, # (This command attaches the CORS configuration to your application instance so the frontend can securely connect)
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    return response
 
 # Routers
 app.include_router(auth.router,            prefix="/api/auth",         tags=["Auth"]) # (This command registers the authentication endpoints to the main API)
 app.include_router(settings_routes.router, prefix="/api/settings",     tags=["Settings"])
 app.include_router(resume.router,          prefix="/api/resume",       tags=["Resume"])
-app.include_router(resume_data.router,     prefix="/api/resume-data",  tags=["Resume Builder"])
 app.include_router(jobs.router,            prefix="/api/jobs",         tags=["Jobs"])
 app.include_router(cover_letter.router,    prefix="/api/cover-letter", tags=["Cover Letter"])
 app.include_router(interview.router,       prefix="/api/interview",    tags=["Interview Prep"])
 app.include_router(motivationsschreiben.router, prefix="/api/motivationsschreiben", tags=["Motivationsschreiben"])
 app.include_router(ai_assistant.router,       prefix="/api/ai-assistant",        tags=["KI-Assistent"])
+app.include_router(job_alerts.router,         prefix="/api/job-alerts",           tags=["Job Alerts"])
+app.include_router(research.router,           prefix="/api/research",              tags=["Research"])
 
 @app.get("/health")
 async def health_check():

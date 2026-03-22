@@ -49,10 +49,16 @@ async def update_profile(
         profile = UserProfile(user_id=current_user.id)
         db.add(profile)
 
-    # Update fields that were provided
+    # Update only known safe fields explicitly
     update_data = payload.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(profile, key, value)
+    if "desired_locations" in update_data:    profile.desired_locations    = update_data["desired_locations"]
+    if "salary_min" in update_data:           profile.salary_min           = update_data["salary_min"]
+    if "salary_max" in update_data:           profile.salary_max           = update_data["salary_max"]
+    if "job_types" in update_data:            profile.job_types            = update_data["job_types"]
+    if "industries" in update_data:           profile.industries           = update_data["industries"]
+    if "experience_level" in update_data:     profile.experience_level     = update_data["experience_level"]
+    if "is_open_to_relocation" in update_data: profile.is_open_to_relocation = update_data["is_open_to_relocation"]
+    if "avatar" in update_data:               profile.avatar               = update_data["avatar"]
 
     await db.commit()
     await db.refresh(profile)
@@ -84,10 +90,11 @@ async def update_preferences(
     )
     user = result.scalar_one()
 
-    # Update fields that were provided
+    # Update only known safe fields explicitly
     update_data = payload.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(user, key, value)
+    if "currency" in update_data:  user.currency = update_data["currency"]
+    if "location" in update_data:  user.location = update_data["location"]
+    if "language" in update_data:  user.language = update_data["language"]
 
     await db.commit()
     await db.refresh(user)

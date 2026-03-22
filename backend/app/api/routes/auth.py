@@ -52,19 +52,3 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/debug/token-info")
-async def debug_token_info(token: str = Depends(oauth2_scheme)):
-    """Debug endpoint to check token validation. Requires Authorization header."""
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return {
-            "status": "valid",
-            "user_id": payload.get("sub"),
-            "expires_at": payload.get("exp"),
-            "token_length": len(token),
-        }
-    except JWTError as e:
-        return {
-            "status": "invalid",
-            "error": str(e),
-        }

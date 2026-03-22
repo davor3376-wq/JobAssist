@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, PlusSquare, User, Mail, Bot } from "lucide-react";
+import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell } from "lucide-react";
 import useAuthStore from "../../hooks/useAuthStore";
 import clsx from "clsx";
 import { useI18n } from "../../context/I18nContext";
@@ -9,26 +9,34 @@ import { settingsApi, authApi } from "../../services/api";
 const NAV_KEYS = [
   { to: "/dashboard",      tKey: "navigation.dashboard",    icon: LayoutDashboard },
   { to: "/resume",         tKey: "navigation.myResumes",    icon: FileText },
-  { to: "/resume-creator", tKey: "navigation.createResume", icon: PlusSquare },
   { to: "/jobs",           tKey: "navigation.jobs",         icon: Briefcase },
   { to: "/cover-letter",   tKey: "navigation.coverLetter",  icon: Mail },
   { to: "/ai-assistant",   tKey: "navigation.aiAssistant",  icon: Bot },
+  { to: "/job-alerts",     tKey: "navigation.jobAlerts",    icon: Bell },
   { to: "/settings",       tKey: "navigation.preferences",  icon: Settings },
 ];
 
 export default function Layout() {
   const logout = useAuthStore((s) => s.logout);
+  const setUser = useAuthStore((s) => s.setUser);
+  const storedUser = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const { t } = useI18n();
 
+  const cachedProfile = (() => { try { const s = sessionStorage.getItem("profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => settingsApi.getProfile().then((r) => r.data),
+    queryFn: () => settingsApi.getProfile().then((r) => {
+      try { sessionStorage.setItem("profile", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedProfile,
     staleTime: 1000 * 60 * 5,
   });
   const { data: me } = useQuery({
     queryKey: ["me"],
-    queryFn: () => authApi.me().then((r) => r.data),
+    queryFn: () => authApi.me().then((r) => { setUser(r.data); return r.data; }),
+    initialData: storedUser ?? undefined,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -105,9 +113,9 @@ export default function Layout() {
               )}
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
-                  {me?.full_name || me?.email?.split("@")[0] || "User"}
+                  {me?.full_name || me?.email?.split("@")[0]}
                 </p>
-                <p className="text-[10px] text-gray-400 truncate">{me?.email || ""}</p>
+                <p className="text-[10px] text-gray-400 truncate">{me?.email}</p>
               </div>
             </div>
 

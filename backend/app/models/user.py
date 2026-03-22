@@ -23,4 +23,3 @@ class User(Base):
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
-    resume_data = relationship("ResumeData", back_populates="user", cascade="all, delete-orphan")

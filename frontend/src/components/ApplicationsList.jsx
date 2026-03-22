@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { MapPin, DollarSign, Trash2, CheckCircle, Zap, FileText, Brain, ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
-import { jobApi, resumeApi } from "../services/api";
+import { MapPin, DollarSign, Trash2, CheckCircle, Zap, FileText, Brain, ChevronDown, ChevronUp, MoreVertical, ExternalLink, Send, SearchCheck } from "lucide-react";
+import { jobApi, resumeApi, motivationsschreibenApi, authApi, researchApi } from "../services/api";
+import { generateMailtoLink } from "../utils/emailHelpers";
+import ResearchModal from "./ResearchModal";
 
 const STATUS_LABELS = {
   bookmarked: "Gespeichert",
@@ -22,14 +24,16 @@ const STATUS_COLORS = {
 
 const STATUS_ORDER = ["bookmarked", "applied", "interviewing", "offered", "rejected"];
 
-// Color code match scores with granular tiers
-// <30% red, 30-40% orange, 40-50% orange-yellow, 50-60% yellow-orange, 60%+ yellow
 const getMatchColorClass = (score) => {
   if (score < 30) return "bg-red-100 text-red-800";
   if (score < 40) return "bg-orange-100 text-orange-800";
-  if (score < 50) return "bg-amber-200 text-amber-900";
-  if (score < 60) return "bg-yellow-200 text-yellow-900";
-  return "bg-yellow-100 text-yellow-800";
+  if (score < 50) return "bg-amber-100 text-amber-800";
+  if (score < 60) return "bg-yellow-100 text-yellow-800";
+  if (score < 70) return "bg-green-100 text-green-700";
+  if (score < 80) return "bg-green-200 text-green-800";
+  if (score < 90) return "bg-green-300 text-green-900";
+  if (score < 100) return "bg-green-400 text-white";
+  return "bg-green-600 text-white";
 };
 
 export default function ApplicationsList({ jobs, onJobsUpdate }) {
@@ -39,6 +43,17 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const [expandedJobId, setExpandedJobId] = useState(null);
   const [collapsedJobCards, setCollapsedJobCards] = useState({});
   const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [draftTexts, setDraftTexts] = useState({});
+  const [draftLoading, setDraftLoading] = useState(null);
+  const [researchModal, setResearchModal] = useState(null); // { jobId, companyName }
+  const [researchData, setResearchData] = useState(null);
+  const [researchLoading, setResearchLoading] = useState(false);
+
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => authApi.me().then(r => r.data),
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Fetch user's resumes
   const { data: resumes = [] } = useQuery({
@@ -61,15 +76,15 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [notesInput, setNotesInput] = useState({});
 
-  // Apply filters and sorting
+  // Apply search + status filters (hard filter — removes from DOM)
+  // Match score filter is applied via CSS for smooth animation
   const filteredJobs = jobs
     .filter(job => {
       const matchesSearch = !searchQuery ||
         job.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.company?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = filterStatus === "all" || job.status === filterStatus;
-      const matchesScore = !job.match_score || job.match_score >= filterMinMatch;
-      return matchesSearch && matchesStatus && matchesScore;
+      return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       switch(sortBy) {
@@ -202,6 +217,70 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     onError: () => toast.error("Frist konnte nicht gespeichert werden"),
   });
 
+  const updateUrlMutation = useMutation({
+    mutationFn: ({ jobId, url }) => jobApi.updateUrl(jobId, url),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }),
+    onError: () => toast.error("Link konnte nicht gespeichert werden"),
+  });
+
+  const handleDraftEmail = async (job) => {
+    const id = job.id;
+    const userName = me?.full_name || me?.email?.split("@")[0] || "Bewerber";
+    const jobForLink = { title: job.role, role: job.role, company: job.company };
+
+    if (draftTexts[id]) {
+      window.location.href = generateMailtoLink(jobForLink, draftTexts[id], userName);
+      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+      return;
+    }
+    // Use existing cover letter if already generated
+    if (job.cover_letter) {
+      window.location.href = generateMailtoLink(jobForLink, job.cover_letter, userName);
+      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+      return;
+    }
+    setDraftLoading(id);
+    try {
+      const res = await motivationsschreibenApi.generate({
+        company: job.company || "",
+        role: job.role || "",
+        job_description: job.description || `${job.role} bei ${job.company}`,
+        tone: "formell",
+      });
+      const text = res.data?.text || "";
+      setDraftTexts((prev) => ({ ...prev, [id]: text }));
+      window.location.href = generateMailtoLink(jobForLink, text, userName);
+      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+    } catch {
+      toast.error("Brief-Entwurf konnte nicht generiert werden");
+    } finally {
+      setDraftLoading(null);
+    }
+  };
+
+  const handleResearch = async (job) => {
+    // Show saved research immediately if available
+    if (job.research_data) {
+      try {
+        setResearchData(JSON.parse(job.research_data));
+      } catch { setResearchData(null); }
+      setResearchModal({ jobId: job.id, companyName: job.company || "" });
+      return;
+    }
+    setResearchData(null);
+    setResearchModal({ jobId: job.id, companyName: job.company || "" });
+    setResearchLoading(true);
+    try {
+      const res = await researchApi.research(job.company || "", job.description || "");
+      setResearchData(res.data);
+    } catch {
+      toast.error("Recherche fehlgeschlagen");
+      setResearchModal(null);
+    } finally {
+      setResearchLoading(false);
+    }
+  };
+
   if (jobs.length === 0) {
     return (
       <div className="text-center py-12">
@@ -220,7 +299,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     <div className="space-y-6">
       {/* Resume Selector */}
       {resumes.length > 0 && (
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 animate-slide-up">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             📄 Lebenslauf für Inhaltserstellung auswählen
           </label>
@@ -231,7 +310,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
           >
             {resumes.map(resume => (
               <option key={resume.id} value={resume.id}>
-                {resume.name || `Lebenslauf ${resume.id}`}
+                {resume.name || resume.filename || `Lebenslauf ${resume.id}`}
               </option>
             ))}
           </select>
@@ -240,7 +319,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       )}
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4">
+      <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4 animate-slide-up">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search */}
           <div>
@@ -299,7 +378,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
           </div>
         </div>
         <p className="text-xs text-gray-500">
-          Zeige {filteredJobs.length} von {jobs.length} Stellen
+          Zeige {filteredJobs.filter(j => !j.match_score || j.match_score >= filterMinMatch).length} von {jobs.length} Stellen
           {selectedJobs.size > 0 && ` • ${selectedJobs.size} ausgewählt`}
         </p>
       </div>
@@ -365,10 +444,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
             <div className="space-y-3">
               {statusJobs.map(job => {
                 const isCollapsed = collapsedJobCards[job.id];
+                const isScoreHidden = job.match_score != null && job.match_score < filterMinMatch;
                 return (
                 <div
                   key={job.id}
-                  className="rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 overflow-hidden"
+                  className={`rounded-lg border border-gray-200 hover:border-blue-300 overflow-hidden transition-all duration-300 ${isScoreHidden ? 'opacity-0 max-h-0 border-0 !mt-0 pointer-events-none' : 'opacity-100 max-h-[2000px]'}`}
                 >
                   {/* Minimized Header */}
                   <div className={`p-4 ${isCollapsed ? 'hover:bg-blue-50' : 'bg-white'}`}>
@@ -389,7 +469,21 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                           className="mt-1 flex-shrink-0"
                         />
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-gray-900 truncate">{job.role || "Ohne Titel"}</h4>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <h4 className="font-semibold text-gray-900 truncate">{job.role || "Ohne Titel"}</h4>
+                            {job.url && (
+                              <a
+                                href={job.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-shrink-0 text-blue-500 hover:text-blue-700 transition-colors"
+                                title="Stellenanzeige öffnen"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600">{job.company || "Unbekanntes Unternehmen"}</p>
                         </div>
                       </div>
@@ -409,7 +503,10 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                           );
                         })()}
                         {job.match_score !== null && job.match_score !== undefined && (
-                          <div className={`text-xs font-medium px-2 py-1 rounded ${getMatchColorClass(job.match_score)}`}>
+                          <div
+                            className={`text-xs font-medium px-2 py-1 rounded cursor-help ${getMatchColorClass(job.match_score)}`}
+                            title={(() => { try { return JSON.parse(job.match_feedback)?.summary || ""; } catch { return job.match_feedback || ""; } })()}
+                          >
                             ✨ {Math.round(job.match_score)}%
                           </div>
                         )}
@@ -453,21 +550,50 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                       )}
                     </div>
 
+                    {/* Match Feedback Summary */}
+                    {job.match_score != null && job.match_feedback && (
+                      <div className="border-t border-gray-300 pt-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-1">✨ Match-Analyse</p>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {(() => { try { return JSON.parse(job.match_feedback)?.summary || job.match_feedback; } catch { return job.match_feedback; } })()}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Stellenanzeige URL */}
+                    <div className="border-t border-gray-300 pt-3">
+                      <label className="text-sm font-semibold text-gray-700 block mb-2 flex items-center gap-1">
+                        🔗 Stellenanzeige Link
+                        {job.url && (
+                          <a href={job.url} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:text-blue-700 transition-colors" title="Link öffnen">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </label>
+                      <input
+                        type="url"
+                        key={`${job.id}-url`}
+                        defaultValue={job.url || ""}
+                        onBlur={(e) => {
+                          const val = e.target.value.trim() || null;
+                          if (val !== (job.url || null)) {
+                            updateUrlMutation.mutate({ jobId: job.id, url: val });
+                          }
+                        }}
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
                     {/* Job Description */}
                     {job.description && (
                       <div className="border-t border-gray-300 pt-3">
-                        <button
-                          onClick={() => setExpandedJobId(expandedJobId === `desc-${job.id}` ? null : `desc-${job.id}`)}
-                          className="text-sm font-semibold text-blue-700 hover:text-blue-800 flex items-center gap-2 transition-colors"
-                        >
-                          📋
-                          {expandedJobId === `desc-${job.id}` ? "Stellenbeschreibung ausblenden" : "Vollständige Stellenbeschreibung anzeigen"}
-                        </button>
-                        {expandedJobId === `desc-${job.id}` && (
-                          <div className="mt-3 p-3 bg-white border border-blue-300 rounded-lg text-sm text-gray-700 max-h-96 overflow-y-auto whitespace-pre-wrap font-normal leading-relaxed">
-                            {job.description}
-                          </div>
-                        )}
+                        <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                          📋 Stellenanzeige
+                        </p>
+                        <div className="p-3 bg-white border border-blue-300 rounded-lg text-sm text-gray-700 max-h-96 overflow-y-auto whitespace-pre-wrap font-normal leading-relaxed">
+                          {job.description}
+                        </div>
                       </div>
                     )}
 
@@ -476,8 +602,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                       <label className="text-sm font-semibold text-gray-700 block mb-2">📅 Bewerbungsfrist</label>
                       <input
                         type="date"
-                        value={job.deadline ? job.deadline.split('T')[0] : ""}
-                        onChange={(e) => updateDeadlineMutation.mutate({ jobId: job.id, deadline: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                        key={`${job.id}-${job.deadline}`}
+                        defaultValue={job.deadline ? job.deadline.split('T')[0] : ""}
+                        onBlur={(e) => updateDeadlineMutation.mutate({ jobId: job.id, deadline: e.target.value ? new Date(e.target.value + 'T12:00:00').toISOString() : null })}
                         className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -561,6 +688,25 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                         <Brain className="w-3 h-3" />
                         {processingJobId === job.id && processingFeature === "interview" ? "Wird vorbereitet..." : "Gesprächsvorbereitung"}
                       </button>
+                      <button
+                        onClick={() => handleDraftEmail(job)}
+                        disabled={draftLoading === job.id}
+                        className="text-xs px-3 py-1.5 rounded border border-blue-300 bg-white text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {draftLoading === job.id ? (
+                          <><div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />Generiert…</>
+                        ) : (
+                          <><Send className="w-3 h-3" />Brief-Entwurf</>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleResearch(job)}
+                        disabled={!job.company}
+                        className={`text-xs px-3 py-1.5 rounded border transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 ${job.research_data ? "border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700" : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"}`}
+                      >
+                        <SearchCheck className="w-3 h-3" />
+                        {job.research_data ? "Recherche ansehen" : "Recherche"}
+                      </button>
                     </div>
 
                     {/* Generated Content Display */}
@@ -625,6 +771,16 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
         );
       })}
       </div>
+
+      {researchModal && (
+        <ResearchModal
+          companyName={researchModal.companyName}
+          data={researchData}
+          loading={researchLoading}
+          jobId={researchModal.jobId}
+          onClose={() => { setResearchModal(null); setResearchData(null); }}
+        />
+      )}
     </div>
   );
 }

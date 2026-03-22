@@ -10,7 +10,7 @@ from app.models.user import User
 from app.models.user_profile import UserProfile
 from app.models.job import Job
 from app.models.resume import Resume
-from app.schemas.job import JobCreate, JobOut, MatchRequest, JobStatusUpdate, JobNotesUpdate, JobDeadlineUpdate, PipelineStats
+from app.schemas.job import JobCreate, JobOut, MatchRequest, JobStatusUpdate, JobNotesUpdate, JobDeadlineUpdate, JobUrlUpdate, JobResearchUpdate, PipelineStats
 from app.services.claude_service import match_resume_to_job
 from app.services.job_search import search_jobs, search_jobs_by_preferences
 
@@ -266,4 +266,46 @@ async def update_job_deadline(
     await db.commit()
     await db.refresh(job)
     logger.info(f"Job {job_id} deadline updated by user {current_user.email}")
+    return job
+
+
+@router.patch("/{job_id}/url", response_model=JobOut)
+async def update_job_url(
+    job_id: int,
+    payload: JobUrlUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update job URL."""
+    result = await db.execute(
+        select(Job).where(Job.id == job_id, Job.user_id == current_user.id)
+    )
+    job = result.scalar_one_or_none()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job.url = payload.url
+    await db.commit()
+    await db.refresh(job)
+    return job
+
+
+@router.patch("/{job_id}/research", response_model=JobOut)
+async def update_job_research(
+    job_id: int,
+    payload: JobResearchUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Save research data to a job."""
+    result = await db.execute(
+        select(Job).where(Job.id == job_id, Job.user_id == current_user.id)
+    )
+    job = result.scalar_one_or_none()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job.research_data = payload.research_data
+    await db.commit()
+    await db.refresh(job)
     return job

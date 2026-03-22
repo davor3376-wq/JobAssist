@@ -57,7 +57,7 @@ export default function ResumePage() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-10 animate-slide-up">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Mein Lebenslauf</h1>
         <p className="text-gray-600">Lade deinen Lebenslauf hoch und verwalte ihn für Bewerbungen</p>
       </div>
