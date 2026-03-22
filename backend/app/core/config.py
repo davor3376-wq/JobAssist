@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from typing import List
 
 
@@ -32,19 +31,12 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     EMAILS_FROM_EMAIL: str = ""
 
-    # CORS — accepts JSON array or comma-separated string
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "https://yourdomain.com"]
+    # CORS — comma-separated string, e.g. "https://app.vercel.app,http://localhost:5173"
+    ALLOWED_ORIGINS: str = "http://localhost:5173"
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_origins(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                import json
-                return json.loads(v)
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
     class Config:
         env_file = ".env"
