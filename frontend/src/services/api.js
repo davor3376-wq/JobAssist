@@ -1,9 +1,17 @@
 import axios from "axios";
+import queryClient from "../queryClient";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: { "Content-Type": "application/json" },
 });
+
+// Endpoints that consume usage — invalidate billing data after success
+const USAGE_ENDPOINTS = [
+  "/resume/analyze", "/cover-letter/generate", "/motivationsschreiben/generate",
+  "/interview/generate", "/ai-assistant/chat", "/ai-assistant/optimize",
+  "/ai-assistant/analyze-job", "/jobs/match", "/research/",
+];
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
@@ -35,6 +43,12 @@ api.interceptors.response.use(
   (res) => {
     if (import.meta.env.DEV) {
       console.log(`[API] Response ${res.status} from ${res.config.url}`);
+    }
+    // Invalidate billing/init data after usage-consuming calls
+    const url = res.config?.url || "";
+    if (res.config?.method === "post" && USAGE_ENDPOINTS.some((ep) => url.includes(ep))) {
+      queryClient.invalidateQueries({ queryKey: ["billing-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["init"] });
     }
     return res;
   },

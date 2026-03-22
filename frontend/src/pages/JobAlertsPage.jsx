@@ -10,9 +10,10 @@ const JOB_TYPES = [
   { value: "", label: "Alle" },
   { value: "Full-time", label: "Vollzeit" },
   { value: "Part-time", label: "Teilzeit" },
-  { value: "Remote", label: "Remote" },
   { value: "Contract", label: "Befristet" },
   { value: "Internship", label: "Praktikum" },
+  { value: "Lehre", label: "Lehre" },
+  { value: "Samstagsjob", label: "Samstagsjob" },
 ];
 const FREQUENCIES = [
   { value: "daily", label: "Täglich" },
@@ -157,15 +158,14 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
             <input
               type="email"
               value={form.email}
-              onChange={e => set("email", e.target.value)}
-              placeholder="deine@email.com"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              disabled
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-400 mt-1">Alerts werden nur an deine registrierte E-Mail-Adresse gesendet.</p>
           </div>
 
           <div>

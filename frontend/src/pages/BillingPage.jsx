@@ -13,7 +13,7 @@ const FEATURE_LABELS = {
 };
 
 const PLAN_NAMES = {
-  basic: "Basic (Free)",
+  basic: "Basic (Gratis)",
   pro: "Pro",
   max: "Max",
   enterprise: "Enterprise",
@@ -61,6 +61,8 @@ export default function BillingPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["billing-overview"],
     queryFn: () => billingApi.overview().then((r) => r.data),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const handleManage = async () => {

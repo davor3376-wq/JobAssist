@@ -48,6 +48,7 @@ export default function PricingPage() {
       period: "",
       icon: Star,
       color: "gray",
+      highlighted: false,
       badge: null,
       limits: { cv_analysis: 2, cover_letter: 1, job_alerts: 1, ai_chat: 15 },
       extras: ["Lebenslauf hochladen", "Job-Suche", "Pipeline-Tracking"],
@@ -60,6 +61,7 @@ export default function PricingPage() {
       period: "/ Monat",
       icon: Zap,
       color: "blue",
+      highlighted: true,
       badge: "Beliebt",
       limits: { cv_analysis: 15, cover_letter: 10, job_alerts: 10, ai_chat: 200 },
       extras: ["Prioritäts-Support", "Alles aus Basic"],
@@ -72,6 +74,7 @@ export default function PricingPage() {
       period: "/ Monat",
       icon: Crown,
       color: "purple",
+      highlighted: false,
       badge: "Bestes Angebot",
       limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1 },
       extras: ["24h Support", "Alles aus Pro", "Unbegrenzte Nutzung"],
@@ -84,6 +87,7 @@ export default function PricingPage() {
       period: "Kontaktiere uns",
       icon: Building2,
       color: "slate",
+      highlighted: false,
       badge: null,
       limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1 },
       extras: ["Dedizierter Manager", "Custom Integrationen", "SLA & Compliance"],
@@ -107,7 +111,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       {/* Top bar */}
       {token && (
-        <div className="max-w-6xl mx-auto px-6 pt-6">
+        <div className="max-w-7xl mx-auto px-6 pt-6">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
@@ -117,9 +121,9 @@ export default function PricingPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-20">
+      <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-16">
           <p className="text-sm font-semibold text-blue-600 tracking-wide uppercase mb-3">Preise</p>
           <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
             Finde den passenden Plan
@@ -130,46 +134,45 @@ export default function PricingPage() {
         </div>
 
         {/* Plan Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-start">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
           {plans.map((plan) => {
             const isCurrent = currentPlan === plan.key;
-            const isPro = plan.key === "pro";
             const Icon = plan.icon;
 
             return (
               <div
                 key={plan.key}
-                className={`relative bg-white rounded-2xl flex flex-col transition-shadow ${
-                  isPro
-                    ? "border-2 border-blue-500 shadow-xl shadow-blue-100/50 lg:-mt-2 lg:mb-[-8px]"
-                    : "border border-gray-200 shadow-sm hover:shadow-md"
+                className={`relative bg-white rounded-2xl flex flex-col transition-all duration-200 ${
+                  plan.highlighted
+                    ? "border-2 border-blue-500 shadow-xl shadow-blue-100/60 scale-[1.02]"
+                    : "border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300"
                 }`}
               >
                 {/* Badge */}
                 {plan.badge && (
                   <div className="absolute -top-3.5 inset-x-0 flex justify-center">
                     <span className={`text-xs font-bold px-4 py-1 rounded-full text-white shadow-sm ${
-                      isPro ? "bg-blue-500" : "bg-purple-500"
+                      plan.highlighted ? "bg-blue-500" : "bg-purple-500"
                     }`}>
                       {plan.badge}
                     </span>
                   </div>
                 )}
 
+                {/* Top section: Icon + Name + Price */}
                 <div className="p-6 pb-0">
-                  {/* Icon + Name */}
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-5">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg[plan.color]}`}>
                       <Icon className={`w-5 h-5 ${iconFg[plan.color]}`} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900">{plan.name}</h3>
-                      <p className="text-xs text-gray-400">{plan.subtitle}</p>
+                      <h3 className="text-base font-bold text-gray-900 leading-tight">{plan.name}</h3>
+                      <p className="text-xs text-gray-400 leading-tight mt-0.5">{plan.subtitle}</p>
                     </div>
                   </div>
 
                   {/* Price */}
-                  <div className="mb-5">
+                  <div className="h-14 flex items-end mb-5">
                     {plan.price !== null ? (
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-extrabold text-gray-900">
@@ -184,13 +187,12 @@ export default function PricingPage() {
                     )}
                   </div>
 
-                  {/* Divider */}
                   <hr className="border-gray-100" />
                 </div>
 
-                {/* Features */}
+                {/* Features — flex-1 to equalize heights */}
                 <div className="p-6 pt-4 flex-1">
-                  <ul className="space-y-3">
+                  <ul className="space-y-2.5">
                     {Object.entries(plan.limits).map(([feat, val]) => (
                       <li key={feat} className="flex items-start gap-2.5 text-sm">
                         <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
@@ -209,7 +211,7 @@ export default function PricingPage() {
                   </ul>
                 </div>
 
-                {/* CTA */}
+                {/* CTA — always at bottom */}
                 <div className="p-6 pt-0">
                   {isCurrent ? (
                     <button
@@ -229,7 +231,7 @@ export default function PricingPage() {
                     <button
                       onClick={() => handleUpgrade(plan.key)}
                       className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
-                        isPro
+                        plan.highlighted
                           ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 hover:shadow-lg"
                           : plan.key === "max"
                           ? "bg-purple-600 text-white hover:bg-purple-700 shadow-md shadow-purple-200 hover:shadow-lg"
@@ -247,7 +249,7 @@ export default function PricingPage() {
         </div>
 
         {/* Bottom note */}
-        <p className="text-center text-xs text-gray-400 mt-10">
+        <p className="text-center text-xs text-gray-400 mt-12">
           Alle Preise inkl. MwSt. Jederzeit kündbar. Keine versteckten Kosten.
         </p>
       </div>

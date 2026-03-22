@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     # Email — Brevo HTTP API (replaces SMTP, works on Railway free tier)
     BREVO_API_KEY: str = ""
-    EMAILS_FROM_EMAIL: str = ""
+    EMAILS_FROM_EMAIL: str = "jobassistalert@gmail.com"
     EMAILS_FROM_NAME: str = "JobAssist"
 
     # Legacy SMTP fields (unused but kept so existing env vars don't break startup)
