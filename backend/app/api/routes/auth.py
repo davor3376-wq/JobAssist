@@ -26,7 +26,7 @@ router = APIRouter()
 async def register(request: Request, payload: UserCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == payload.email))
     if result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Diese E-Mail-Adresse ist bereits registriert")
 
     user = User(
         email=payload.email,
@@ -48,10 +48,10 @@ async def login(request: Request, payload: UserLogin, db: AsyncSession = Depends
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Ungültige E-Mail-Adresse oder Passwort",
         )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Account is inactive")
+        raise HTTPException(status_code=400, detail="Konto ist deaktiviert")
 
     access_token = create_access_token({"sub": str(user.id)})
     raw_refresh, refresh_hash = generate_refresh_token()
