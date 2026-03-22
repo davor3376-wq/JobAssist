@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.user_profile import UserProfile
 from app.models.job import Job
 from app.models.resume import Resume
+from app.models.resume import Resume
 from app.schemas.job import JobCreate, JobOut, MatchRequest, JobStatusUpdate, JobNotesUpdate, JobDeadlineUpdate, JobUrlUpdate, JobResearchUpdate, PipelineStats
 from app.services.claude_service import match_resume_to_job
 from app.services.job_search import search_jobs, search_jobs_by_preferences
@@ -36,6 +37,11 @@ async def create_job(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if payload.resume_id:
+        r = await db.execute(select(Resume).where(Resume.id == payload.resume_id, Resume.user_id == current_user.id))
+        if not r.scalar_one_or_none():
+            raise HTTPException(status_code=403, detail="Resume not found")
+
     job = Job(
         user_id=current_user.id,
         company=payload.company,
@@ -110,7 +116,7 @@ async def get_pipeline_stats(
 
 @router.get("/search/recommended", response_model=dict)
 async def search_recommended_jobs(
-    page: int = Query(1, ge=1),
+    page: int = Query(1, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -146,7 +152,7 @@ async def search_custom_jobs(
     keywords: str = Query(..., description="Job title or keywords"),
     location: str = Query("", description="City/location"),
     job_type: str = Query("", description="Job type (Full-time, Remote, etc.)"),
-    page: int = Query(1, ge=1),
+    page: int = Query(1, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.resume import Resume
 from app.services.claude_service import _call_groq
+from app.main import limiter
 
 router = APIRouter()
 
@@ -44,7 +45,9 @@ class JobAnalyzeResponse(BaseModel):
 
 
 @router.post("/analyze-job", response_model=JobAnalyzeResponse)
+@limiter.limit("20/minute")
 async def analyze_job(
+    request: Request,
     payload: JobAnalyzeRequest,
     current_user: User = Depends(get_current_user),
 ):
@@ -92,7 +95,9 @@ class OptimizeResponse(BaseModel):
 
 
 @router.post("/chat", response_model=AssistantChatResponse)
+@limiter.limit("20/minute")
 async def chat(
+    request: Request,
     payload: AssistantChatRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -143,7 +148,9 @@ async def chat(
 
 
 @router.post("/optimize", response_model=OptimizeResponse)
+@limiter.limit("10/minute")
 async def optimize(
+    request: Request,
     payload: OptimizeRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

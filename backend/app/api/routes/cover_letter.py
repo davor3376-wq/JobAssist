@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -9,12 +9,15 @@ from app.models.job import Job
 from app.models.resume import Resume
 from app.schemas.job import CoverLetterRequest, JobOut
 from app.services.claude_service import generate_cover_letter
+from app.main import limiter
 
 router = APIRouter()
 
 
 @router.post("/generate", response_model=JobOut)
+@limiter.limit("10/minute")
 async def generate(
+    request: Request,
     payload: CoverLetterRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

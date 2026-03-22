@@ -1,22 +1,34 @@
 import smtplib
 import logging
+import html as html_lib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Dict, Any
+from urllib.parse import urlparse
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
+def _safe_url(url: str) -> str:
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme in ("http", "https"):
+            return html_lib.escape(url)
+    except Exception:
+        pass
+    return "#"
+
+
 def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any]]) -> str:
     rows = ""
     for job in jobs[:20]:
-        title = job.get("title", "Ohne Titel")
-        company = job.get("company", "Unbekannt")
-        loc = job.get("location", location or "")
-        url = job.get("full_url", "#")
-        salary = job.get("salary_range", "")
+        title = html_lib.escape(job.get("title", "Ohne Titel"))
+        company = html_lib.escape(job.get("company", "Unbekannt"))
+        loc = html_lib.escape(job.get("location", location or ""))
+        url = _safe_url(job.get("full_url", "#"))
+        salary = html_lib.escape(job.get("salary_range", ""))
         salary_html = f'<span style="color:#6b7280;font-size:13px;">{salary}</span>' if salary else ""
         rows += f"""
         <tr>
@@ -37,7 +49,7 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">JobAssist — Neue Stellenangebote</h1>
       <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:14px;">
-        {count} neue Stellen für <strong>{keywords}</strong>{f' in {location}' if location else ''}
+        {count} neue Stellen für <strong>{html_lib.escape(keywords)}</strong>{f' in {html_lib.escape(location)}' if location else ''}
       </p>
     </div>
     <div style="padding:24px 32px;">
@@ -65,7 +77,7 @@ def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"JobAssist: {len(jobs)} neue Stellen für '{keywords}'"
+        msg["Subject"] = f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'"
         msg["From"] = settings.EMAILS_FROM_EMAIL or settings.SMTP_USER
         msg["To"] = to_email
 

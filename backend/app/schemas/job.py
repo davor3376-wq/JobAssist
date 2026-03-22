@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional
+from urllib.parse import urlparse
 
 
 class JobCreate(BaseModel):
@@ -66,6 +67,19 @@ class JobDeadlineUpdate(BaseModel):
 
 class JobUrlUpdate(BaseModel):
     url: Optional[str] = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v):
+        if v is None:
+            return v
+        try:
+            parsed = urlparse(v)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError("URL must start with http:// or https://")
+        except Exception:
+            raise ValueError("Invalid URL")
+        return v
 
 
 class PipelineStats(BaseModel):

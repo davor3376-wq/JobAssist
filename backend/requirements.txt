@@ -25,6 +25,9 @@ pypdf==4.3.1
 # Multipart uploads
 python-multipart==0.0.9
 
+# Rate limiting
+slowapi==0.1.9
+
 # Dev/test
 pytest==8.3.2
 pytest-asyncio==0.23.8

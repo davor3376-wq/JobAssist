@@ -38,7 +38,7 @@ async def create_alert(
         keywords=payload.keywords,
         location=payload.location,
         job_type=payload.job_type,
-        email=payload.email,
+        email=current_user.email,
         frequency=payload.frequency,
     )
     db.add(alert)
@@ -65,7 +65,6 @@ async def update_alert(
     if "keywords" in update_data:   alert.keywords  = update_data["keywords"]
     if "location" in update_data:   alert.location  = update_data["location"]
     if "job_type" in update_data:   alert.job_type  = update_data["job_type"]
-    if "email" in update_data:      alert.email     = update_data["email"]
     if "frequency" in update_data:  alert.frequency = update_data["frequency"]
     if "is_active" in update_data:  alert.is_active = update_data["is_active"]
 

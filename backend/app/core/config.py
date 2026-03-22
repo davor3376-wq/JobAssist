@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # Auth (JWT)
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # API Keys
     GROQ_API_KEY: str = ""

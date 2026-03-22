@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import json
@@ -10,12 +10,15 @@ from app.models.job import Job
 from app.models.resume import Resume
 from app.schemas.job import InterviewPrepRequest, JobOut
 from app.services.claude_service import generate_interview_prep
+from app.main import limiter
 
 router = APIRouter()
 
 
 @router.post("/generate", response_model=JobOut)
+@limiter.limit("10/minute")
 async def generate(
+    request: Request,
     payload: InterviewPrepRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

@@ -3,8 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import Response, JSONResponse
 from contextlib import asynccontextmanager
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 import traceback
 import re
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 from app.core.config import settings
 from app.core.database import engine, Base, get_db
@@ -33,6 +39,9 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware, # (This command attaches the CORS configuration to your application instance so the frontend can securely connect)
@@ -56,9 +65,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
     traceback.print_exc()
+    detail = str(exc) if settings.DEBUG else "Internal server error"
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc)},
+        content={"detail": detail},
         headers=headers,
     )
 

@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.resume import Resume
 from app.services.claude_service import generate_motivationsschreiben
+from app.main import limiter
 
 router = APIRouter()
 
@@ -32,7 +33,9 @@ class MotivationsschreibenResponse(BaseModel):
 
 
 @router.post("/generate", response_model=MotivationsschreibenResponse)
+@limiter.limit("10/minute")
 async def generate(
+    request: Request,
     payload: MotivationsschreibenRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
