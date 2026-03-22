@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Save, MapPin, DollarSign, Briefcase, Target, Globe, Sliders, Camera, Trash2, User } from "lucide-react";
 import { settingsApi } from "../services/api";
 import { useI18n } from "../context/I18nContext";
+import { FormSkeleton } from "../components/PageSkeleton";
 
 /** Resize + compress an image File to a JPEG base64 data URL (max 200×200px, ~15–30KB). */
 function compressImage(file) {
@@ -103,7 +104,15 @@ export default function SettingsPage() {
     }
   };
 
-  if (!profile && !cachedProfile) return <p className="text-gray-500">{t("common.loading")}</p>;
+  if (!profile && !cachedProfile) return (
+    <div className="max-w-2xl animate-slide-up">
+      <div className="mb-8">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
+      </div>
+      <FormSkeleton fields={6} />
+    </div>
+  );
 
   return (
     <div className="max-w-2xl animate-slide-up">

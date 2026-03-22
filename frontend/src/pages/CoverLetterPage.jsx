@@ -27,12 +27,14 @@ export default function CoverLetterPage() {
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then((r) => r.data),
+    staleTime: 1000 * 60 * 2,
   });
 
   // Fetch saved jobs for import
   const { data: savedJobs = [] } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => jobApi.list().then((r) => r.data),
+    staleTime: 1000 * 60 * 2,
   });
 
   const generateMutation = useMutation({

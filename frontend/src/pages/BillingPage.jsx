@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { CreditCard, ExternalLink, Zap, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { billingApi } from "../services/api";
+import { CardSkeleton } from "../components/PageSkeleton";
 
 const FEATURE_LABELS = {
   cv_analysis: "Lebenslauf-Analysen",
@@ -81,7 +82,16 @@ export default function BillingPage() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-16 text-gray-400">Lade Abrechnungsdaten...</div>;
+    return (
+      <div className="space-y-6 animate-slide-up">
+        <div>
+          <div className="h-7 w-40 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <CardSkeleton lines={3} />
+        <CardSkeleton lines={4} />
+      </div>
+    );
   }
 
   const sub = data?.subscription;

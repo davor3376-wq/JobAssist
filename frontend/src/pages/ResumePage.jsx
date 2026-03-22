@@ -4,14 +4,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Upload, Trash2, FileText } from "lucide-react";
 import { resumeApi } from "../services/api";
+import { ListSkeleton } from "../components/PageSkeleton";
 
 export default function ResumePage() {
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
 
+  const cachedResumes = (() => { try { const s = localStorage.getItem("resumes"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: resumes = [], isLoading } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then(r => r.data),
+    queryFn: () => resumeApi.list().then(r => {
+      try { localStorage.setItem("resumes", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedResumes,
+    staleTime: 1000 * 60 * 2,
   });
 
   const deleteMutation = useMutation({
@@ -118,10 +125,7 @@ export default function ResumePage() {
       {/* Resume List */}
       {isLoading ? (
         <div className="animate-slide-up">
-          <div className="card p-8 text-center">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-brand-500 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Lebensläufe werden geladen…</p>
-          </div>
+          <ListSkeleton rows={3} />
         </div>
       ) : resumes.length === 0 ? (
         <div className="animate-slide-up">

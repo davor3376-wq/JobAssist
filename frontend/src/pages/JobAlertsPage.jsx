@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import { jobAlertsApi } from "../services/api";
+import { ListSkeleton } from "../components/PageSkeleton";
 
 const JOB_TYPES = [
   { value: "", label: "Alle" },
@@ -216,9 +217,15 @@ export default function JobAlertsPage() {
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
 
+  const cachedAlerts = (() => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
-    queryFn: () => jobAlertsApi.list().then(r => r.data),
+    queryFn: () => jobAlertsApi.list().then(r => {
+      try { localStorage.setItem("job_alerts", JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: cachedAlerts,
+    staleTime: 1000 * 60 * 2,
   });
 
   const createMutation = useMutation({
@@ -310,7 +317,7 @@ export default function JobAlertsPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="text-center py-16 text-gray-400">Lade Alerts...</div>
+        <div className="animate-slide-up"><ListSkeleton rows={3} /></div>
       ) : alerts.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
