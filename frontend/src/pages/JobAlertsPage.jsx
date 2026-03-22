@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw, Send, SearchCheck } from "lucide-react";
 import toast from "react-hot-toast";
-import { jobAlertsApi, authApi, motivationsschreibenApi, researchApi } from "../services/api";
+import { jobAlertsApi, authApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
 import ResearchModal from "../components/ResearchModal";
 
@@ -234,6 +234,11 @@ export default function JobAlertsPage() {
     queryFn: () => authApi.me().then(r => r.data),
     staleTime: 1000 * 60 * 5,
   });
+  const { data: resumes = [] } = useQuery({
+    queryKey: ["resumes"],
+    queryFn: () => resumeApi.list().then(r => r.data),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const handleDraftEmail = async (alert) => {
     const userName = me?.full_name || me?.email?.split("@")[0] || "Bewerber";
@@ -244,6 +249,8 @@ export default function JobAlertsPage() {
         role: alert.keywords,
         job_description: `Stelle gesucht: ${alert.keywords}${alert.location ? ` in ${alert.location}` : ""}${alert.job_type ? `, ${alert.job_type}` : ""}`,
         tone: "formell",
+        resume_id: resumes[0]?.id || null,
+        applicant_name: me?.full_name || "",
       });
       const text = res.data?.text || "";
       const jobForLink = { title: alert.keywords, role: alert.keywords };

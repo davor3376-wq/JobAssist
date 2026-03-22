@@ -246,6 +246,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
         role: job.role || "",
         job_description: job.description || `${job.role} bei ${job.company}`,
         tone: "formell",
+        resume_id: resumes[0]?.id || null,
+        applicant_name: me?.full_name || "",
       });
       const text = res.data?.text || "";
       setDraftTexts((prev) => ({ ...prev, [id]: text }));
