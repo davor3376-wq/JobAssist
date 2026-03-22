@@ -45,7 +45,9 @@ settings = Settings()
 
 _INSECURE_DEFAULT_KEY = "change-me-in-production"
 if settings.SECRET_KEY == _INSECURE_DEFAULT_KEY:
-    raise RuntimeError(
+    import warnings
+    warnings.warn(
         "SECRET_KEY is set to the insecure default value. "
-        "Set a strong random SECRET_KEY in your .env file before starting the server."
+        "Set a strong random SECRET_KEY in your environment before going to production.",
+        stacklevel=1,
     )
