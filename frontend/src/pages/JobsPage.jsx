@@ -414,7 +414,7 @@ export default function JobsPage() {
       {/* My Applications Tab */}
       {mainTab === "applications" && (
         <div className="space-y-6">
-          <PipelineStats />
+          <PipelineStats jobs={jobs} />
           <ApplicationsList jobs={jobs} />
         </div>
       )}

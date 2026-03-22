@@ -1,12 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { Bookmark, Send, MessageSquare, Award, XCircle } from "lucide-react";
-import { jobApi } from "../services/api";
 
-export default function PipelineStats() {
-  const { data: stats = {}, isLoading } = useQuery({
-    queryKey: ["pipeline", "stats"],
-    queryFn: () => jobApi.getPipelineStats().then(r => r.data),
-  });
+export default function PipelineStats({ jobs = [] }) {
+  const stats = {
+    bookmarked:   jobs.filter(j => j.status === "bookmarked").length,
+    applied:      jobs.filter(j => j.status === "applied").length,
+    interviewing: jobs.filter(j => j.status === "interviewing").length,
+    offered:      jobs.filter(j => j.status === "offered").length,
+    rejected:     jobs.filter(j => j.status === "rejected").length,
+  };
 
   const statuses = [
     { key: "bookmarked",   label: "Gespeichert", icon: Bookmark,      iconColor: "text-blue-500",   color: "bg-blue-50 border-blue-200" },
@@ -15,10 +16,6 @@ export default function PipelineStats() {
     { key: "offered",      label: "Angebot",     icon: Award,          iconColor: "text-amber-500",  color: "bg-amber-50 border-amber-200" },
     { key: "rejected",     label: "Abgelehnt",   icon: XCircle,        iconColor: "text-red-500",    color: "bg-red-50 border-red-200" },
   ];
-
-  if (isLoading) {
-    return <div className="animate-pulse h-24 bg-gray-200 rounded-lg"></div>;
-  }
 
   return (
     <div className="grid grid-cols-5 gap-3 mb-8">
