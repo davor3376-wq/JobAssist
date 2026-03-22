@@ -89,15 +89,19 @@ def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List
     }
 
     try:
+        api_key = settings.BREVO_API_KEY.strip()
+        logger.info(f"Brevo key prefix: {api_key[:12]}... length={len(api_key)}")
         with httpx.Client(timeout=15) as client:
             response = client.post(
                 BREVO_SEND_URL,
                 json=payload,
                 headers={
-                    "api-key": settings.BREVO_API_KEY,
+                    "api-key": api_key,
                     "Content-Type": "application/json",
                 },
             )
+            if not response.is_success:
+                logger.error(f"Brevo response {response.status_code}: {response.text}")
             response.raise_for_status()
 
         logger.info(f"Job alert email sent to {to_email} ({len(jobs)} jobs for '{keywords}')")
