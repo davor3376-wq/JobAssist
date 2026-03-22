@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 
@@ -104,7 +105,8 @@ async def create_checkout_session(
     customer_id = sub.stripe_customer_id if sub else None
 
     if not customer_id:
-        customer = stripe.Customer.create(
+        customer = await asyncio.to_thread(
+            stripe.Customer.create,
             email=current_user.email,
             name=current_user.full_name or "",
             metadata={"user_id": str(current_user.id)},
@@ -124,7 +126,8 @@ async def create_checkout_session(
         await db.commit()
 
     try:
-        session = stripe.checkout.Session.create(
+        session = await asyncio.to_thread(
+            stripe.checkout.Session.create,
             customer=customer_id,
             mode="subscription",
             line_items=[{"price": price_id, "quantity": 1}],
@@ -155,7 +158,8 @@ async def create_portal_session(
     if not sub or not sub.stripe_customer_id:
         raise HTTPException(status_code=400, detail="Kein aktives Abonnement gefunden")
 
-    session = stripe.billing_portal.Session.create(
+    session = await asyncio.to_thread(
+        stripe.billing_portal.Session.create,
         customer=sub.stripe_customer_id,
         return_url=f"{settings.FRONTEND_URL}/billing",
     )
@@ -229,7 +233,7 @@ async def _handle_invoice_paid(db: AsyncSession, invoice: dict):
     stripe_sub_id = invoice.get("subscription")
     if stripe_sub_id:
         try:
-            stripe_sub = stripe.Subscription.retrieve(stripe_sub_id)
+            stripe_sub = await asyncio.to_thread(stripe.Subscription.retrieve, stripe_sub_id)
             sub.current_period_end = datetime.fromtimestamp(
                 stripe_sub.current_period_end, tz=timezone.utc
             )

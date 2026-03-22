@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Star, Zap, Crown, Building2, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, Star, Zap, Crown, Building2, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { billingApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import toast from "react-hot-toast";
@@ -21,6 +22,7 @@ export default function PricingPage() {
   const token = useAuthStore((s) => s.token);
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const currentPlan = initData?.plan || "basic";
+  const [loadingPlan, setLoadingPlan] = useState(null);
 
   const handleUpgrade = async (planKey) => {
     if (!token) {
@@ -31,11 +33,13 @@ export default function PricingPage() {
       window.location.href = "mailto:kontakt@jobassist.app?subject=Enterprise-Anfrage";
       return;
     }
+    setLoadingPlan(planKey);
     try {
       const res = await billingApi.createCheckout(planKey);
       window.location.href = res.data.checkout_url;
     } catch {
       toast.error("Fehler beim Starten des Checkout-Prozesses");
+      setLoadingPlan(null);
     }
   };
 
@@ -230,7 +234,8 @@ export default function PricingPage() {
                   ) : (
                     <button
                       onClick={() => handleUpgrade(plan.key)}
-                      className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                      disabled={loadingPlan === plan.key}
+                      className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-70 ${
                         plan.highlighted
                           ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 hover:shadow-lg"
                           : plan.key === "max"
@@ -238,8 +243,11 @@ export default function PricingPage() {
                           : "bg-gray-800 text-white hover:bg-gray-900"
                       }`}
                     >
-                      {plan.key === "enterprise" ? "Kontaktiere uns" : "Jetzt upgraden"}
-                      <ArrowRight className="w-4 h-4" />
+                      {loadingPlan === plan.key ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Wird geladen...</>
+                      ) : (
+                        <>{plan.key === "enterprise" ? "Kontaktiere uns" : "Jetzt upgraden"}<ArrowRight className="w-4 h-4" /></>
+                      )}
                     </button>
                   )}
                 </div>
