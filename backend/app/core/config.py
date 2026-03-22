@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import List
 
 
@@ -13,7 +14,7 @@ class Settings(BaseSettings):
     # Auth (JWT)
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     # API Keys
     GROQ_API_KEY: str = ""
@@ -31,14 +32,24 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     EMAILS_FROM_EMAIL: str = ""
 
-    # CORS
+    # CORS — accepts JSON array or comma-separated string
     ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "https://yourdomain.com"]
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_origins(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                import json
+                return json.loads(v)
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
-        # This tells Pydantic to ignore extra fields in .env instead of crashing
-        extra = "ignore" 
+        extra = "ignore"
 
 
 settings = Settings()
