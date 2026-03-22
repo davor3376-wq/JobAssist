@@ -24,13 +24,17 @@ class Settings(BaseSettings):
     ADZUNA_APP_ID: str = ""
     ADZUNA_APP_KEY: str = ""
 
-    # Email / SMTP
+    # Email — Brevo HTTP API (replaces SMTP, works on Railway free tier)
+    BREVO_API_KEY: str = ""
+    EMAILS_FROM_EMAIL: str = ""
+    EMAILS_FROM_NAME: str = "JobAssist"
+
+    # Legacy SMTP fields (unused but kept so existing env vars don't break startup)
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_TLS: bool = True
-    EMAILS_FROM_EMAIL: str = ""
 
     # CORS — comma-separated string, e.g. "https://app.vercel.app,http://localhost:5173"
     ALLOWED_ORIGINS: str = "http://localhost:5173"

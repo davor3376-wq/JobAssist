@@ -1,14 +1,15 @@
-import smtplib
 import logging
 import html as html_lib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from typing import List, Dict, Any
 from urllib.parse import urlparse
+
+import httpx
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def _safe_url(url: str) -> str:
@@ -67,28 +68,37 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
 
 
 def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]]) -> bool:
-    if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP not configured — skipping email send")
+    if not settings.BREVO_API_KEY:
+        logger.warning("BREVO_API_KEY not configured — skipping email send")
         return False
 
     if not jobs:
         logger.info(f"No jobs found for alert '{keywords}' — skipping email")
         return False
 
+    from_email = settings.EMAILS_FROM_EMAIL or "noreply@jobassist.app"
+    from_name = settings.EMAILS_FROM_NAME or "JobAssist"
+
+    html_body = _build_job_alert_html(keywords, location or "", jobs)
+
+    payload = {
+        "sender": {"name": from_name, "email": from_email},
+        "to": [{"email": to_email}],
+        "subject": f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'",
+        "htmlContent": html_body,
+    }
+
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'"
-        msg["From"] = settings.EMAILS_FROM_EMAIL or settings.SMTP_USER
-        msg["To"] = to_email
-
-        html = _build_job_alert_html(keywords, location or "", jobs)
-        msg.attach(MIMEText(html, "html"))
-
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_TLS:
-                server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(msg["From"], [to_email], msg.as_string())
+        with httpx.Client(timeout=15) as client:
+            response = client.post(
+                BREVO_SEND_URL,
+                json=payload,
+                headers={
+                    "api-key": settings.BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+            response.raise_for_status()
 
         logger.info(f"Job alert email sent to {to_email} ({len(jobs)} jobs for '{keywords}')")
         return True
