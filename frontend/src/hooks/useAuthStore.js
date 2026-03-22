@@ -13,9 +13,13 @@ const useAuthStore = create((set) => ({
 
   login: (accessToken, refreshToken) => {
     if (!accessToken) return;
+    // Clear previous user's cached data before storing new credentials
+    for (const k of ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "resumes", "job_alerts"]) {
+      localStorage.removeItem(k);
+    }
     localStorage.setItem("access_token", accessToken);
     if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
-    set({ token: accessToken, isHydrated: true });
+    set({ token: accessToken, user: null, isHydrated: true });
   },
 
   setAccessToken: (accessToken) => {
@@ -24,10 +28,9 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    ls.remove("auth_user");
-    ls.remove("init");
+    for (const k of ["access_token", "refresh_token", "auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "resumes", "job_alerts"]) {
+      localStorage.removeItem(k);
+    }
     set({ token: null, user: null, isHydrated: true });
   },
 
