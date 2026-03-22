@@ -33,6 +33,8 @@ class Settings(BaseSettings):
 
     # CORS — comma-separated string, e.g. "https://app.vercel.app,http://localhost:5173"
     ALLOWED_ORIGINS: str = "http://localhost:5173"
+    # Optional regex for dynamic origins like Vercel previews, e.g. "https://job-assist-.*\.vercel\.app"
+    ALLOWED_ORIGIN_REGEX: str = ""
 
     @property
     def allowed_origins_list(self) -> List[str]:
