@@ -278,8 +278,19 @@ export default function JobAlertsPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => jobAlertsApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["job-alerts"] }),
-    onError: () => toast.error("Fehler beim Aktualisieren"),
+    onMutate: async ({ id, data }) => {
+      await qc.cancelQueries({ queryKey: ["job-alerts"] });
+      const prev = qc.getQueryData(["job-alerts"]);
+      qc.setQueryData(["job-alerts"], (old = []) =>
+        old.map((a) => (a.id === id ? { ...a, ...data } : a))
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["job-alerts"], ctx.prev);
+      toast.error("Fehler beim Aktualisieren");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["job-alerts"] }),
   });
 
   const deleteMutation = useMutation({
