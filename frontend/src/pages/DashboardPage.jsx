@@ -58,7 +58,7 @@ export default function DashboardPage() {
     return "Guten Abend";
   };
 
-  const isLoading = !initData && !cachedJobs;
+  const isLoading = !initData && !jobs;
 
   return (
     <div className="max-w-5xl">

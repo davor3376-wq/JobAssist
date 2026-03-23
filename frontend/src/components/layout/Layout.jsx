@@ -201,7 +201,7 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 page-enter">
+          <div className="max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8">
             <Outlet />
           </div>
         </main>
