@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authApi } from "../services/api";
+import { authApi, initApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import AuthLayout from "../components/ui/AuthLayout";
+import queryClient from "../queryClient";
 
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
@@ -14,7 +15,13 @@ export default function RegisterPage() {
     try {
       await authApi.register(data);
       const res = await authApi.login({ email: data.email, password: data.password });
-      login(res.data.access_token);
+      login(res.data.access_token, res.data.refresh_token);
+      // Prefetch init so sidebar has data instantly
+      try {
+        const initRes = await initApi.fetch();
+        localStorage.setItem("init", JSON.stringify(initRes.data));
+        queryClient.setQueryData(["init"], initRes.data);
+      } catch {}
       navigate("/dashboard");
       toast.success("Konto erstellt! Willkommen.");
     } catch (err) {

@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authApi } from "../services/api";
+import { authApi, initApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import AuthLayout from "../components/ui/AuthLayout";
+import queryClient from "../queryClient";
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
@@ -15,8 +16,14 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(data);
       login(res.data.access_token, res.data.refresh_token);
-      // Cache user immediately so sidebar never flashes on first load
-      try { const meRes = await authApi.me(); setUser(meRes.data); } catch {}
+      // Prefetch init so sidebar has data instantly on dashboard load
+      try {
+        const initRes = await initApi.fetch();
+        const initData = initRes.data;
+        localStorage.setItem("init", JSON.stringify(initData));
+        queryClient.setQueryData(["init"], initData);
+        if (initData.me) setUser(initData.me);
+      } catch {}
       navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.detail || "Anmeldung fehlgeschlagen");

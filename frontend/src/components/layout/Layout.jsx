@@ -99,23 +99,35 @@ export default function Layout() {
           <div className="border-t border-gray-100 pt-4 space-y-1">
             {/* User info */}
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
-              {profile?.avatar ? (
-                <img
-                  src={profile.avatar}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-brand-100"
-                />
+              {me ? (
+                <>
+                  {profile?.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-brand-100"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
+                      {me.full_name || me.email?.split("@")[0]}
+                    </p>
+                    <p className="text-[10px] text-gray-400 truncate">{me.email}</p>
+                  </div>
+                </>
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-white" />
-                </div>
+                <>
+                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="h-3.5 w-24 bg-gray-200 rounded animate-pulse mb-1.5" />
+                    <div className="h-2.5 w-32 bg-gray-100 rounded animate-pulse" />
+                  </div>
+                </>
               )}
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
-                  {me?.full_name || me?.email?.split("@")[0]}
-                </p>
-                <p className="text-[10px] text-gray-400 truncate">{me?.email}</p>
-              </div>
             </div>
 
             {/* Logout */}
