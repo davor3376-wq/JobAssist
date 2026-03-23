@@ -26,8 +26,8 @@ function PrivateRoute({ children }) {
 function AppRoutes() {
   const location = useLocation();
   return (
-    // Key resets ErrorBoundary on every navigation so a stale error doesn't block other pages
-    <ErrorBoundary key={location.pathname}>
+    // resetKey lets ErrorBoundary clear its error state on navigation without remounting children
+    <ErrorBoundary resetKey={location.pathname}>
       <Suspense fallback={<div className="flex-1" />}>
         <Routes>
           {/* Public */}

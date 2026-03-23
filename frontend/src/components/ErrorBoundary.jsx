@@ -7,6 +7,13 @@ export default class ErrorBoundary extends Component {
     return { hasError: true, error };
   }
 
+  // Reset error state when the route changes without unmounting children
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return (
