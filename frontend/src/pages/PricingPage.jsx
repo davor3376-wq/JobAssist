@@ -11,7 +11,7 @@ const FEATURE_LABELS = {
   cover_letter: "Anschreiben / Monat",
   job_alerts: "Aktive Job-Alerts",
   ai_chat: "KI-Nachrichten / Monat",
-  job_search: "Stellensuchen / Tag",
+  job_search: "Jobsuche / Tag",
 };
 
 function formatLimit(v) {
@@ -36,7 +36,7 @@ const plans = [
     key: "pro",
     name: "Pro",
     subtitle: "Für aktive Bewerber",
-    price: "7,99",
+    price: "4,99",
     period: "/ Monat",
     icon: Zap,
     color: "blue",
