@@ -43,8 +43,8 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const { t, setLanguage } = useI18n();
   const fileInputRef = useRef(null);
-  const cachedProfile = (() => { try { const s = localStorage.getItem("settings_profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
-  const [avatar, setAvatar] = useState(cachedProfile?.avatar || null);
+  const readCachedProfile = () => { try { const s = localStorage.getItem("settings_profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
+  const [avatar, setAvatar] = useState(() => readCachedProfile()?.avatar || null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       try { localStorage.setItem("settings_profile", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: cachedProfile,
+    initialData: readCachedProfile,
     staleTime: 1000 * 60 * 3,
   });
 

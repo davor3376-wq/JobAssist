@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import useAuthStore from "./hooks/useAuthStore";
 import Layout from "./components/layout/Layout";
 import UpgradeModal from "./components/UpgradeModal";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const LoginPage      = lazy(() => import("./pages/LoginPage"));
 const RegisterPage   = lazy(() => import("./pages/RegisterPage"));
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <>
       <UpgradeModal />
+      <ErrorBoundary>
       <Suspense fallback={null}>
         <Routes>
           {/* Public */}
@@ -55,6 +57,7 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </>
   );
 }

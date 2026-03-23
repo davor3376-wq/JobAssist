@@ -19,7 +19,7 @@ const FEATURE_LABELS = {
 export default function useUsageGuard(feature) {
   const navigate = useNavigate();
   const { data: initData } = useQuery({ queryKey: ["init"] });
-  const { data: billingData } = useQuery({ queryKey: ["billing-overview"] });
+  const { data: billingData } = useQuery({ queryKey: ["billing-overview"], staleTime: 1000 * 60 * 2 });
 
   // Prefer billing data (refreshes more often), fall back to init
   const usageList = billingData?.usage || initData?.usage || [];

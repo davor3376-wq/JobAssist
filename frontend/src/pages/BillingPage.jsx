@@ -60,14 +60,13 @@ export default function BillingPage() {
     }
   }, [params]);
 
-  const cachedBilling = (() => { try { const s = localStorage.getItem("billing"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data, isLoading } = useQuery({
     queryKey: ["billing-overview"],
     queryFn: () => billingApi.overview().then((r) => {
       try { localStorage.setItem("billing", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: cachedBilling,
+    initialData: () => { try { const s = localStorage.getItem("billing"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: 60000,

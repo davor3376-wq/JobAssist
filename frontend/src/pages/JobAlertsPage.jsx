@@ -248,14 +248,13 @@ export default function JobAlertsPage() {
   const me = initData?.me;
   const { guardedRun, atLimit } = useUsageGuard("job_alerts");
 
-  const cachedAlerts = (() => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
     queryFn: () => jobAlertsApi.list().then(r => {
       try { localStorage.setItem("job_alerts", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: cachedAlerts,
+    initialData: () => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 1000 * 60 * 2,
   });
 

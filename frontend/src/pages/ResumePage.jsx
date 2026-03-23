@@ -12,14 +12,13 @@ export default function ResumePage() {
   const [uploading, setUploading] = useState(false);
   const { guardedRun } = useUsageGuard("cv_analysis");
 
-  const cachedResumes = (() => { try { const s = localStorage.getItem("resumes"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: resumes = [], isLoading } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then(r => {
       try { localStorage.setItem("resumes", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: cachedResumes,
+    initialData: () => { try { const s = localStorage.getItem("resumes"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 1000 * 60 * 2,
   });
 

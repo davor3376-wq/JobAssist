@@ -128,7 +128,6 @@ export default function Layout() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  const cachedInit = (() => { try { const s = localStorage.getItem("init"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: initData } = useQuery({
     queryKey: ["init"],
     queryFn: () => initApi.fetch().then((r) => {
@@ -136,7 +135,7 @@ export default function Layout() {
       setUser(r.data.me);
       return r.data;
     }),
-    initialData: cachedInit,
+    initialData: () => { try { const s = localStorage.getItem("init"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 1000 * 60 * 5,
   });
   const me = initData?.me ?? storedUser;

@@ -126,6 +126,9 @@ export default function JobsPage() {
     jobType: "",
     bezirk: "",
   });
+  // Tracks what was last submitted — drives the query key so cache is reused for identical searches
+  const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
+  const [recommendedEnabled, setRecommendedEnabled] = useState(false);
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
 
   const { data: initData } = useQuery({ queryKey: ["init"] });
@@ -149,34 +152,33 @@ export default function JobsPage() {
     data: recommendedResults = [],
     isFetching: recommendedLoading,
     error: recommendedError,
-    refetch: refetchRecommended,
   } = useQuery({
     queryKey: ["search", "recommended"],
     queryFn: () => jobApi.searchRecommended(1).then(r => r.data.jobs || []),
-    enabled: false,
+    enabled: recommendedEnabled,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
   });
 
-  // Custom search
+  // Custom search — query key includes submitted params so identical searches reuse cache
   const {
     data: customResults = [],
     isFetching: customLoading,
     error: customError,
-    refetch: refetchCustom,
   } = useQuery({
-    queryKey: ["search", "custom", customSearchParams],
+    queryKey: ["search", "custom", submittedCustomParams],
     retry: 1,
     queryFn: () => {
-      // Bezirk postal code takes priority — Adzuna understands Austrian postal codes
-      const loc = customSearchParams.bezirk || customSearchParams.location || "";
+      const loc = submittedCustomParams.bezirk || submittedCustomParams.location || "";
       return jobApi.searchCustom(
-        customSearchParams.keywords,
+        submittedCustomParams.keywords,
         loc,
-        customSearchParams.jobType,
+        submittedCustomParams.jobType,
         1
       ).then(r => r.data.jobs || []);
     },
-    enabled: false,
+    enabled: !!submittedCustomParams,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Create job mutation (manual form)
@@ -214,17 +216,23 @@ export default function JobsPage() {
       customSearchParams.keywords &&
       customResults.length > 0
     ) {
-      refetchCustom();
+      setSubmittedCustomParams({ ...customSearchParams });
     }
   }, [customSearchParams.bezirk]);
 
   const handleRecommendedSearch = () => {
-    guardSearch(() => refetchRecommended());
+    guardSearch(() => {
+      if (recommendedEnabled) {
+        qc.invalidateQueries({ queryKey: ["search", "recommended"] });
+      } else {
+        setRecommendedEnabled(true);
+      }
+    });
   };
 
   const handleCustomSearch = (e) => {
     e.preventDefault();
-    guardSearch(() => { setVisibleCount(5); refetchCustom(); });
+    guardSearch(() => { setVisibleCount(5); setSubmittedCustomParams({ ...customSearchParams }); });
   };
 
   const handleSaveSearchResult = (result) => {
@@ -878,7 +886,7 @@ export default function JobsPage() {
                   (searchTab === "recommended" ? recommendedResults : customResults) !==
                     undefined &&
                   (searchTab === "custom" &&
-                    customSearchParams.keywords) && (
+                    submittedCustomParams?.keywords) && (
                     <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-center">
                       <Briefcase className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">

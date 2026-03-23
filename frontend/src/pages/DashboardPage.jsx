@@ -36,14 +36,13 @@ export default function DashboardPage() {
   const resumes = initData?.resumes;
 
   // Jobs with localStorage cache for instant display
-  const cachedJobs = (() => { try { const s = localStorage.getItem("dashboard_jobs"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: jobs } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => jobApi.list().then(r => {
       try { localStorage.setItem("dashboard_jobs", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: cachedJobs,
+    initialData: () => { try { const s = localStorage.getItem("dashboard_jobs"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 1000 * 60 * 2,
   });
 
