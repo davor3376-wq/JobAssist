@@ -14,10 +14,18 @@ from app.models.usage import UsageRecord
 from app.models.user import User
 
 
+DAILY_FEATURES = {"job_search"}
+
+
 def _current_period_start() -> date:
     """First day of the current month."""
     today = date.today()
     return today.replace(day=1)
+
+
+def _period_for(feature: str) -> date:
+    """Return the period start date for a feature (daily or monthly)."""
+    return date.today() if feature in DAILY_FEATURES else _current_period_start()
 
 
 async def get_user_plan(db: AsyncSession, user_id: int) -> str:
@@ -32,7 +40,7 @@ async def get_user_plan(db: AsyncSession, user_id: int) -> str:
 
 
 async def get_usage_count(db: AsyncSession, user_id: int, feature: str) -> int:
-    period = _current_period_start()
+    period = _period_for(feature)
     result = await db.execute(
         select(UsageRecord.count).where(
             UsageRecord.user_id == user_id,
@@ -44,7 +52,7 @@ async def get_usage_count(db: AsyncSession, user_id: int, feature: str) -> int:
 
 
 async def increment_usage(db: AsyncSession, user_id: int, feature: str) -> None:
-    period = _current_period_start()
+    period = _period_for(feature)
     stmt = pg_insert(UsageRecord).values(
         user_id=user_id, feature=feature, period_start=period, count=1
     ).on_conflict_do_update(
@@ -98,17 +106,33 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
     from app.models.job_alert import JobAlert
 
     features = ["cv_analysis", "cover_letter", "job_alerts", "ai_chat", "job_search"]
-    period = _current_period_start()
+    monthly_period = _current_period_start()
+    daily_period = date.today()
 
-    # Fetch monthly usage counters
-    rows = await db.execute(
-        select(UsageRecord.feature, UsageRecord.count).where(
-            UsageRecord.user_id == user_id,
-            UsageRecord.feature.in_(features),
-            UsageRecord.period_start == period,
+    monthly_features = [f for f in features if f not in DAILY_FEATURES]
+    daily_features_list = [f for f in features if f in DAILY_FEATURES]
+
+    counts = {}
+
+    if monthly_features:
+        rows = await db.execute(
+            select(UsageRecord.feature, UsageRecord.count).where(
+                UsageRecord.user_id == user_id,
+                UsageRecord.feature.in_(monthly_features),
+                UsageRecord.period_start == monthly_period,
+            )
         )
-    )
-    counts = {row.feature: row.count for row in rows}
+        counts.update({row.feature: row.count for row in rows})
+
+    if daily_features_list:
+        rows = await db.execute(
+            select(UsageRecord.feature, UsageRecord.count).where(
+                UsageRecord.user_id == user_id,
+                UsageRecord.feature.in_(daily_features_list),
+                UsageRecord.period_start == daily_period,
+            )
+        )
+        counts.update({row.feature: row.count for row in rows})
 
     # Job alerts usage = actual alert count (not a monthly counter)
     alert_count_result = await db.execute(
