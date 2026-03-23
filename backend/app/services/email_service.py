@@ -67,6 +67,76 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
 </html>"""
 
 
+def _send_transactional_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Generic helper to send a single transactional email via Brevo."""
+    if not settings.BREVO_API_KEY:
+        logger.warning("BREVO_API_KEY not configured — skipping email send")
+        return False
+
+    from_email = settings.EMAILS_FROM_EMAIL or "noreply@jobassist.app"
+    from_name = settings.EMAILS_FROM_NAME or "JobAssist"
+
+    payload = {
+        "sender": {"name": from_name, "email": from_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_body,
+    }
+    try:
+        api_key = settings.BREVO_API_KEY.strip()
+        with httpx.Client(timeout=15) as client:
+            response = client.post(
+                BREVO_SEND_URL, json=payload,
+                headers={"api-key": api_key, "Content-Type": "application/json"},
+            )
+            if not response.is_success:
+                logger.error(f"Brevo response {response.status_code}: {response.text}")
+            response.raise_for_status()
+        logger.info(f"Email sent to {to_email}: {subject}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}", exc_info=True)
+        return False
+
+
+def send_verification_email(to_email: str, token: str) -> bool:
+    verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
+  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
+    <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
+      <h1 style="color:#fff;margin:0;font-size:22px;">E-Mail-Adresse bestätigen</h1>
+    </div>
+    <div style="padding:24px 32px;">
+      <p style="font-size:15px;color:#374151;">Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen:</p>
+      <a href="{html_lib.escape(verify_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">E-Mail bestätigen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 24 Stunden gültig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
+    </div>
+  </div>
+</body></html>"""
+    return _send_transactional_email(to_email, "JobAssist — E-Mail bestätigen", html)
+
+
+def send_password_reset_email(to_email: str, token: str) -> bool:
+    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
+  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
+    <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
+      <h1 style="color:#fff;margin:0;font-size:22px;">Passwort zurücksetzen</h1>
+    </div>
+    <div style="padding:24px 32px;">
+      <p style="font-size:15px;color:#374151;">Du hast eine Passwort-Zurücksetzung angefordert. Klicke auf den Button:</p>
+      <a href="{html_lib.escape(reset_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">Passwort zurücksetzen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 1 Stunde gültig. Falls du kein neues Passwort angefordert hast, ignoriere diese E-Mail.</p>
+    </div>
+  </div>
+</body></html>"""
+    return _send_transactional_email(to_email, "JobAssist — Passwort zurücksetzen", html)
+
+
 def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]]) -> bool:
     if not settings.BREVO_API_KEY:
         logger.warning("BREVO_API_KEY not configured — skipping email send")

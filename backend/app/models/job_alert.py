@@ -25,4 +25,4 @@ class JobAlert(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    user = relationship("User", backref="job_alerts")
+    user = relationship("User", back_populates="alerts")

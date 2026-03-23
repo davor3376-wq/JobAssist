@@ -209,13 +209,13 @@ export default function JobsPage() {
     },
   });
 
-  // Re-run search automatically when bezirk changes (if keywords are set and search tab is active)
+  // Re-run search automatically when bezirk changes (only if a search was already submitted)
   useEffect(() => {
     if (
       searchTab === "custom" &&
+      submittedCustomParams &&
       customSearchParams.bezirk &&
-      customSearchParams.keywords &&
-      customResults.length > 0
+      customSearchParams.keywords
     ) {
       setSubmittedCustomParams({ ...customSearchParams });
     }

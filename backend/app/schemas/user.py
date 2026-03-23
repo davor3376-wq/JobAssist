@@ -32,6 +32,7 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: Optional[str]
     is_active: bool
+    is_verified: bool = False
     created_at: datetime
     currency: str = "USD"
     location: str = "United States"

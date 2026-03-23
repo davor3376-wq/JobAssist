@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell, CreditCard, Menu, X } from "lucide-react";
 import useAuthStore from "../../hooks/useAuthStore";
 import clsx from "clsx";
@@ -213,6 +213,14 @@ export default function Layout() {
               <Outlet />
             </Suspense>
           </div>
+          <footer className="max-w-5xl mx-auto px-4 pb-6 md:px-8">
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
+              <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
+              <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
+              <Link to="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+              <Link to="/contact" className="hover:text-gray-600 transition-colors">Kontakt</Link>
+            </div>
+          </footer>
         </main>
       </div>
     </div>

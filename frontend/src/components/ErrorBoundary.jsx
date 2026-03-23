@@ -25,7 +25,8 @@ export default class ErrorBoundary extends Component {
           </div>
           <div className="text-center max-w-lg">
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Etwas ist schiefgelaufen</h2>
-            {this.state.error && (
+            <p className="text-sm text-gray-500 mb-3">Die Seite konnte nicht geladen werden.</p>
+            {import.meta.env.DEV && this.state.error && (
               <pre className="text-xs text-left bg-gray-100 text-red-600 rounded-lg p-3 mb-3 overflow-auto max-h-40">
                 {this.state.error.message}
               </pre>

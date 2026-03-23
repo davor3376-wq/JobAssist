@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { Save, MapPin, DollarSign, Briefcase, Target, Globe, Sliders, Camera, Trash2, User } from "lucide-react";
-import { settingsApi } from "../services/api";
+import { Save, MapPin, DollarSign, Briefcase, Target, Globe, Sliders, Camera, Trash2, User, AlertTriangle, Mail } from "lucide-react";
+import { settingsApi, authApi } from "../services/api";
+import useAuthStore from "../hooks/useAuthStore";
+import { useNavigate } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
 import { FormSkeleton } from "../components/PageSkeleton";
 
@@ -451,6 +453,125 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Email Verification Banner */}
+      <VerificationBanner />
+
+      {/* Danger Zone — Delete Account */}
+      <DeleteAccountSection />
+    </div>
+  );
+}
+
+function VerificationBanner() {
+  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const me = initData?.me;
+  const [sending, setSending] = useState(false);
+
+  if (!me || me.is_verified) return null;
+
+  const handleResend = async () => {
+    setSending(true);
+    try {
+      await authApi.resendVerification();
+      toast.success("Bestätigungs-E-Mail gesendet");
+    } catch {
+      toast.error("Fehler beim Senden");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-3">
+      <Mail className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <h3 className="text-sm font-semibold text-gray-900">E-Mail nicht bestätigt</h3>
+        <p className="text-xs text-gray-600 mt-1">Bitte bestätige deine E-Mail-Adresse, um alle Funktionen nutzen zu können.</p>
+        <button
+          onClick={handleResend}
+          disabled={sending}
+          className="mt-2 text-xs font-semibold text-amber-700 hover:text-amber-800 transition-colors disabled:opacity-50"
+        >
+          {sending ? "Wird gesendet..." : "Bestätigungs-E-Mail erneut senden"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeleteAccountSection() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [password, setPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+
+  const handleDelete = async () => {
+    if (!password) { toast.error("Bitte gib dein Passwort ein"); return; }
+    setDeleting(true);
+    try {
+      await authApi.deleteAccount(password);
+      toast.success("Konto wurde gelöscht");
+      logout();
+      navigate("/login");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Fehler beim Löschen des Kontos");
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="mt-10 border-t-2 border-red-100 pt-8">
+      <div className="flex items-start gap-3 mb-4">
+        <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+        <div>
+          <h2 className="font-semibold text-red-700">Konto löschen</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Alle deine Daten (Profil, Lebensläufe, Anschreiben, Jobs) werden unwiderruflich gelöscht.
+          </p>
+        </div>
+      </div>
+
+      {!showConfirm ? (
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors"
+        >
+          <Trash2 className="w-4 h-4" /> Konto endgültig löschen
+        </button>
+      ) : (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 space-y-4">
+          <p className="text-sm font-semibold text-red-800">
+            Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.
+          </p>
+          <div>
+            <label className="label text-red-700">Passwort zur Bestätigung</label>
+            <input
+              type="password"
+              className="input"
+              placeholder="Dein aktuelles Passwort"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleting ? "Wird gelöscht..." : "Unwiderruflich löschen"}
+            </button>
+            <button
+              onClick={() => { setShowConfirm(false); setPassword(""); }}
+              className="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

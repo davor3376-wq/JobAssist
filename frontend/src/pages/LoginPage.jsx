@@ -59,6 +59,11 @@ export default function LoginPage() {
             {...register("password", { required: "Passwort ist erforderlich" })}
           />
           {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>}
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-xs text-brand-600 hover:text-brand-700 transition-colors">
+              Passwort vergessen?
+            </Link>
+          </div>
         </div>
 
         <button type="submit" className="btn-primary w-full !py-3 text-base" disabled={isSubmitting}>

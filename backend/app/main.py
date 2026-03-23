@@ -13,6 +13,7 @@ import re
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 from app.core.config import settings
+from sqlalchemy import text
 from app.core.database import engine, Base, get_db
 from app.core.security import get_current_user
 from app.models.user import User
@@ -25,6 +26,10 @@ async def lifespan(app: FastAPI):
     # Startup: create DB tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all) # (This command generates the database tables based on your SQLAlchemy models)
+        # Add is_verified column if missing (for existing databases)
+        await conn.execute(
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE")
+        )
     yield
     # Shutdown
     await engine.dispose() # (This command safely closes the active database connection pool)

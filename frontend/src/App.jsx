@@ -21,6 +21,9 @@ const TermsPage      = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage    = lazy(() => import("./pages/PrivacyPage"));
 const ImpressumPage  = lazy(() => import("./pages/ImpressumPage"));
 const ContactPage    = lazy(() => import("./pages/ContactPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage  = lazy(() => import("./pages/ResetPasswordPage"));
+const VerifyEmailPage    = lazy(() => import("./pages/VerifyEmailPage"));
 
 function PrivateRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -40,6 +43,9 @@ function AppRoutes() {
         <Route path="/privacy" element={<Suspense fallback={null}><PrivacyPage /></Suspense>} />
         <Route path="/impressum" element={<Suspense fallback={null}><ImpressumPage /></Suspense>} />
         <Route path="/contact" element={<Suspense fallback={null}><ContactPage /></Suspense>} />
+        <Route path="/forgot-password" element={<Suspense fallback={null}><ForgotPasswordPage /></Suspense>} />
+        <Route path="/reset-password" element={<Suspense fallback={null}><ResetPasswordPage /></Suspense>} />
+        <Route path="/verify-email" element={<Suspense fallback={null}><VerifyEmailPage /></Suspense>} />
 
         {/* Protected — Layout has its own Suspense around Outlet */}
         <Route

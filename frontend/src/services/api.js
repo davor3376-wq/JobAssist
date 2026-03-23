@@ -139,6 +139,11 @@ export const authApi = {
     if (refresh_token) return api.post("/auth/logout", { refresh_token });
     return Promise.resolve();
   },
+  verifyEmail: (token) => api.post("/auth/verify-email", { token }),
+  resendVerification: () => api.post("/auth/resend-verification"),
+  forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (token, new_password) => api.post("/auth/reset-password", { token, new_password }),
+  deleteAccount: (password) => api.post("/auth/delete-account", { password }),
 };
 
 // --- Resumes ---
