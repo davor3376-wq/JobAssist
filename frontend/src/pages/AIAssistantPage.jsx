@@ -84,31 +84,31 @@ export default function AIAssistantPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col animate-slide-up" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="max-w-4xl mx-auto flex flex-col animate-slide-up h-[calc(100svh-160px)] md:h-[calc(100vh-120px)]">
       {/* Header */}
-      <div className="mb-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+      <div className="mb-3 flex-shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
               KI-Bewerbungsassistent
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 mt-0.5 text-sm sm:text-base hidden sm:block">
               Dein intelligenter Helfer für Bewerbungen in Österreich
             </p>
           </div>
           {messages.length > 0 && (
             <button
               onClick={handleClear}
-              className="px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+              className="p-2 sm:px-3 sm:py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-1.5 flex-shrink-0"
             >
               <Trash2 className="w-4 h-4" />
-              Chat leeren
+              <span className="hidden sm:inline">Chat leeren</span>
             </button>
           )}
         </div>
 
         {/* Resume context selector */}
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-500">Kontext:</span>
           <select
             value={selectedResumeId || ""}
@@ -126,27 +126,27 @@ export default function AIAssistantPage() {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 mb-4">
+      <div className="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 mb-3 min-h-0">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-4">
-              <Bot className="w-8 h-8 text-white" />
+          <div className="flex flex-col items-center justify-center h-full p-4 sm:p-8">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-3 sm:mb-4">
+              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">Hallo! Wie kann ich dir helfen?</h3>
-            <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
+            <h3 className="font-semibold text-gray-800 mb-1 text-sm sm:text-base">Hallo! Wie kann ich dir helfen?</h3>
+            <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 text-center max-w-md">
               Ich bin dein KI-Bewerbungsassistent für Österreich. Stelle mir Fragen zu Bewerbungen, Lebensläufen, Motivationsschreiben oder Vorstellungsgesprächen.
             </p>
 
             {/* Suggestion chips */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 w-full max-w-2xl">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s.label}
                   onClick={() => handleSend(s.prompt)}
-                  className="flex items-center gap-2 px-3 py-3 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left min-w-0"
+                  className="flex items-center gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left min-w-0"
                 >
-                  <s.icon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-sm font-medium text-gray-700 truncate">{s.label}</span>
+                  <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{s.label}</span>
                 </button>
               ))}
             </div>
@@ -199,13 +199,13 @@ export default function AIAssistantPage() {
       </div>
 
       {/* Input area */}
-      <div className="flex-shrink-0 bg-white border border-gray-200 rounded-lg p-3 flex items-end gap-2">
+      <div className="flex-shrink-0 bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3 flex items-end gap-2">
         <textarea
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Stelle eine Frage zu deiner Bewerbung..."
+          placeholder="Stelle eine Frage..."
           rows={1}
           className="flex-1 resize-none border-0 focus:outline-none text-sm leading-relaxed max-h-32"
           style={{ minHeight: "36px" }}
@@ -213,10 +213,10 @@ export default function AIAssistantPage() {
         <button
           onClick={() => handleSend()}
           disabled={!input.trim() || chatMutation.isPending}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 flex-shrink-0"
+          className="p-2 sm:px-4 sm:py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 flex-shrink-0"
         >
           <Send className="w-4 h-4" />
-          <span className="text-sm font-medium">Senden</span>
+          <span className="hidden sm:inline text-sm font-medium">Senden</span>
         </button>
       </div>
     </div>
