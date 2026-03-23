@@ -29,10 +29,10 @@ export default function ContactPage() {
           </div>
 
           <a
-            href="mailto:kontakt@jobassist.app"
+            href="mailto:jobassistsupport@gmail.com"
             className="block w-full text-center py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
           >
-            kontakt@jobassist.app
+            jobassistsupport@gmail.com
           </a>
 
           <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">

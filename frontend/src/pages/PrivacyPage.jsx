@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-bold text-gray-900 mb-3">1. Verantwortliche Stelle</h2>
             <p>
-              Verantwortlich für die Datenverarbeitung ist der Betreiber von JobAssist (siehe <Link to="/impressum" className="text-blue-600 hover:underline">Impressum</Link>). Bei Fragen zum Datenschutz erreichst du uns unter <strong>kontakt@jobassist.app</strong>.
+              Verantwortlich für die Datenverarbeitung ist der Betreiber von JobAssist (siehe <Link to="/impressum" className="text-blue-600 hover:underline">Impressum</Link>). Bei Fragen zum Datenschutz erreichst du uns unter <strong>jobassistsupport@gmail.com</strong>.
             </p>
           </section>
 
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
               <li><strong>Widerspruch</strong> — Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
             </ul>
             <p className="mt-2">
-              Zur Ausübung deiner Rechte schreibe an <strong>kontakt@jobassist.app</strong>. Wir antworten innerhalb von 30 Tagen.
+              Zur Ausübung deiner Rechte schreibe an <strong>jobassistsupport@gmail.com</strong>. Wir antworten innerhalb von 30 Tagen.
             </p>
           </section>
 

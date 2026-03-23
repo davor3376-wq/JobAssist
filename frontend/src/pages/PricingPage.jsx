@@ -108,7 +108,7 @@ export default function PricingPage() {
   const handleUpgrade = async (planKey) => {
     if (!token) { navigate("/register"); return; }
     if (planKey === "enterprise") {
-      window.location.href = "mailto:kontakt@jobassist.app?subject=Enterprise-Anfrage";
+      window.location.href = "mailto:jobassistsupport@gmail.com?subject=Enterprise-Anfrage";
       return;
     }
     setLoadingPlan(planKey);

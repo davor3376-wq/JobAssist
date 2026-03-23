@@ -17,36 +17,24 @@ export default function ImpressumPage() {
             <h2 className="text-lg font-bold text-gray-900 mb-4">Unternehmensangaben</h2>
             <dl className="space-y-3 text-sm">
               <div className="flex flex-col sm:flex-row sm:gap-4">
-                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Unternehmensbezeichnung</dt>
-                <dd className="text-gray-600">[Vor- und Nachname] — Einzelunternehmen</dd>
+                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Name</dt>
+                <dd className="text-gray-600">Davor Radeski</dd>
               </div>
               <div className="flex flex-col sm:flex-row sm:gap-4">
                 <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Unternehmensgegenstand</dt>
                 <dd className="text-gray-600">IT-Dienstleistungen / Softwareentwicklung</dd>
               </div>
               <div className="flex flex-col sm:flex-row sm:gap-4">
-                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Rechtsform</dt>
-                <dd className="text-gray-600">Einzelunternehmen (Kleingewerbe gem. § 1 Abs. 2 GewO)</dd>
+                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Status</dt>
+                <dd className="text-gray-600">Nicht gewerblich registriert — privates Projekt</dd>
               </div>
               <div className="flex flex-col sm:flex-row sm:gap-4">
                 <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Anschrift</dt>
-                <dd className="text-gray-600">[Straße und Hausnummer]<br />[PLZ Ort], Österreich</dd>
+                <dd className="text-gray-600">Österreich</dd>
               </div>
               <div className="flex flex-col sm:flex-row sm:gap-4">
                 <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">E-Mail</dt>
-                <dd className="text-gray-600">kontakt@jobassist.app</dd>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:gap-4">
-                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">UID-Nr.</dt>
-                <dd className="text-gray-600">[ATU00000000] (falls vorhanden)</dd>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:gap-4">
-                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">GISA-Zahl</dt>
-                <dd className="text-gray-600">[wird nach Gewerbeanmeldung ergänzt]</dd>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:gap-4">
-                <dt className="font-semibold text-gray-900 sm:w-48 flex-shrink-0">Zuständige Behörde</dt>
-                <dd className="text-gray-600">Bezirkshauptmannschaft / Magistrat [Ort]</dd>
+                <dd className="text-gray-600">jobassistsupport@gmail.com</dd>
               </div>
             </dl>
           </section>
@@ -81,12 +69,6 @@ export default function ImpressumPage() {
             </p>
           </section>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-gray-900 mb-1">Hinweis</p>
-            <p className="text-gray-600">
-              Die mit [Klammern] gekennzeichneten Angaben sind Platzhalter und müssen vor Veröffentlichung mit deinen tatsächlichen Unternehmensdaten ergänzt werden.
-            </p>
-          </div>
         </div>
       </div>
     </div>

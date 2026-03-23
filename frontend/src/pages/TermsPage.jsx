@@ -65,7 +65,7 @@ export default function TermsPage() {
                 Da es sich bei JobAssist um einen <strong>digitalen Dienst</strong> handelt, der sofort nach der Zahlung bereitgestellt wird, stimmst du mit dem Kauf ausdrücklich zu, dass die Leistung sofort beginnt, und bestätigst, dass du damit dein Widerrufsrecht verlierst, sobald der Dienst vollständig erbracht oder die KI-Funktionen genutzt wurden (§ 18 Abs. 1 Z 11 FAGG).
               </p>
               <p className="mt-2">
-                Wurde der Dienst noch nicht genutzt (keine KI-Analyse, kein Anschreiben generiert, kein KI-Chat), kannst du innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Der Widerruf ist per E-Mail an <strong>kontakt@jobassist.app</strong> zu richten.
+                Wurde der Dienst noch nicht genutzt (keine KI-Analyse, kein Anschreiben generiert, kein KI-Chat), kannst du innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Der Widerruf ist per E-Mail an <strong>jobassistsupport@gmail.com</strong> zu richten.
               </p>
             </div>
           </section>
