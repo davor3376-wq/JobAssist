@@ -169,6 +169,7 @@ export default function JobsPage() {
     queryKey: ["search", "custom", submittedCustomParams],
     retry: 1,
     queryFn: () => {
+      if (!submittedCustomParams) return [];
       const loc = submittedCustomParams.bezirk || submittedCustomParams.location || "";
       return jobApi.searchCustom(
         submittedCustomParams.keywords,

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import useAuthStore from "./hooks/useAuthStore";
 import Layout from "./components/layout/Layout";
 import UpgradeModal from "./components/UpgradeModal";
@@ -23,12 +23,12 @@ function PrivateRoute({ children }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
-export default function App() {
+function AppRoutes() {
+  const location = useLocation();
   return (
-    <>
-      <UpgradeModal />
-      <ErrorBoundary>
-      <Suspense fallback={null}>
+    // Key resets ErrorBoundary on every navigation so a stale error doesn't block other pages
+    <ErrorBoundary key={location.pathname}>
+      <Suspense fallback={<div className="flex-1" />}>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -57,7 +57,15 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
-      </ErrorBoundary>
+    </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      <UpgradeModal />
+      <AppRoutes />
     </>
   );
 }
