@@ -80,6 +80,12 @@ export default function LoginPage() {
           Jetzt registrieren
         </Link>
       </p>
+
+      <div className="flex justify-center gap-4 mt-6 text-xs text-gray-400">
+        <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
+        <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
+        <Link to="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+      </div>
     </AuthLayout>
   );
 }

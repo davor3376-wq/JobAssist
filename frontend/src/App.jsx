@@ -17,6 +17,10 @@ const AIAssistantPage = lazy(() => import("./pages/AIAssistantPage"));
 const JobAlertsPage  = lazy(() => import("./pages/JobAlertsPage"));
 const PricingPage    = lazy(() => import("./pages/PricingPage"));
 const BillingPage    = lazy(() => import("./pages/BillingPage"));
+const TermsPage      = lazy(() => import("./pages/TermsPage"));
+const PrivacyPage    = lazy(() => import("./pages/PrivacyPage"));
+const ImpressumPage  = lazy(() => import("./pages/ImpressumPage"));
+const ContactPage    = lazy(() => import("./pages/ContactPage"));
 
 function PrivateRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -32,6 +36,10 @@ function AppRoutes() {
         <Route path="/login" element={<Suspense fallback={null}><LoginPage /></Suspense>} />
         <Route path="/register" element={<Suspense fallback={null}><RegisterPage /></Suspense>} />
         <Route path="/pricing" element={<Suspense fallback={null}><PricingPage /></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={null}><TermsPage /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={null}><PrivacyPage /></Suspense>} />
+        <Route path="/impressum" element={<Suspense fallback={null}><ImpressumPage /></Suspense>} />
+        <Route path="/contact" element={<Suspense fallback={null}><ContactPage /></Suspense>} />
 
         {/* Protected — Layout has its own Suspense around Outlet */}
         <Route

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Star, Zap, Crown, Building2, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { billingApi } from "../services/api";
@@ -272,6 +272,14 @@ export default function PricingPage() {
         <p className="text-center text-xs text-gray-400 mt-10">
           Alle Preise inkl. MwSt. Jederzeit kündbar. Keine versteckten Kosten.
         </p>
+
+        {/* Legal footer */}
+        <div className="flex flex-wrap justify-center gap-4 mt-6 text-xs text-gray-400">
+          <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
+          <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
+          <Link to="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+          <Link to="/contact" className="hover:text-gray-600 transition-colors">Kontakt</Link>
+        </div>
       </div>
     </div>
   );
