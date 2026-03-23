@@ -31,15 +31,9 @@ export default {
         'glow': '0 0 20px rgba(99, 102, 241, 0.15)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.15s ease-out',
-        'slide-up': 'fadeIn 0.15s ease-out',
-        'slide-in': 'fadeIn 0.15s ease-out',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
+        'fade-in': 'none',
+        'slide-up': 'none',
+        'slide-in': 'none',
       },
     },
   },
