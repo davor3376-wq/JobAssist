@@ -30,7 +30,16 @@
       "Bash(\"C:\\\\Users\\\\davor\\\\Downloads\\\\Projects\\\\Scripts\\\\SaaS_Project\\\\backend\\\\Procfile\")",
       "Bash(grep -r \"dangerouslySetInnerHTML\\\\|innerHTML\" frontend/src --include=*.jsx --include=*.js)",
       "Bash(grep -B5 \"@router\\\\|@app\" backend/app/api/routes/*.py backend/app/main.py)",
-      "Bash(grep -n \"eval\\\\|Function\\\\|dangerously\\\\|innerHTML\" frontend/src -r --include=*.jsx --include=*.js)"
+      "Bash(grep -n \"eval\\\\|Function\\\\|dangerously\\\\|innerHTML\" frontend/src -r --include=*.jsx --include=*.js)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/frontend/src -type f \\\\\\(-name *.js -o -name *.jsx -o -name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(xargs grep:*)",
+      "Bash(npx -y acorn --ecma2020 --module --allow-import-export-everywhere src/pages/ResumePage.jsx)",
+      "Bash(npx vite:*)",
+      "Bash(cd:*)",
+      "Bash(wc -l /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/frontend/src/**/*.jsx /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/frontend/src/**/*.js)"
     ]
   }
 }

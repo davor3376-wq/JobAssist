@@ -1,17 +1,17 @@
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
-from app.main import limiter
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime, timezone, timedelta
 import logging
+from datetime import datetime, timezone, timedelta
 
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from sqlalchemy import select, func as sa_func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.main import limiter
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.config import settings
 from app.core.usage import get_user_plan
 from app.core.plans import get_limit
-from sqlalchemy import func as sa_func
 from app.models.user import User
 from app.models.job_alert import JobAlert
 from app.schemas.job_alert import JobAlertCreate, JobAlertUpdate, JobAlertOut
@@ -21,6 +21,10 @@ from app.services.email_service import send_job_alert_email
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# --- HELPER FOR NEON COMPATIBILITY ---
+def get_naive_now():
+    """Returns current UTC time without timezone info (Naive)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 @router.get("/", response_model=list[JobAlertOut])
 async def list_alerts(
@@ -28,7 +32,9 @@ async def list_alerts(
     current_user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(JobAlert).where(JobAlert.user_id == current_user.id).order_by(JobAlert.created_at.desc())
+        select(JobAlert)
+        .where(JobAlert.user_id == current_user.id)
+        .order_by(JobAlert.created_at.desc())
     )
     return result.scalars().all()
 
@@ -42,6 +48,7 @@ async def create_alert(
     # Check job alert limit based on plan
     plan = await get_user_plan(db, current_user.id)
     limit = get_limit(plan, "job_alerts")
+    
     if limit != -1:
         count_result = await db.execute(
             select(sa_func.count()).where(JobAlert.user_id == current_user.id)
@@ -60,6 +67,7 @@ async def create_alert(
                 },
             )
 
+    # Initialize new alert with naive timestamps
     alert = JobAlert(
         user_id=current_user.id,
         keywords=payload.keywords,
@@ -67,6 +75,8 @@ async def create_alert(
         job_type=payload.job_type,
         email=current_user.email,
         frequency=payload.frequency,
+        manual_refresh_count=0,
+        manual_refresh_window_start=get_naive_now()
     )
     db.add(alert)
     await db.commit()
@@ -89,11 +99,8 @@ async def update_alert(
         raise HTTPException(status_code=404, detail="Alert not found")
 
     update_data = payload.model_dump(exclude_unset=True)
-    if "keywords" in update_data:   alert.keywords  = update_data["keywords"]
-    if "location" in update_data:   alert.location  = update_data["location"]
-    if "job_type" in update_data:   alert.job_type  = update_data["job_type"]
-    if "frequency" in update_data:  alert.frequency = update_data["frequency"]
-    if "is_active" in update_data:  alert.is_active = update_data["is_active"]
+    for key, value in update_data.items():
+        setattr(alert, key, value)
 
     await db.commit()
     await db.refresh(alert)
@@ -136,23 +143,28 @@ async def run_alert_now(
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    now = datetime.now(timezone.utc)
+    # Force 'now' to be naive immediately
+    now = get_naive_now()
+    
+    # window_start from Neon is already naive
     window_start = alert.manual_refresh_window_start
-    # Make window_start timezone-aware if it's naive
-    if window_start and window_start.tzinfo is None:
-        window_start = window_start.replace(tzinfo=timezone.utc)
+
+    # Safety: ensure window_start is naive if it was somehow loaded with TZ info
+    if window_start and window_start.tzinfo is not None:
+        window_start = window_start.replace(tzinfo=None)
 
     window_expired = window_start is None or (now - window_start) >= timedelta(hours=REFRESH_WINDOW_HOURS)
 
     if window_expired:
         alert.manual_refresh_count = 0
         alert.manual_refresh_window_start = now
-
+    
+    # Check if they hit the limit within the current window
     if alert.manual_refresh_count >= REFRESH_MAX:
         reset_at = window_start + timedelta(hours=REFRESH_WINDOW_HOURS)
         seconds_left = int((reset_at - now).total_seconds())
-        hours_left = seconds_left // 3600
-        minutes_left = (seconds_left % 3600) // 60
+        hours_left = max(0, seconds_left // 3600)
+        minutes_left = max(0, (seconds_left % 3600) // 60)
         raise HTTPException(
             status_code=429,
             detail=f"Maximale Aktualisierungen erreicht ({REFRESH_MAX}/{REFRESH_WINDOW_HOURS}h). "
@@ -160,14 +172,22 @@ async def run_alert_now(
         )
 
     alert.manual_refresh_count += 1
+    # This commit will now succeed because alert.manual_refresh_window_start is naive
     await db.commit()
 
-    background_tasks.add_task(_run_and_send, alert_id, alert.keywords, alert.location, alert.job_type, alert.email)
-    remaining = REFRESH_MAX - alert.manual_refresh_count
+    background_tasks.add_task(
+        _run_and_send, 
+        alert_id, 
+        alert.keywords, 
+        alert.location, 
+        alert.job_type, 
+        alert.email
+    )
+    
     return {
         "message": "Suche gestartet. Du erhältst in Kürze eine E-Mail.",
         "refreshes_used": alert.manual_refresh_count,
-        "refreshes_remaining": remaining,
+        "refreshes_remaining": REFRESH_MAX - alert.manual_refresh_count,
     }
 
 
@@ -199,10 +219,20 @@ async def test_email(current_user: User = Depends(get_current_user)):
 
 
 async def _run_and_send(alert_id: int, keywords: str, location: str, job_type: str, email: str):
-    import asyncio
     try:
-        results = await search_jobs(keywords=keywords, location=location or "", job_type=job_type or "", page=1)
+        results = await search_jobs(
+            keywords=keywords, 
+            location=location or "", 
+            job_type=job_type or "", 
+            page=1
+        )
         jobs = results.get("jobs", [])
-        await asyncio.to_thread(send_job_alert_email, to_email=email, keywords=keywords, location=location or "", jobs=jobs)
+        await asyncio.to_thread(
+            send_job_alert_email, 
+            to_email=email, 
+            keywords=keywords, 
+            location=location or "", 
+            jobs=jobs
+        )
     except Exception as e:
         logger.error(f"Alert run failed for alert {alert_id}: {e}", exc_info=True)
