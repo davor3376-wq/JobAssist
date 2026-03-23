@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell, CreditCard, Menu, X } from "lucide-react";
 import useAuthStore from "../../hooks/useAuthStore";
@@ -201,8 +201,10 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8">
-            <Outlet />
+          <div className="max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 page-enter">
+            <Suspense fallback={null}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>

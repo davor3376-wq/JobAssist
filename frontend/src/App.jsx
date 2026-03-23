@@ -26,37 +26,34 @@ function PrivateRoute({ children }) {
 function AppRoutes() {
   const location = useLocation();
   return (
-    // resetKey lets ErrorBoundary clear its error state on navigation without remounting children
     <ErrorBoundary resetKey={location.pathname}>
-      <Suspense fallback={<div className="flex-1" />}>
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
+      <Routes>
+        {/* Public — wrapped in own Suspense so Layout is never affected */}
+        <Route path="/login" element={<Suspense fallback={null}><LoginPage /></Suspense>} />
+        <Route path="/register" element={<Suspense fallback={null}><RegisterPage /></Suspense>} />
+        <Route path="/pricing" element={<Suspense fallback={null}><PricingPage /></Suspense>} />
 
-          {/* Protected */}
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Layout />
-              </PrivateRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="resume" element={<ResumePage />} />
-            <Route path="jobs" element={<JobsPage />} />
-            <Route path="jobs/:jobId" element={<JobDetailPage />} />
-            <Route path="cover-letter" element={<CoverLetterPage />} />
-            <Route path="ai-assistant" element={<AIAssistantPage />} />
-            <Route path="job-alerts" element={<JobAlertsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="billing" element={<BillingPage />} />
-          </Route>
-        </Routes>
-      </Suspense>
+        {/* Protected — Layout has its own Suspense around Outlet */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="resume" element={<ResumePage />} />
+          <Route path="jobs" element={<JobsPage />} />
+          <Route path="jobs/:jobId" element={<JobDetailPage />} />
+          <Route path="cover-letter" element={<CoverLetterPage />} />
+          <Route path="ai-assistant" element={<AIAssistantPage />} />
+          <Route path="job-alerts" element={<JobAlertsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="billing" element={<BillingPage />} />
+        </Route>
+      </Routes>
     </ErrorBoundary>
   );
 }
