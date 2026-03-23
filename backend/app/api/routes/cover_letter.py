@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -38,9 +39,10 @@ async def generate(
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
 
-    letter = generate_cover_letter(
-        resume_text=resume.raw_text,
-        job_description=job.description,
+    letter = await asyncio.to_thread(
+        generate_cover_letter,
+        resume_text=resume.raw_text or "",
+        job_description=job.description or "",
         company=job.company or "",
         role=job.role or "",
         tone=payload.tone,

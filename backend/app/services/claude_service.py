@@ -10,19 +10,33 @@ MODEL = "llama-3.3-70b-versatile"
 
 def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperature: float = 0.3, **kwargs) -> str:
     """Base helper to call Groq and return text."""
+    from fastapi import HTTPException
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
 
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        **kwargs,
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs,
+        )
+        content = response.choices[0].message.content
+        if not content:
+            raise HTTPException(status_code=502, detail="KI hat keine Antwort zurückgegeben. Bitte erneut versuchen.")
+        return content.strip()
+    except HTTPException:
+        raise
+    except Exception as e:
+        err = str(e).lower()
+        if "rate" in err or "429" in err:
+            raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte in einigen Sekunden erneut versuchen.")
+        if "api key" in err or "authentication" in err or "401" in err:
+            raise HTTPException(status_code=503, detail="KI-Dienst temporär nicht verfügbar.")
+        raise HTTPException(status_code=502, detail="Fehler beim KI-Dienst. Bitte erneut versuchen.")
 
 
 def _strip_code_fences(text: str) -> str:
@@ -137,16 +151,7 @@ Stellenbeschreibung:
 {job_description}
 \"\"\"
 """
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=2048,
-        temperature=0,
-    )
-    result = _strip_code_fences(response.choices[0].message.content)
+    result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0))
     try:
         match = json.loads(result)
     except json.JSONDecodeError:
