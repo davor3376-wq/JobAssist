@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2 } from "lucide-react";
+import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2, Lock } from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
 
 const SUGGESTIONS = [
-  { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?" },
+  { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
   { icon: Briefcase, label: "Bewerbungstipps", prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
   { icon: GraduationCap, label: "Praktikum finden", prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
   { icon: Euro, label: "Gehaltsauskunft", prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
@@ -139,16 +139,34 @@ export default function AIAssistantPage() {
 
             {/* Suggestion chips */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 w-full max-w-2xl">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s.label}
-                  onClick={() => handleSend(s.prompt)}
-                  className="flex items-center gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left min-w-0"
-                >
-                  <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{s.label}</span>
-                </button>
-              ))}
+              {SUGGESTIONS.map((s) => {
+                const locked = s.requiresResume && uploadedResumes.length === 0;
+                return (
+                  <button
+                    key={s.label}
+                    onClick={() => {
+                      if (locked) {
+                        toast("Lade zuerst einen Lebenslauf hoch um diese Funktion zu nutzen.", { icon: "📄" });
+                        return;
+                      }
+                      handleSend(s.prompt);
+                    }}
+                    className={`flex items-center gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-lg border transition-all text-left min-w-0 ${
+                      locked
+                        ? "border-gray-100 bg-gray-50 cursor-not-allowed"
+                        : "border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300"
+                    }`}
+                  >
+                    {locked
+                      ? <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 flex-shrink-0" />
+                      : <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                    }
+                    <span className={`text-xs sm:text-sm font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
+                      {s.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (
