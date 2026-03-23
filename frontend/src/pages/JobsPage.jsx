@@ -372,39 +372,39 @@ export default function JobsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-8 animate-slide-up">
+      <div className="flex items-center justify-between mb-4 sm:mb-8 animate-slide-up">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
             Bewerbungen
           </h1>
-          <p className="text-gray-600 mt-1">Verwalte deine Bewerbungen und finde neue Stellenangebote</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Verwalte deine Bewerbungen und finde neue Stellenangebote</p>
         </div>
       </div>
 
       {/* Main Tabs */}
-      <div className="mb-8 flex gap-4 border-b border-gray-200 animate-slide-up">
+      <div className="mb-4 sm:mb-8 flex gap-1 sm:gap-4 border-b border-gray-200 animate-slide-up">
         <button
           onClick={() => setMainTab("applications")}
-          className={`pb-4 px-4 font-medium transition-colors ${
+          className={`pb-3 sm:pb-4 px-2 sm:px-4 text-sm font-medium transition-colors ${
             mainTab === "applications"
               ? "border-b-2 border-blue-600 text-blue-600"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <CheckCircle className="w-4 h-4" />
-            Meine Bewerbungen
+            <span className="hidden xs:inline">Meine </span>Bewerbungen
           </div>
         </button>
         <button
           onClick={() => setMainTab("search")}
-          className={`pb-4 px-4 font-medium transition-colors ${
+          className={`pb-3 sm:pb-4 px-2 sm:px-4 text-sm font-medium transition-colors ${
             mainTab === "search"
               ? "border-b-2 border-blue-600 text-blue-600"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Search className="w-4 h-4" />
             Stellen finden
           </div>
@@ -446,27 +446,28 @@ export default function JobsPage() {
                 <div className="flex border-b border-gray-200 mb-6">
                   <button
                     onClick={() => setSearchTab("recommended")}
-                    className={`flex-1 px-4 py-3 font-medium text-sm transition-all ${
+                    className={`flex-1 px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm transition-all ${
                       searchTab === "recommended"
                         ? "border-b-2 border-blue-600 text-blue-600"
                         : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Empfohlen (basierend auf Präferenzen)
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                      <Zap className="w-4 h-4 flex-shrink-0" />
+                      <span className="sm:hidden">Empfohlen</span>
+                      <span className="hidden sm:inline">Empfohlen (basierend auf Präferenzen)</span>
                     </div>
                   </button>
                   <button
                     onClick={() => setSearchTab("custom")}
-                    className={`flex-1 px-4 py-3 font-medium text-sm transition-all ${
+                    className={`flex-1 px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm transition-all ${
                       searchTab === "custom"
                         ? "border-b-2 border-blue-600 text-blue-600"
                         : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <Search className="w-4 h-4" />
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                      <Search className="w-4 h-4 flex-shrink-0" />
                       Eigene Suche
                     </div>
                   </button>
