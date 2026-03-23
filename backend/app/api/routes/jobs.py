@@ -7,6 +7,7 @@ import logging
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.usage import require_usage
 from app.models.user import User
 from app.models.user_profile import UserProfile
 from app.models.job import Job
@@ -121,6 +122,7 @@ async def search_recommended_jobs(
     page: int = Query(1, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("job_search")),
 ):
     """Search jobs based on user's preferences."""
     try:
@@ -157,6 +159,7 @@ async def search_custom_jobs(
     page: int = Query(1, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("job_search")),
 ):
     """Search jobs with custom parameters."""
     try:

@@ -3,27 +3,31 @@
 PLAN_LIMITS = {
     "basic": {
         "cv_analysis": 2,
-        "cover_letter": 1,
+        "cover_letter": 3,
         "job_alerts": 1,
         "ai_chat": 15,
+        "job_search": 5,
     },
     "pro": {
         "cv_analysis": 15,
-        "cover_letter": 10,
+        "cover_letter": 25,
         "job_alerts": 10,
         "ai_chat": 200,
+        "job_search": 20,
     },
     "max": {
         "cv_analysis": -1,  # unlimited
         "cover_letter": -1,
         "job_alerts": -1,
         "ai_chat": -1,
+        "job_search": -1,
     },
     "enterprise": {
         "cv_analysis": -1,
         "cover_letter": -1,
         "job_alerts": -1,
         "ai_chat": -1,
+        "job_search": -1,
     },
 }
 

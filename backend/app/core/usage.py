@@ -97,7 +97,7 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
     from sqlalchemy import func as sa_func
     from app.models.job_alert import JobAlert
 
-    features = ["cv_analysis", "cover_letter", "job_alerts", "ai_chat"]
+    features = ["cv_analysis", "cover_letter", "job_alerts", "ai_chat", "job_search"]
     period = _current_period_start()
 
     # Fetch monthly usage counters

@@ -10,6 +10,7 @@ import ApplicationsList from "../components/ApplicationsList";
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
 import ResearchModal from "../components/ResearchModal";
+import { useUsageGuard } from "../hooks/useUsageGuard";
 
 const CITY_DISTRICTS = {
   "graz": [
@@ -129,6 +130,7 @@ export default function JobsPage() {
 
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
+  const { guardedRun: guardSearch } = useUsageGuard("job_search");
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then(r => r.data),
@@ -217,13 +219,12 @@ export default function JobsPage() {
   }, [customSearchParams.bezirk]);
 
   const handleRecommendedSearch = () => {
-    refetchRecommended();
+    guardSearch(() => refetchRecommended());
   };
 
   const handleCustomSearch = (e) => {
     e.preventDefault();
-    setVisibleCount(5);
-    refetchCustom();
+    guardSearch(() => { setVisibleCount(5); refetchCustom(); });
   };
 
   const handleSaveSearchResult = (result) => {
