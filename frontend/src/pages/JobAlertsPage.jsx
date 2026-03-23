@@ -6,6 +6,7 @@ import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshC
 import toast from "react-hot-toast";
 import { jobAlertsApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
+import useUsageGuard from "../hooks/useUsageGuard";
 
 const JOB_TYPES = [
   { value: "", label: "Alle" },
@@ -216,6 +217,7 @@ export default function JobAlertsPage() {
   const [runningId, setRunningId] = useState(null);
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
+  const { guardedRun, atLimit } = useUsageGuard("job_alerts");
 
   const cachedAlerts = (() => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: alerts = [], isLoading } = useQuery({
@@ -289,7 +291,7 @@ export default function JobAlertsPage() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreate(true)}
+          onClick={() => guardedRun(() => setShowCreate(true))}
           className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
@@ -328,7 +330,7 @@ export default function JobAlertsPage() {
             Erstelle deinen ersten Alert und erhalte passende Stellenangebote direkt per E-Mail.
           </p>
           <button
-            onClick={() => setShowCreate(true)}
+            onClick={() => guardedRun(() => setShowCreate(true))}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />

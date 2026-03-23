@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { X, Zap } from "lucide-react";
 
 const FEATURE_LABELS = {
-  cv_analysis: "CV-Analysen",
+  cv_analysis: "Lebenslauf-Analysen",
   cover_letter: "Anschreiben",
   job_alerts: "Job-Alerts",
   ai_chat: "KI-Nachrichten",
@@ -48,7 +48,7 @@ export default function UpgradeModal() {
 
         <h2 className="text-xl font-bold text-gray-900 mb-2">Limit erreicht</h2>
         <p className="text-gray-600 mb-4">
-          Du hast <strong>{data.used}/{data.limit}</strong> {featureLabel} in deinem <strong>{data.plan === "basic" ? "Basic (Free)" : data.plan}</strong>-Plan verwendet.
+          Du hast <strong>{data.used}/{data.limit}</strong> {featureLabel} in deinem <strong>{data.plan === "basic" ? "Basic (Gratis)" : data.plan}</strong>-Plan verwendet.
         </p>
         <p className="text-gray-500 text-sm mb-6">
           Upgrade auf Pro oder Max, um mehr Funktionen freizuschalten.

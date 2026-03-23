@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2 } from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
+import useUsageGuard from "../hooks/useUsageGuard";
 
 const SUGGESTIONS = [
   { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?" },
@@ -19,6 +20,7 @@ export default function AIAssistantPage() {
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const { guardedRun, atLimit } = useUsageGuard("ai_chat");
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -52,20 +54,22 @@ export default function AIAssistantPage() {
     const message = text || input.trim();
     if (!message) return;
 
-    const userMsg = { role: "user", content: message };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    guardedRun(() => {
+      const userMsg = { role: "user", content: message };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput("");
 
-    const data = {
-      message,
-      history: messages.slice(-10),
-    };
+      const data = {
+        message,
+        history: messages.slice(-10),
+      };
 
-    if (selectedResumeId) {
-      data.resume_id = selectedResumeId;
-    }
+      if (selectedResumeId) {
+        data.resume_id = selectedResumeId;
+      }
 
-    chatMutation.mutate(data);
+      chatMutation.mutate(data);
+    });
   };
 
   const handleKeyDown = (e) => {

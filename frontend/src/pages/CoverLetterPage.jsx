@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FileText, Sparkles, Copy, Download, RefreshCw, Building2, Briefcase, ClipboardList } from "lucide-react";
 import { resumeApi, motivationsschreibenApi, jobApi } from "../services/api";
+import useUsageGuard from "../hooks/useUsageGuard";
 
 const TONES = [
   { value: "formell", label: "Formell", desc: "Klassisch und professionell" },
@@ -22,6 +23,7 @@ export default function CoverLetterPage() {
   const [editedText, setEditedText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const { guardedRun, atLimit } = useUsageGuard("cover_letter");
 
   // Fetch uploaded resumes
   const { data: uploadedResumes = [] } = useQuery({
@@ -54,20 +56,22 @@ export default function CoverLetterPage() {
       return;
     }
 
-    const data = {
-      company,
-      role,
-      job_description: jobDescription,
-      tone,
-      applicant_name: applicantName,
-      applicant_address: applicantAddress,
-    };
+    guardedRun(() => {
+      const data = {
+        company,
+        role,
+        job_description: jobDescription,
+        tone,
+        applicant_name: applicantName,
+        applicant_address: applicantAddress,
+      };
 
-    if (selectedResumeId) {
-      data.resume_id = selectedResumeId;
-    }
+      if (selectedResumeId) {
+        data.resume_id = selectedResumeId;
+      }
 
-    generateMutation.mutate(data);
+      generateMutation.mutate(data);
+    });
   };
 
   const handleCopy = () => {

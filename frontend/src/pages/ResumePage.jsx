@@ -5,10 +5,12 @@ import toast from "react-hot-toast";
 import { Upload, Trash2, FileText } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
+import useUsageGuard from "../hooks/useUsageGuard";
 
 export default function ResumePage() {
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const { guardedRun } = useUsageGuard("cv_analysis");
 
   const cachedResumes = (() => { try { const s = localStorage.getItem("resumes"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } })();
   const { data: resumes = [], isLoading } = useQuery({
@@ -33,19 +35,21 @@ export default function ResumePage() {
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      await resumeApi.upload(formData);
-      qc.invalidateQueries({ queryKey: ["resumes"] });
-      toast.success("Lebenslauf hochgeladen und analysiert!");
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Upload fehlgeschlagen");
-    } finally {
-      setUploading(false);
-    }
-  }, [qc]);
+    guardedRun(async () => {
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        await resumeApi.upload(formData);
+        qc.invalidateQueries({ queryKey: ["resumes"] });
+        toast.success("Lebenslauf hochgeladen und analysiert!");
+      } catch (err) {
+        toast.error(err.response?.data?.detail || "Upload fehlgeschlagen");
+      } finally {
+        setUploading(false);
+      }
+    });
+  }, [qc, guardedRun]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
