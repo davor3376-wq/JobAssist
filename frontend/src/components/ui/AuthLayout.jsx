@@ -48,7 +48,14 @@ export default function AuthLayout({ children }) {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 sm:p-8 bg-white min-h-screen">
+        {/* Mobile-only logo */}
+        <div className="lg:hidden flex items-center gap-2.5 mb-8">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shadow-lg">
+            <Sparkles className="w-4.5 h-4.5 text-white" />
+          </div>
+          <span className="text-xl font-bold text-gray-900">JobAssist AI</span>
+        </div>
         <div className="w-full max-w-md animate-fade-in">
           {children}
         </div>

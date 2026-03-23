@@ -32,9 +32,9 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Willkommen zurück</h2>
-        <p className="text-gray-500">Melde dich bei deinem JobAssist-Konto an</p>
+        <p className="text-gray-500 text-sm sm:text-base">Melde dich bei deinem JobAssist-Konto an</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
