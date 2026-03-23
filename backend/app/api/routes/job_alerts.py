@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from app.main import limiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 
 from app.core.database import get_db
@@ -118,6 +118,9 @@ async def delete_alert(
     await db.commit()
 
 
+REFRESH_WINDOW_HOURS = 4
+REFRESH_MAX = 3
+
 @router.post("/{alert_id}/run", response_model=dict)
 async def run_alert_now(
     alert_id: int,
@@ -133,8 +136,39 @@ async def run_alert_now(
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
+    now = datetime.now(timezone.utc)
+    window_start = alert.manual_refresh_window_start
+    # Make window_start timezone-aware if it's naive
+    if window_start and window_start.tzinfo is None:
+        window_start = window_start.replace(tzinfo=timezone.utc)
+
+    window_expired = window_start is None or (now - window_start) >= timedelta(hours=REFRESH_WINDOW_HOURS)
+
+    if window_expired:
+        alert.manual_refresh_count = 0
+        alert.manual_refresh_window_start = now
+
+    if alert.manual_refresh_count >= REFRESH_MAX:
+        reset_at = window_start + timedelta(hours=REFRESH_WINDOW_HOURS)
+        seconds_left = int((reset_at - now).total_seconds())
+        hours_left = seconds_left // 3600
+        minutes_left = (seconds_left % 3600) // 60
+        raise HTTPException(
+            status_code=429,
+            detail=f"Maximale Aktualisierungen erreicht ({REFRESH_MAX}/{REFRESH_WINDOW_HOURS}h). "
+                   f"Verfügbar in {hours_left}h {minutes_left}min.",
+        )
+
+    alert.manual_refresh_count += 1
+    await db.commit()
+
     background_tasks.add_task(_run_and_send, alert_id, alert.keywords, alert.location, alert.job_type, alert.email)
-    return {"message": "Suche gestartet. Du erhältst in Kürze eine E-Mail."}
+    remaining = REFRESH_MAX - alert.manual_refresh_count
+    return {
+        "message": "Suche gestartet. Du erhältst in Kürze eine E-Mail.",
+        "refreshes_used": alert.manual_refresh_count,
+        "refreshes_remaining": remaining,
+    }
 
 
 @router.post("/test-email", response_model=dict)

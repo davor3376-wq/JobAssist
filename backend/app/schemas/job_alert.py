@@ -29,6 +29,8 @@ class JobAlertOut(BaseModel):
     frequency: str
     is_active: bool
     last_sent_at: Optional[datetime]
+    manual_refresh_count: int = 0
+    manual_refresh_window_start: Optional[datetime] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

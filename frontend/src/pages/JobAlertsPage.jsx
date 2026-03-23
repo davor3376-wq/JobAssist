@@ -22,7 +22,25 @@ const FREQUENCIES = [
   { value: "weekly", label: "Wöchentlich" },
 ];
 
+const REFRESH_MAX = 3;
+const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
+
+function getRefreshState(alert) {
+  const windowStart = alert.manual_refresh_window_start ? new Date(alert.manual_refresh_window_start) : null;
+  const windowExpired = !windowStart || (Date.now() - windowStart.getTime()) >= REFRESH_WINDOW_MS;
+  const used = windowExpired ? 0 : (alert.manual_refresh_count || 0);
+  const atLimit = used >= REFRESH_MAX;
+  let resetInMin = null;
+  if (atLimit && windowStart) {
+    const resetAt = windowStart.getTime() + REFRESH_WINDOW_MS;
+    resetInMin = Math.ceil((resetAt - Date.now()) / 60000);
+  }
+  return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
+}
+
 function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning }) {
+  const { used, remaining, atLimit, resetInMin } = getRefreshState(alert);
+
   return (
     <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-3">
@@ -57,14 +75,25 @@ function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning }) {
               Zuletzt gesendet: {new Date(alert.last_sent_at).toLocaleString("de-AT")}
             </p>
           )}
+          {/* Refresh cooldown indicator */}
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {[...Array(REFRESH_MAX)].map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full ${i < used ? "bg-orange-400" : "bg-gray-200"}`} />
+            ))}
+            <span className="text-xs text-gray-400">
+              {atLimit
+                ? `Cooldown — verfügbar in ${resetInMin}min`
+                : `${remaining} Aktualisierung${remaining !== 1 ? "en" : ""} heute (alle 4h)`}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={() => onRunNow(alert.id)}
-            disabled={isRunning}
-            title="Jetzt ausführen"
-            className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors"
+            disabled={isRunning || atLimit}
+            title={atLimit ? `Cooldown — verfügbar in ${resetInMin}min` : "Jetzt ausführen"}
+            className={`p-2 rounded-lg transition-colors ${atLimit ? "text-gray-300 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
           >
             {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
           </button>
@@ -269,10 +298,17 @@ export default function JobAlertsPage() {
   const handleRunNow = async (id) => {
     setRunningId(id);
     try {
-      await jobAlertsApi.runNow(id);
-      toast.success("Suche gestartet — E-Mail kommt in Kürze!");
-    } catch {
-      toast.error("Fehler beim Starten der Suche");
+      const res = await jobAlertsApi.runNow(id);
+      const remaining = res.data?.refreshes_remaining ?? "?";
+      toast.success(`Suche gestartet — E-Mail kommt in Kürze! (Noch ${remaining} Aktualisierungen)`);
+      qc.invalidateQueries({ queryKey: ["job-alerts"] });
+    } catch (err) {
+      const msg = err.response?.data?.detail;
+      if (err.response?.status === 429) {
+        toast.error(msg || "Zu viele Aktualisierungen. Bitte warte 4 Stunden.");
+      } else {
+        toast.error("Fehler beim Starten der Suche");
+      }
     } finally {
       setRunningId(null);
     }

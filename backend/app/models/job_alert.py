@@ -20,6 +20,8 @@ class JobAlert(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     last_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    manual_refresh_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    manual_refresh_window_start: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
