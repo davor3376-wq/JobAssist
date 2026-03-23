@@ -1,4 +1,4 @@
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell, CreditCard, Menu, X } from "lucide-react";
 import useAuthStore from "../../hooks/useAuthStore";
@@ -122,6 +122,13 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
 
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  // Allow animations on first load, then disable for future navigations
+  useEffect(() => {
+    const timer = setTimeout(() => setInitialLoad(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
   const logout = useAuthStore((s) => s.logout);
   const setUser = useAuthStore((s) => s.setUser);
   const storedUser = useAuthStore((s) => s.user);
@@ -201,7 +208,7 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 page-enter">
+          <div className={`max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 ${initialLoad ? "page-enter" : "page-ready"}`}>
             <Suspense fallback={null}>
               <Outlet />
             </Suspense>

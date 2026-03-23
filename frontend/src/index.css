@@ -71,7 +71,7 @@
   }
 }
 
-/* Smooth page transitions */
+/* Smooth page transitions — only on initial load */
 .page-enter {
   animation: slideUp 0.4s ease-out both;
 }
@@ -79,5 +79,12 @@
 /* Fix staggered animate-slide-up: elements start hidden until animation fires */
 .animate-slide-up {
   animation-fill-mode: both;
+}
+
+/* After initial load completes, disable all mount animations so they don't replay on navigation */
+.page-ready .animate-slide-up {
+  animation: none;
+  opacity: 1;
+  transform: none;
 }
 
