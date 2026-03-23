@@ -16,14 +16,14 @@ export default function RegisterPage() {
       await authApi.register(data);
       const res = await authApi.login({ email: data.email, password: data.password });
       login(res.data.access_token, res.data.refresh_token);
-      // Prefetch init so sidebar has data instantly
-      try {
-        const initRes = await initApi.fetch();
-        localStorage.setItem("init", JSON.stringify(initRes.data));
-        queryClient.setQueryData(["init"], initRes.data);
-      } catch {}
+      queryClient.clear();
       navigate("/dashboard");
       toast.success("Konto erstellt! Willkommen.");
+      // Prefetch init in background so sidebar has data quickly
+      initApi.fetch().then((initRes) => {
+        try { localStorage.setItem("init", JSON.stringify(initRes.data)); } catch {}
+        queryClient.setQueryData(["init"], initRes.data);
+      }).catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.detail || "Registrierung fehlgeschlagen");
     }

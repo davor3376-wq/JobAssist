@@ -70,7 +70,7 @@ export default function BillingPage() {
     initialData: cachedBilling,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   const handleManage = async () => {

@@ -16,15 +16,16 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(data);
       login(res.data.access_token, res.data.refresh_token);
-      // Prefetch init so sidebar has data instantly on dashboard load
-      try {
-        const initRes = await initApi.fetch();
+      // Clear previous user's React Query cache before setting new user's data
+      queryClient.clear();
+      navigate("/dashboard");
+      // Prefetch init in background so sidebar has data quickly
+      initApi.fetch().then((initRes) => {
         const initData = initRes.data;
-        localStorage.setItem("init", JSON.stringify(initData));
+        try { localStorage.setItem("init", JSON.stringify(initData)); } catch {}
         queryClient.setQueryData(["init"], initData);
         if (initData.me) setUser(initData.me);
-      } catch {}
-      navigate("/dashboard");
+      }).catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.detail || "Anmeldung fehlgeschlagen");
     }
