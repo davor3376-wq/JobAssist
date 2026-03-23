@@ -10,7 +10,7 @@ import ApplicationsList from "../components/ApplicationsList";
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
 import ResearchModal from "../components/ResearchModal";
-import { useUsageGuard } from "../hooks/useUsageGuard";
+import useUsageGuard from "../hooks/useUsageGuard";
 
 const CITY_DISTRICTS = {
   "graz": [
