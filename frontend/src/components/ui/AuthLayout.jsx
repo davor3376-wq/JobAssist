@@ -56,7 +56,7 @@ export default function AuthLayout({ children }) {
           </div>
           <span className="text-xl font-bold text-gray-900">JobAssist AI</span>
         </div>
-        <div className="w-full max-w-md animate-fade-in">
+        <div className="w-full max-w-md">
           {children}
         </div>
       </div>
