@@ -71,12 +71,3 @@
   }
 }
 
-/* Smooth page transitions */
-.page-enter {
-  animation: slideUp 0.4s ease-out both;
-}
-
-/* Fix staggered animate-slide-up: elements start hidden until animation fires */
-.animate-slide-up {
-  animation-fill-mode: both;
-}

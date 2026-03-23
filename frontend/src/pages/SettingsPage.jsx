@@ -104,7 +104,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!profile && !cachedProfile) return (
+  if (!profile && !readCachedProfile()) return (
     <div className="max-w-2xl animate-slide-up">
       <div className="mb-8">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
