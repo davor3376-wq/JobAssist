@@ -11,6 +11,7 @@ const USAGE_ENDPOINTS = [
   "/resume/analyze", "/cover-letter/generate", "/motivationsschreiben/generate",
   "/interview/generate", "/ai-assistant/chat", "/ai-assistant/optimize",
   "/ai-assistant/analyze-job", "/jobs/match", "/research/",
+  "/jobs/search/recommended", "/jobs/search/custom",
 ];
 
 // Attach JWT token to every request
@@ -44,9 +45,9 @@ api.interceptors.response.use(
     if (import.meta.env.DEV) {
       console.log(`[API] Response ${res.status} from ${res.config.url}`);
     }
-    // Invalidate billing/init data after usage-consuming calls
+    // Invalidate billing/init data after any usage-consuming call (POST or GET)
     const url = res.config?.url || "";
-    if (res.config?.method === "post" && USAGE_ENDPOINTS.some((ep) => url.includes(ep))) {
+    if (USAGE_ENDPOINTS.some((ep) => url.includes(ep))) {
       queryClient.invalidateQueries({ queryKey: ["billing-overview"] });
       queryClient.invalidateQueries({ queryKey: ["init"] });
     }
@@ -55,7 +56,19 @@ api.interceptors.response.use(
   async (err) => {
     // Usage limit hit — trigger upgrade modal
     if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") {
+      // Refresh usage counts so guard is accurate on next attempt
+      queryClient.invalidateQueries({ queryKey: ["billing-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["init"] });
       const event = new CustomEvent("usage-limit", { detail: err.response.data });
+      window.dispatchEvent(event);
+      return Promise.reject(err);
+    }
+
+    // Rate limit hit (slowapi / job alert cooldown)
+    if (err.response?.status === 429) {
+      const detail = err.response?.data?.detail || err.response?.data?.error;
+      const message = typeof detail === "string" ? detail : "Zu viele Anfragen. Bitte warte kurz.";
+      const event = new CustomEvent("rate-limited", { detail: { message } });
       window.dispatchEvent(event);
       return Promise.reject(err);
     }

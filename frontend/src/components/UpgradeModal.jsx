@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X, Zap } from "lucide-react";
+import toast from "react-hot-toast";
 
 const FEATURE_LABELS = {
   cv_analysis: "Lebenslauf-Analysen",
@@ -19,6 +20,12 @@ export default function UpgradeModal() {
     const handler = (e) => setData(e.detail);
     window.addEventListener("usage-limit", handler);
     return () => window.removeEventListener("usage-limit", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => toast.error(e.detail.message, { duration: 5000 });
+    window.addEventListener("rate-limited", handler);
+    return () => window.removeEventListener("rate-limited", handler);
   }, []);
 
   if (!data) return null;
