@@ -147,7 +147,7 @@ export default function JobsPage() {
   // Recommended search (based on preferences)
   const {
     data: recommendedResults = [],
-    isLoading: recommendedLoading,
+    isFetching: recommendedLoading,
     error: recommendedError,
     refetch: refetchRecommended,
   } = useQuery({
@@ -160,7 +160,7 @@ export default function JobsPage() {
   // Custom search
   const {
     data: customResults = [],
-    isLoading: customLoading,
+    isFetching: customLoading,
     error: customError,
     refetch: refetchCustom,
   } = useQuery({
