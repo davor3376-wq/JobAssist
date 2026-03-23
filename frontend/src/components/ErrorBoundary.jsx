@@ -1,10 +1,10 @@
 import { Component } from "react";
 
 export default class ErrorBoundary extends Component {
-  state = { hasError: false };
+  state = { hasError: false, error: null };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
 
   render() {
@@ -16,11 +16,15 @@ export default class ErrorBoundary extends Component {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <div className="text-center">
+          <div className="text-center max-w-lg">
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Etwas ist schiefgelaufen</h2>
-            <p className="text-sm text-gray-500 mb-4">Seite konnte nicht geladen werden.</p>
+            {this.state.error && (
+              <pre className="text-xs text-left bg-gray-100 text-red-600 rounded-lg p-3 mb-3 overflow-auto max-h-40">
+                {this.state.error.message}
+              </pre>
+            )}
             <button
-              onClick={() => this.setState({ hasError: false })}
+              onClick={() => this.setState({ hasError: false, error: null })}
               className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Erneut versuchen
