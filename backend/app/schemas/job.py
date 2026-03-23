@@ -1,14 +1,14 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse
 
 
 class JobCreate(BaseModel):
-    company: Optional[str] = None
-    role: Optional[str] = None
-    description: str
-    url: Optional[str] = None
+    company: Optional[str] = Field(None, max_length=200)
+    role: Optional[str] = Field(None, max_length=200)
+    description: str = Field(..., max_length=50000)
+    url: Optional[str] = Field(None, max_length=2000)
     resume_id: Optional[int] = None
 
 
@@ -54,11 +54,11 @@ class InterviewPrepRequest(BaseModel):
 
 
 class JobStatusUpdate(BaseModel):
-    status: str  # bookmarked, applied, interviewing, offered, rejected
+    status: str = Field(..., max_length=20)  # bookmarked, applied, interviewing, offered, rejected
 
 
 class JobNotesUpdate(BaseModel):
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=10000)
 
 
 class JobDeadlineUpdate(BaseModel):

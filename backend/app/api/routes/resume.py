@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from app.main import limiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import json
@@ -78,7 +79,9 @@ async def get_resume(
 
 
 @router.delete("/{resume_id}", status_code=204)
+@limiter.limit("30/minute")
 async def delete_resume(
+    request: Request,
     resume_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

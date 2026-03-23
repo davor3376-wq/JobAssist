@@ -72,7 +72,8 @@ class RefreshRequest(BaseModel):
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("20/minute")
+async def refresh(request: Request, payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
     token_hash = hash_refresh_token(payload.refresh_token)
     result = await db.execute(
         select(RefreshToken).where(
@@ -101,7 +102,8 @@ async def refresh(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/logout", status_code=204)
-async def logout(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def logout(request: Request, payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
     token_hash = hash_refresh_token(payload.refresh_token)
     result = await db.execute(
         select(RefreshToken).where(RefreshToken.token_hash == token_hash)

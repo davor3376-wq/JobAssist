@@ -1,5 +1,6 @@
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from app.main import limiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timezone
@@ -100,7 +101,9 @@ async def update_alert(
 
 
 @router.delete("/{alert_id}", status_code=204)
+@limiter.limit("30/minute")
 async def delete_alert(
+    request: Request,
     alert_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -141,9 +144,7 @@ async def test_email(current_user: User = Depends(get_current_user)):
     if not smtp_ok:
         return {
             "ok": False,
-            "error": "SMTP not configured",
-            "smtp_host": settings.SMTP_HOST or "(not set)",
-            "smtp_user": settings.SMTP_USER or "(not set)",
+            "error": "E-Mail-Versand ist nicht konfiguriert. Bitte kontaktiere den Support.",
         }
 
     fake_jobs = [
@@ -160,8 +161,6 @@ async def test_email(current_user: User = Depends(get_current_user)):
     return {
         "ok": ok,
         "to": current_user.email,
-        "smtp_host": settings.SMTP_HOST,
-        "smtp_user": settings.SMTP_USER,
     }
 
 

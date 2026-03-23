@@ -62,9 +62,14 @@ settings = Settings()
 
 _INSECURE_DEFAULT_KEY = "change-me-in-production"
 if settings.SECRET_KEY == _INSECURE_DEFAULT_KEY:
-    import warnings
-    warnings.warn(
-        "SECRET_KEY is set to the insecure default value. "
-        "Set a strong random SECRET_KEY in your environment before going to production.",
-        stacklevel=1,
-    )
+    if not settings.DEBUG:
+        import sys
+        print("FATAL: SECRET_KEY is set to the insecure default. Set a strong random SECRET_KEY.", file=sys.stderr)
+        sys.exit(1)
+    else:
+        import warnings
+        warnings.warn(
+            "SECRET_KEY is set to the insecure default value. "
+            "Set a strong random SECRET_KEY in your environment before going to production.",
+            stacklevel=1,
+        )

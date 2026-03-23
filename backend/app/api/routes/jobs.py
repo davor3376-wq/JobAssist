@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from app.main import limiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import json
@@ -150,9 +151,9 @@ async def search_recommended_jobs(
 
 @router.get("/search/custom", response_model=dict)
 async def search_custom_jobs(
-    keywords: str = Query(..., description="Job title or keywords"),
-    location: str = Query("", description="City/location"),
-    job_type: str = Query("", description="Job type (Full-time, Remote, etc.)"),
+    keywords: str = Query(..., description="Job title or keywords", min_length=1, max_length=200),
+    location: str = Query("", description="City/location", max_length=100),
+    job_type: str = Query("", description="Job type (Full-time, Remote, etc.)", max_length=50),
     page: int = Query(1, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -191,7 +192,9 @@ async def get_job(
 
 
 @router.delete("/{job_id}", status_code=204)
+@limiter.limit("30/minute")
 async def delete_job(
+    request: Request,
     job_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
