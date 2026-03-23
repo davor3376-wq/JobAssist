@@ -2,9 +2,9 @@
 
 PLAN_LIMITS = {
     "basic": {
-        "cv_analysis": 2,
-        "cover_letter": 3,
-        "job_alerts": 1,
+        "cv_analysis": 5,
+        "cover_letter": 5,
+        "job_alerts": 2,
         "ai_chat": 15,
         "job_search": 5,
     },

@@ -8,6 +8,7 @@ const FEATURE_LABELS = {
   cover_letter: "Anschreiben",
   job_alerts: "Job-Alerts",
   ai_chat: "KI-Nachrichten",
+  job_search: "Stellensuchen / Tag",
 };
 
 export default function UpgradeModal() {

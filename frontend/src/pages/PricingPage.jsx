@@ -11,6 +11,7 @@ const FEATURE_LABELS = {
   cover_letter: "Anschreiben / Monat",
   job_alerts: "Aktive Job-Alerts",
   ai_chat: "KI-Nachrichten / Monat",
+  job_search: "Stellensuchen / Tag",
 };
 
 function formatLimit(v) {
@@ -28,7 +29,7 @@ const plans = [
     color: "gray",
     highlighted: false,
     badge: null,
-    limits: { cv_analysis: 2, cover_letter: 1, job_alerts: 1, ai_chat: 15 },
+    limits: { cv_analysis: 5, cover_letter: 5, job_alerts: 2, ai_chat: 15, job_search: 5 },
     extras: ["Lebenslauf hochladen", "Job-Suche", "Pipeline-Tracking"],
   },
   {
@@ -41,7 +42,7 @@ const plans = [
     color: "blue",
     highlighted: true,
     badge: "Beliebt",
-    limits: { cv_analysis: 15, cover_letter: 10, job_alerts: 10, ai_chat: 200 },
+    limits: { cv_analysis: 15, cover_letter: 25, job_alerts: 10, ai_chat: 200, job_search: 20 },
     extras: ["Prioritäts-Support", "Alles aus Basic"],
   },
   {
@@ -54,7 +55,7 @@ const plans = [
     color: "purple",
     highlighted: false,
     badge: "Bestes Angebot",
-    limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1 },
+    limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1, job_search: -1 },
     extras: ["24h Support", "Alles aus Pro", "Unbegrenzte Nutzung"],
   },
   {
@@ -67,7 +68,7 @@ const plans = [
     color: "slate",
     highlighted: false,
     badge: null,
-    limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1 },
+    limits: { cv_analysis: -1, cover_letter: -1, job_alerts: -1, ai_chat: -1, job_search: -1 },
     extras: ["Dedizierter Manager", "Custom Integrationen", "SLA & Compliance"],
   },
 ];
