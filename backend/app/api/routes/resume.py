@@ -28,9 +28,20 @@ async def upload_resume(
     if file.content_type not in ("application/pdf", "text/plain"):
         raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
 
-    file_bytes = await file.read()
-    if len(file_bytes) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large (max 5MB)")
+    # Chunked read — abort as soon as bytes exceed the limit to save RAM.
+    # This prevents a malicious client from forcing the server to buffer a huge file.
+    CHUNK = 64 * 1024  # 64 KB
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(CHUNK)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="Datei zu groß (max. 5 MB)")
+        chunks.append(chunk)
+    file_bytes = b"".join(chunks)
 
     try:
         raw_text = extract_resume_text(file.filename, file_bytes)

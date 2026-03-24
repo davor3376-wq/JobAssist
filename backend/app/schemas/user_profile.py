@@ -1,6 +1,11 @@
+import re
 from pydantic import BaseModel, field_validator, model_validator
 from datetime import datetime
 from typing import Optional
+
+# ~300 KB base64 ≈ ~225 KB decoded — enough for a 200×200 JPEG, blocks DB bloat
+_AVATAR_MAX_LEN = 400_000
+_AVATAR_PATTERN = re.compile(r"^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$")
 
 
 class UserProfileUpdate(BaseModel):
@@ -18,6 +23,17 @@ class UserProfileUpdate(BaseModel):
     def salary_non_negative(cls, v: Optional[float]) -> Optional[float]:
         if v is not None and v < 0:
             raise ValueError("Gehalt darf nicht negativ sein")
+        return v
+
+    @field_validator("avatar")
+    @classmethod
+    def avatar_valid(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        if len(v) > _AVATAR_MAX_LEN:
+            raise ValueError(f"Avatar darf maximal {_AVATAR_MAX_LEN // 1000} KB groß sein")
+        if not _AVATAR_PATTERN.match(v):
+            raise ValueError("Ungültiges Bildformat. Nur JPEG, PNG und WebP als Base64-Data-URL erlaubt")
         return v
 
     @model_validator(mode="after")

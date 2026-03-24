@@ -45,10 +45,16 @@ async def create_alert(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Check job alert limit based on plan
+    # Acquire a row-level lock on the user row to serialize concurrent creations.
+    # Any parallel request for the same user blocks here until this transaction
+    # commits, preventing two requests from both seeing count < limit.
+    await db.execute(
+        select(User).where(User.id == current_user.id).with_for_update()
+    )
+
     plan = await get_user_plan(db, current_user.id)
     limit = get_limit(plan, "job_alerts")
-    
+
     if limit != -1:
         count_result = await db.execute(
             select(sa_func.count()).where(JobAlert.user_id == current_user.id)
@@ -67,7 +73,6 @@ async def create_alert(
                 },
             )
 
-    # Initialize new alert with naive timestamps
     alert = JobAlert(
         user_id=current_user.id,
         keywords=payload.keywords,
@@ -76,7 +81,7 @@ async def create_alert(
         email=current_user.email,
         frequency=payload.frequency,
         manual_refresh_count=0,
-        manual_refresh_window_start=get_naive_now()
+        manual_refresh_window_start=get_naive_now(),
     )
     db.add(alert)
     await db.commit()

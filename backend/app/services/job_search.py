@@ -1,12 +1,52 @@
 from app.core.config import settings
 import httpx
 import asyncio
+import time
 from typing import Optional
 import logging
 import re
 import html
 
 logger = logging.getLogger(__name__)
+
+
+class _CircuitBreaker:
+    """Trips after FAILURE_THRESHOLD consecutive Adzuna failures.
+    While open, requests fail fast for RESET_SECONDS before auto-resetting.
+    """
+    FAILURE_THRESHOLD = 5
+    RESET_SECONDS = 60
+
+    def __init__(self) -> None:
+        self._failures = 0
+        self._tripped_at: Optional[float] = None
+
+    def is_open(self) -> bool:
+        if self._tripped_at is None:
+            return False
+        if time.monotonic() - self._tripped_at >= self.RESET_SECONDS:
+            self._reset()
+            return False
+        return True
+
+    def record_success(self) -> None:
+        self._reset()
+
+    def record_failure(self) -> None:
+        self._failures += 1
+        if self._failures >= self.FAILURE_THRESHOLD:
+            self._tripped_at = time.monotonic()
+            logger.warning(
+                "Adzuna circuit breaker TRIPPED after %d consecutive failures — "
+                "fast-failing for %ds", self._failures, self.RESET_SECONDS
+            )
+
+    def _reset(self) -> None:
+        self._failures = 0
+        self._tripped_at = None
+
+
+_breaker = _CircuitBreaker()
 
 # Adzuna Austrian endpoint — aggregates karriere.at, stepstone.at, etc.
 # Docs: https://developer.adzuna.com/docs/search
@@ -138,6 +178,11 @@ async def search_jobs(
         return {"jobs": [], "total_count": 0, "page": page,
                 "error": "Adzuna API-Schlüssel nicht konfiguriert. Bitte in .env eintragen."}
 
+    if _breaker.is_open():
+        logger.warning("Adzuna circuit breaker open — returning fast-fail response")
+        return {"jobs": [], "total_count": 0, "page": page,
+                "error": "Jobsuche vorübergehend nicht verfügbar. Bitte in einer Minute erneut versuchen."}
+
     type_entry = _JOB_TYPE_MAP.get(job_type.lower()) if job_type else None
 
     # Build keyword string — include job type term so Adzuna searches for it
@@ -167,6 +212,8 @@ async def search_jobs(
             response = await client.get(url, params=params, headers={"Content-Type": "application/json"})
             response.raise_for_status()
             data = response.json()
+
+        _breaker.record_success()
 
         jobs = data.get("results", [])
 
@@ -201,9 +248,11 @@ async def search_jobs(
         }
 
     except httpx.HTTPStatusError as e:
+        _breaker.record_failure()
         logger.error(f"Adzuna HTTP error: {e.response.status_code} — {e.response.text[:300]}")
         raise
     except Exception as e:
+        _breaker.record_failure()
         logger.error(f"Adzuna error: {type(e).__name__}: {e}")
         raise
 

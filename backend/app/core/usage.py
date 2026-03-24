@@ -66,9 +66,9 @@ async def increment_usage(db: AsyncSession, user_id: int, feature: str) -> None:
 def require_usage(feature: str):
     """FastAPI dependency that checks usage limits before allowing the request.
 
-    Usage:
-        @router.post("/generate")
-        async def generate(..., _=Depends(require_usage("cover_letter"))):
+    Uses a single atomic UPSERT (INSERT ... ON CONFLICT DO UPDATE WHERE count < limit)
+    to eliminate the check-then-update race condition. If the WHERE clause blocks
+    the update (count >= limit), 0 rows are returned and a 403 is raised.
     """
     async def _check(
         db: AsyncSession = Depends(get_db),
@@ -78,24 +78,45 @@ def require_usage(feature: str):
         limit = get_limit(plan, feature)
 
         if limit == -1:
-            # Unlimited — just increment
+            # Unlimited — plain increment, no race risk
             await increment_usage(db, current_user.id, feature)
             return
 
-        used = await get_usage_count(db, current_user.id, feature)
-        if used >= limit:
+        period = _period_for(feature)
+
+        # Atomic: insert count=1 (new row) OR increment count IF count < limit.
+        # When count >= limit the ON CONFLICT WHERE clause blocks the update and
+        # RETURNING yields 0 rows — no separate SELECT needed.
+        stmt = (
+            pg_insert(UsageRecord)
+            .values(user_id=current_user.id, feature=feature, period_start=period, count=1)
+            .on_conflict_do_update(
+                constraint="uq_user_feature_period",
+                set_={"count": UsageRecord.count + 1},
+                where=UsageRecord.count < limit,
+            )
+            .returning(UsageRecord.count)
+        )
+
+        result = await db.execute(stmt)
+        row = result.fetchone()
+
+        if row is None:
+            # Conflict existed but WHERE blocked the update → limit already reached
+            await db.rollback()
             raise HTTPException(
                 status_code=403,
                 detail={
                     "error": "usage_limit",
                     "feature": feature,
                     "plan": plan,
-                    "used": used,
+                    "used": limit,
                     "limit": limit,
-                    "message": f"Du hast dein Limit für diese Funktion erreicht ({used}/{limit}). Bitte upgrade deinen Plan.",
+                    "message": f"Du hast dein Limit für diese Funktion erreicht ({limit}/{limit}). Bitte upgrade deinen Plan.",
                 },
             )
-        await increment_usage(db, current_user.id, feature)
+
+        await db.commit()
 
     return _check
 
