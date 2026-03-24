@@ -267,7 +267,7 @@ export default function JobAlertsPage() {
     },
     onError: (err) => {
       // UpgradeModal already shows for usage_limit
-      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
       const detail = err.response?.data?.detail;
       const msg = typeof detail === "object" ? detail?.message :
@@ -314,7 +314,7 @@ export default function JobAlertsPage() {
       qc.invalidateQueries({ queryKey: ["job-alerts"] });
     } catch (err) {
       if (err.response?.status === 429) return; // interceptor shows rate-limited toast
-      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       const detail = err.response?.data?.detail;
       toast.error(typeof detail === "string" ? detail : "Fehler beim Starten der Suche");
     } finally {

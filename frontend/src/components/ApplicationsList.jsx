@@ -256,7 +256,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
     } catch (err) {
       // Interceptor handles 403 usage_limit (UpgradeModal) and 429 (rate toast)
-      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
       const detail = err.response?.data?.detail;
       toast.error(typeof detail === "string" ? detail : "Brief-Entwurf konnte nicht generiert werden");

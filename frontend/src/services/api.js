@@ -55,11 +55,11 @@ api.interceptors.response.use(
   },
   async (err) => {
     // Usage limit hit — trigger upgrade modal
-    if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") {
+    if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") {
       // Refresh usage counts so guard is accurate on next attempt
       queryClient.invalidateQueries({ queryKey: ["billing-overview"] });
       queryClient.invalidateQueries({ queryKey: ["init"] });
-      const event = new CustomEvent("usage-limit", { detail: err.response.data });
+      const event = new CustomEvent("usage-limit", { detail: err.response.data.detail });
       window.dispatchEvent(event);
       return Promise.reject(err);
     }

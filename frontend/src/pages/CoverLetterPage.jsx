@@ -54,7 +54,7 @@ export default function CoverLetterPage() {
     },
     onError: (err) => {
       // Interceptor already showed UpgradeModal for usage limits
-      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       // Interceptor already showed rate-limit toast
       if (err.response?.status === 429) return;
       const detail = err.response?.data?.detail;
