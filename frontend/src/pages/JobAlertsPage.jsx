@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -25,10 +25,10 @@ const FREQUENCIES = [
 const REFRESH_MAX = 3;
 const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
 
-function getRefreshState(alert) {
-  const windowStart = alert.manual_refresh_window_start ? new Date(alert.manual_refresh_window_start) : null;
+function getRefreshState(refreshState) {
+  const windowStart = refreshState?.manual_refresh_window_start ? new Date(refreshState.manual_refresh_window_start) : null;
   const windowExpired = !windowStart || (Date.now() - windowStart.getTime()) >= REFRESH_WINDOW_MS;
-  const used = windowExpired ? 0 : (alert.manual_refresh_count || 0);
+  const used = windowExpired ? 0 : (refreshState?.manual_refresh_count || 0);
   const atLimit = used >= REFRESH_MAX;
   let resetInMin = null;
   if (atLimit && windowStart) {
@@ -38,8 +38,8 @@ function getRefreshState(alert) {
   return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
 }
 
-function AlertCard({ alert, onToggle, onDelete, onRunNow, isRunning }) {
-  const { used, remaining, atLimit, resetInMin } = getRefreshState(alert);
+function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunning }) {
+  const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
 
   return (
     <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
@@ -244,6 +244,14 @@ export default function JobAlertsPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [runningId, setRunningId] = useState(null);
+  const [refreshState, setRefreshState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("job_alert_refresh_state");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun, atLimit } = useUsageGuard("job_alerts");
@@ -257,6 +265,32 @@ export default function JobAlertsPage() {
     initialData: () => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
     staleTime: 1000 * 60 * 2,
   });
+
+  useEffect(() => {
+    if (!alerts.length || refreshState?.manual_refresh_window_start) return;
+
+    const freshestAlertState = alerts.reduce((best, alert) => {
+      const nextTs = alert.manual_refresh_window_start ? new Date(alert.manual_refresh_window_start).getTime() : 0;
+      const bestTs = best?.manual_refresh_window_start ? new Date(best.manual_refresh_window_start).getTime() : 0;
+      return nextTs > bestTs
+        ? {
+            manual_refresh_count: alert.manual_refresh_count || 0,
+            manual_refresh_window_start: alert.manual_refresh_window_start || null,
+          }
+        : best;
+    }, null);
+
+    if (freshestAlertState?.manual_refresh_window_start) {
+      setRefreshState(freshestAlertState);
+    }
+  }, [alerts, refreshState?.manual_refresh_window_start]);
+
+  useEffect(() => {
+    try {
+      if (refreshState) localStorage.setItem("job_alert_refresh_state", JSON.stringify(refreshState));
+      else localStorage.removeItem("job_alert_refresh_state");
+    } catch {}
+  }, [refreshState]);
 
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
@@ -306,6 +340,14 @@ export default function JobAlertsPage() {
     setRunningId(id);
     try {
       const res = await jobAlertsApi.runNow(id);
+      const nextRefreshState = {
+        manual_refresh_count: res.data?.refreshes_used ?? 0,
+        manual_refresh_window_start: new Date().toISOString(),
+      };
+      setRefreshState(nextRefreshState);
+      qc.setQueryData(["job-alerts"], (old = []) =>
+        old.map((alert) => ({ ...alert, ...nextRefreshState }))
+      );
       const remaining = res.data?.refreshes_remaining ?? "?";
       toast.success(
         `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierungen)`,
@@ -387,6 +429,7 @@ export default function JobAlertsPage() {
             <AlertCard
               key={alert.id}
               alert={alert}
+              refreshState={refreshState ?? alert}
               onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
               onDelete={(id) => deleteMutation.mutate(id)}
               onRunNow={handleRunNow}
