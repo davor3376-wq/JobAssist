@@ -272,8 +272,11 @@ export default function JobDetailPage() {
             try {
               const res = await researchApi.research(job.company || "", job.description || "");
               setResearchData(res.data);
-            } catch {
-              toast.error("Recherche fehlgeschlagen");
+            } catch (err) {
+              if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429) {
+                const detail = err.response?.data?.detail;
+                toast.error(typeof detail === "string" ? detail : "Recherche fehlgeschlagen");
+              }
               setResearchOpen(false);
             } finally {
               setResearchLoading(false);

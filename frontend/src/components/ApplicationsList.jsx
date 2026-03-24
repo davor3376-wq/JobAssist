@@ -280,8 +280,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     try {
       const res = await researchApi.research(job.company || "", job.description || "");
       setResearchData(res.data);
-    } catch {
-      toast.error("Recherche fehlgeschlagen");
+    } catch (err) {
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") { setResearchModal(null); return; }
+      if (err.response?.status === 429) { setResearchModal(null); return; }
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Recherche fehlgeschlagen");
       setResearchModal(null);
     } finally {
       setResearchLoading(false);
