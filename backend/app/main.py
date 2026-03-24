@@ -30,6 +30,13 @@ async def lifespan(app: FastAPI):
         await conn.execute(
             text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE")
         )
+        # Add per-user alert refresh tracking (moved from job_alerts table)
+        await conn.execute(
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_count INTEGER DEFAULT 0")
+        )
+        await conn.execute(
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_window_start TIMESTAMP")
+        )
     yield
     # Shutdown
     await engine.dispose() # (This command safely closes the active database connection pool)

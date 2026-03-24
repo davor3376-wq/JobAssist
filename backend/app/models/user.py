@@ -1,6 +1,7 @@
 from sqlalchemy import Integer, String, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import Optional
 
 from app.core.database import Base
 
@@ -15,6 +16,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    # Job alert manual refresh tracking (per-user so deleting alerts can't reset the limit)
+    alert_refresh_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    alert_refresh_window_start: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # User preferences
     currency: Mapped[str] = mapped_column(String, default="USD", nullable=False)  # USD, EUR, GBP, etc.

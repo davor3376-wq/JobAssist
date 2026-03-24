@@ -143,24 +143,22 @@ async def run_alert_now(
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
 
-    # Force 'now' to be naive immediately
+    # Rate limit is tracked on the user, not the alert — prevents bypass by delete+recreate
     now = get_naive_now()
-    
-    # window_start from Neon is already naive
-    window_start = alert.manual_refresh_window_start
+    window_start = current_user.alert_refresh_window_start
 
-    # Safety: ensure window_start is naive if it was somehow loaded with TZ info
+    # Safety: strip tz info if Neon ever returns it
     if window_start and window_start.tzinfo is not None:
         window_start = window_start.replace(tzinfo=None)
 
     window_expired = window_start is None or (now - window_start) >= timedelta(hours=REFRESH_WINDOW_HOURS)
 
     if window_expired:
-        alert.manual_refresh_count = 0
-        alert.manual_refresh_window_start = now
-    
-    # Check if they hit the limit within the current window
-    if alert.manual_refresh_count >= REFRESH_MAX:
+        current_user.alert_refresh_count = 0
+        current_user.alert_refresh_window_start = now
+        window_start = now
+
+    if current_user.alert_refresh_count >= REFRESH_MAX:
         reset_at = window_start + timedelta(hours=REFRESH_WINDOW_HOURS)
         seconds_left = int((reset_at - now).total_seconds())
         hours_left = max(0, seconds_left // 3600)
@@ -171,8 +169,7 @@ async def run_alert_now(
                    f"Verfügbar in {hours_left}h {minutes_left}min.",
         )
 
-    alert.manual_refresh_count += 1
-    # This commit will now succeed because alert.manual_refresh_window_start is naive
+    current_user.alert_refresh_count += 1
     await db.commit()
 
     background_tasks.add_task(
@@ -186,8 +183,8 @@ async def run_alert_now(
     
     return {
         "message": "Suche gestartet. Du erhältst in Kürze eine E-Mail.",
-        "refreshes_used": alert.manual_refresh_count,
-        "refreshes_remaining": REFRESH_MAX - alert.manual_refresh_count,
+        "refreshes_used": current_user.alert_refresh_count,
+        "refreshes_remaining": REFRESH_MAX - current_user.alert_refresh_count,
     }
 
 

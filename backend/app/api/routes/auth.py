@@ -19,6 +19,7 @@ from app.models.refresh_token import RefreshToken
 from app.schemas.user import UserCreate, UserLogin, UserOut, Token
 from app.main import limiter
 from app.services.email_service import send_verification_email, send_password_reset_email
+from app.core.email_validation import is_allowed_email
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ def _decode_email_token(token: str, expected_purpose: str) -> int:
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def register(request: Request, payload: UserCreate, bg: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    if not is_allowed_email(payload.email):
+        raise HTTPException(status_code=400, detail="Bitte verwende eine gültige E-Mail-Adresse (z.B. Gmail, Outlook, iCloud)")
+
     result = await db.execute(select(User).where(User.email == payload.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Diese E-Mail-Adresse ist bereits registriert")
