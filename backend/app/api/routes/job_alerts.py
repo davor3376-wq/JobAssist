@@ -89,12 +89,17 @@ async def create_alert(
         job_type=payload.job_type,
         email=current_user.email,
         frequency=payload.frequency,
-        manual_refresh_count=0,
-        manual_refresh_window_start=get_naive_now(),
+        manual_refresh_count=current_user.alert_refresh_count,
+        manual_refresh_window_start=current_user.alert_refresh_window_start,
     )
     db.add(alert)
     await db.commit()
     await db.refresh(alert)
+
+    # Keep response aligned with the shared user-level refresh quota so a newly
+    # created alert never appears to reset the manual-run allowance.
+    alert.manual_refresh_count = current_user.alert_refresh_count
+    alert.manual_refresh_window_start = current_user.alert_refresh_window_start
     return alert
 
 

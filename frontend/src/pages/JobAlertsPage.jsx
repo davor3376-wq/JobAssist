@@ -305,7 +305,26 @@ export default function JobAlertsPage() {
 
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const createdAlert = res.data;
+      const nextRefreshState = {
+        manual_refresh_count: createdAlert?.manual_refresh_count || 0,
+        manual_refresh_window_start: createdAlert?.manual_refresh_window_start || null,
+      };
+
+      setRefreshState((prev) => {
+        const prevTs = prev?.manual_refresh_window_start ? new Date(prev.manual_refresh_window_start).getTime() : 0;
+        const nextTs = nextRefreshState.manual_refresh_window_start ? new Date(nextRefreshState.manual_refresh_window_start).getTime() : 0;
+
+        if (!prev) return nextRefreshState;
+        if (nextTs > prevTs) return nextRefreshState;
+        if (nextTs === prevTs && nextRefreshState.manual_refresh_count !== prev.manual_refresh_count) {
+          return nextRefreshState;
+        }
+        return prev;
+      });
+
+      qc.setQueryData(["job-alerts"], (old = []) => [createdAlert, ...old]);
       qc.invalidateQueries({ queryKey: ["job-alerts"] });
       setShowCreate(false);
       toast.success("Alert erstellt!");
