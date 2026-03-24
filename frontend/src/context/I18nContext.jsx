@@ -1,19 +1,32 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import useAuthStore from "../hooks/useAuthStore";
 import translations from "../i18n/translations.json";
 
 const I18nContext = createContext();
 
 export function I18nProvider({ children }) {
-  const [language, setLanguage] = useState("de");
+  const [language, setLanguageState] = useState("de");
+  // Prevents authUser refetches from rolling back a manual language change mid-save
+  const isChangingLanguage = useRef(false);
   const authUser = useAuthStore((s) => s.user);
 
-  // Load language from user preferences when user is fetched
+  // Only sync from server when no manual change is in flight
   useEffect(() => {
-    if (authUser?.language) {
-      setLanguage(authUser.language);
+    if (!isChangingLanguage.current && authUser?.language) {
+      setLanguageState(authUser.language);
     }
   }, [authUser]);
+
+  // Sets language and locks out authUser override until releaseLanguageLock is called
+  const setLanguage = (lang) => {
+    isChangingLanguage.current = true;
+    setLanguageState(lang);
+  };
+
+  // Call after save completes (success or failure) to re-enable authUser syncing
+  const releaseLanguageLock = () => {
+    isChangingLanguage.current = false;
+  };
 
   const t = (key) => {
     const keys = key.split(".");
@@ -31,7 +44,7 @@ export function I18nProvider({ children }) {
   };
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
+    <I18nContext.Provider value={{ language, setLanguage, releaseLanguageLock, t }}>
       {children}
     </I18nContext.Provider>
   );

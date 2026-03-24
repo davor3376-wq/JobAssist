@@ -43,7 +43,7 @@ const LANGUAGES = [
 
 export default function SettingsPage() {
   const qc = useQueryClient();
-  const { t, setLanguage } = useI18n();
+  const { t, setLanguage, releaseLanguageLock } = useI18n();
   const fileInputRef = useRef(null);
   const [avatar, setAvatar] = useState(null);
 
@@ -94,6 +94,8 @@ export default function SettingsPage() {
   });
 
   const onSubmit = async (data) => {
+    if (isSubmitting) return;
+
     const preferencesPayload = {
       currency: data.currency,
       location: data.location,
@@ -111,32 +113,42 @@ export default function SettingsPage() {
       avatar: avatar ?? null,
     };
 
-    const [prefResult, profResult] = await Promise.allSettled([
-      settingsApi.updatePreferences(preferencesPayload),
-      settingsApi.updateProfile(profilePayload),
-    ]);
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 10000);
 
-    // Always invalidate both regardless of partial failure
-    await Promise.allSettled([
-      qc.invalidateQueries({ queryKey: ["profile"] }),
-      qc.invalidateQueries({ queryKey: ["preferences"] }),
-      qc.invalidateQueries({ queryKey: ["init"] }),
-    ]);
+    try {
+      const [prefResult, profResult] = await Promise.allSettled([
+        settingsApi.updatePreferences(preferencesPayload, { signal: controller.signal }),
+        settingsApi.updateProfile(profilePayload, { signal: controller.signal }),
+      ]);
 
-    const prefFailed = prefResult.status === "rejected";
-    const profFailed = profResult.status === "rejected";
+      // Always invalidate both regardless of partial failure
+      await Promise.allSettled([
+        qc.invalidateQueries({ queryKey: ["profile"] }),
+        qc.invalidateQueries({ queryKey: ["preferences"] }),
+        qc.invalidateQueries({ queryKey: ["init"] }),
+      ]);
 
-    if (prefFailed && profFailed) {
-      toast.error("Einstellungen konnten nicht gespeichert werden");
-    } else if (prefFailed) {
-      toast.error("App-Einstellungen konnten nicht gespeichert werden");
-      toast.success("Jobpräferenzen gespeichert ✓");
-    } else if (profFailed) {
-      toast.error("Jobpräferenzen konnten nicht gespeichert werden");
-      toast.success("App-Einstellungen gespeichert ✓");
-    } else {
-      if (data.language) setLanguage(data.language);
-      toast.success(t("settings.savePreferences") + " ✓");
+      const prefFailed = prefResult.status === "rejected";
+      const profFailed = profResult.status === "rejected";
+
+      if (prefFailed && profFailed) {
+        const aborted = controller.signal.aborted;
+        toast.error(aborted ? "Zeitüberschreitung — bitte erneut versuchen" : "Einstellungen konnten nicht gespeichert werden");
+      } else if (prefFailed) {
+        toast.error("App-Einstellungen konnten nicht gespeichert werden");
+        toast.success("Jobpräferenzen gespeichert ✓");
+      } else if (profFailed) {
+        toast.error("Jobpräferenzen konnten nicht gespeichert werden");
+        toast.success("App-Einstellungen gespeichert ✓");
+      } else {
+        // Coupled to request success — prevents rollback from background authUser refetch
+        if (data.language) setLanguage(data.language);
+        toast.success(t("settings.savePreferences") + " ✓");
+      }
+    } finally {
+      clearTimeout(abortTimer);
+      releaseLanguageLock();
     }
   };
 
@@ -273,10 +285,7 @@ export default function SettingsPage() {
                     {...field}
                     className="input"
                     value={field.value || "en"}
-                    onChange={(e) => {
-                      field.onChange(e.target.value);
-                      setLanguage(e.target.value); // live preview — changes UI immediately
-                    }}
+                    onChange={(e) => field.onChange(e.target.value)}
                   >
                     {LANGUAGES.map((lang) => (
                       <option key={lang.code} value={lang.code}>

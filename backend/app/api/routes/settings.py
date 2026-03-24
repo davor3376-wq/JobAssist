@@ -39,7 +39,9 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update user's profile and preferences."""
+    """Update user's profile and preferences.
+    Returns 422 automatically for invalid salary values (via Pydantic validators).
+    """
     result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == current_user.id)
     )
@@ -60,8 +62,13 @@ async def update_profile(
     if "is_open_to_relocation" in update_data: profile.is_open_to_relocation = update_data["is_open_to_relocation"]
     if "avatar" in update_data:               profile.avatar               = update_data["avatar"]
 
-    await db.commit()
-    await db.refresh(profile)
+    try:
+        await db.commit()
+        await db.refresh(profile)
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=422, detail="Profil konnte nicht gespeichert werden")
+
     return profile
 
 

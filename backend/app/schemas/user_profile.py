@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from datetime import datetime
 from typing import Optional
 
@@ -12,6 +12,20 @@ class UserProfileUpdate(BaseModel):
     experience_level: Optional[str] = None
     is_open_to_relocation: Optional[bool] = None
     avatar: Optional[str] = None   # base64 data URL
+
+    @field_validator("salary_min", "salary_max")
+    @classmethod
+    def salary_non_negative(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v < 0:
+            raise ValueError("Gehalt darf nicht negativ sein")
+        return v
+
+    @model_validator(mode="after")
+    def salary_range_valid(self) -> "UserProfileUpdate":
+        if self.salary_min is not None and self.salary_max is not None:
+            if self.salary_min > self.salary_max:
+                raise ValueError("Mindestgehalt darf nicht höher als das Höchstgehalt sein")
+        return self
 
 
 class UserProfileOut(BaseModel):

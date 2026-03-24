@@ -4,6 +4,7 @@ import queryClient from "../queryClient";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: { "Content-Type": "application/json" },
+  timeout: 10000,
 });
 
 // Endpoints that consume usage — invalidate billing data after success
@@ -242,9 +243,9 @@ export const billingApi = {
 // --- Settings ---
 export const settingsApi = {
   getProfile: () => api.get("/settings/profile"),
-  updateProfile: (data) => api.put("/settings/profile", data),
+  updateProfile: (data, config) => api.put("/settings/profile", data, config),
   getPreferences: () => api.get("/settings/preferences"),
-  updatePreferences: (data) => api.put("/settings/preferences", data),
+  updatePreferences: (data, config) => api.put("/settings/preferences", data, config),
 };
 
 
