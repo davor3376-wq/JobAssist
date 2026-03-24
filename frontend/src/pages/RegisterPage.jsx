@@ -6,6 +6,19 @@ import { authApi } from "../services/api";
 import AuthLayout from "../components/ui/AuthLayout";
 import { Mail } from "lucide-react";
 
+function getErrorMessage(err) {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === "string") return detail;
+
+  if (Array.isArray(detail)) {
+    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
+    if (firstMessage) return firstMessage;
+  }
+
+  return "Registrierung fehlgeschlagen";
+}
+
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const [registered, setRegistered] = useState(false);
@@ -17,7 +30,7 @@ export default function RegisterPage() {
       setRegisteredEmail(data.email);
       setRegistered(true);
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Registrierung fehlgeschlagen");
+      toast.error(getErrorMessage(err));
     }
   };
 
