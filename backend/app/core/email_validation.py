@@ -1,129 +1,138 @@
-"""Blocklist of known disposable / throwaway email domains."""
+"""Allowlist of legitimate personal email providers."""
 
-DISPOSABLE_DOMAINS = {
-    # Mailinator family
-    "mailinator.com", "mailinator2.com", "mailinater.com", "suremail.info",
-    "spamgourmet.com", "spamgourmet.net", "spamgourmet.org",
-    # Guerrilla Mail
-    "guerrillamail.com", "guerrillamail.net", "guerrillamail.org",
-    "guerrillamail.biz", "guerrillamail.de", "guerrillamail.info",
-    "guerrillamailblock.com", "spam4.me",
-    # Temp-mail / 10min
-    "temp-mail.org", "temp-mail.ru", "tempmail.com", "tempmail.net",
-    "tempmail.de", "10minutemail.com", "10minutemail.net", "10minutemail.org",
-    "10minemail.com", "10minutemail.co.za", "10minutemail.us",
-    "throwam.com", "throwam.net",
-    # Yopmail
-    "yopmail.com", "yopmail.fr", "cool.fr.nf", "jetable.fr.nf",
-    "nospam.ze.tc", "nomail.xl.cx", "mega.zik.dj", "speed.1s.fr",
-    "courriel.fr.nf", "moncourrier.fr.nf", "monemail.fr.nf", "monmail.fr.nf",
-    # Sharklasers / Guerrilla variants
-    "sharklasers.com", "guerrillamailblock.com", "grr.la", "guerrillamail.info",
-    "spam4.me", "trashmail.at",
-    # Trashmail
-    "trashmail.com", "trashmail.me", "trashmail.net", "trashmail.org",
-    "trashmail.io", "trashmail.xyz", "trashmail.at",
-    # Dispostable
-    "dispostable.com", "discard.email", "discardmail.com", "discardmail.de",
-    # Mailnull
-    "mailnull.com", "mailn.com",
-    # Spamex
-    "spamex.com", "spaml.com", "spaml.de",
-    # Fakeinbox / Throwam
-    "fakeinbox.com", "throwam.com",
-    # Getairmail
-    "getairmail.com", "getairmail.cf", "getairmail.ga", "getairmail.gq",
-    "getairmail.ml", "getairmail.tk",
-    # Mailnesia
-    "mailnesia.com",
-    # Maildrop
-    "maildrop.cc",
-    # Spamgourmet
-    "spamgourmet.com", "spamgourmet.net", "spamgourmet.org",
-    # Others
-    "crap.handcrafted.jp", "jetable.com", "jetable.net", "jetable.org",
-    "jetable.fr.nf", "nomail.xl.cx", "spamevader.com",
-    "sogetthis.com", "spamspot.com", "tempemail.net",
-    "temporaryemail.net", "temporaryemail.us", "temporaryforwarding.com",
-    "thanksnospam.info", "throwam.com", "throwam.net",
-    "trbvm.com", "trillianpro.com", "tyldd.com",
-    "uggsrock.com", "urhen.com", "veryrealemail.com",
-    "wetrainbayarea.com", "wetrainbayarea.org",
-    "xagloo.com", "xemaps.com", "xents.com", "xmaily.com",
-    "xoxy.net", "yapped.net", "yepmail.net",
-    "yogamaven.com", "yomail.info", "yopmail.pp.ua",
-    "ypmail.webarnak.fr.eu.org",
-    "z1p.biz", "za.com", "zehnminutenmail.de",
-    "zippymail.info", "zoaxe.com", "zoemail.net",
-    "zoemail.org", "zomg.info",
-    # CF/GA/ML/TK domains often used for throwaway
-    "mailsac.com", "mailsac.org",
-    "e4ward.com", "filzmail.com", "freemail.ms",
-    "haltospam.com", "hatespam.org", "hidemail.de",
-    "hidzz.com", "ieatspam.eu", "ieatspam.info",
-    "ihateyoualot.info", "iheartspam.org",
-    "imails.info", "inboxdesign.me",
-    "includes.com", "ipoo.org", "irish2me.com",
-    "jnxjn.com", "jourrapide.com",
-    "kasmail.com", "kaspop.com",
-    "klassmaster.com", "klassmaster.net",
-    "klzlk.com", "koszmail.pl",
-    "kurzepost.de", "letthemeatspam.com",
-    "lol.ovpn.to", "lookugly.com",
-    "lopl.co.cc", "lortemail.dk",
-    "m4ilweb.info", "maboard.com",
-    "mail-temporaire.fr", "mail.by",
-    "mail2rss.org", "mailbidon.com",
-    "mailbiz.biz", "mailblocks.com",
-    "mailbucket.org", "mailc.net",
-    "mailchop.com", "mailde.org",
-    "maileimer.de", "mailexpire.com",
-    "mailfall.com", "mailfree.ga",
-    "mailfreeonline.com", "mailfs.com",
-    "mailguard.me", "mailhazard.com",
-    "mailhazard.us", "mailimate.com",
-    "mailimails.com", "mailimate.com",
-    "mailkurier.de", "mailme.ir",
-    "mailme24.com", "mailmetrash.com",
-    "mailmoat.com", "mailnadeln.net",
-    "mailnew.com", "mailnull.com",
-    "mailonaut.com", "mailorg.org",
-    "mailpick.biz", "mailproxsy.com",
-    "mailquack.com", "mailrock.biz",
-    "mailscrap.com", "mailseal.de",
-    "mailshell.com", "mailsiphon.com",
-    "mailslapping.com", "mailslite.com",
-    "mailsoul.com", "mailtome.de",
-    "mailtothis.com", "mailvault.com",
-    "mailw.info", "mailwire.com",
-    "makemetheking.com", "manifestgenerator.com",
-    "mt2009.com", "mt2014.com",
-    "mt2015.com", "mycleaninbox.net",
-    "mypartyclip.de", "myphantomemail.com",
-    "mysamp.de", "myspace-france.fr",
-    "myspaceinc.com", "myspaceinc.net",
-    "myspaceinc.org", "myspacepimps.net",
-    "myspamless.com", "mytrashmail.com",
-    "neomailbox.com", "nepwk.com",
-    "nervmich.net", "nervtmich.net",
-    "netmails.com", "netmails.net",
-    "nevermail.de", "newbpotato.tk",
-    "nezdiro.org", "ninfected.com",
-    "nnot.net", "no-spam.ws",
-    "nobulk.com", "noclickemail.com",
-    "nogmailspam.info", "nomail.pw",
-    "nospam.ze.tc", "nospam4.us",
-    "nospamfor.us", "nospamthanks.info",
-    "notmailinator.com", "notypings.com",
-    "novakovitch.net", "nowhere.org",
-    "nowmymail.com",
+ALLOWED_DOMAINS = {
+    # Google
+    "gmail.com", "googlemail.com",
+
+    # Microsoft
+    "outlook.com", "outlook.de", "outlook.at", "outlook.fr", "outlook.es",
+    "outlook.it", "outlook.co.uk", "outlook.com.au", "outlook.jp",
+    "hotmail.com", "hotmail.de", "hotmail.at", "hotmail.fr", "hotmail.es",
+    "hotmail.it", "hotmail.co.uk", "hotmail.com.au", "hotmail.be",
+    "live.com", "live.de", "live.at", "live.fr", "live.co.uk",
+    "live.com.au", "live.be", "live.nl", "live.it",
+    "msn.com",
+
+    # Yahoo
+    "yahoo.com", "yahoo.de", "yahoo.at", "yahoo.co.uk", "yahoo.fr",
+    "yahoo.es", "yahoo.it", "yahoo.com.au", "yahoo.ca", "yahoo.co.jp",
+    "yahoo.co.in", "yahoo.com.br", "yahoo.com.mx", "yahoo.com.ar",
+    "ymail.com", "rocketmail.com",
+
+    # Apple
+    "icloud.com", "me.com", "mac.com",
+
+    # ProtonMail / Proton
+    "protonmail.com", "protonmail.ch", "proton.me", "pm.me",
+
+    # GMX (popular in DACH)
+    "gmx.de", "gmx.net", "gmx.com", "gmx.at", "gmx.ch",
+    "gmx.li", "gmx.org",
+
+    # Web.de (Germany)
+    "web.de",
+
+    # T-Online / Telekom (Germany)
+    "t-online.de", "telekom.de",
+
+    # Freenet (Germany)
+    "freenet.de",
+
+    # 1&1 (Germany)
+    "1und1.de",
+
+    # A1 / Magnet (Austria)
+    "a1.net", "aon.at", "utanet.at", "chello.at", "magnet.at",
+
+    # Drei (Austria)
+    "drei.at",
+
+    # AOL
+    "aol.com", "aol.de", "aol.fr", "aol.co.uk",
+
+    # Tutanota / Tuta
+    "tutanota.com", "tutanota.de", "tutamail.com", "tuta.io", "tuta.com",
+
+    # Fastmail
+    "fastmail.com", "fastmail.fm", "fastmail.net", "fastmail.org",
+
+    # Zoho
+    "zoho.com", "zohomail.com",
+
+    # Yandex
+    "yandex.com", "yandex.ru", "yandex.de", "yandex.fr", "ya.ru",
+
+    # Mail.ru (Russia)
+    "mail.ru", "inbox.ru", "list.ru", "bk.ru",
+
+    # Posteo (Germany, privacy-focused)
+    "posteo.de", "posteo.net", "posteo.eu",
+
+    # Mailbox.org (Germany)
+    "mailbox.org",
+
+    # Hey
+    "hey.com",
+
+    # Startmail
+    "startmail.com",
+
+    # Runbox
+    "runbox.com",
+
+    # Disroot
+    "disroot.org",
+
+    # US ISP / legacy
+    "comcast.net", "verizon.net", "att.net", "sbcglobal.net",
+    "bellsouth.net", "cox.net", "charter.net", "earthlink.net",
+    "frontier.com", "windstream.net",
+
+    # Orange / Wanadoo (France)
+    "orange.fr", "wanadoo.fr", "laposte.net", "free.fr", "sfr.fr",
+    "bbox.fr",
+
+    # Belgium
+    "skynet.be", "telenet.be", "proximus.be",
+
+    # Netherlands
+    "ziggo.nl", "xs4all.nl", "planet.nl",
+
+    # Italy
+    "libero.it", "virgilio.it", "tim.it", "tiscali.it", "alice.it",
+
+    # Spain
+    "telefonica.net",
+
+    # UK
+    "btinternet.com", "virginmedia.com", "sky.com", "ntlworld.com",
+    "talktalk.net", "btopenworld.com",
+
+    # Australia / NZ
+    "bigpond.com", "bigpond.net.au", "optusnet.com.au",
+    "xtra.co.nz",
+
+    # Canada
+    "shaw.ca", "rogers.com", "videotron.ca", "sympatico.ca",
+
+    # Poland
+    "wp.pl", "onet.pl", "interia.pl", "o2.pl",
+
+    # Czech Republic
+    "seznam.cz", "centrum.cz", "email.cz",
+
+    # Brazil
+    "uol.com.br", "bol.com.br", "terra.com.br", "ig.com.br",
+
+    # Samsung (Samsung Email app)
+    "samsung.com",
 }
 
 
 def is_allowed_email(email: str) -> bool:
-    """Returns False if the email domain is a known disposable provider."""
+    """Returns True only if the email domain is a known legitimate provider."""
     try:
         domain = email.split("@")[1].lower().strip()
-        return domain not in DISPOSABLE_DOMAINS
+        return domain in ALLOWED_DOMAINS
     except (IndexError, AttributeError):
         return False
