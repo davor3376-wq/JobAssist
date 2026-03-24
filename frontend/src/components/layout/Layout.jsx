@@ -120,14 +120,23 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
   );
 }
 
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center py-16">
+      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Allow animations on first load, then disable for future navigations
+  // page-enter only fires on the true first browser load (not on SPA navigation like register → dashboard)
+  const [animClass] = useState(() =>
+    sessionStorage.getItem("app-loaded") ? "page-ready" : "page-enter"
+  );
   useEffect(() => {
-    const timer = setTimeout(() => setInitialLoad(false), 800);
-    return () => clearTimeout(timer);
+    sessionStorage.setItem("app-loaded", "1");
   }, []);
   const logout = useAuthStore((s) => s.logout);
   const setUser = useAuthStore((s) => s.setUser);
@@ -208,8 +217,8 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className={`max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 ${initialLoad ? "page-enter" : "page-ready"}`}>
-            <Suspense fallback={null}>
+          <div className={`max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 ${animClass}`}>
+            <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
           </div>
