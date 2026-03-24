@@ -512,7 +512,6 @@ export default function SettingsPage() {
       </form>
 
       {/* Email Verification Banner */}
-      <VerificationBanner />
 
       {/* Danger Zone — Delete Account */}
       <DeleteAccountSection />

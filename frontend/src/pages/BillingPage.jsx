@@ -15,7 +15,7 @@ const FEATURE_LABELS = {
 };
 
 const PLAN_NAMES = {
-  basic: "Basic (Gratis)",
+  basic: "Basic",
   pro: "Pro",
   max: "Max",
   enterprise: "Enterprise",
@@ -96,7 +96,7 @@ export default function BillingPage() {
 
   const sub = data?.subscription;
   const usage = data?.usage || [];
-  const planName = PLAN_NAMES[sub?.plan] || "Basic (Gratis)";
+  const planName = PLAN_NAMES[sub?.plan] || "Basic";
   const isPaid = sub?.plan && sub.plan !== "basic";
 
   return (
