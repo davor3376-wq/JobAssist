@@ -88,6 +88,11 @@ async def login(request: Request, payload: UserLogin, db: AsyncSession = Depends
         )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Konto ist deaktiviert")
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Bitte bestätige zuerst deine E-Mail-Adresse. Sieh in deinem Posteingang nach der Bestätigungs-E-Mail.",
+        )
 
     access_token = create_access_token({"sub": str(user.id)})
     raw_refresh, refresh_hash = generate_refresh_token()

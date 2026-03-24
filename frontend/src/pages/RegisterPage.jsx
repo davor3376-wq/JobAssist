@@ -1,33 +1,48 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authApi, initApi } from "../services/api";
-import useAuthStore from "../hooks/useAuthStore";
+import { authApi } from "../services/api";
 import AuthLayout from "../components/ui/AuthLayout";
-import queryClient from "../queryClient";
+import { Mail } from "lucide-react";
 
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
-  const login = useAuthStore((s) => s.login);
-  const navigate = useNavigate();
+  const [registered, setRegistered] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const onSubmit = async (data) => {
     try {
       await authApi.register(data);
-      const res = await authApi.login({ email: data.email, password: data.password });
-      login(res.data.access_token, res.data.refresh_token);
-      queryClient.clear();
-      navigate("/dashboard");
-      toast.success("Konto erstellt! Willkommen.");
-      // Prefetch init in background so sidebar has data quickly
-      initApi.fetch().then((initRes) => {
-        try { localStorage.setItem("init", JSON.stringify(initRes.data)); } catch {}
-        queryClient.setQueryData(["init"], initRes.data);
-      }).catch(() => {});
+      setRegisteredEmail(data.email);
+      setRegistered(true);
     } catch (err) {
       toast.error(err.response?.data?.detail || "Registrierung fehlgeschlagen");
     }
   };
+
+  if (registered) {
+    return (
+      <AuthLayout>
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-7 h-7 text-brand-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">E-Mail bestätigen</h2>
+          <p className="text-gray-500 text-sm mb-1">
+            Wir haben eine Bestätigungs-E-Mail an
+          </p>
+          <p className="font-semibold text-gray-800 text-sm mb-4">{registeredEmail}</p>
+          <p className="text-gray-500 text-sm mb-6">
+            Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
+          </p>
+          <Link to="/login" className="btn-primary w-full block text-center !py-2.5">
+            Zur Anmeldung
+          </Link>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
