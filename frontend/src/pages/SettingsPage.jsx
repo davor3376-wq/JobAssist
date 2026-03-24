@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
@@ -45,26 +45,41 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const { t, setLanguage } = useI18n();
   const fileInputRef = useRef(null);
-  const readCachedProfile = () => { try { const s = localStorage.getItem("settings_profile"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
-  const [avatar, setAvatar] = useState(() => readCachedProfile()?.avatar || null);
+  const [avatar, setAvatar] = useState(null);
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => settingsApi.getProfile().then((r) => {
-      try { localStorage.setItem("settings_profile", JSON.stringify(r.data)); } catch {}
-      return r.data;
-    }),
-    initialData: readCachedProfile,
+    queryFn: () => settingsApi.getProfile().then((r) => r.data),
     staleTime: 1000 * 60 * 3,
   });
 
-  // Sync avatar if profile loads something newer than the cache
-  useEffect(() => {
-    if (profile?.avatar && !avatar) setAvatar(profile.avatar);
-  }, [profile]);
+  const { data: preferences, isLoading: preferencesLoading } = useQuery({
+    queryKey: ["preferences"],
+    queryFn: () => settingsApi.getPreferences().then((r) => r.data),
+    staleTime: 1000 * 60 * 3,
+  });
 
-  const { control, handleSubmit, reset, formState: { isSubmitting } } = useForm({
-    values: profile || {
+  // Merged form values: profile fields + preferences fields, both authoritative for their own slice
+  const formValues = profile && preferences ? {
+    desired_locations: profile.desired_locations ?? [],
+    salary_min: profile.salary_min ?? null,
+    salary_max: profile.salary_max ?? null,
+    job_types: profile.job_types ?? [],
+    industries: profile.industries ?? [],
+    experience_level: profile.experience_level ?? "",
+    is_open_to_relocation: profile.is_open_to_relocation ?? false,
+    currency: preferences.currency ?? "EUR",
+    location: preferences.location ?? "Österreich",
+    language: preferences.language ?? "de",
+  } : undefined;
+
+  // Sync avatar from server once profile loads
+  useEffect(() => {
+    if (profile?.avatar) setAvatar(profile.avatar);
+  }, [profile?.avatar]);
+
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm({
+    values: formValues ?? {
       currency: "EUR",
       location: "Österreich",
       language: "de",
@@ -78,19 +93,51 @@ export default function SettingsPage() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: settingsApi.updateProfile,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profile"] });
-      qc.invalidateQueries({ queryKey: ["init"] });
-      toast.success(t("settings.savePreferences") + " ✓");
-    },
-    onError: () => toast.error("Einstellungen konnten nicht gespeichert werden"),
-  });
+  const onSubmit = async (data) => {
+    const preferencesPayload = {
+      currency: data.currency,
+      location: data.location,
+      language: data.language,
+    };
 
-  const onSubmit = (data) => {
-    updateMutation.mutate({ ...data, avatar: avatar ?? null });
-    if (data.language) setLanguage(data.language);
+    const profilePayload = {
+      desired_locations: data.desired_locations,
+      salary_min: data.salary_min,
+      salary_max: data.salary_max,
+      job_types: data.job_types,
+      industries: data.industries,
+      experience_level: data.experience_level,
+      is_open_to_relocation: data.is_open_to_relocation,
+      avatar: avatar ?? null,
+    };
+
+    const [prefResult, profResult] = await Promise.allSettled([
+      settingsApi.updatePreferences(preferencesPayload),
+      settingsApi.updateProfile(profilePayload),
+    ]);
+
+    // Always invalidate both regardless of partial failure
+    await Promise.allSettled([
+      qc.invalidateQueries({ queryKey: ["profile"] }),
+      qc.invalidateQueries({ queryKey: ["preferences"] }),
+      qc.invalidateQueries({ queryKey: ["init"] }),
+    ]);
+
+    const prefFailed = prefResult.status === "rejected";
+    const profFailed = profResult.status === "rejected";
+
+    if (prefFailed && profFailed) {
+      toast.error("Einstellungen konnten nicht gespeichert werden");
+    } else if (prefFailed) {
+      toast.error("App-Einstellungen konnten nicht gespeichert werden");
+      toast.success("Jobpräferenzen gespeichert ✓");
+    } else if (profFailed) {
+      toast.error("Jobpräferenzen konnten nicht gespeichert werden");
+      toast.success("App-Einstellungen gespeichert ✓");
+    } else {
+      if (data.language) setLanguage(data.language);
+      toast.success(t("settings.savePreferences") + " ✓");
+    }
   };
 
   const handleFileChange = async (e) => {
@@ -106,7 +153,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!profile && !readCachedProfile()) return (
+  if (profileLoading || preferencesLoading) return (
     <div className="max-w-2xl animate-slide-up">
       <div className="mb-8">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
