@@ -268,7 +268,7 @@ export default function JobAlertsPage() {
   });
 
   useEffect(() => {
-    if (!alerts.length || refreshState?.manual_refresh_window_start) return;
+    if (!alerts.length) return;
 
     const freshestAlertState = alerts.reduce((best, alert) => {
       const nextTs = alert.manual_refresh_window_start ? new Date(alert.manual_refresh_window_start).getTime() : 0;
@@ -281,10 +281,20 @@ export default function JobAlertsPage() {
         : best;
     }, null);
 
-    if (freshestAlertState?.manual_refresh_window_start) {
-      setRefreshState(freshestAlertState);
-    }
-  }, [alerts, refreshState?.manual_refresh_window_start]);
+    if (!freshestAlertState) return;
+
+    setRefreshState((prev) => {
+      const prevTs = prev?.manual_refresh_window_start ? new Date(prev.manual_refresh_window_start).getTime() : 0;
+      const nextTs = freshestAlertState.manual_refresh_window_start ? new Date(freshestAlertState.manual_refresh_window_start).getTime() : 0;
+
+      if (!prev) return freshestAlertState;
+      if (nextTs > prevTs) return freshestAlertState;
+      if (nextTs === prevTs && freshestAlertState.manual_refresh_count !== prev.manual_refresh_count) {
+        return freshestAlertState;
+      }
+      return prev;
+    });
+  }, [alerts]);
 
   useEffect(() => {
     try {

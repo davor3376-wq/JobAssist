@@ -36,7 +36,16 @@ async def list_alerts(
         .where(JobAlert.user_id == current_user.id)
         .order_by(JobAlert.created_at.desc())
     )
-    return result.scalars().all()
+    alerts = result.scalars().all()
+
+    # Manual refresh quota is tracked on the user, but the frontend still renders
+    # these legacy alert fields. Mirror the user-level values onto each alert
+    # response so the UI always receives the current shared state.
+    for alert in alerts:
+        alert.manual_refresh_count = current_user.alert_refresh_count
+        alert.manual_refresh_window_start = current_user.alert_refresh_window_start
+
+    return alerts
 
 
 @router.post("/", response_model=JobAlertOut, status_code=201)
