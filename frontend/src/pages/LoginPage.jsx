@@ -6,6 +6,19 @@ import useAuthStore from "../hooks/useAuthStore";
 import AuthLayout from "../components/ui/AuthLayout";
 import queryClient from "../queryClient";
 
+function getErrorMessage(err, fallback = "Anmeldung fehlgeschlagen") {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === "string") return detail;
+
+  if (Array.isArray(detail)) {
+    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
+    if (firstMessage) return firstMessage;
+  }
+
+  return fallback;
+}
+
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const login = useAuthStore((s) => s.login);
@@ -27,7 +40,7 @@ export default function LoginPage() {
         if (initData.me) setUser(initData.me);
       }).catch(() => {});
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Anmeldung fehlgeschlagen");
+      toast.error(getErrorMessage(err));
     }
   };
 

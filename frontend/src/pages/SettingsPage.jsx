@@ -41,6 +41,19 @@ const LANGUAGES = [
   { code: "de", label: "Deutsch" },
 ];
 
+function getErrorMessage(err, fallback = "Ein Fehler ist aufgetreten") {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === "string") return detail;
+
+  if (Array.isArray(detail)) {
+    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
+    if (firstMessage) return firstMessage;
+  }
+
+  return fallback;
+}
+
 export default function SettingsPage() {
   const qc = useQueryClient();
   const { t, setLanguage, releaseLanguageLock } = useI18n();

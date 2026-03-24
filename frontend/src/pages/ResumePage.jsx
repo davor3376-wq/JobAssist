@@ -7,6 +7,19 @@ import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
 
+function getErrorMessage(err, fallback = "Upload fehlgeschlagen") {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === "string") return detail;
+
+  if (Array.isArray(detail)) {
+    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
+    if (firstMessage) return firstMessage;
+  }
+
+  return fallback;
+}
+
 export default function ResumePage() {
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
@@ -43,7 +56,7 @@ export default function ResumePage() {
         qc.invalidateQueries({ queryKey: ["resumes"] });
         toast.success("Lebenslauf hochgeladen und analysiert!");
       } catch (err) {
-        toast.error(err.response?.data?.detail || "Upload fehlgeschlagen");
+        toast.error(getErrorMessage(err));
       } finally {
         setUploading(false);
       }
