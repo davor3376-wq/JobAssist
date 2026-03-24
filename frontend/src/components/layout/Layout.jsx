@@ -6,6 +6,8 @@ import clsx from "clsx";
 import { useI18n } from "../../context/I18nContext";
 import { useQuery } from "@tanstack/react-query";
 import { initApi, authApi } from "../../services/api";
+import toast from "react-hot-toast";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 const NAV_KEYS = [
   { to: "/dashboard",      tKey: "navigation.dashboard",    icon: LayoutDashboard },
@@ -128,6 +130,46 @@ function PageLoader() {
   );
 }
 
+function VerificationBanner({ me }) {
+  const [sending, setSending] = useState(false);
+
+  if (!me || me.is_verified !== false) return null;
+
+  const handleResend = async () => {
+    setSending(true);
+    try {
+      await authApi.resendVerification();
+      toast.success("Bestaetigungs-E-Mail gesendet");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Fehler beim Senden der Bestaetigungs-E-Mail"));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 md:px-5">
+      <div className="flex items-start gap-3">
+        <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold text-amber-900">E-Mail noch nicht bestaetigt</h2>
+          <p className="mt-1 text-sm text-amber-800">
+            Du kannst die App bereits nutzen. KI- und Premium-Funktionen werden aber erst nach der E-Mail-Bestaetigung freigeschaltet.
+          </p>
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={sending}
+            className="mt-3 text-sm font-semibold text-amber-700 transition-colors hover:text-amber-900 disabled:opacity-50"
+          >
+            {sending ? "E-Mail wird gesendet..." : "Bestaetigungs-E-Mail erneut senden"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -218,6 +260,7 @@ export default function Layout() {
 
         <main className="flex-1 overflow-y-auto">
           <div className={`max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 ${animClass}`}>
+            <VerificationBanner me={me} />
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>

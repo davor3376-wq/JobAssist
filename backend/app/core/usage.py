@@ -74,6 +74,15 @@ def require_usage(feature: str):
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user),
     ):
+        if not current_user.is_verified:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "email_not_verified",
+                    "message": "Bitte bestaetige zuerst deine E-Mail-Adresse, um diese Funktion nutzen zu koennen.",
+                },
+            )
+
         plan = await get_user_plan(db, current_user.id)
         limit = get_limit(plan, feature)
 

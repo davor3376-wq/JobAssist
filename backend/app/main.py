@@ -1,3 +1,6 @@
+import asyncio
+from datetime import datetime, timedelta
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -13,13 +16,39 @@ import re
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 from app.core.config import settings
-from sqlalchemy import text
-from app.core.database import engine, Base, get_db
+from sqlalchemy import select, text
+from app.core.database import AsyncSessionLocal, engine, Base, get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research, billing
+
+
+async def delete_stale_unverified_users():
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User).where(
+                User.is_verified.is_(False),
+                User.created_at < cutoff,
+            )
+        )
+        stale_users = result.scalars().all()
+        if not stale_users:
+            return
+        for user in stale_users:
+            await session.delete(user)
+        await session.commit()
+
+
+async def stale_user_cleanup_loop():
+    while True:
+        try:
+            await delete_stale_unverified_users()
+        except Exception:
+            traceback.print_exc()
+        await asyncio.sleep(60 * 60)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,9 +66,16 @@ async def lifespan(app: FastAPI):
         await conn.execute(
             text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_window_start TIMESTAMP")
         )
-    yield
-    # Shutdown
-    await engine.dispose() # (This command safely closes the active database connection pool)
+    cleanup_task = asyncio.create_task(stale_user_cleanup_loop())
+    try:
+        yield
+    finally:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
+        await engine.dispose() # (This command safely closes the active database connection pool)
 
 app = FastAPI(
     title="Job Application Assistant API",
@@ -151,6 +187,7 @@ async def init(
             "id": current_user.id,
             "email": current_user.email,
             "full_name": current_user.full_name,
+            "is_verified": current_user.is_verified,
             "currency": current_user.currency,
             "location": current_user.location,
             "language": current_user.language,

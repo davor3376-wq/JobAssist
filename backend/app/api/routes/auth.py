@@ -16,7 +16,6 @@ from app.core.security import (
     get_current_user,
     hash_password,
     hash_refresh_token,
-    oauth2_scheme,
     verify_password,
 )
 from app.main import limiter
@@ -52,7 +51,7 @@ def _decode_email_token(token: str, expected_purpose: str) -> int:
         raise HTTPException(status_code=400, detail="Token ist ungueltig oder abgelaufen")
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def register(
     request: Request,
@@ -82,7 +81,17 @@ async def register(
     token = _create_email_token(user.id, "verify", expires_minutes=1440)
     bg.add_task(send_verification_email, user.email, token)
 
-    return user
+    access_token = create_access_token({"sub": str(user.id)})
+    raw_refresh, refresh_hash = generate_refresh_token()
+    rt = RefreshToken(
+        user_id=user.id,
+        token_hash=refresh_hash,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    db.add(rt)
+    await db.commit()
+
+    return Token(access_token=access_token, refresh_token=raw_refresh)
 
 
 @router.post("/login", response_model=Token)
@@ -98,11 +107,6 @@ async def login(request: Request, payload: UserLogin, db: AsyncSession = Depends
         )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Konto ist deaktiviert")
-    if not user.is_verified:
-        raise HTTPException(
-            status_code=403,
-            detail="Bitte bestaetige zuerst deine E-Mail-Adresse. Sieh in deinem Posteingang nach der Bestaetigungs-E-Mail.",
-        )
 
     access_token = create_access_token({"sub": str(user.id)})
     raw_refresh, refresh_hash = generate_refresh_token()

@@ -1,83 +1,49 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authApi } from "../services/api";
+
 import AuthLayout from "../components/ui/AuthLayout";
-import { Mail } from "lucide-react";
+import useAuthStore from "../hooks/useAuthStore";
+import queryClient from "../queryClient";
+import { authApi, initApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
-  const [registered, setRegistered] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [isResending, setIsResending] = useState(false);
+  const login = useAuthStore((s) => s.login);
+  const setUser = useAuthStore((s) => s.setUser);
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
-      await authApi.register(data);
-      setRegisteredEmail(data.email);
-      setRegistered(true);
+      const res = await authApi.register(data);
+      login(res.data.access_token, res.data.refresh_token);
+      queryClient.clear();
+      navigate("/dashboard");
+
+      initApi.fetch().then((initRes) => {
+        const initData = initRes.data;
+        try { localStorage.setItem("init", JSON.stringify(initData)); } catch {}
+        queryClient.setQueryData(["init"], initData);
+        if (initData.me) setUser(initData.me);
+      }).catch(() => {});
+
+      toast.success("Konto erstellt. Bitte bestaetige deine E-Mail, um alle Funktionen freizuschalten.");
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Registrierung fehlgeschlagen"));
     }
   };
 
-  const handleResendVerification = async () => {
-    if (!registeredEmail || isResending) return;
-
-    setIsResending(true);
-    try {
-      const res = await authApi.resendVerificationPublic(registeredEmail);
-      toast.success(res.data?.message || "Bestatigungs-E-Mail erneut gesendet");
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Bestatigungs-E-Mail konnte nicht gesendet werden"));
-    } finally {
-      setIsResending(false);
-    }
-  };
-
-  if (registered) {
-    return (
-      <AuthLayout>
-        <div className="text-center">
-          <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-7 h-7 text-brand-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">E-Mail bestätigen</h2>
-          <p className="text-gray-500 text-sm mb-1">
-            Wir haben eine Bestätigungs-E-Mail an
-          </p>
-          <p className="font-semibold text-gray-800 text-sm mb-4">{registeredEmail}</p>
-          <p className="text-gray-500 text-sm mb-6">
-            Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
-          </p>
-          <button
-            type="button"
-            className="btn-secondary w-full block text-center !py-2.5 mb-3"
-            onClick={handleResendVerification}
-            disabled={isResending}
-          >
-            {isResending ? "E-Mail wird erneut gesendet..." : "Bestatigungs-E-Mail erneut senden"}
-          </button>
-          <Link to="/login" className="btn-primary w-full block text-center !py-2.5">
-            Zur Anmeldung
-          </Link>
-        </div>
-      </AuthLayout>
-    );
-  }
-
   return (
     <AuthLayout>
       <div className="mb-6 sm:mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Konto erstellen</h2>
-        <p className="text-gray-500 text-sm sm:text-base">Starte jetzt mit deiner Bewerbung in Österreich</p>
+        <p className="text-gray-500 text-sm sm:text-base">Starte jetzt mit deiner Bewerbung in Oesterreich</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label className="label">Vollständiger Name</label>
+          <label className="label">Vollstaendiger Name</label>
           <input className="input" placeholder="Max Mustermann" {...register("full_name")} />
         </div>
 
