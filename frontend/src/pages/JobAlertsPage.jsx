@@ -265,7 +265,15 @@ export default function JobAlertsPage() {
       setShowCreate(false);
       toast.success("Alert erstellt!");
     },
-    onError: () => toast.error("Fehler beim Erstellen des Alerts"),
+    onError: (err) => {
+      // UpgradeModal already shows for usage_limit
+      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 429) return;
+      const detail = err.response?.data?.detail;
+      const msg = typeof detail === "object" ? detail?.message :
+                  typeof detail === "string" ? detail : "Fehler beim Erstellen des Alerts";
+      toast.error(msg);
+    },
   });
 
   const updateMutation = useMutation({
@@ -299,15 +307,16 @@ export default function JobAlertsPage() {
     try {
       const res = await jobAlertsApi.runNow(id);
       const remaining = res.data?.refreshes_remaining ?? "?";
-      toast.success(`Suche gestartet — E-Mail kommt in Kürze! (Noch ${remaining} Aktualisierungen)`);
+      toast.success(
+        `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierungen)`,
+        { duration: 5000 }
+      );
       qc.invalidateQueries({ queryKey: ["job-alerts"] });
     } catch (err) {
-      const msg = err.response?.data?.detail;
-      if (err.response?.status === 429) {
-        toast.error(msg || "Zu viele Aktualisierungen. Bitte warte 4 Stunden.");
-      } else {
-        toast.error("Fehler beim Starten der Suche");
-      }
+      if (err.response?.status === 429) return; // interceptor shows rate-limited toast
+      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Fehler beim Starten der Suche");
     } finally {
       setRunningId(null);
     }

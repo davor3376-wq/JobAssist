@@ -247,11 +247,19 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
         applicant_name: me?.full_name || "",
       });
       const text = res.data?.text || "";
+      if (!text) {
+        toast.error("KI hat keinen Text zurückgegeben. Bitte erneut versuchen.");
+        return;
+      }
       setDraftTexts((prev) => ({ ...prev, [id]: text }));
       window.location.href = generateMailtoLink(jobForLink, text, userName);
       toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
-    } catch {
-      toast.error("Brief-Entwurf konnte nicht generiert werden");
+    } catch (err) {
+      // Interceptor handles 403 usage_limit (UpgradeModal) and 429 (rate toast)
+      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      if (err.response?.status === 429) return;
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Brief-Entwurf konnte nicht generiert werden");
     } finally {
       setDraftLoading(null);
     }

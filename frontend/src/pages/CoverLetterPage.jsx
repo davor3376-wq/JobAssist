@@ -42,12 +42,24 @@ export default function CoverLetterPage() {
   const generateMutation = useMutation({
     mutationFn: (data) => motivationsschreibenApi.generate(data),
     onSuccess: (res) => {
-      setGeneratedText(res.data.text);
-      setEditedText(res.data.text);
+      const text = res.data?.text;
+      if (!text) {
+        toast.error("KI hat keinen Text zurückgegeben. Bitte erneut versuchen.");
+        return;
+      }
+      setGeneratedText(text);
+      setEditedText(text);
       setIsEditing(false);
       toast.success("Motivationsschreiben erstellt!");
     },
-    onError: () => toast.error("Fehler beim Erstellen des Motivationsschreibens"),
+    onError: (err) => {
+      // Interceptor already showed UpgradeModal for usage limits
+      if (err.response?.status === 403 && err.response?.data?.error === "usage_limit") return;
+      // Interceptor already showed rate-limit toast
+      if (err.response?.status === 429) return;
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Fehler beim Erstellen des Motivationsschreibens");
+    },
   });
 
   const handleGenerate = () => {
