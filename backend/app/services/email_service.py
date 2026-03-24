@@ -1,6 +1,9 @@
-import logging
 import html as html_lib
-from typing import List, Dict, Any
+import logging
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 import httpx
@@ -48,9 +51,9 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
 <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">JobAssist — Neue Stellenangebote</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">JobAssist - Neue Stellenangebote</h1>
       <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:14px;">
-        {count} neue Stellen für <strong>{html_lib.escape(keywords)}</strong>{f' in {html_lib.escape(location)}' if location else ''}
+        {count} neue Stellen fuer <strong>{html_lib.escape(keywords)}</strong>{f' in {html_lib.escape(location)}' if location else ''}
       </p>
     </div>
     <div style="padding:24px 32px;">
@@ -67,36 +70,71 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
 </html>"""
 
 
-def _send_transactional_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Generic helper to send a single transactional email via Brevo."""
+def _send_via_brevo(to_email: str, subject: str, html_body: str) -> bool:
     if not settings.BREVO_API_KEY:
-        logger.warning("BREVO_API_KEY not configured — skipping email send")
         return False
 
     from_email = settings.EMAILS_FROM_EMAIL or "noreply@jobassist.app"
     from_name = settings.EMAILS_FROM_NAME or "JobAssist"
-
     payload = {
         "sender": {"name": from_name, "email": from_email},
         "to": [{"email": to_email}],
         "subject": subject,
         "htmlContent": html_body,
     }
+
     try:
         api_key = settings.BREVO_API_KEY.strip()
         with httpx.Client(timeout=15) as client:
             response = client.post(
-                BREVO_SEND_URL, json=payload,
+                BREVO_SEND_URL,
+                json=payload,
                 headers={"api-key": api_key, "Content-Type": "application/json"},
             )
             if not response.is_success:
-                logger.error(f"Brevo response {response.status_code}: {response.text}")
+                logger.error("Brevo response %s: %s", response.status_code, response.text)
             response.raise_for_status()
-        logger.info(f"Email sent to {to_email}: {subject}")
+        logger.info("Email sent via Brevo to %s: %s", to_email, subject)
         return True
-    except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {e}", exc_info=True)
+    except Exception as exc:
+        logger.error("Failed to send email via Brevo to %s: %s", to_email, exc, exc_info=True)
         return False
+
+
+def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
+    if not (settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD):
+        return False
+
+    from_email = settings.EMAILS_FROM_EMAIL or settings.SMTP_USER
+    from_name = settings.EMAILS_FROM_NAME or "JobAssist"
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = f"{from_name} <{from_email}>"
+    message["To"] = to_email
+    message.attach(MIMEText(html_body, "html", "utf-8"))
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+            if settings.SMTP_TLS:
+                server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(from_email, [to_email], message.as_string())
+        logger.info("Email sent via SMTP to %s: %s", to_email, subject)
+        return True
+    except Exception as exc:
+        logger.error("Failed to send email via SMTP to %s: %s", to_email, exc, exc_info=True)
+        return False
+
+
+def _send_transactional_email(to_email: str, subject: str, html_body: str) -> bool:
+    if _send_via_brevo(to_email, subject, html_body):
+        return True
+    if _send_via_smtp(to_email, subject, html_body):
+        return True
+
+    logger.warning("No email provider configured or all providers failed - skipping email send")
+    return False
 
 
 def send_verification_email(to_email: str, token: str) -> bool:
@@ -106,16 +144,16 @@ def send_verification_email(to_email: str, token: str) -> bool:
 <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">E-Mail-Adresse bestätigen</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">E-Mail-Adresse bestaetigen</h1>
     </div>
     <div style="padding:24px 32px;">
-      <p style="font-size:15px;color:#374151;">Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen:</p>
-      <a href="{html_lib.escape(verify_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">E-Mail bestätigen</a>
-      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 24 Stunden gültig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
+      <p style="font-size:15px;color:#374151;">Klicke auf den Button, um deine E-Mail-Adresse zu bestaetigen:</p>
+      <a href="{html_lib.escape(verify_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">E-Mail bestaetigen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 24 Stunden gueltig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
     </div>
   </div>
 </body></html>"""
-    return _send_transactional_email(to_email, "JobAssist — E-Mail bestätigen", html)
+    return _send_transactional_email(to_email, "JobAssist - E-Mail bestaetigen", html)
 
 
 def send_password_reset_email(to_email: str, token: str) -> bool:
@@ -125,57 +163,23 @@ def send_password_reset_email(to_email: str, token: str) -> bool:
 <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">Passwort zurücksetzen</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">Passwort zuruecksetzen</h1>
     </div>
     <div style="padding:24px 32px;">
-      <p style="font-size:15px;color:#374151;">Du hast eine Passwort-Zurücksetzung angefordert. Klicke auf den Button:</p>
-      <a href="{html_lib.escape(reset_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">Passwort zurücksetzen</a>
-      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 1 Stunde gültig. Falls du kein neues Passwort angefordert hast, ignoriere diese E-Mail.</p>
+      <p style="font-size:15px;color:#374151;">Du hast eine Passwort-Zuruecksetzung angefordert. Klicke auf den Button:</p>
+      <a href="{html_lib.escape(reset_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">Passwort zuruecksetzen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 1 Stunde gueltig. Falls du kein neues Passwort angefordert hast, ignoriere diese E-Mail.</p>
     </div>
   </div>
 </body></html>"""
-    return _send_transactional_email(to_email, "JobAssist — Passwort zurücksetzen", html)
+    return _send_transactional_email(to_email, "JobAssist - Passwort zuruecksetzen", html)
 
 
 def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]]) -> bool:
-    if not settings.BREVO_API_KEY:
-        logger.warning("BREVO_API_KEY not configured — skipping email send")
-        return False
-
     if not jobs:
-        logger.info(f"No jobs found for alert '{keywords}' — skipping email")
+        logger.info("No jobs found for alert '%s' - skipping email", keywords)
         return False
-
-    from_email = settings.EMAILS_FROM_EMAIL or "noreply@jobassist.app"
-    from_name = settings.EMAILS_FROM_NAME or "JobAssist"
 
     html_body = _build_job_alert_html(keywords, location or "", jobs)
-
-    payload = {
-        "sender": {"name": from_name, "email": from_email},
-        "to": [{"email": to_email}],
-        "subject": f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'",
-        "htmlContent": html_body,
-    }
-
-    try:
-        api_key = settings.BREVO_API_KEY.strip()
-        logger.info(f"Brevo key prefix: {api_key[:12]}... length={len(api_key)}")
-        with httpx.Client(timeout=15) as client:
-            response = client.post(
-                BREVO_SEND_URL,
-                json=payload,
-                headers={
-                    "api-key": api_key,
-                    "Content-Type": "application/json",
-                },
-            )
-            if not response.is_success:
-                logger.error(f"Brevo response {response.status_code}: {response.text}")
-            response.raise_for_status()
-
-        logger.info(f"Job alert email sent to {to_email} ({len(jobs)} jobs for '{keywords}')")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to send job alert email to {to_email}: {e}", exc_info=True)
-        return False
+    subject = f"JobAssist: {len(jobs)} neue Stellen fuer '{keywords.strip()}'"
+    return _send_transactional_email(to_email, subject, html_body)

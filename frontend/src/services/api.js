@@ -142,6 +142,7 @@ export const authApi = {
   },
   verifyEmail: (token) => api.post("/auth/verify-email", { token }),
   resendVerification: () => api.post("/auth/resend-verification"),
+  resendVerificationPublic: (email) => api.post("/auth/resend-verification-public", { email }),
   forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
   resetPassword: (token, new_password) => api.post("/auth/reset-password", { token, new_password }),
   deleteAccount: (password) => api.post("/auth/delete-account", { password }),

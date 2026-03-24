@@ -32,7 +32,7 @@ export default function VerifyEmailPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">E-Mail bestätigt</h2>
             <p className="text-sm text-gray-500 mb-4">Deine E-Mail-Adresse wurde erfolgreich bestätigt.</p>
-            <Link to="/dashboard" className="btn-primary inline-block">Zum Dashboard</Link>
+            <Link to="/login" className="btn-primary inline-block">Zum Login</Link>
           </>
         )}
         {status === "error" && (

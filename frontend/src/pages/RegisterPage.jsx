@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const [registered, setRegistered] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
 
   const onSubmit = async (data) => {
     try {
@@ -19,6 +20,20 @@ export default function RegisterPage() {
       setRegistered(true);
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Registrierung fehlgeschlagen"));
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail || isResending) return;
+
+    setIsResending(true);
+    try {
+      const res = await authApi.resendVerificationPublic(registeredEmail);
+      toast.success(res.data?.message || "Bestatigungs-E-Mail erneut gesendet");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Bestatigungs-E-Mail konnte nicht gesendet werden"));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -37,6 +52,14 @@ export default function RegisterPage() {
           <p className="text-gray-500 text-sm mb-6">
             Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
           </p>
+          <button
+            type="button"
+            className="btn-secondary w-full block text-center !py-2.5 mb-3"
+            onClick={handleResendVerification}
+            disabled={isResending}
+          >
+            {isResending ? "E-Mail wird erneut gesendet..." : "Bestatigungs-E-Mail erneut senden"}
+          </button>
           <Link to="/login" className="btn-primary w-full block text-center !py-2.5">
             Zur Anmeldung
           </Link>
