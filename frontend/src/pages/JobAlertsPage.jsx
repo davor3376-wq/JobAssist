@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -245,92 +245,32 @@ export default function JobAlertsPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [runningId, setRunningId] = useState(null);
-  const [refreshState, setRefreshState] = useState(() => {
-    try {
-      const saved = localStorage.getItem("job_alert_refresh_state");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun, atLimit } = useUsageGuard("job_alerts");
 
+  // Single source of truth: alert refresh quota lives on the user (init endpoint).
+  // No localStorage, no per-alert fields, no complex sync logic.
+  const refreshState = {
+    manual_refresh_count: me?.alert_refresh_count ?? 0,
+    manual_refresh_window_start: me?.alert_refresh_window_start ?? null,
+  };
+
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
-    queryFn: () => jobAlertsApi.list().then(r => {
-      try { localStorage.setItem("job_alerts", JSON.stringify(r.data)); } catch {}
-      return r.data;
-    }),
-    initialData: () => { try { const s = localStorage.getItem("job_alerts"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
+    queryFn: () => jobAlertsApi.list().then(r => r.data),
     staleTime: 1000 * 60 * 2,
   });
-
-  useEffect(() => {
-    if (!alerts.length) return;
-
-    const freshestAlertState = alerts.reduce((best, alert) => {
-      const nextTs = alert.manual_refresh_window_start ? new Date(alert.manual_refresh_window_start).getTime() : 0;
-      const bestTs = best?.manual_refresh_window_start ? new Date(best.manual_refresh_window_start).getTime() : 0;
-      return nextTs > bestTs
-        ? {
-            manual_refresh_count: alert.manual_refresh_count || 0,
-            manual_refresh_window_start: alert.manual_refresh_window_start || null,
-          }
-        : best;
-    }, null);
-
-    if (!freshestAlertState) return;
-
-    setRefreshState((prev) => {
-      const prevTs = prev?.manual_refresh_window_start ? new Date(prev.manual_refresh_window_start).getTime() : 0;
-      const nextTs = freshestAlertState.manual_refresh_window_start ? new Date(freshestAlertState.manual_refresh_window_start).getTime() : 0;
-
-      if (!prev) return freshestAlertState;
-      if (nextTs > prevTs) return freshestAlertState;
-      if (nextTs === prevTs && freshestAlertState.manual_refresh_count !== prev.manual_refresh_count) {
-        return freshestAlertState;
-      }
-      return prev;
-    });
-  }, [alerts]);
-
-  useEffect(() => {
-    try {
-      if (refreshState) localStorage.setItem("job_alert_refresh_state", JSON.stringify(refreshState));
-      else localStorage.removeItem("job_alert_refresh_state");
-    } catch {}
-  }, [refreshState]);
 
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
     onSuccess: (res) => {
-      const createdAlert = res.data;
-      const nextRefreshState = {
-        manual_refresh_count: createdAlert?.manual_refresh_count || 0,
-        manual_refresh_window_start: createdAlert?.manual_refresh_window_start || null,
-      };
-
-      setRefreshState((prev) => {
-        const prevTs = prev?.manual_refresh_window_start ? new Date(prev.manual_refresh_window_start).getTime() : 0;
-        const nextTs = nextRefreshState.manual_refresh_window_start ? new Date(nextRefreshState.manual_refresh_window_start).getTime() : 0;
-
-        if (!prev) return nextRefreshState;
-        if (nextTs > prevTs) return nextRefreshState;
-        if (nextTs === prevTs && nextRefreshState.manual_refresh_count !== prev.manual_refresh_count) {
-          return nextRefreshState;
-        }
-        return prev;
-      });
-
-      qc.setQueryData(["job-alerts"], (old = []) => [createdAlert, ...old]);
+      qc.setQueryData(["job-alerts"], (old = []) => [res.data, ...old]);
       qc.invalidateQueries({ queryKey: ["job-alerts"] });
       setShowCreate(false);
       toast.success("Alert erstellt!");
     },
     onError: (err) => {
-      // UpgradeModal already shows for usage_limit
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
       toast.error(getApiErrorMessage(err, "Fehler beim Erstellen des Alerts"));
@@ -367,22 +307,22 @@ export default function JobAlertsPage() {
     setRunningId(id);
     try {
       const res = await jobAlertsApi.runNow(id);
-      const nextRefreshState = {
-        manual_refresh_count: res.data?.refreshes_used ?? 0,
-        manual_refresh_window_start: new Date().toISOString(),
-      };
-      setRefreshState(nextRefreshState);
-      qc.setQueryData(["job-alerts"], (old = []) =>
-        old.map((alert) => ({ ...alert, ...nextRefreshState }))
-      );
+      const used = res.data?.refreshes_used ?? 0;
       const remaining = res.data?.refreshes_remaining ?? "?";
+
+      // Optimistically update the init cache so the counter reflects immediately.
+      // The server-authoritative window_start comes back on the next invalidation.
+      qc.setQueryData(["init"], (old) =>
+        old ? { ...old, me: { ...old.me, alert_refresh_count: used } } : old
+      );
+      qc.invalidateQueries({ queryKey: ["init"] });
+
       toast.success(
-        `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierungen)`,
+        `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierung${remaining !== 1 ? "en" : ""})`,
         { duration: 5000 }
       );
-      qc.invalidateQueries({ queryKey: ["job-alerts"] });
     } catch (err) {
-      if (err.response?.status === 429) return; // interceptor shows rate-limited toast
+      if (err.response?.status === 429) return;
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       toast.error(getApiErrorMessage(err, "Fehler beim Starten der Suche"));
     } finally {
@@ -455,7 +395,7 @@ export default function JobAlertsPage() {
             <AlertCard
               key={alert.id}
               alert={alert}
-              refreshState={refreshState ?? alert}
+              refreshState={refreshState}
               onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
               onDelete={(id) => deleteMutation.mutate(id)}
               onRunNow={handleRunNow}

@@ -191,6 +191,8 @@ async def init(
             "currency": current_user.currency,
             "location": current_user.location,
             "language": current_user.language,
+            "alert_refresh_count": current_user.alert_refresh_count or 0,
+            "alert_refresh_window_start": current_user.alert_refresh_window_start,
         },
         "profile": {
             "id": profile.id,
