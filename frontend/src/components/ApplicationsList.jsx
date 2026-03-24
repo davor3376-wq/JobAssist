@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { MapPin, DollarSign, Trash2, CheckCircle, Zap, FileText, Brain, ChevronDown, ChevronUp, MoreVertical, ExternalLink, Send, SearchCheck } from "lucide-react";
 import { jobApi, resumeApi, motivationsschreibenApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
+import { getApiErrorMessage } from "../utils/apiError";
 import ResearchModal from "./ResearchModal";
 
 const STATUS_LABELS = {
@@ -258,8 +259,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       // Interceptor handles 403 usage_limit (UpgradeModal) and 429 (rate toast)
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
-      const detail = err.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Brief-Entwurf konnte nicht generiert werden");
+      toast.error(getApiErrorMessage(err, "Brief-Entwurf konnte nicht generiert werden"));
     } finally {
       setDraftLoading(null);
     }
@@ -283,8 +283,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") { setResearchModal(null); return; }
       if (err.response?.status === 429) { setResearchModal(null); return; }
-      const detail = err.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Recherche fehlgeschlagen");
+      toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
       setResearchModal(null);
     } finally {
       setResearchLoading(false);

@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { jobAlertsApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const JOB_TYPES = [
   { value: "", label: "Alle" },
@@ -303,10 +304,7 @@ export default function JobAlertsPage() {
       // UpgradeModal already shows for usage_limit
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
-      const detail = err.response?.data?.detail;
-      const msg = typeof detail === "object" ? detail?.message :
-                  typeof detail === "string" ? detail : "Fehler beim Erstellen des Alerts";
-      toast.error(msg);
+      toast.error(getApiErrorMessage(err, "Fehler beim Erstellen des Alerts"));
     },
   });
 
@@ -357,8 +355,7 @@ export default function JobAlertsPage() {
     } catch (err) {
       if (err.response?.status === 429) return; // interceptor shows rate-limited toast
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
-      const detail = err.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Fehler beim Starten der Suche");
+      toast.error(getApiErrorMessage(err, "Fehler beim Starten der Suche"));
     } finally {
       setRunningId(null);
     }

@@ -8,6 +8,7 @@ import useAuthStore from "../hooks/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
 import { FormSkeleton } from "../components/PageSkeleton";
+import { getApiErrorMessage } from "../utils/apiError";
 
 /** Resize + compress an image File to a JPEG base64 data URL (max 200×200px, ~15–30KB). */
 function compressImage(file) {
@@ -40,19 +41,6 @@ const CURRENCIES = ["EUR"];
 const LANGUAGES = [
   { code: "de", label: "Deutsch" },
 ];
-
-function getErrorMessage(err, fallback = "Ein Fehler ist aufgetreten") {
-  const detail = err?.response?.data?.detail;
-
-  if (typeof detail === "string") return detail;
-
-  if (Array.isArray(detail)) {
-    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
-    if (firstMessage) return firstMessage;
-  }
-
-  return fallback;
-}
 
 export default function SettingsPage() {
   const qc = useQueryClient();

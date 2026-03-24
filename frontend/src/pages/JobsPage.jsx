@@ -11,6 +11,7 @@ import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
 import ResearchModal from "../components/ResearchModal";
 import useUsageGuard from "../hooks/useUsageGuard";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const CITY_DISTRICTS = {
   "graz": [
@@ -316,8 +317,7 @@ export default function JobsPage() {
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") { setResearchModal(null); return; }
       if (err.response?.status === 429) { setResearchModal(null); return; }
-      const detail = err.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Recherche fehlgeschlagen");
+      toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
       setResearchModal(null);
     } finally {
       setResearchLoading(false);

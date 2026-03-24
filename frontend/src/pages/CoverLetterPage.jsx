@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { FileText, Sparkles, Copy, Download, RefreshCw, Building2, Briefcase, ClipboardList } from "lucide-react";
 import { resumeApi, motivationsschreibenApi, jobApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const TONES = [
   { value: "formell", label: "Formell", desc: "Klassisch und professionell" },
@@ -57,8 +58,7 @@ export default function CoverLetterPage() {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       // Interceptor already showed rate-limit toast
       if (err.response?.status === 429) return;
-      const detail = err.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Fehler beim Erstellen des Motivationsschreibens");
+      toast.error(getApiErrorMessage(err, "Fehler beim Erstellen des Motivationsschreibens"));
     },
   });
 

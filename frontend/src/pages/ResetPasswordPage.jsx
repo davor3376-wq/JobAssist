@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { authApi } from "../services/api";
 import AuthLayout from "../components/ui/AuthLayout";
 import { CheckCircle } from "lucide-react";
+import { getApiErrorMessage } from "../utils/apiError";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -18,7 +19,7 @@ export default function ResetPasswordPage() {
       await authApi.resetPassword(token, data.password);
       setDone(true);
     } catch (err) {
-      setError(err.response?.data?.detail || "Link ist ungültig oder abgelaufen");
+      setError(getApiErrorMessage(err, "Link ist ungültig oder abgelaufen"));
     }
   };
 

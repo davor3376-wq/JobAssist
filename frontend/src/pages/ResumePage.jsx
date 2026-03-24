@@ -6,19 +6,7 @@ import { Upload, Trash2, FileText } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
-
-function getErrorMessage(err, fallback = "Upload fehlgeschlagen") {
-  const detail = err?.response?.data?.detail;
-
-  if (typeof detail === "string") return detail;
-
-  if (Array.isArray(detail)) {
-    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
-    if (firstMessage) return firstMessage;
-  }
-
-  return fallback;
-}
+import { getApiErrorMessage } from "../utils/apiError";
 
 export default function ResumePage() {
   const qc = useQueryClient();
@@ -56,7 +44,7 @@ export default function ResumePage() {
         qc.invalidateQueries({ queryKey: ["resumes"] });
         toast.success("Lebenslauf hochgeladen und analysiert!");
       } catch (err) {
-        toast.error(getErrorMessage(err));
+        toast.error(getApiErrorMessage(err, "Upload fehlgeschlagen"));
       } finally {
         setUploading(false);
       }

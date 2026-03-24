@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Trash2, Zap, FileText, MessageSquare, Copy, Check, ChevronDown, Download, SearchCheck } from "lucide-react";
 import { jobApi, coverLetterApi, interviewApi, resumeApi, researchApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const LoadingSpinner = () => (
   <div className="inline-block">
@@ -274,8 +275,7 @@ export default function JobDetailPage() {
               setResearchData(res.data);
             } catch (err) {
               if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429) {
-                const detail = err.response?.data?.detail;
-                toast.error(typeof detail === "string" ? detail : "Recherche fehlgeschlagen");
+                toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
               }
               setResearchOpen(false);
             } finally {

@@ -5,19 +5,7 @@ import { authApi, initApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import AuthLayout from "../components/ui/AuthLayout";
 import queryClient from "../queryClient";
-
-function getErrorMessage(err, fallback = "Anmeldung fehlgeschlagen") {
-  const detail = err?.response?.data?.detail;
-
-  if (typeof detail === "string") return detail;
-
-  if (Array.isArray(detail)) {
-    const firstMessage = detail.find((item) => typeof item?.msg === "string")?.msg;
-    if (firstMessage) return firstMessage;
-  }
-
-  return fallback;
-}
+import { getApiErrorMessage } from "../utils/apiError";
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
@@ -40,7 +28,7 @@ export default function LoginPage() {
         if (initData.me) setUser(initData.me);
       }).catch(() => {});
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toast.error(getApiErrorMessage(err, "Anmeldung fehlgeschlagen"));
     }
   };
 
