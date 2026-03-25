@@ -19,8 +19,14 @@ from app.core.security import (
     verify_password,
 )
 from app.main import limiter
+from app.models.job import Job
+from app.models.job_alert import JobAlert
 from app.models.refresh_token import RefreshToken
+from app.models.resume import Resume
+from app.models.subscription import Subscription
 from app.models.user import User
+from app.models.user_profile import UserProfile
+from app.models.usage import UsageRecord
 from app.schemas.user import Token, UserCreate, UserLogin, UserOut
 from app.services.email_service import send_password_reset_email, send_verification_email
 
@@ -272,7 +278,18 @@ async def delete_account(
     if not verify_password(payload.password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Passwort ist nicht korrekt")
 
-    await db.execute(sa_delete(RefreshToken).where(RefreshToken.user_id == current_user.id))
-    await db.delete(current_user)
-    await db.commit()
+    try:
+        await db.execute(sa_delete(JobAlert).where(JobAlert.user_id == current_user.id))
+        await db.execute(sa_delete(Job).where(Job.user_id == current_user.id))
+        await db.execute(sa_delete(Resume).where(Resume.user_id == current_user.id))
+        await db.execute(sa_delete(UserProfile).where(UserProfile.user_id == current_user.id))
+        await db.execute(sa_delete(Subscription).where(Subscription.user_id == current_user.id))
+        await db.execute(sa_delete(UsageRecord).where(UsageRecord.user_id == current_user.id))
+        await db.execute(sa_delete(RefreshToken).where(RefreshToken.user_id == current_user.id))
+        await db.delete(current_user)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        logger.exception("Account deletion failed for user_id=%s", current_user.id)
+        raise HTTPException(status_code=500, detail="Konto konnte nicht gelöscht werden")
     return {"message": "Konto und alle Daten wurden gelöscht"}
