@@ -124,8 +124,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const deleteJobMutation = useMutation({
     mutationFn: (jobId) => jobApi.delete(jobId),
-    onSuccess: (res) => {
-      qc.setQueryData(["jobs"], (old = []) => old.map((job) => (job.id === res.data.id ? res.data : job)));
+    onSuccess: (_res, deletedJobId) => {
+      qc.setQueryData(["jobs"], (old = []) => old.filter((job) => job.id !== deletedJobId));
       qc.invalidateQueries({ queryKey: ["jobs"] });
       qc.invalidateQueries({ queryKey: ["pipeline", "stats"] });
       toast.success("Stelle entfernt");
@@ -518,7 +518,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                           }}
                           className="mt-1 flex-shrink-0"
                         />
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <h4 className="font-semibold text-gray-900 truncate">{job.role || "Ohne Titel"}</h4>
                             {job.url && (
@@ -535,6 +535,33 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                             )}
                           </div>
                           <p className="text-sm text-gray-600">{job.company || "Unbekanntes Unternehmen"}</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
+                            {job.deadline && (() => {
+                              const now = new Date();
+                              const deadline = new Date(job.deadline);
+                              const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+                              return (
+                                <div className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                                  daysLeft < 0 ? 'bg-red-100 text-red-800' :
+                                  daysLeft <= 3 ? 'bg-orange-100 text-orange-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}>
+                                  {daysLeft < 0 ? 'Überfällig' : daysLeft === 0 ? 'Heute' : `${daysLeft}T`}
+                                </div>
+                              );
+                            })()}
+                            {job.match_score !== null && job.match_score !== undefined && (
+                              <div
+                                className={`text-xs font-medium px-1.5 py-0.5 rounded cursor-help ${getMatchColorClass(job.match_score)}`}
+                                title={(() => { try { return JSON.parse(job.match_feedback)?.summary || ""; } catch { return job.match_feedback || ""; } })()}
+                              >
+                                {Math.round(job.match_score)}%
+                              </div>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[job.status]}`}>
+                              {STATUS_LABELS[job.status]}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end max-w-[160px] sm:max-w-none">
@@ -543,7 +570,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                           const deadline = new Date(job.deadline);
                           const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
                           return (
-                            <div className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                            <div className={`hidden sm:block text-xs font-medium px-1.5 py-0.5 rounded ${
                               daysLeft < 0 ? 'bg-red-100 text-red-800' :
                               daysLeft <= 3 ? 'bg-orange-100 text-orange-800' :
                               'bg-green-100 text-green-800'
@@ -554,7 +581,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
                         })()}
                         {job.match_score !== null && job.match_score !== undefined && (
                           <div
-                            className={`text-xs font-medium px-1.5 py-0.5 rounded cursor-help ${getMatchColorClass(job.match_score)}`}
+                            className={`hidden sm:block text-xs font-medium px-1.5 py-0.5 rounded cursor-help ${getMatchColorClass(job.match_score)}`}
                             title={(() => { try { return JSON.parse(job.match_feedback)?.summary || ""; } catch { return job.match_feedback || ""; } })()}
                           >
                             ✨ {Math.round(job.match_score)}%
