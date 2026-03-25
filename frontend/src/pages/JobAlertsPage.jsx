@@ -305,13 +305,19 @@ export default function JobAlertsPage() {
 
   const handleRunNow = async (id) => {
     setRunningId(id);
+
+    // Optimistic update fires BEFORE the request so the counter changes instantly.
+    const prevCount = me?.alert_refresh_count ?? 0;
+    qc.setQueryData(["init"], (old) =>
+      old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount + 1 } } : old
+    );
+
     try {
       const res = await jobAlertsApi.runNow(id);
-      const used = res.data?.refreshes_used ?? 0;
+      const used = res.data?.refreshes_used ?? prevCount + 1;
       const remaining = res.data?.refreshes_remaining ?? "?";
 
-      // Optimistically update the init cache so the counter reflects immediately.
-      // The server-authoritative window_start comes back on the next invalidation.
+      // Correct with server value (handles edge cases like window reset)
       qc.setQueryData(["init"], (old) =>
         old ? { ...old, me: { ...old.me, alert_refresh_count: used } } : old
       );
@@ -322,6 +328,10 @@ export default function JobAlertsPage() {
         { duration: 5000 }
       );
     } catch (err) {
+      // Roll back optimistic update on failure
+      qc.setQueryData(["init"], (old) =>
+        old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount } } : old
+      );
       if (err.response?.status === 429) return;
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       toast.error(getApiErrorMessage(err, "Fehler beim Starten der Suche"));
