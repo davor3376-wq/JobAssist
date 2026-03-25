@@ -67,10 +67,13 @@ export default function BillingPage() {
       return r.data;
     }),
     initialData: () => { try { const s = localStorage.getItem("billing"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
-    refetchInterval: 60000,
   });
+
+  // Usage bars come from the init query (already loaded by Layout, updated after
+  // every AI feature call) so they reflect current usage without a separate request.
+  const { data: initData } = useQuery({ queryKey: ["init"] });
 
   const handleManage = async () => {
     try {
@@ -95,8 +98,10 @@ export default function BillingPage() {
   }
 
   const sub = data?.subscription;
-  const usage = data?.usage || [];
-  const planName = PLAN_NAMES[sub?.plan] || "Basic";
+  // Prefer initData.usage (kept fresh by Layout + AI feature interceptor);
+  // fall back to billing-overview for first render before init loads.
+  const usage = initData?.usage || data?.usage || [];
+  const planName = PLAN_NAMES[sub?.plan || initData?.plan] || "Basic";
   const isPaid = sub?.plan && sub.plan !== "basic";
 
   return (

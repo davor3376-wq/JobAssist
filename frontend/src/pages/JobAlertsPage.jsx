@@ -39,6 +39,27 @@ function getRefreshState(refreshState) {
   return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
 }
 
+function updateUsageList(usage = [], delta) {
+  return usage.map((item) => {
+    if (item.feature !== "job_alerts") return item;
+    const nextUsed = Math.max(0, (item.used || 0) + delta);
+    return {
+      ...item,
+      used: nextUsed,
+      remaining: item.limit === -1 ? -1 : Math.max(0, item.limit - nextUsed),
+    };
+  });
+}
+
+function bumpJobAlertUsageCaches(qc, delta) {
+  qc.setQueryData(["billing-overview"], (old) =>
+    old ? { ...old, usage: updateUsageList(old.usage, delta) } : old
+  );
+  qc.setQueryData(["init"], (old) =>
+    old ? { ...old, usage: updateUsageList(old.usage, delta) } : old
+  );
+}
+
 function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunning }) {
   const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
 
@@ -266,7 +287,10 @@ export default function JobAlertsPage() {
     mutationFn: (data) => jobAlertsApi.create(data),
     onSuccess: (res) => {
       qc.setQueryData(["job-alerts"], (old = []) => [res.data, ...old]);
+      bumpJobAlertUsageCaches(qc, 1);
       qc.invalidateQueries({ queryKey: ["job-alerts"] });
+      qc.invalidateQueries({ queryKey: ["billing-overview"] });
+      qc.invalidateQueries({ queryKey: ["init"] });
       setShowCreate(false);
       toast.success("Alert erstellt!");
     },
@@ -296,11 +320,31 @@ export default function JobAlertsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => jobAlertsApi.delete(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["job-alerts"] });
+    onMutate: async (id) => {
+      await Promise.all([
+        qc.cancelQueries({ queryKey: ["job-alerts"] }),
+        qc.cancelQueries({ queryKey: ["billing-overview"] }),
+        qc.cancelQueries({ queryKey: ["init"] }),
+      ]);
+      const prev = qc.getQueryData(["job-alerts"]);
+      const prevBilling = qc.getQueryData(["billing-overview"]);
+      const prevInit = qc.getQueryData(["init"]);
+      qc.setQueryData(["job-alerts"], (old = []) => old.filter((a) => a.id !== id));
+      bumpJobAlertUsageCaches(qc, -1);
       toast.success("Alert gelöscht");
+      return { prev, prevBilling, prevInit };
     },
-    onError: () => toast.error("Fehler beim Löschen"),
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["job-alerts"], ctx.prev);
+      if (ctx?.prevBilling) qc.setQueryData(["billing-overview"], ctx.prevBilling);
+      if (ctx?.prevInit) qc.setQueryData(["init"], ctx.prevInit);
+      toast.error("Fehler beim Löschen");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["job-alerts"] });
+      qc.invalidateQueries({ queryKey: ["billing-overview"] });
+      qc.invalidateQueries({ queryKey: ["init"] });
+    },
   });
 
   const handleRunNow = async (id) => {
