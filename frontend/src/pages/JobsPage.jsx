@@ -349,6 +349,21 @@ export default function JobsPage() {
     }
   };
 
+  const handleRefreshResearch = async () => {
+    if (!researchModal) return;
+    setResearchLoading(true);
+    try {
+      const res = await researchApi.research(researchModal.companyName || "", researchModal.jobDescription || "");
+      setResearchData(res.data);
+    } catch (err) {
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
+      if (err.response?.status === 429) return;
+      toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
+    } finally {
+      setResearchLoading(false);
+    }
+  };
+
   const getMatchScoreBadgeClasses = (score) => {
     if (score >= 75) return "score-high";
     if (score >= 50) return "score-mid";
@@ -925,6 +940,7 @@ export default function JobsPage() {
           companyName={researchModal.companyName}
           data={researchData}
           loading={researchLoading}
+          onRefresh={handleRefreshResearch}
           onClose={() => { setResearchModal(null); setResearchData(null); }}
         />
       )}

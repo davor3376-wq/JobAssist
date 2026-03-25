@@ -129,8 +129,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       setProcessingJobId(null);
       setProcessingFeature(null);
     },
-    onError: () => {
-      toast.error("Match-Bewertung konnte nicht erstellt werden");
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Match-Bewertung konnte nicht erstellt werden"));
       setProcessingJobId(null);
       setProcessingFeature(null);
     },
@@ -285,6 +285,22 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       if (err.response?.status === 429) { setResearchModal(null); return; }
       toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
       setResearchModal(null);
+    } finally {
+      setResearchLoading(false);
+    }
+  };
+
+  const handleRefreshResearch = async () => {
+    if (!researchModal) return;
+    setResearchLoading(true);
+    try {
+      const job = jobs.find((entry) => entry.id === researchModal.jobId);
+      const res = await researchApi.research(job?.company || researchModal.companyName || "", job?.description || "");
+      setResearchData(res.data);
+    } catch (err) {
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
+      if (err.response?.status === 429) return;
+      toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
     } finally {
       setResearchLoading(false);
     }
@@ -787,6 +803,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
           data={researchData}
           loading={researchLoading}
           jobId={researchModal.jobId}
+          onRefresh={handleRefreshResearch}
           onClose={() => { setResearchModal(null); setResearchData(null); }}
         />
       )}

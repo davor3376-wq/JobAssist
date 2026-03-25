@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Building2, TrendingUp, MessageCircle, Loader2, Save, Check, Mail, Phone, MapPin, Globe } from "lucide-react";
+import { X, Building2, TrendingUp, MessageCircle, Loader2, Save, Check, Mail, Phone, MapPin, Globe, RefreshCw } from "lucide-react";
 import { jobApi } from "../services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-export default function ResearchModal({ companyName, data, loading, onClose, jobId }) {
+export default function ResearchModal({ companyName, data, loading, onClose, jobId, onRefresh }) {
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -170,7 +170,17 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
         </div>
 
         <div className="px-6 py-4 border-t flex justify-between items-center">
-          <div>
+          <div className="flex items-center gap-2">
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                Aktualisieren
+              </button>
+            )}
             {jobId && data && !loading && (
               <button
                 onClick={handleSave}

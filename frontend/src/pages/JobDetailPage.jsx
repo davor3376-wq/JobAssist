@@ -130,8 +130,12 @@ export default function JobDetailPage() {
 
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
-    onSuccess: () => { invalidate(); toast.success("Match-Bewertung erstellt!"); },
-    onError: () => toast.error("Match fehlgeschlagen"),
+    onSuccess: (res) => {
+      qc.setQueryData(["jobs", jobId], res.data);
+      invalidate();
+      toast.success("Match-Bewertung erstellt!");
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Match-Bewertung konnte nicht erstellt werden")),
   });
 
   const coverLetterMutation = useMutation({
@@ -675,6 +679,19 @@ export default function JobDetailPage() {
           data={researchData}
           loading={researchLoading}
           jobId={job?.id}
+          onRefresh={async () => {
+            setResearchLoading(true);
+            try {
+              const res = await researchApi.research(job?.company || "", job?.description || "");
+              setResearchData(res.data);
+            } catch (err) {
+              if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429) {
+                toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
+              }
+            } finally {
+              setResearchLoading(false);
+            }
+          }}
           onClose={() => { setResearchOpen(false); setResearchData(null); }}
         />
       )}

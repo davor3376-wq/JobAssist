@@ -6,6 +6,7 @@ from typing import Optional
 import logging
 import re
 import html
+from difflib import get_close_matches
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,14 @@ _CITY_MAP = {
     "austria": "",
     "österreich": "",
     "remote": "",
+}
+
+_KEYWORD_DICTIONARY = {
+    "software", "engineer", "developer", "entwickler", "marketing", "manager",
+    "sales", "verkauf", "assistant", "intern", "internship", "praktikum",
+    "customer", "support", "service", "data", "analyst", "projekt", "project",
+    "designer", "finance", "accounting", "accountant", "hr", "recruiter",
+    "consultant", "berater", "operations", "admin", "administrator", "remote",
 }
 
 
@@ -163,6 +172,15 @@ def _normalise_location(location: Optional[str]) -> str:
     return _CITY_MAP.get(location.strip().lower(), location.strip())
 
 
+def _normalise_keyword_tokens(text: str) -> str:
+    tokens = re.findall(r"[a-zA-ZäöüÄÖÜß]+", text or "")
+    corrected = []
+    for token in tokens:
+        match = get_close_matches(token.lower(), _KEYWORD_DICTIONARY, n=1, cutoff=0.8)
+        corrected.append(match[0] if match else token)
+    return " ".join(corrected).strip()
+
+
 async def search_jobs(
     keywords: Optional[str] = None,
     location: Optional[str] = None,
@@ -207,15 +225,27 @@ async def search_jobs(
 
     url = f"{_ADZUNA_BASE}/{page}"
 
-    try:
+    async def _fetch_jobs(what: str) -> dict:
+        current_params = {**params, "what": what}
         async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.get(url, params=params, headers={"Content-Type": "application/json"})
+            response = await client.get(url, params=current_params, headers={"Content-Type": "application/json"})
             response.raise_for_status()
-            data = response.json()
+            return response.json()
+
+    try:
+        data = await _fetch_jobs(search_what)
 
         _breaker.record_success()
 
         jobs = data.get("results", [])
+        corrected_search = _normalise_keyword_tokens(search_what)
+        if not jobs and corrected_search and corrected_search.lower() != (search_what or "").lower():
+            retry_data = await _fetch_jobs(corrected_search)
+            retry_jobs = retry_data.get("results", [])
+            if retry_jobs:
+                data = retry_data
+                jobs = retry_jobs
+                logger.info("Adzuna keyword retry %r -> %r returned %d jobs", search_what, corrected_search, len(jobs))
 
         # Post-filter by job type — title must contain one of the match terms
         if type_entry and type_entry[1]:
