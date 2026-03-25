@@ -161,6 +161,7 @@ class ResearchResponse(BaseModel):
     company_name: str
     known_data: dict
     summary: str
+    contact_info: dict
     hot_topics: list[str]
     smart_questions: list[str]
 
@@ -184,6 +185,7 @@ async def research_company(
         company_name=payload.company_name,
         known_data=known,
         summary=briefing.get("summary", ""),
+        contact_info=briefing.get("contact_info", {}),
         hot_topics=briefing.get("hot_topics", []),
         smart_questions=briefing.get("smart_questions", []),
     )

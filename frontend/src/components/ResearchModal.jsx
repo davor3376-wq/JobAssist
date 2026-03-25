@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Building2, TrendingUp, MessageCircle, Loader2, Save, Check } from "lucide-react";
+import { X, Building2, TrendingUp, MessageCircle, Loader2, Save, Check, Mail, Phone, MapPin, Globe } from "lucide-react";
 import { jobApi } from "../services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -53,6 +53,49 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
             </div>
           ) : data ? (
             <>
+              {data.contact_info && Object.values(data.contact_info).some(Boolean) && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Kontakt</h3>
+                  <div className="bg-blue-50 rounded-xl p-4 space-y-2 text-sm">
+                    {data.contact_info.email && (
+                      <a
+                        href={`mailto:${data.contact_info.email}`}
+                        className="flex items-center gap-2 text-blue-700 hover:text-blue-800 break-all"
+                      >
+                        <Mail className="w-4 h-4 flex-shrink-0" />
+                        <span>{data.contact_info.email}</span>
+                      </a>
+                    )}
+                    {data.contact_info.phone && (
+                      <a
+                        href={`tel:${data.contact_info.phone}`}
+                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+                      >
+                        <Phone className="w-4 h-4 flex-shrink-0" />
+                        <span>{data.contact_info.phone}</span>
+                      </a>
+                    )}
+                    {data.contact_info.location && (
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        <span>{data.contact_info.location}</span>
+                      </div>
+                    )}
+                    {data.contact_info.website && (
+                      <a
+                        href={data.contact_info.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-700 hover:text-blue-800 break-all"
+                      >
+                        <Globe className="w-4 h-4 flex-shrink-0" />
+                        <span>{data.contact_info.website}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Known data */}
               {data.known_data && Object.keys(data.known_data).length > 0 && (
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1.5 text-sm">

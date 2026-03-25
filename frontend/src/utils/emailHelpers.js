@@ -1,19 +1,28 @@
-/**
- * Generates a mailto: link pre-filled with a job application subject and cover letter body.
- * Handles German characters (ä, ö, ü, ß) and line breaks correctly.
- *
- * @param {object} job     - Job object with at least { title, company }
- * @param {string} body    - Cover letter / motivation text
- * @param {string} userName     - Applicant's display name
- * @param {string} [contactEmail] - Optional recipient address (contact_email from job result)
- * @returns {string} mailto: URL
- */
+function getResearchData(job) {
+  if (!job?.research_data) return null;
+  if (typeof job.research_data === "object") return job.research_data;
+  try {
+    return JSON.parse(job.research_data);
+  } catch {
+    return null;
+  }
+}
+
+export function getJobContactDetails(job, explicitContactEmail = "") {
+  const research = getResearchData(job);
+  const contact = research?.contact_info || {};
+
+  return {
+    email: explicitContactEmail || job?.contact_email || contact.email || "",
+    phone: contact.phone || "",
+    location: contact.location || research?.known_data?.hq || job?.location || "",
+    website: contact.website || "",
+  };
+}
+
 export function generateMailtoLink(job, body, userName, contactEmail = "") {
   const subject = `Bewerbung als ${job.title || job.role || "diese Stelle"} - ${userName}`;
-
-  // Normalise line endings to CRLF — required by RFC 2822 for email body
   const normalisedBody = body.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "\r\n");
-
-  const to = contactEmail ? encodeURIComponent(contactEmail) : "";
+  const to = encodeURIComponent(getJobContactDetails(job, contactEmail).email || "");
   return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(normalisedBody)}`;
 }

@@ -329,6 +329,12 @@ Unternehmen: {company_name}
 Gib exakt dieses JSON zurück:
 {{
   "summary": "<2 prägnante Sätze über das Unternehmen, seine Stärken und Marktposition>",
+  "contact_info": {{
+    "email": "<allgemeine Recruiting- oder Karriere-E-Mail, sonst leer>",
+    "phone": "<allgemeine Recruiting- oder Zentrale-Telefonnummer, sonst leer>",
+    "location": "<relevanter Standort / Büro / Hauptsitz für Bewerbungen, sonst leer>",
+    "website": "<offizielle Website oder Karriereseite, sonst leer>"
+  }},
   "hot_topics": [
     "<Aktuelles Thema oder Trend 2026 das das Unternehmen betrifft>",
     "<Weiteres relevantes Thema oder Entwicklung 2026>"
@@ -346,6 +352,7 @@ Gib exakt dieses JSON zurück:
     except json.JSONDecodeError:
         return {
             "summary": result,
+            "contact_info": {},
             "hot_topics": [],
             "smart_questions": [],
         }

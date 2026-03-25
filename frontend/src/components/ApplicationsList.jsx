@@ -224,7 +224,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const handleDraftEmail = async (job) => {
     const id = job.id;
     const userName = me?.full_name || me?.email?.split("@")[0] || "Bewerber";
-    const jobForLink = { title: job.role, role: job.role, company: job.company };
+    const jobForLink = { ...job, title: job.role || job.title, role: job.role || job.title, company: job.company };
 
     if (draftTexts[id]) {
       window.location.href = generateMailtoLink(jobForLink, draftTexts[id], userName);
