@@ -8,11 +8,11 @@ import { CardSkeleton } from "../components/PageSkeleton";
 import { billingApi } from "../services/api";
 
 const FEATURE_LABELS = {
-  cv_analysis: "Lebenslauf-Analysen",
-  cover_letter: "Anschreiben",
-  job_alerts: "Job-Alerts",
-  ai_chat: "KI-Nachrichten",
-  job_search: "Jobsuche / Tag",
+  cv_analysis: "Lebenslauf-Analysen (Diesen Monat)",
+  cover_letter: "Anschreiben (Diesen Monat)",
+  job_alerts: "Job-Alerts (Diesen Monat)",
+  ai_chat: "KI-Nachrichten (Diesen Monat)",
+  job_search: "Jobsuchen (Heute)",
 };
 
 const PLAN_NAMES = {

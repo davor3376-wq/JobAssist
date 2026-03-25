@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { Save, MapPin, DollarSign, Briefcase, Target, Globe, Sliders, Camera, Trash2, User, AlertTriangle, Mail } from "lucide-react";
+import { Save, MapPin, DollarSign, Briefcase, Target, Globe, Sliders, Camera, Trash2, User, AlertTriangle } from "lucide-react";
 import { settingsApi, authApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import { useNavigate } from "react-router-dom";
@@ -538,43 +538,6 @@ export default function SettingsPage() {
 
       {/* Danger Zone — Delete Account */}
       <DeleteAccountSection />
-    </div>
-  );
-}
-
-function VerificationBanner() {
-  const { data: initData } = useQuery({ queryKey: ["init"] });
-  const me = initData?.me;
-  const [sending, setSending] = useState(false);
-
-  if (!me || me.is_verified) return null;
-
-  const handleResend = async () => {
-    setSending(true);
-    try {
-      await authApi.resendVerification();
-      toast.success("Bestätigungs-E-Mail gesendet");
-    } catch {
-      toast.error("Fehler beim Senden");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-3">
-      <Mail className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-gray-900">E-Mail nicht bestätigt</h3>
-        <p className="text-xs text-gray-600 mt-1">Bitte bestätige deine E-Mail-Adresse, um alle Funktionen nutzen zu können.</p>
-        <button
-          onClick={handleResend}
-          disabled={sending}
-          className="mt-2 text-xs font-semibold text-amber-700 hover:text-amber-800 transition-colors disabled:opacity-50"
-        >
-          {sending ? "Wird gesendet..." : "Bestätigungs-E-Mail erneut senden"}
-        </button>
-      </div>
     </div>
   );
 }
