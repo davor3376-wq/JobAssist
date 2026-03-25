@@ -286,7 +286,7 @@ async def delete_account(
         await db.execute(sa_delete(Subscription).where(Subscription.user_id == current_user.id))
         await db.execute(sa_delete(UsageRecord).where(UsageRecord.user_id == current_user.id))
         await db.execute(sa_delete(RefreshToken).where(RefreshToken.user_id == current_user.id))
-        await db.delete(current_user)
+        await db.execute(sa_delete(User).where(User.id == current_user.id))
         await db.commit()
     except Exception:
         await db.rollback()
