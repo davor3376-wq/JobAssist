@@ -900,15 +900,6 @@ export default function JobsPage() {
                   </div>
                 )}
 
-                {/* Error States */}
-                {searchError && (
-                  <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-200">
-                    <p className="text-sm text-red-700">
-                      Suchergebnisse konnten nicht geladen werden. Bitte versuche es erneut.
-                    </p>
-                  </div>
-                )}
-
                 {/* No Results */}
                 {!searchLoading &&
                   searchResults.length === 0 &&

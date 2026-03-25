@@ -7,13 +7,55 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Endpoints that consume usage — invalidate billing data after success
-const USAGE_ENDPOINTS = [
-  "/resume/analyze", "/cover-letter/generate", "/motivationsschreiben/generate",
-  "/interview/generate", "/ai-assistant/chat", "/ai-assistant/optimize",
-  "/ai-assistant/analyze-job", "/jobs/match", "/research/",
-  "/jobs/search/recommended", "/jobs/search/custom",
+const USAGE_FEATURES = [
+  { match: "/resume/analyze", feature: "cv_analysis" },
+  { match: "/cover-letter/generate", feature: "cover_letter" },
+  { match: "/motivationsschreiben/generate", feature: "cover_letter" },
+  { match: "/interview/generate", feature: "ai_chat" },
+  { match: "/ai-assistant/chat", feature: "ai_chat" },
+  { match: "/ai-assistant/optimize", feature: "ai_chat" },
+  { match: "/ai-assistant/analyze-job", feature: "ai_chat" },
+  { match: "/jobs/match", feature: "cv_analysis" },
+  { match: "/research/", feature: "ai_chat" },
+  { match: "/jobs/search/recommended", feature: "job_search" },
+  { match: "/jobs/search/custom", feature: "job_search" },
 ];
+
+function updateUsageList(usage = [], feature, delta = 1) {
+  return usage.map((item) => {
+    if (item.feature !== feature) return item;
+    const nextUsed = (item.used || 0) + delta;
+    return {
+      ...item,
+      used: nextUsed,
+      remaining: item.limit === -1 ? -1 : Math.max(0, (item.limit || 0) - nextUsed),
+    };
+  });
+}
+
+function syncLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function bumpUsageCaches(feature) {
+  if (!feature) return;
+
+  queryClient.setQueryData(["billing-overview"], (old) => {
+    if (!old?.usage) return old;
+    const next = { ...old, usage: updateUsageList(old.usage, feature, 1) };
+    syncLocalStorage("billing", next);
+    return next;
+  });
+
+  queryClient.setQueryData(["init"], (old) => {
+    if (!old?.usage) return old;
+    const next = { ...old, usage: updateUsageList(old.usage, feature, 1) };
+    syncLocalStorage("init", next);
+    return next;
+  });
+}
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
@@ -46,9 +88,11 @@ api.interceptors.response.use(
     if (import.meta.env.DEV) {
       console.log(`[API] Response ${res.status} from ${res.config.url}`);
     }
-    // Invalidate billing/init data after any usage-consuming call (POST or GET)
+    // Keep monthly usage counters in sync immediately, then refetch in background.
     const url = res.config?.url || "";
-    if (USAGE_ENDPOINTS.some((ep) => url.includes(ep))) {
+    const usageFeature = USAGE_FEATURES.find((entry) => url.includes(entry.match))?.feature;
+    if (usageFeature) {
+      bumpUsageCaches(usageFeature);
       queryClient.invalidateQueries({ queryKey: ["billing-overview"] });
       queryClient.invalidateQueries({ queryKey: ["init"] });
     }
