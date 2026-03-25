@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
-import { CreditCard, ExternalLink, Zap, ArrowRight } from "lucide-react";
+import { ArrowRight, CreditCard, ExternalLink, Zap } from "lucide-react";
 import toast from "react-hot-toast";
-import { billingApi } from "../services/api";
+
 import { CardSkeleton } from "../components/PageSkeleton";
+import { billingApi } from "../services/api";
 
 const FEATURE_LABELS = {
   cv_analysis: "Lebenslauf-Analysen",
@@ -32,14 +33,12 @@ function UsageBar({ feature, used, limit }) {
       <div className="flex justify-between text-sm">
         <span className="font-medium text-gray-700">{label}</span>
         <span className={`font-semibold ${isNearLimit ? "text-red-500" : "text-gray-900"}`}>
-          {used} / {unlimited ? "\u221e" : limit}
+          {used} / {unlimited ? "∞" : limit}
         </span>
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${
-            isNearLimit ? "bg-red-400" : "bg-blue-500"
-          }`}
+          className={`h-full rounded-full transition-all ${isNearLimit ? "bg-red-400" : "bg-blue-500"}`}
           style={{ width: unlimited ? "0%" : `${pct}%` }}
         />
       </div>
@@ -66,13 +65,18 @@ export default function BillingPage() {
       try { localStorage.setItem("billing", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: () => { try { const s = localStorage.getItem("billing"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
+    initialData: () => {
+      try {
+        const saved = localStorage.getItem("billing");
+        return saved ? JSON.parse(saved) : undefined;
+      } catch {
+        return undefined;
+      }
+    },
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
   });
 
-  // Usage bars come from the init query (already loaded by Layout, updated after
-  // every AI feature call) so they reflect current usage without a separate request.
   const { data: initData } = useQuery({ queryKey: ["init"] });
 
   const handleManage = async () => {
@@ -98,8 +102,6 @@ export default function BillingPage() {
   }
 
   const sub = data?.subscription;
-  // Prefer initData.usage (kept fresh by Layout + AI feature interceptor);
-  // fall back to billing-overview for first render before init loads.
   const usage = initData?.usage || data?.usage || [];
   const planName = PLAN_NAMES[sub?.plan || initData?.plan] || "Basic";
   const isPaid = sub?.plan && sub.plan !== "basic";
@@ -111,7 +113,6 @@ export default function BillingPage() {
         <p className="text-gray-500 mt-1 text-sm">Verwalte deinen Plan und deine Nutzung.</p>
       </div>
 
-      {/* Current Plan Card */}
       <div className="bg-white rounded-xl border p-6 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
@@ -127,6 +128,7 @@ export default function BillingPage() {
               </p>
             </div>
           </div>
+
           <div className="flex gap-3">
             {isPaid && (
               <button
@@ -137,6 +139,7 @@ export default function BillingPage() {
                 Abo verwalten
               </button>
             )}
+
             {sub?.plan !== "max" && sub?.plan !== "enterprise" && (
               <button
                 onClick={() => navigate("/pricing")}
@@ -151,12 +154,11 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Usage */}
       <div className="bg-white rounded-xl border p-6 shadow-sm">
         <h3 className="text-base font-bold text-gray-900 mb-4">Nutzung diesen Monat</h3>
         <div className="space-y-4">
-          {usage.map((u) => (
-            <UsageBar key={u.feature} {...u} />
+          {usage.map((item) => (
+            <UsageBar key={item.feature} {...item} />
           ))}
         </div>
       </div>

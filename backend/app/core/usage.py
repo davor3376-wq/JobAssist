@@ -1,14 +1,15 @@
 """Usage tracking: check limits and increment counters."""
 
 from datetime import date
+
 from fastapi import Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import get_current_user
 from app.core.plans import get_limit
+from app.core.security import get_current_user
 from app.models.subscription import Subscription
 from app.models.usage import UsageRecord
 from app.models.user import User
@@ -18,13 +19,11 @@ DAILY_FEATURES = {"job_search"}
 
 
 def _current_period_start() -> date:
-    """First day of the current month."""
     today = date.today()
     return today.replace(day=1)
 
 
 def _period_for(feature: str) -> date:
-    """Return the period start date for a feature (daily or monthly)."""
     return date.today() if feature in DAILY_FEATURES else _current_period_start()
 
 
@@ -54,7 +53,10 @@ async def get_usage_count(db: AsyncSession, user_id: int, feature: str) -> int:
 async def increment_usage(db: AsyncSession, user_id: int, feature: str) -> None:
     period = _period_for(feature)
     stmt = pg_insert(UsageRecord).values(
-        user_id=user_id, feature=feature, period_start=period, count=1
+        user_id=user_id,
+        feature=feature,
+        period_start=period,
+        count=1,
     ).on_conflict_do_update(
         constraint="uq_user_feature_period",
         set_={"count": UsageRecord.count + 1},
@@ -64,12 +66,6 @@ async def increment_usage(db: AsyncSession, user_id: int, feature: str) -> None:
 
 
 def require_usage(feature: str):
-    """FastAPI dependency that checks usage limits before allowing the request.
-
-    Uses a single atomic UPSERT (INSERT ... ON CONFLICT DO UPDATE WHERE count < limit)
-    to eliminate the check-then-update race condition. If the WHERE clause blocks
-    the update (count >= limit), 0 rows are returned and a 403 is raised.
-    """
     async def _check(
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user),
@@ -79,7 +75,7 @@ def require_usage(feature: str):
                 status_code=403,
                 detail={
                     "error": "email_not_verified",
-                    "message": "Bitte bestaetige zuerst deine E-Mail-Adresse, um diese Funktion nutzen zu koennen.",
+                    "message": "Bitte bestätige zuerst deine E-Mail-Adresse, um diese Funktion nutzen zu können.",
                 },
             )
 
@@ -87,15 +83,10 @@ def require_usage(feature: str):
         limit = get_limit(plan, feature)
 
         if limit == -1:
-            # Unlimited — plain increment, no race risk
             await increment_usage(db, current_user.id, feature)
             return
 
         period = _period_for(feature)
-
-        # Atomic: insert count=1 (new row) OR increment count IF count < limit.
-        # When count >= limit the ON CONFLICT WHERE clause blocks the update and
-        # RETURNING yields 0 rows — no separate SELECT needed.
         stmt = (
             pg_insert(UsageRecord)
             .values(user_id=current_user.id, feature=feature, period_start=period, count=1)
@@ -111,7 +102,6 @@ def require_usage(feature: str):
         row = result.fetchone()
 
         if row is None:
-            # Conflict existed but WHERE blocked the update → limit already reached
             await db.rollback()
             raise HTTPException(
                 status_code=403,
@@ -131,7 +121,6 @@ def require_usage(feature: str):
 
 
 async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]:
-    """Return usage stats for all tracked features in a single query."""
     from sqlalchemy import func as sa_func
     from app.models.job_alert import JobAlert
 
@@ -141,7 +130,6 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
 
     monthly_features = [f for f in features if f not in DAILY_FEATURES]
     daily_features_list = [f for f in features if f in DAILY_FEATURES]
-
     counts = {}
 
     if monthly_features:
@@ -164,23 +152,17 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
         )
         counts.update({row.feature: row.count for row in rows})
 
-    # Job alerts usage = actual alert count (not a monthly counter)
-    alert_count_result = await db.execute(
-        select(sa_func.count()).where(JobAlert.user_id == user_id)
-    )
+    alert_count_result = await db.execute(select(sa_func.count()).where(JobAlert.user_id == user_id))
     alert_count = alert_count_result.scalar() or 0
 
     result = []
-    for f in features:
-        if f == "job_alerts":
-            used = alert_count
-        else:
-            used = counts.get(f, 0)
-        limit = get_limit(plan, f)
+    for feature in features:
+        used = alert_count if feature == "job_alerts" else counts.get(feature, 0)
+        limit = get_limit(plan, feature)
         result.append({
-            "feature": f,
-            "used": used,
-            "limit": limit,
-            "remaining": -1 if limit == -1 else max(0, limit - used),
+          "feature": feature,
+          "used": used,
+          "limit": limit,
+          "remaining": -1 if limit == -1 else max(0, limit - used),
         })
     return result

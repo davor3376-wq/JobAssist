@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { Bell, BellOff, Trash2, Play, Plus, X, Mail, MapPin, Briefcase, RefreshCw } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, BellOff, Briefcase, Mail, MapPin, Play, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { jobAlertsApi } from "../services/api";
+
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
+import { jobAlertsApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 
 const JOB_TYPES = [
@@ -18,6 +18,7 @@ const JOB_TYPES = [
   { value: "Lehre", label: "Lehre" },
   { value: "Samstagsjob", label: "Samstagsjob" },
 ];
+
 const FREQUENCIES = [
   { value: "daily", label: "Täglich" },
   { value: "weekly", label: "Wöchentlich" },
@@ -27,15 +28,19 @@ const REFRESH_MAX = 3;
 const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
 
 function getRefreshState(refreshState) {
-  const windowStart = refreshState?.manual_refresh_window_start ? new Date(refreshState.manual_refresh_window_start) : null;
+  const windowStart = refreshState?.manual_refresh_window_start
+    ? new Date(refreshState.manual_refresh_window_start)
+    : null;
   const windowExpired = !windowStart || (Date.now() - windowStart.getTime()) >= REFRESH_WINDOW_MS;
   const used = windowExpired ? 0 : (refreshState?.manual_refresh_count || 0);
   const atLimit = used >= REFRESH_MAX;
   let resetInMin = null;
+
   if (atLimit && windowStart) {
     const resetAt = windowStart.getTime() + REFRESH_WINDOW_MS;
     resetInMin = Math.ceil((resetAt - Date.now()) / 60000);
   }
+
   return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
 }
 
@@ -73,6 +78,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
               {alert.is_active ? "Aktiv" : "Pausiert"}
             </span>
           </div>
+
           <div className="flex flex-wrap gap-3 mt-1.5 text-sm text-gray-500">
             {alert.location && (
               <span className="flex items-center gap-1">
@@ -81,7 +87,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
             )}
             {alert.job_type && (
               <span className="flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find(t => t.value === alert.job_type)?.label || alert.job_type}
+                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find((t) => t.value === alert.job_type)?.label || alert.job_type}
               </span>
             )}
             <span className="flex items-center gap-1">
@@ -89,15 +95,16 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
             </span>
             <span className="flex items-center gap-1">
               <Bell className="w-3.5 h-3.5" />
-              {FREQUENCIES.find(f => f.value === alert.frequency)?.label || alert.frequency}
+              {FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency}
             </span>
           </div>
+
           {alert.last_sent_at && (
             <p className="text-xs text-gray-400 mt-1">
               Zuletzt gesendet: {new Date(alert.last_sent_at).toLocaleString("de-AT")}
             </p>
           )}
-          {/* Refresh cooldown indicator */}
+
           <div className="flex items-center gap-1.5 mt-1.5">
             {[...Array(REFRESH_MAX)].map((_, i) => (
               <div key={i} className={`w-2 h-2 rounded-full ${i < used ? "bg-orange-400" : "bg-gray-200"}`} />
@@ -119,6 +126,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
           >
             {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
           </button>
+
           <button
             onClick={() => onToggle(alert.id, !alert.is_active)}
             title={alert.is_active ? "Pausieren" : "Aktivieren"}
@@ -126,6 +134,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
           >
             {alert.is_active ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
           </button>
+
           <button
             onClick={() => onDelete(alert.id)}
             title="Löschen"
@@ -148,12 +157,13 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
     frequency: "daily",
   });
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.keywords.trim()) return toast.error("Bitte Suchbegriff eingeben");
     if (!form.email.trim()) return toast.error("Bitte E-Mail-Adresse eingeben");
+
     onCreate({
       keywords: form.keywords.trim(),
       location: form.location.trim() || null,
@@ -164,7 +174,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
   };
 
   return createPortal(
-    <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", padding: "16px", margin: 0 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", padding: "16px", margin: 0 }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-gray-900">Neuer Job-Alert</h2>
@@ -179,7 +189,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
             <input
               type="text"
               value={form.keywords}
-              onChange={e => set("keywords", e.target.value)}
+              onChange={(e) => set("keywords", e.target.value)}
               placeholder="z.B. Software Engineer, Marketing Manager"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -191,7 +201,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
             <input
               type="text"
               value={form.location}
-              onChange={e => set("location", e.target.value)}
+              onChange={(e) => set("location", e.target.value)}
               placeholder="z.B. Wien, Remote, Österreich"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -201,11 +211,11 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Stellenart</label>
             <select
               value={form.job_type}
-              onChange={e => set("job_type", e.target.value)}
+              onChange={(e) => set("job_type", e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
-              {JOB_TYPES.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
+              {JOB_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>{type.label}</option>
               ))}
             </select>
           </div>
@@ -224,17 +234,17 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Häufigkeit</label>
             <div className="flex gap-3">
-              {FREQUENCIES.map(f => (
-                <label key={f.value} className="flex items-center gap-2 cursor-pointer">
+              {FREQUENCIES.map((frequency) => (
+                <label key={frequency.value} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="frequency"
-                    value={f.value}
-                    checked={form.frequency === f.value}
-                    onChange={() => set("frequency", f.value)}
+                    value={frequency.value}
+                    checked={form.frequency === frequency.value}
+                    onChange={() => set("frequency", frequency.value)}
                     className="accent-blue-600"
                   />
-                  <span className="text-sm text-gray-700">{f.label}</span>
+                  <span className="text-sm text-gray-700">{frequency.label}</span>
                 </label>
               ))}
             </div>
@@ -268,10 +278,8 @@ export default function JobAlertsPage() {
   const [runningId, setRunningId] = useState(null);
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
-  const { guardedRun, atLimit } = useUsageGuard("job_alerts");
+  const { guardedRun } = useUsageGuard("job_alerts");
 
-  // Single source of truth: alert refresh quota lives on the user (init endpoint).
-  // No localStorage, no per-alert fields, no complex sync logic.
   const refreshState = {
     manual_refresh_count: me?.alert_refresh_count ?? 0,
     manual_refresh_window_start: me?.alert_refresh_window_start ?? null,
@@ -279,7 +287,7 @@ export default function JobAlertsPage() {
 
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
-    queryFn: () => jobAlertsApi.list().then(r => r.data),
+    queryFn: () => jobAlertsApi.list().then((r) => r.data),
     staleTime: 1000 * 60 * 2,
   });
 
@@ -307,7 +315,7 @@ export default function JobAlertsPage() {
       await qc.cancelQueries({ queryKey: ["job-alerts"] });
       const prev = qc.getQueryData(["job-alerts"]);
       qc.setQueryData(["job-alerts"], (old = []) =>
-        old.map((a) => (a.id === id ? { ...a, ...data } : a))
+        old.map((alert) => (alert.id === id ? { ...alert, ...data } : alert))
       );
       return { prev };
     },
@@ -329,7 +337,7 @@ export default function JobAlertsPage() {
       const prev = qc.getQueryData(["job-alerts"]);
       const prevBilling = qc.getQueryData(["billing-overview"]);
       const prevInit = qc.getQueryData(["init"]);
-      qc.setQueryData(["job-alerts"], (old = []) => old.filter((a) => a.id !== id));
+      qc.setQueryData(["job-alerts"], (old = []) => old.filter((alert) => alert.id !== id));
       bumpJobAlertUsageCaches(qc, -1);
       toast.success("Alert gelöscht");
       return { prev, prevBilling, prevInit };
@@ -350,7 +358,6 @@ export default function JobAlertsPage() {
   const handleRunNow = async (id) => {
     setRunningId(id);
 
-    // Optimistic update fires BEFORE the request so the counter changes instantly.
     const prevCount = me?.alert_refresh_count ?? 0;
     qc.setQueryData(["init"], (old) =>
       old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount + 1 } } : old
@@ -361,7 +368,6 @@ export default function JobAlertsPage() {
       const used = res.data?.refreshes_used ?? prevCount + 1;
       const remaining = res.data?.refreshes_remaining ?? "?";
 
-      // Correct with server value (handles edge cases like window reset)
       qc.setQueryData(["init"], (old) =>
         old ? { ...old, me: { ...old.me, alert_refresh_count: used } } : old
       );
@@ -372,7 +378,6 @@ export default function JobAlertsPage() {
         { duration: 5000 }
       );
     } catch (err) {
-      // Roll back optimistic update on failure
       qc.setQueryData(["init"], (old) =>
         old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount } } : old
       );
@@ -384,11 +389,10 @@ export default function JobAlertsPage() {
     }
   };
 
-  const activeCount = alerts.filter(a => a.is_active).length;
+  const activeCount = alerts.filter((alert) => alert.is_active).length;
 
   return (
     <div className="space-y-6 animate-slide-up">
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 animate-slide-up">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Job-Alerts</h1>
@@ -405,7 +409,6 @@ export default function JobAlertsPage() {
         </button>
       </div>
 
-      {/* Stats */}
       {alerts.length > 0 && (
         <div className="grid grid-cols-3 gap-4 animate-slide-up">
           <div className="bg-white rounded-xl border p-4 text-center">
@@ -423,7 +426,6 @@ export default function JobAlertsPage() {
         </div>
       )}
 
-      {/* List */}
       {isLoading ? (
         <div className="animate-slide-up"><ListSkeleton rows={3} /></div>
       ) : alerts.length === 0 ? (
@@ -445,7 +447,7 @@ export default function JobAlertsPage() {
         </div>
       ) : (
         <div className="space-y-3 animate-slide-up">
-          {alerts.map(alert => (
+          {alerts.map((alert) => (
             <AlertCard
               key={alert.id}
               alert={alert}
@@ -466,7 +468,6 @@ export default function JobAlertsPage() {
           defaultEmail={me?.email || ""}
         />
       )}
-
     </div>
   );
 }

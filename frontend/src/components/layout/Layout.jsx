@@ -1,29 +1,43 @@
 import { useState, useEffect, Suspense } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
-import { LayoutDashboard, FileText, Briefcase, LogOut, Sparkles, Settings, User, Mail, Bot, Bell, CreditCard, Menu, X } from "lucide-react";
-import useAuthStore from "../../hooks/useAuthStore";
-import clsx from "clsx";
-import { useI18n } from "../../context/I18nContext";
+import {
+  LayoutDashboard,
+  FileText,
+  Briefcase,
+  LogOut,
+  Sparkles,
+  Settings,
+  User,
+  Mail,
+  Bot,
+  Bell,
+  CreditCard,
+  Menu,
+  X,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { initApi, authApi } from "../../services/api";
 import toast from "react-hot-toast";
+import clsx from "clsx";
+
+import useAuthStore from "../../hooks/useAuthStore";
+import { useI18n } from "../../context/I18nContext";
+import { initApi, authApi } from "../../services/api";
 import { getApiErrorMessage } from "../../utils/apiError";
 
 const NAV_KEYS = [
-  { to: "/dashboard",      tKey: "navigation.dashboard",    icon: LayoutDashboard },
-  { to: "/resume",         tKey: "navigation.myResumes",    icon: FileText },
-  { to: "/jobs",           tKey: "navigation.jobs",         icon: Briefcase },
-  { to: "/cover-letter",   tKey: "navigation.coverLetter",  icon: Mail },
-  { to: "/ai-assistant",   tKey: "navigation.aiAssistant",  icon: Bot },
-  { to: "/job-alerts",     tKey: "navigation.jobAlerts",    icon: Bell },
-  { to: "/settings",       tKey: "navigation.preferences",  icon: Settings },
-  { to: "/billing",        tKey: "navigation.billing",      icon: CreditCard },
+  { to: "/dashboard", tKey: "navigation.dashboard", icon: LayoutDashboard },
+  { to: "/resume", tKey: "navigation.myResumes", icon: FileText },
+  { to: "/jobs", tKey: "navigation.jobs", icon: Briefcase },
+  { to: "/cover-letter", tKey: "navigation.coverLetter", icon: Mail },
+  { to: "/ai-assistant", tKey: "navigation.aiAssistant", icon: Bot },
+  { to: "/job-alerts", tKey: "navigation.jobAlerts", icon: Bell },
+  { to: "/settings", tKey: "navigation.preferences", icon: Settings },
+  { to: "/billing", tKey: "navigation.billing", icon: CreditCard },
 ];
 
 function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
       <div className="px-6 py-6">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
@@ -36,7 +50,6 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
         <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Menü</p>
         {NAV_KEYS.map(({ to, tKey, icon: Icon }) => (
@@ -55,12 +68,12 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
           >
             {({ isActive }) => (
               <>
-                <div className={clsx(
-                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-                  isActive
-                    ? "bg-brand-100 text-brand-600"
-                    : "bg-gray-100 text-gray-400"
-                )}>
+                <div
+                  className={clsx(
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
+                    isActive ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
+                  )}
+                >
                   <Icon className="w-4 h-4" />
                 </div>
                 {t(tKey)}
@@ -70,10 +83,8 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
         ))}
       </nav>
 
-      {/* Bottom — user card + logout */}
       <div className="px-3 pb-4">
         <div className="border-t border-gray-100 pt-4 space-y-1">
-          {/* User info */}
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
             {me ? (
               <>
@@ -106,7 +117,6 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
             )}
           </div>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
@@ -139,9 +149,9 @@ function VerificationBanner({ me }) {
     setSending(true);
     try {
       await authApi.resendVerification();
-      toast.success("Bestaetigungs-E-Mail gesendet");
+      toast.success("Bestätigungs-E-Mail gesendet");
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Fehler beim Senden der Bestaetigungs-E-Mail"));
+      toast.error(getApiErrorMessage(err, "Fehler beim Senden der Bestätigungs-E-Mail"));
     } finally {
       setSending(false);
     }
@@ -152,9 +162,9 @@ function VerificationBanner({ me }) {
       <div className="flex items-start gap-3">
         <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-amber-900">E-Mail noch nicht bestaetigt</h2>
+          <h2 className="text-sm font-semibold text-amber-900">E-Mail noch nicht bestätigt</h2>
           <p className="mt-1 text-sm text-amber-800">
-            Du kannst die App bereits nutzen. KI- und Premium-Funktionen werden aber erst nach der E-Mail-Bestaetigung freigeschaltet.
+            Du kannst die App bereits nutzen. KI- und Premium-Funktionen werden aber erst nach der E-Mail-Bestätigung freigeschaltet.
           </p>
           <button
             type="button"
@@ -162,7 +172,7 @@ function VerificationBanner({ me }) {
             disabled={sending}
             className="mt-3 text-sm font-semibold text-amber-700 transition-colors hover:text-amber-900 disabled:opacity-50"
           >
-            {sending ? "E-Mail wird gesendet..." : "Bestaetigungs-E-Mail erneut senden"}
+            {sending ? "E-Mail wird gesendet..." : "Bestätigungs-E-Mail erneut senden"}
           </button>
         </div>
       </div>
@@ -172,14 +182,12 @@ function VerificationBanner({ me }) {
 
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [animClass] = useState(() => (sessionStorage.getItem("app-loaded") ? "page-ready" : "page-enter"));
 
-  // page-enter only fires on the true first browser load (not on SPA navigation like register → dashboard)
-  const [animClass] = useState(() =>
-    sessionStorage.getItem("app-loaded") ? "page-ready" : "page-enter"
-  );
   useEffect(() => {
     sessionStorage.setItem("app-loaded", "1");
   }, []);
+
   const logout = useAuthStore((s) => s.logout);
   const setUser = useAuthStore((s) => s.setUser);
   const storedUser = useAuthStore((s) => s.user);
@@ -193,9 +201,17 @@ export default function Layout() {
       setUser(r.data.me);
       return r.data;
     }),
-    initialData: () => { try { const s = localStorage.getItem("init"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
+    initialData: () => {
+      try {
+        const saved = localStorage.getItem("init");
+        return saved ? JSON.parse(saved) : undefined;
+      } catch {
+        return undefined;
+      }
+    },
     staleTime: 1000 * 60 * 5,
   });
+
   const me = initData?.me ?? storedUser;
   const profile = initData?.profile;
 
@@ -207,30 +223,27 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-[260px] bg-white border-r border-gray-100 flex-col shadow-sm flex-shrink-0">
         <SidebarContent me={me} profile={profile} t={t} handleLogout={handleLogout} onNavClick={undefined} />
       </aside>
 
-      {/* ── Mobile drawer overlay ── */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* ── Mobile drawer ── */}
-      <aside className={clsx(
-        "fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-xl flex flex-col transition-transform duration-300 md:hidden",
-        mobileOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={clsx(
+          "fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-xl flex flex-col transition-transform duration-300 md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <button
           onClick={() => setMobileOpen(false)}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"
         >
           <X className="w-5 h-5" />
         </button>
+
         <SidebarContent
           me={me}
           profile={profile}
@@ -240,9 +253,7 @@ export default function Layout() {
         />
       </aside>
 
-      {/* ── Main content ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile top bar */}
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
           <button
             onClick={() => setMobileOpen(true)}

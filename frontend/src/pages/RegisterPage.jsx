@@ -28,7 +28,7 @@ export default function RegisterPage() {
         if (initData.me) setUser(initData.me);
       }).catch(() => {});
 
-      toast.success("Konto erstellt. Bitte bestaetige deine E-Mail, um alle Funktionen freizuschalten.");
+      toast.success("Konto erstellt. Bitte bestätige deine E-Mail, um alle Funktionen freizuschalten.");
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Registrierung fehlgeschlagen"));
     }
@@ -38,12 +38,12 @@ export default function RegisterPage() {
     <AuthLayout>
       <div className="mb-6 sm:mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Konto erstellen</h2>
-        <p className="text-gray-500 text-sm sm:text-base">Starte jetzt mit deiner Bewerbung in Oesterreich</p>
+        <p className="text-gray-500 text-sm sm:text-base">Starte jetzt mit deiner Bewerbung in Österreich</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label className="label">Vollstaendiger Name</label>
+          <label className="label">Vollständiger Name</label>
           <input className="input" placeholder="Max Mustermann" {...register("full_name")} />
         </div>
 
