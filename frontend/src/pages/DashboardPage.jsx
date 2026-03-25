@@ -31,24 +31,33 @@ function StatSkeleton() {
 }
 
 export default function DashboardPage() {
-  // Reuse init data (already cached by Layout with localStorage) for resumes
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const resumes = initData?.resumes;
 
-  // Jobs with localStorage cache for instant display
   const { data: jobs } = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then(r => {
-      try { localStorage.setItem("dashboard_jobs", JSON.stringify(r.data)); } catch {}
-      return r.data;
-    }),
-    initialData: () => { try { const s = localStorage.getItem("dashboard_jobs"); return s ? JSON.parse(s) : undefined; } catch { return undefined; } },
+    queryFn: () =>
+      jobApi.list().then((r) => {
+        try {
+          localStorage.setItem("dashboard_jobs", JSON.stringify(r.data));
+        } catch {}
+        return r.data;
+      }),
+    initialData: () => {
+      try {
+        const saved = localStorage.getItem("dashboard_jobs");
+        return saved ? JSON.parse(saved) : undefined;
+      } catch {
+        return undefined;
+      }
+    },
     staleTime: 1000 * 60 * 2,
   });
 
   const recentJobs = jobs?.slice(0, 5) ?? [];
-  const avgScore = jobs?.length
-    ? Math.round(jobs.filter(j => j.match_score).reduce((a, j) => a + j.match_score, 0) / jobs.filter(j => j.match_score).length)
+  const scoredJobs = jobs?.filter((job) => job.match_score != null) ?? [];
+  const avgScore = scoredJobs.length
+    ? Math.round(scoredJobs.reduce((sum, job) => sum + job.match_score, 0) / scoredJobs.length)
     : null;
 
   const greeting = () => {
@@ -62,19 +71,20 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl">
-      {/* Welcome Header */}
       <div className="animate-slide-up mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">{greeting()}</h1>
         <p className="text-gray-500">Hier ist der aktuelle Stand deiner Stellensuche</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-slide-up">
         {isLoading ? (
-          <><StatSkeleton /><StatSkeleton /><StatSkeleton /></>
+          <>
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </>
         ) : (
           <>
-            {/* Resumes Card */}
             <div className="card card-hover group">
               <div className="flex items-start justify-between">
                 <div>
@@ -88,7 +98,6 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500 mt-4">Verwalte alle deine Dokumente</p>
             </div>
 
-            {/* Jobs Card */}
             <div className="card card-hover group">
               <div className="flex items-start justify-between">
                 <div>
@@ -102,7 +111,6 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500 mt-4">Behalte den Überblick über Möglichkeiten</p>
             </div>
 
-            {/* Average Score Card */}
             <div className="card card-hover group">
               <div className="flex items-start justify-between">
                 <div>
@@ -119,7 +127,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Quick Actions */}
       <div className="card card-hover mb-8 animate-slide-up">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Schnellzugriff</h2>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -144,7 +151,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Jobs */}
       {recentJobs.length > 0 && (
         <div className="card card-hover animate-slide-up">
           <div className="flex items-center justify-between mb-6">

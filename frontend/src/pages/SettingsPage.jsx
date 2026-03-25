@@ -10,6 +10,21 @@ import { useI18n } from "../context/I18nContext";
 import { FormSkeleton } from "../components/PageSkeleton";
 import { getApiErrorMessage } from "../utils/apiError";
 
+const loadStored = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 /** Resize + compress an image File to a JPEG base64 data URL (max 200×200px, ~15–30KB). */
 function compressImage(file) {
   return new Promise((resolve, reject) => {
@@ -50,13 +65,21 @@ export default function SettingsPage() {
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => settingsApi.getProfile().then((r) => r.data),
+    queryFn: () => settingsApi.getProfile().then((r) => {
+      saveStored("profile", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("profile"),
     staleTime: 1000 * 60 * 3,
   });
 
   const { data: preferences, isLoading: preferencesLoading } = useQuery({
     queryKey: ["preferences"],
-    queryFn: () => settingsApi.getPreferences().then((r) => r.data),
+    queryFn: () => settingsApi.getPreferences().then((r) => {
+      saveStored("preferences", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("preferences"),
     staleTime: 1000 * 60 * 3,
   });
 

@@ -5,6 +5,21 @@ import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbul
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
 
+const loadStored = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 const SUGGESTIONS = [
   { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
   { icon: Briefcase, label: "Bewerbungstipps", prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
@@ -24,7 +39,11 @@ export default function AIAssistantPage() {
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then((r) => r.data),
+    queryFn: () => resumeApi.list().then((r) => {
+      saveStored("resumes", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("resumes"),
     staleTime: 1000 * 60 * 2,
   });
 

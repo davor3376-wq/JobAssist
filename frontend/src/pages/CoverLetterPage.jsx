@@ -6,6 +6,21 @@ import { resumeApi, motivationsschreibenApi, jobApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { getApiErrorMessage } from "../utils/apiError";
 
+const loadStored = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 const TONES = [
   { value: "formell", label: "Formell", desc: "Klassisch und professionell" },
   { value: "modern", label: "Modern", desc: "Dynamisch und zeitgemäß" },
@@ -29,14 +44,22 @@ export default function CoverLetterPage() {
   // Fetch uploaded resumes
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then((r) => r.data),
+    queryFn: () => resumeApi.list().then((r) => {
+      saveStored("resumes", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("resumes"),
     staleTime: 1000 * 60 * 2,
   });
 
   // Fetch saved jobs for import
   const { data: savedJobs = [] } = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then((r) => r.data),
+    queryFn: () => jobApi.list().then((r) => {
+      saveStored("jobs", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("jobs"),
     staleTime: 1000 * 60 * 2,
   });
 

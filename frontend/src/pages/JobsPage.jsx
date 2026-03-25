@@ -13,6 +13,21 @@ import ResearchModal from "../components/ResearchModal";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { getApiErrorMessage } from "../utils/apiError";
 
+const loadStored = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 const CITY_DISTRICTS = {
   "graz": [
     { value: "8010", label: "1. Bezirk – Innere Stadt" },
@@ -137,14 +152,22 @@ export default function JobsPage() {
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then(r => r.data),
+    queryFn: () => resumeApi.list().then((r) => {
+      saveStored("resumes", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("resumes"),
     staleTime: 1000 * 60 * 5,
   });
 
   // Tracked jobs
   const { data: jobs = [], isLoading, error: jobsError } = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then(r => r.data),
+    queryFn: () => jobApi.list().then((r) => {
+      saveStored("jobs", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("jobs"),
     retry: 1,
   });
 
@@ -157,6 +180,7 @@ export default function JobsPage() {
     queryKey: ["search", "recommended"],
     queryFn: () => jobApi.searchRecommended(1).then(r => r.data.jobs || []),
     enabled: recommendedEnabled,
+    placeholderData: () => qc.getQueryData(["search", "recommended"]),
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
@@ -180,6 +204,7 @@ export default function JobsPage() {
       ).then(r => r.data.jobs || []);
     },
     enabled: !!submittedCustomParams,
+    placeholderData: (previousData) => previousData,
     staleTime: 1000 * 60 * 5,
   });
 

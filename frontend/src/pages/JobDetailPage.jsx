@@ -7,6 +7,21 @@ import { jobApi, coverLetterApi, interviewApi, resumeApi, researchApi } from "..
 import ResearchModal from "../components/ResearchModal";
 import { getApiErrorMessage } from "../utils/apiError";
 
+const loadStored = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 const LoadingSpinner = () => (
   <div className="inline-block">
     <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -80,12 +95,26 @@ export default function JobDetailPage() {
 
   const { data: job, isLoading } = useQuery({
     queryKey: ["jobs", jobId],
-    queryFn: () => jobApi.get(jobId).then(r => r.data),
+    queryFn: () => jobApi.get(jobId).then((r) => {
+      const allJobs = loadStored("jobs") || [];
+      const merged = allJobs.some((entry) => String(entry.id) === String(jobId))
+        ? allJobs.map((entry) => (String(entry.id) === String(jobId) ? r.data : entry))
+        : [r.data, ...allJobs];
+      saveStored("jobs", merged);
+      return r.data;
+    }),
+    placeholderData: () =>
+      qc.getQueryData(["jobs"])?.find((entry) => String(entry.id) === String(jobId)) ||
+      loadStored("jobs")?.find((entry) => String(entry.id) === String(jobId)),
   });
 
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then(r => r.data),
+    queryFn: () => resumeApi.list().then((r) => {
+      saveStored("resumes", r.data);
+      return r.data;
+    }),
+    initialData: () => loadStored("resumes"),
   });
 
   const [selectedResume, setSelectedResume] = useState(null);
