@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, Briefcase, Mail, MapPin, Play, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Bell, BellOff, Briefcase, Mail, MapPin, Play, Plus, RefreshCw, Trash2, X, Pencil } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { ListSkeleton } from "../components/PageSkeleton";
@@ -26,6 +26,7 @@ const FREQUENCIES = [
 
 const REFRESH_MAX = 3;
 const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
+const REWRITE_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 function getRefreshState(refreshState) {
   const windowStart = refreshState?.manual_refresh_window_start
@@ -42,6 +43,15 @@ function getRefreshState(refreshState) {
   }
 
   return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
+}
+
+function getRewriteState(alert) {
+  const base = alert?.updated_at ? new Date(alert.updated_at) : alert?.created_at ? new Date(alert.created_at) : null;
+  if (!base) return { canRewrite: true, remainingMin: 0 };
+  const remainingMs = base.getTime() + REWRITE_WINDOW_MS - Date.now();
+  return remainingMs <= 0
+    ? { canRewrite: true, remainingMin: 0 }
+    : { canRewrite: false, remainingMin: Math.ceil(remainingMs / 60000) };
 }
 
 function updateUsageList(usage = [], delta) {
@@ -65,8 +75,9 @@ function bumpJobAlertUsageCaches(qc, delta) {
   );
 }
 
-function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunning }) {
+function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
   const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
+  const { canRewrite, remainingMin } = getRewriteState(alert);
 
   return (
     <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
@@ -136,6 +147,15 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
           </button>
 
           <button
+            onClick={() => onEdit(alert)}
+            disabled={!canRewrite}
+            title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verfügbar`}
+            className={`p-2 rounded-lg transition-colors ${canRewrite ? "text-gray-500 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+
+          <button
             onClick={() => onDelete(alert.id)}
             title="Löschen"
             className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
@@ -148,13 +168,13 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, isRunnin
   );
 }
 
-function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
+function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title = "Neuer Job-Alert", submitLabel = "Alert erstellen" }) {
   const [form, setForm] = useState({
-    keywords: "",
-    location: "",
-    job_type: "",
+    keywords: initialData?.keywords || "",
+    location: initialData?.location || "",
+    job_type: initialData?.job_type || "",
     email: defaultEmail || "",
-    frequency: "daily",
+    frequency: initialData?.frequency || "daily",
   });
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -164,7 +184,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
     if (!form.keywords.trim()) return toast.error("Bitte Suchbegriff eingeben");
     if (!form.email.trim()) return toast.error("Bitte E-Mail-Adresse eingeben");
 
-    onCreate({
+    onSubmit({
       keywords: form.keywords.trim(),
       location: form.location.trim() || null,
       job_type: form.job_type || null,
@@ -177,7 +197,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", padding: "16px", margin: 0 }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">Neuer Job-Alert</h2>
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
             <X className="w-5 h-5" />
           </button>
@@ -262,7 +282,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
               type="submit"
               className="px-5 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Alert erstellen
+              {submitLabel}
             </button>
           </div>
         </form>
@@ -275,6 +295,7 @@ function CreateAlertModal({ onClose, onCreate, defaultEmail }) {
 export default function JobAlertsPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingAlert, setEditingAlert] = useState(null);
   const [runningId, setRunningId] = useState(null);
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
@@ -315,13 +336,20 @@ export default function JobAlertsPage() {
       await qc.cancelQueries({ queryKey: ["job-alerts"] });
       const prev = qc.getQueryData(["job-alerts"]);
       qc.setQueryData(["job-alerts"], (old = []) =>
-        old.map((alert) => (alert.id === id ? { ...alert, ...data } : alert))
+        old.map((alert) => (alert.id === id ? { ...alert, ...data, updated_at: new Date().toISOString() } : alert))
       );
       return { prev };
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) qc.setQueryData(["job-alerts"], ctx.prev);
       toast.error("Fehler beim Aktualisieren");
+    },
+    onSuccess: (res) => {
+      qc.setQueryData(["job-alerts"], (old = []) =>
+        old.map((alert) => (alert.id === res.data.id ? res.data : alert))
+      );
+      setEditingAlert(null);
+      toast.success("Alert aktualisiert!");
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ["job-alerts"] }),
   });
@@ -455,6 +483,14 @@ export default function JobAlertsPage() {
               onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
               onDelete={(id) => deleteMutation.mutate(id)}
               onRunNow={handleRunNow}
+              onEdit={(currentAlert) => {
+                const { canRewrite, remainingMin } = getRewriteState(currentAlert);
+                if (!canRewrite) {
+                  toast.error(`Du kannst diesen Alert in ${remainingMin} Minuten erneut bearbeiten.`);
+                  return;
+                }
+                setEditingAlert(currentAlert);
+              }}
               isRunning={runningId === alert.id}
             />
           ))}
@@ -464,8 +500,19 @@ export default function JobAlertsPage() {
       {showCreate && (
         <CreateAlertModal
           onClose={() => setShowCreate(false)}
-          onCreate={(data) => createMutation.mutate(data)}
+          onSubmit={(data) => createMutation.mutate(data)}
           defaultEmail={me?.email || ""}
+        />
+      )}
+
+      {editingAlert && (
+        <CreateAlertModal
+          onClose={() => setEditingAlert(null)}
+          onSubmit={(data) => updateMutation.mutate({ id: editingAlert.id, data })}
+          defaultEmail={me?.email || ""}
+          initialData={editingAlert}
+          title="Job-Alert bearbeiten"
+          submitLabel="Änderungen speichern"
         />
       )}
     </div>

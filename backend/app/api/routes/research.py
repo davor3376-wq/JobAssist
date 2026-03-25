@@ -2,11 +2,13 @@ import asyncio
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from typing import Optional
+import re
 
 from app.core.security import get_current_user
 from app.core.usage import require_usage
 from app.models.user import User
 from app.services.claude_service import generate_company_research
+from app.services.job_search import _find_contact_email
 from app.main import limiter
 
 router = APIRouter()
@@ -152,6 +154,16 @@ def _lookup_company(company_name: str) -> dict:
     return {}
 
 
+def _guess_company_website(company_name: str, email: str = "") -> str:
+    if email and "@" in email and not email.endswith("@unternehmen.at"):
+        return f"https://{email.split('@', 1)[1]}"
+
+    slug = re.sub(r"[^a-z0-9]", "", (company_name or "").lower())
+    if slug:
+        return f"https://www.{slug}.at"
+    return ""
+
+
 class ResearchRequest(BaseModel):
     company_name: str
     job_description: Optional[str] = ""
@@ -181,11 +193,22 @@ async def research_company(
         payload.job_description or "",
         known,
     )
+    contact_info = briefing.get("contact_info", {}) or {}
+    email = contact_info.get("email") or _find_contact_email(
+        payload.company_name,
+        payload.job_description or "",
+    )
+    contact_info = {
+        "email": "" if email == "bewerbung@unternehmen.at" else email,
+        "phone": contact_info.get("phone", ""),
+        "location": contact_info.get("location") or known.get("hq", ""),
+        "website": contact_info.get("website") or _guess_company_website(payload.company_name, email),
+    }
     return ResearchResponse(
         company_name=payload.company_name,
         known_data=known,
         summary=briefing.get("summary", ""),
-        contact_info=briefing.get("contact_info", {}),
+        contact_info=contact_info,
         hot_topics=briefing.get("hot_topics", []),
         smart_questions=briefing.get("smart_questions", []),
     )

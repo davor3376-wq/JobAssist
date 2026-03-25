@@ -53,6 +53,16 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
 
+  const applyJobUpdate = (nextJob) => {
+    if (!nextJob) return;
+    qc.setQueryData(["jobs"], (old = []) =>
+      old.map((job) => (job.id === nextJob.id ? nextJob : job))
+    );
+    if (typeof onJobsUpdate === "function") {
+      onJobsUpdate((old = []) => old.map((job) => (job.id === nextJob.id ? nextJob : job)));
+    }
+  };
+
   // Fetch user's resumes
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -103,7 +113,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ jobId, status }) => jobApi.updateStatus(jobId, status),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      qc.setQueryData(["jobs"], (old = []) => old.map((job) => (job.id === res.data.id ? res.data : job)));
       qc.invalidateQueries({ queryKey: ["jobs"] });
       qc.invalidateQueries({ queryKey: ["pipeline", "stats"] });
       toast.success("Status aktualisiert!");
@@ -113,7 +124,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const deleteJobMutation = useMutation({
     mutationFn: (jobId) => jobApi.delete(jobId),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      qc.setQueryData(["jobs"], (old = []) => old.map((job) => (job.id === res.data.id ? res.data : job)));
       qc.invalidateQueries({ queryKey: ["jobs"] });
       qc.invalidateQueries({ queryKey: ["pipeline", "stats"] });
       toast.success("Stelle entfernt");
@@ -123,7 +135,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const matchMutation = useMutation({
     mutationFn: ({ jobId, resumeId }) => jobApi.generateMatch(jobId, resumeId),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      applyJobUpdate(res.data);
       qc.invalidateQueries({ queryKey: ["jobs"] });
       toast.success("Match-Bewertung erstellt!");
       setProcessingJobId(null);
@@ -138,7 +151,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const coverLetterMutation = useMutation({
     mutationFn: ({ jobId, resumeId }) => jobApi.generateCoverLetter(jobId, resumeId),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      qc.setQueryData(["jobs"], (old = []) => old.map((job) => (job.id === res.data.id ? res.data : job)));
       qc.invalidateQueries({ queryKey: ["jobs"] });
       toast.success("Motivationsschreiben erstellt!");
       setProcessingJobId(null);
@@ -153,7 +167,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const interviewPrepMutation = useMutation({
     mutationFn: ({ jobId, resumeId }) => jobApi.generateInterviewPrep(jobId, resumeId),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      applyJobUpdate(res.data);
       qc.invalidateQueries({ queryKey: ["jobs"] });
       toast.success("Gesprächsvorbereitung erstellt!");
       setProcessingJobId(null);
@@ -280,6 +295,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     try {
       const res = await researchApi.research(job.company || "", job.description || "");
       setResearchData(res.data);
+      qc.setQueryData(["jobs"], (old = []) =>
+        old.map((entry) =>
+          entry.id === job.id ? { ...entry, research_data: JSON.stringify(res.data) } : entry
+        )
+      );
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") { setResearchModal(null); return; }
       if (err.response?.status === 429) { setResearchModal(null); return; }
@@ -297,6 +317,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       const job = jobs.find((entry) => entry.id === researchModal.jobId);
       const res = await researchApi.research(job?.company || researchModal.companyName || "", job?.description || "");
       setResearchData(res.data);
+      qc.setQueryData(["jobs"], (old = []) =>
+        old.map((entry) =>
+          entry.id === researchModal.jobId ? { ...entry, research_data: JSON.stringify(res.data) } : entry
+        )
+      );
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;

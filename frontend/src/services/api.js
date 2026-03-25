@@ -1,8 +1,19 @@
 import axios from "axios";
 import queryClient from "../queryClient";
 
+const defaultBaseURL = (() => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "jobassist.tech" || host === "www.jobassist.tech") {
+      return "https://jobassist-production.up.railway.app/api";
+    }
+  }
+  return "/api";
+})();
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: defaultBaseURL,
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
 });

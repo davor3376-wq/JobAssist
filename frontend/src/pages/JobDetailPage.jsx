@@ -95,6 +95,19 @@ export default function JobDetailPage() {
   const [researchLoading, setResearchLoading] = useState(false);
   const { data: initData } = useQuery({ queryKey: ["init"] });
 
+  const updateJobCaches = (nextJob) => {
+    if (!nextJob) return;
+    qc.setQueryData(["jobs", jobId], nextJob);
+    qc.setQueryData(["jobs"], (old = []) =>
+      old.map((entry) => (String(entry.id) === String(nextJob.id) ? nextJob : entry))
+    );
+    const allJobs = loadStored("jobs") || [];
+    const merged = allJobs.some((entry) => String(entry.id) === String(nextJob.id))
+      ? allJobs.map((entry) => (String(entry.id) === String(nextJob.id) ? nextJob : entry))
+      : [nextJob, ...allJobs];
+    saveStored("jobs", merged);
+  };
+
   const { data: job, isLoading } = useQuery({
     queryKey: ["jobs", jobId],
     queryFn: () => jobApi.get(jobId).then((r) => {
@@ -131,7 +144,7 @@ export default function JobDetailPage() {
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
     onSuccess: (res) => {
-      qc.setQueryData(["jobs", jobId], res.data);
+      updateJobCaches(res.data);
       invalidate();
       toast.success("Match-Bewertung erstellt!");
     },
@@ -140,8 +153,13 @@ export default function JobDetailPage() {
 
   const coverLetterMutation = useMutation({
     mutationFn: () => coverLetterApi.generate(Number(jobId), resumeId),
-    onSuccess: () => { invalidate(); setActiveTab("cover-letter"); toast.success("Anschreiben fertig!"); },
-    onError: () => toast.error("Fehler beim Erstellen des Anschreibens"),
+    onSuccess: (res) => {
+      updateJobCaches(res.data);
+      invalidate();
+      setActiveTab("cover-letter");
+      toast.success("Anschreiben fertig!");
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Anschreiben konnte nicht erstellt werden")),
   });
 
   const interviewMutation = useMutation({
@@ -321,6 +339,7 @@ export default function JobDetailPage() {
             try {
               const res = await researchApi.research(job.company || "", job.description || "");
               setResearchData(res.data);
+              updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
             } catch (err) {
               if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429) {
                 toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
@@ -684,6 +703,7 @@ export default function JobDetailPage() {
             try {
               const res = await researchApi.research(job?.company || "", job?.description || "");
               setResearchData(res.data);
+              updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
             } catch (err) {
               if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429) {
                 toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));

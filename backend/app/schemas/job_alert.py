@@ -32,5 +32,6 @@ class JobAlertOut(BaseModel):
     manual_refresh_count: int = 0
     manual_refresh_window_start: Optional[datetime] = None
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

@@ -129,10 +129,11 @@ export default function JobsPage() {
   const [expandedJob, setExpandedJob] = useState(null);
   const [jobAnalyses, setJobAnalyses] = useState({});
   const [analyzingJobId, setAnalyzingJobId] = useState(null);
-  const [draftTexts, setDraftTexts] = useState({});   // source_id -> generated text
+  const [draftTexts, setDraftTexts] = useState(() => loadStored("job-search-drafts") || {});   // source_id -> generated text
   const [draftLoading, setDraftLoading] = useState(null); // source_id being generated
   const [researchModal, setResearchModal] = useState(null); // { companyName, jobDescription }
   const [researchData, setResearchData] = useState(null);
+  const [researchCache, setResearchCache] = useState(() => loadStored("job-search-research") || {});
   const [researchLoading, setResearchLoading] = useState(false);
   const [sortBy, setSortBy] = useState("date");
   const [visibleCount, setVisibleCount] = useState(5);
@@ -322,23 +323,38 @@ export default function JobsPage() {
         applicant_name: me?.full_name || "",
       });
       const text = res.data?.text || "";
-      setDraftTexts((prev) => ({ ...prev, [id]: text }));
+      setDraftTexts((prev) => {
+        const next = { ...prev, [id]: text };
+        saveStored("job-search-drafts", next);
+        return next;
+      });
       window.location.href = generateMailtoLink(result, text, userName, result.contact_email);
       toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
-    } catch {
-      toast.error("Brief-Entwurf konnte nicht generiert werden");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Brief-Entwurf konnte nicht generiert werden"));
     } finally {
       setDraftLoading(null);
     }
   };
 
   const handleResearch = async (result) => {
+    const cachedResearch = researchCache[result.source_id];
+    if (cachedResearch) {
+      setResearchData(cachedResearch);
+      setResearchModal({ companyName: result.company, jobDescription: result.description || "", sourceId: result.source_id });
+      return;
+    }
     setResearchData(null);
-    setResearchModal({ companyName: result.company, jobDescription: result.description || "" });
+    setResearchModal({ companyName: result.company, jobDescription: result.description || "", sourceId: result.source_id });
     setResearchLoading(true);
     try {
       const res = await researchApi.research(result.company, result.description || "");
       setResearchData(res.data);
+      setResearchCache((prev) => {
+        const next = { ...prev, [result.source_id]: res.data };
+        saveStored("job-search-research", next);
+        return next;
+      });
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") { setResearchModal(null); return; }
       if (err.response?.status === 429) { setResearchModal(null); return; }
@@ -355,6 +371,13 @@ export default function JobsPage() {
     try {
       const res = await researchApi.research(researchModal.companyName || "", researchModal.jobDescription || "");
       setResearchData(res.data);
+      if (researchModal.sourceId) {
+        setResearchCache((prev) => {
+          const next = { ...prev, [researchModal.sourceId]: res.data };
+          saveStored("job-search-research", next);
+          return next;
+        });
+      }
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
