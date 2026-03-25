@@ -10,18 +10,19 @@ const FEATURE_LABELS = {
   job_search: "Jobsuchen",
 };
 
-/**
- * Hook that checks usage limits before performing an action.
- *
- * Returns { canUse, remaining, used, limit, warn } for a given feature,
- * plus a `guardedRun(fn)` helper that shows a toast/blocks when at limit.
- */
+const FEATURE_PERIODS = {
+  cv_analysis: "diesen Monat",
+  cover_letter: "diesen Monat",
+  job_alerts: "diesen Monat",
+  ai_chat: "diesen Monat",
+  job_search: "heute",
+};
+
 export default function useUsageGuard(feature) {
   const navigate = useNavigate();
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const { data: billingData } = useQuery({ queryKey: ["billing-overview"], staleTime: 1000 * 60 * 2 });
 
-  // Prefer billing data (refreshes more often), fall back to init
   const usageList = billingData?.usage || initData?.usage || [];
   const entry = usageList.find((u) => u.feature === feature);
 
@@ -32,13 +33,8 @@ export default function useUsageGuard(feature) {
   const atLimit = !unlimited && remaining <= 0;
   const nearLimit = !unlimited && !atLimit && limit > 0 && remaining <= Math.max(1, Math.ceil(limit * 0.2));
   const label = FEATURE_LABELS[feature] || feature;
+  const periodLabel = FEATURE_PERIODS[feature] || "diesen Monat";
 
-  /**
-   * Wraps an action function with a usage check.
-   * - At limit: shows upgrade toast, does NOT run the action.
-   * - Near limit: shows warning toast, then runs the action.
-   * - Otherwise: runs the action silently.
-   */
   const guardedRun = (fn) => {
     if (atLimit) {
       toast(
@@ -46,18 +42,21 @@ export default function useUsageGuard(feature) {
           <div className="flex flex-col gap-2">
             <p className="font-semibold text-gray-900">Limit erreicht</p>
             <p className="text-sm text-gray-600">
-              Du hast alle {limit} {label} diesen Monat verbraucht.
+              Du hast alle {limit} {label} {periodLabel} verbraucht.
             </p>
-            <div className="flex gap-2 mt-1">
+            <div className="mt-1 flex gap-2">
               <button
-                onClick={() => { toast.dismiss(t.id); navigate("/pricing"); }}
-                className="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  navigate("/pricing");
+                }}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
               >
                 Upgrade
               </button>
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100 rounded-lg"
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100"
               >
                 OK
               </button>
@@ -70,7 +69,7 @@ export default function useUsageGuard(feature) {
     }
 
     if (nearLimit) {
-      toast(`Noch ${remaining} ${label} übrig diesen Monat`, {
+      toast(`Noch ${remaining} ${label} übrig ${periodLabel}`, {
         icon: "⚠️",
         duration: 4000,
       });

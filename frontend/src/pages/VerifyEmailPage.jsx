@@ -12,6 +12,7 @@ export default function VerifyEmailPage() {
   const token = searchParams.get("token");
   const [status, setStatus] = useState("loading");
   const setUser = useAuthStore((s) => s.setUser);
+  const storedUser = useAuthStore((s) => s.user);
   const hasSession = Boolean(localStorage.getItem("access_token"));
 
   useEffect(() => {
@@ -24,7 +25,27 @@ export default function VerifyEmailPage() {
       .then(async () => {
         setStatus("success");
         if (!hasSession) return;
+
+        const optimisticUser = storedUser ? { ...storedUser, is_verified: true } : null;
+        if (optimisticUser) {
+          setUser(optimisticUser);
+          queryClient.setQueryData(["init"], (old) =>
+            old ? { ...old, me: { ...old.me, is_verified: true } } : old
+          );
+          try {
+            const raw = localStorage.getItem("init");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              localStorage.setItem(
+                "init",
+                JSON.stringify({ ...parsed, me: { ...parsed?.me, is_verified: true } })
+              );
+            }
+          } catch {}
+        }
+
         try {
+          await queryClient.invalidateQueries({ queryKey: ["init"] });
           const initRes = await initApi.fetch();
           try { localStorage.setItem("init", JSON.stringify(initRes.data)); } catch {}
           queryClient.setQueryData(["init"], initRes.data);
@@ -32,7 +53,7 @@ export default function VerifyEmailPage() {
         } catch {}
       })
       .catch(() => setStatus("error"));
-  }, [hasSession, setUser, token]);
+  }, [hasSession, setUser, storedUser, token]);
 
   return (
     <AuthLayout>
