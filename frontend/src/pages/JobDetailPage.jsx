@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 import { Trash2, Zap, FileText, MessageSquare, Copy, Check, ChevronDown, Download, SearchCheck } from "lucide-react";
 import { jobApi, coverLetterApi, interviewApi, resumeApi, researchApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
@@ -92,6 +93,7 @@ export default function JobDetailPage() {
   const [researchOpen, setResearchOpen] = useState(false);
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
+  const { data: initData } = useQuery({ queryKey: ["init"] });
 
   const { data: job, isLoading } = useQuery({
     queryKey: ["jobs", jobId],
@@ -108,14 +110,18 @@ export default function JobDetailPage() {
       loadStored("jobs")?.find((entry) => String(entry.id) === String(jobId)),
   });
 
-  const { data: resumes = [] } = useQuery({
+  const { data: resumesQuery = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then((r) => {
       saveStored("resumes", r.data);
       return r.data;
     }),
-    initialData: () => loadStored("resumes"),
+    initialData: () =>
+      qc.getQueryData(["resumes"]) ||
+      initData?.resumes ||
+      loadStored("resumes"),
   });
+  const resumes = resumesQuery?.length ? resumesQuery : initData?.resumes || loadStored("resumes") || [];
 
   const [selectedResume, setSelectedResume] = useState(null);
   const resumeId = selectedResume ?? resumes[0]?.id;
@@ -230,6 +236,15 @@ export default function JobDetailPage() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
           </div>
+        </div>
+      )}
+
+      {resumes.length === 0 && (
+        <div className="animate-slide-up mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm font-medium text-amber-900">Für Match-Bewertung, Anschreiben und Gesprächsvorbereitung brauchst du zuerst einen Lebenslauf.</p>
+          <Link to="/resume" className="inline-flex mt-3 text-sm font-semibold text-amber-800 hover:text-amber-900">
+            Lebenslauf hochladen
+          </Link>
         </div>
       )}
 
