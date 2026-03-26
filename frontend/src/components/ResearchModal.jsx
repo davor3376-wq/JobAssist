@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -21,20 +21,26 @@ import { jobApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export default function ResearchModal({ companyName, data, loading, onClose, jobId, onRefresh }) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const hasContactInfo = useMemo(
+    () => Boolean(data?.contact_info && Object.values(data.contact_info).some(Boolean)),
+    [data]
+  );
+
   const handleSave = async () => {
     if (!jobId || !data) return;
+
     setSaving(true);
     try {
       const res = await jobApi.saveResearch(jobId, data);
-      qc.setQueryData(["jobs"], (old = []) =>
+      queryClient.setQueryData(["jobs"], (old = []) =>
         old.map((job) => (job.id === res.data.id ? res.data : job))
       );
-      qc.setQueryData(["jobs", String(jobId)], res.data);
-      qc.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.setQueryData(["jobs", String(jobId)], res.data);
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
       setSaved(true);
       toast.success("Recherche gespeichert!");
     } catch (err) {
@@ -47,17 +53,21 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="text-base font-bold text-gray-900">{companyName} - Recherche</h2>
+        <div className="flex items-start justify-between gap-3 border-b px-4 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <Building2 className="h-5 w-5 flex-shrink-0 text-blue-600" />
+            <h2 className="truncate text-base font-bold text-gray-900">{companyName} - Recherche</h2>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100"
+            aria-label="Recherche schließen"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-500">
               <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
@@ -65,7 +75,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
             </div>
           ) : data ? (
             <>
-              {data.contact_info && Object.values(data.contact_info).some(Boolean) && (
+              {hasContactInfo && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold text-gray-800">Kontakt</h3>
                   <div className="space-y-2 rounded-xl bg-blue-50 p-4 text-sm">
@@ -110,11 +120,36 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
 
               {data.known_data && Object.keys(data.known_data).length > 0 && (
                 <div className="space-y-1.5 rounded-xl bg-gray-50 p-4 text-sm">
-                  {data.known_data.ceo && <p><span className="font-medium text-gray-700">CEO:</span> <span className="text-gray-600">{data.known_data.ceo}</span></p>}
-                  {data.known_data.industry && <p><span className="font-medium text-gray-700">Branche:</span> <span className="text-gray-600">{data.known_data.industry}</span></p>}
-                  {data.known_data.employees && <p><span className="font-medium text-gray-700">Mitarbeiter:</span> <span className="text-gray-600">{data.known_data.employees}</span></p>}
-                  {data.known_data.founded && <p><span className="font-medium text-gray-700">Gegründet:</span> <span className="text-gray-600">{data.known_data.founded}</span></p>}
-                  {data.known_data.hq && <p><span className="font-medium text-gray-700">Hauptsitz:</span> <span className="text-gray-600">{data.known_data.hq}</span></p>}
+                  {data.known_data.ceo && (
+                    <p>
+                      <span className="font-medium text-gray-700">CEO:</span>{" "}
+                      <span className="text-gray-600">{data.known_data.ceo}</span>
+                    </p>
+                  )}
+                  {data.known_data.industry && (
+                    <p>
+                      <span className="font-medium text-gray-700">Branche:</span>{" "}
+                      <span className="text-gray-600">{data.known_data.industry}</span>
+                    </p>
+                  )}
+                  {data.known_data.employees && (
+                    <p>
+                      <span className="font-medium text-gray-700">Mitarbeiter:</span>{" "}
+                      <span className="text-gray-600">{data.known_data.employees}</span>
+                    </p>
+                  )}
+                  {data.known_data.founded && (
+                    <p>
+                      <span className="font-medium text-gray-700">Gegründet:</span>{" "}
+                      <span className="text-gray-600">{data.known_data.founded}</span>
+                    </p>
+                  )}
+                  {data.known_data.hq && (
+                    <p>
+                      <span className="font-medium text-gray-700">Hauptsitz:</span>{" "}
+                      <span className="text-gray-600">{data.known_data.hq}</span>
+                    </p>
+                  )}
                   {data.known_data.mission && <p className="pt-1 italic text-gray-500">{data.known_data.mission}</p>}
                 </div>
               )}
@@ -165,13 +200,13 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t px-6 py-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {onRefresh && (
               <button
                 onClick={onRefresh}
                 disabled={loading}
-                className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 Aktualisieren
@@ -181,14 +216,24 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
               <button
                 onClick={handleSave}
                 disabled={saving || saved}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 sm:w-auto"
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : saved ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {saved ? "Gespeichert" : "Speichern"}
               </button>
             )}
           </div>
-          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
+
+          <button
+            onClick={onClose}
+            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 sm:w-auto"
+          >
             Schließen
           </button>
         </div>
