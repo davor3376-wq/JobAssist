@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, Send, SearchCheck } from "lucide-react";
@@ -118,6 +119,7 @@ const CITY_DISTRICTS = {
 };
 
 export default function JobsPage() {
+  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const [mainTab, setMainTab] = useState("applications");
   const [searchTab, setSearchTab] = useState("recommended");
@@ -144,6 +146,7 @@ export default function JobsPage() {
   // Tracks what was last submitted — drives the query key so cache is reused for identical searches
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
+  const focusedJobId = searchParams.get("jobId");
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
@@ -229,6 +232,12 @@ export default function JobsPage() {
       setSubmittedCustomParams({ ...customSearchParams });
     }
   }, [customSearchParams, searchTab, submittedCustomParams]);
+
+  useEffect(() => {
+    if (focusedJobId) {
+      setMainTab("applications");
+    }
+  }, [focusedJobId]);
 
   const handleRecommendedSearch = () => {
     guardSearch(() => {
@@ -466,7 +475,7 @@ export default function JobsPage() {
       {mainTab === "applications" && (
         <div className="space-y-6 animate-slide-up">
           <PipelineStats jobs={jobs} />
-          <ApplicationsList jobs={jobs} />
+          <ApplicationsList jobs={jobs} focusedJobId={focusedJobId} />
         </div>
       )}
 

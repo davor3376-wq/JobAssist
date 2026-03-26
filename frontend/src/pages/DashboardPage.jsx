@@ -173,7 +173,7 @@ export default function DashboardPage() {
             {recentJobs.map((job) => (
               <Link
                 key={job.id}
-                to={`/jobs/${job.id}`}
+                to={`/jobs?jobId=${job.id}`}
                 className="card-hover block rounded-lg p-4 transition-all duration-300 hover:shadow-md"
               >
                 <div className="flex items-center justify-between gap-4">

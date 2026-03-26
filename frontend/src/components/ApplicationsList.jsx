@@ -72,12 +72,14 @@ function ActionButton({ onClick, disabled, disabledReason, color, icon, label })
   );
 }
 
-export default function ApplicationsList({ jobs, onJobsUpdate }) {
+export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = null }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const notesTimeoutsRef = useRef({});
+  const jobRefs = useRef({});
 
   const [collapsedJobCards, setCollapsedJobCards] = useState({});
+  const [collapsedDescriptions, setCollapsedDescriptions] = useState({});
   const [expandedPanel, setExpandedPanel] = useState(null);
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [selectedResumeId, setSelectedResumeId] = useState(null);
@@ -109,6 +111,15 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     const timeouts = notesTimeoutsRef.current;
     return () => Object.values(timeouts).forEach(clearTimeout);
   }, []);
+
+  useEffect(() => {
+    if (!focusedJobId) return;
+    setCollapsedJobCards((old) => ({ ...old, [focusedJobId]: false }));
+    const timer = window.setTimeout(() => {
+      jobRefs.current[focusedJobId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [focusedJobId]);
 
   const syncJobs = (updater) => {
     queryClient.setQueryData(["jobs"], (old = []) => updater(old));
@@ -290,12 +301,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
   const hasResume = Boolean(selectedResumeId);
   const isProcessing = (jobId, feature) => processing.jobId === jobId && processing.feature === feature;
 
-  const openCoverLetterWorkspace = (job) => {
-    const params = new URLSearchParams({ jobId: String(job.id) });
-    if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
-    navigate(`/cover-letter?${params.toString()}`);
-  };
-
   const openInterviewWorkspace = (job) => {
     const params = new URLSearchParams({ tab: "interview" });
     if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
@@ -407,20 +412,24 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
         const isDeadlineSaving = isJobFlagActive(job.id, "deadline");
         const isUrlSaving = isJobFlagActive(job.id, "url");
 
+        const isDescriptionCollapsed = collapsedDescriptions[job.id] ?? true;
+        const isFocused = focusedJobId != null && String(focusedJobId) === String(job.id);
+
         return (
-          <div key={job.id} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 p-4">
+          <div key={job.id} ref={(node) => { jobRefs.current[job.id] = node; }} className={`card card-hover overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-300 ${isFocused ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
+            <div className="border-b border-gray-100 p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" checked={selectedJobs.has(job.id)} onChange={() => setSelectedJobs((old) => { const next = new Set(old); next.has(job.id) ? next.delete(job.id) : next.add(job.id); return next; })} className="h-4 w-4 rounded" />
-                    <h4 className="truncate font-semibold text-gray-900">{job.role || "Ohne Titel"}</h4>
+                    <button onClick={() => navigate(`/jobs/${job.id}`)} className="truncate text-left text-base font-semibold text-gray-900 hover:text-indigo-700 sm:text-lg">{job.role || "Ohne Titel"}</button>
                     {job.url && <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700" title="Stellenanzeige öffnen"><ExternalLink className="h-3.5 w-3.5" /></a>}
                   </div>
                   <p className="text-sm text-gray-600">{job.company || "Unbekanntes Unternehmen"}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{meta && <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${meta.className}`}>{meta.label}</span>}{job.match_score != null && <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}%</span>}<span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span></div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">{meta && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}>{meta.label}</span>}{job.match_score != null && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}%</span>}<span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span></div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button onClick={() => navigate(`/jobs/${job.id}`)} className="hidden rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 sm:block">Details</button>
                   <button onClick={() => setCollapsedJobCards((old) => ({ ...old, [job.id]: !old[job.id] }))} className="p-1 text-gray-500 hover:text-gray-700">{isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</button>
                   <span title={isDeleting ? "Stelle wird gerade gelöscht" : "Stelle löschen"}>
                     <button onClick={() => deleteMutation.mutate(job.id)} disabled={isDeleting} aria-disabled={isDeleting} className="p-1 text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
@@ -432,7 +441,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
             {!isCollapsed && <div className="space-y-4 bg-gray-50 p-4">
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
               {job.match_score != null && job.match_feedback && <div className="border-t border-gray-300 pt-3"><p className="mb-1 text-xs font-semibold text-gray-700">Match-Analyse</p><p className="text-xs leading-relaxed text-gray-600">{getMatchSummary(job.match_feedback)}</p></div>}
-              {job.description && <div className="border-t border-gray-300 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Stellenanzeige</p><div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-blue-300 bg-white p-3 text-sm text-gray-700">{job.description}</div></div>}
+              {job.description && <div className="border-t border-gray-300 pt-3"><div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-700">Stellenbeschreibung</p><button onClick={() => setCollapsedDescriptions((old) => ({ ...old, [job.id]: !isDescriptionCollapsed }))} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">{isDescriptionCollapsed ? "Anzeigen" : "Minimieren"}</button></div>{!isDescriptionCollapsed && <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-blue-300 bg-white p-3 text-sm leading-relaxed text-gray-700">{job.description}</div>}</div>}
               <div className="border-t border-gray-300 pt-3"><label className="mb-2 block text-sm font-semibold text-gray-700">Stellenanzeige Link</label><input type="url" defaultValue={job.url || ""} onBlur={(e) => { const value = e.target.value.trim() || null; if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value }); }} disabled={isUrlSaving} className="w-full rounded border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isUrlSaving && <p className="mt-1 text-xs text-gray-500">Link wird gespeichert...</p>}</div>
               <div className="border-t border-gray-300 pt-3"><label className="mb-2 block text-sm font-semibold text-gray-700">Bewerbungsfrist</label><input type="date" defaultValue={job.deadline ? job.deadline.split("T")[0] : ""} onBlur={(e) => deadlineMutation.mutate({ jobId: job.id, deadline: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : null })} disabled={isDeadlineSaving} className="w-full max-w-xs rounded border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isDeadlineSaving && <p className="mt-1 text-xs text-gray-500">Frist wird gespeichert...</p>}</div>
               <div className="border-t border-gray-300 pt-3"><label className="mb-2 block text-sm font-semibold text-gray-700">Notizen</label><textarea value={notesInput[job.id] ?? job.notes ?? ""} onChange={(e) => { const value = e.target.value; setNotesInput((old) => ({ ...old, [job.id]: value })); setNotesSaving((old) => ({ ...old, [job.id]: true })); clearTimeout(notesTimeoutsRef.current[job.id]); notesTimeoutsRef.current[job.id] = setTimeout(() => notesMutation.mutate({ jobId: job.id, notes: value }), 800); }} placeholder="Persönliche Notizen zu dieser Bewerbung..." className="w-full resize-none rounded border border-gray-300 px-3 py-2 text-sm" rows={2} />{notesSaving[job.id] && <p className="mt-1 text-xs text-gray-500">Wird gespeichert...</p>}</div>
@@ -442,7 +451,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
               {showActionHint && <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-700">{!hasResume && <div>Bitte zuerst einen Lebenslauf auswählen, um Match und Gesprächsvorbereitung zu nutzen.</div>}{!job.company && <div>Recherche ist für diese Stelle nicht verfügbar, weil der Firmenname fehlt.</div>}</div>}
               <div className="flex flex-wrap gap-2">
                 <ActionButton color="blue" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-3 w-3" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match berechnen"} />
-                <ActionButton color="green" disabled={false} disabledReason="" onClick={() => openCoverLetterWorkspace(job)} icon={<FileText className="h-3 w-3" />} label="Motivationsschreiben" />
                 <ActionButton color="purple" disabled={!hasResume} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => openInterviewWorkspace(job)} icon={<Brain className="h-3 w-3" />} label="Gesprächsvorbereitung" />
                 <ActionButton color="white" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /> : <Send className="h-3 w-3" />} label={draftLoading === job.id ? "Generiert..." : "Brief-Entwurf"} />
                 <ActionButton color={job.research_data ? "emerald-solid" : "emerald"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-3 w-3" />} label={job.research_data ? "Recherche ansehen" : "Recherche"} />
