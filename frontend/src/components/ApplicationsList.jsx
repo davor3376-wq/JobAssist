@@ -137,13 +137,44 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ jobId, status }) => jobApi.updateStatus(jobId, status),
-    onMutate: ({ jobId }) => setJobFlag(jobId, "status", true),
+    onMutate: async ({ jobId, status }) => {
+      setJobFlag(jobId, "status", true);
+      await queryClient.cancelQueries({ queryKey: ["jobs"] });
+      const previousJobs = queryClient.getQueryData(["jobs"]);
+      const previousJob = queryClient.getQueryData(["jobs", String(jobId)]);
+
+      syncJobs((old = []) =>
+        old.map((job) =>
+          job.id === jobId
+            ? {
+                ...job,
+                status,
+                updated_at: new Date().toISOString(),
+              }
+            : job
+        )
+      );
+      if (previousJob) {
+        queryClient.setQueryData(["jobs", String(jobId)], {
+          ...previousJob,
+          status,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      return { previousJobs, previousJob };
+    },
     onSuccess: (res) => {
       applyJobUpdate(res.data);
       queryClient.invalidateQueries({ queryKey: ["pipeline", "stats"] });
       toast.success("Status aktualisiert!");
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden")),
+    onError: (err, vars, context) => {
+      if (context?.previousJobs) queryClient.setQueryData(["jobs"], context.previousJobs);
+      if (context?.previousJob) queryClient.setQueryData(["jobs", String(vars.jobId)], context.previousJob);
+      if (typeof onJobsUpdate === "function" && context?.previousJobs) onJobsUpdate(context.previousJobs);
+      toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden"));
+    },
     onSettled: (_data, _error, vars) => setJobFlag(vars.jobId, "status", false),
   });
 
@@ -152,6 +183,23 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       const results = await Promise.all(jobIds.map((jobId) => jobApi.updateStatus(jobId, status)));
       return results.map((result) => result.data);
     },
+    onMutate: async ({ status, jobIds }) => {
+      await queryClient.cancelQueries({ queryKey: ["jobs"] });
+      const previousJobs = queryClient.getQueryData(["jobs"]);
+      const jobIdSet = new Set(jobIds);
+      syncJobs((old = []) =>
+        old.map((job) =>
+          jobIdSet.has(job.id)
+            ? {
+                ...job,
+                status,
+                updated_at: new Date().toISOString(),
+              }
+            : job
+        )
+      );
+      return { previousJobs };
+    },
     onSuccess: (updatedJobs) => {
       const byId = new Map(updatedJobs.map((job) => [job.id, job]));
       syncJobs((old = []) => old.map((job) => byId.get(job.id) || job));
@@ -159,7 +207,13 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
       toast.success(`${updatedJobs.length} Stellen aktualisiert!`);
       setSelectedJobs(new Set());
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Stellen konnten nicht aktualisiert werden")),
+    onError: (err, _vars, context) => {
+      if (context?.previousJobs) {
+        queryClient.setQueryData(["jobs"], context.previousJobs);
+        if (typeof onJobsUpdate === "function") onJobsUpdate(context.previousJobs);
+      }
+      toast.error(getApiErrorMessage(err, "Stellen konnten nicht aktualisiert werden"));
+    },
   });
 
   const deleteMutation = useMutation({

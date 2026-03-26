@@ -274,7 +274,7 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-10 text-center text-xs text-gray-400">
-          Alle Preise inkl. MwSt. Jederzeit kündbar. Keine versteckten Kosten.
+          Keine MwSt. ausgewiesen. Jederzeit kündbar. Keine versteckten Kosten.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-4 text-xs text-gray-400">

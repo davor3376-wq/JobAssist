@@ -34,6 +34,21 @@ function bumpJobAlertUsageCaches(queryClient, delta) {
   );
 }
 
+function loadStoredAlerts() {
+  try {
+    const raw = localStorage.getItem("job_alerts");
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function syncStoredAlerts(alerts) {
+  try {
+    localStorage.setItem("job_alerts", JSON.stringify(alerts));
+  } catch {}
+}
+
 function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
   const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
   const { canRewrite, remainingMin } = getRewriteState(alert);
@@ -267,7 +282,18 @@ export default function JobAlertsPage() {
     manual_refresh_count: 0,
     manual_refresh_window_start: null,
   });
-  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const { data: initData } = useQuery({
+    queryKey: ["init"],
+    initialData: () => {
+      try {
+        const raw = localStorage.getItem("init");
+        return raw ? JSON.parse(raw) : queryClient.getQueryData(["init"]);
+      } catch {
+        return queryClient.getQueryData(["init"]);
+      }
+    },
+    staleTime: 1000 * 60 * 2,
+  });
   const me = initData?.me;
   const { guardedRun } = useUsageGuard("job_alerts");
 
@@ -282,14 +308,23 @@ export default function JobAlertsPage() {
 
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
-    queryFn: () => jobAlertsApi.list().then((response) => response.data),
+    queryFn: () =>
+      jobAlertsApi.list().then((response) => {
+        syncStoredAlerts(response.data);
+        return response.data;
+      }),
+    initialData: () => queryClient.getQueryData(["job-alerts"]) ?? loadStoredAlerts(),
     staleTime: 1000 * 60 * 2,
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
     onSuccess: (response) => {
-      queryClient.setQueryData(["job-alerts"], (old = []) => [response.data, ...old]);
+      queryClient.setQueryData(["job-alerts"], (old = []) => {
+        const next = [response.data, ...old];
+        syncStoredAlerts(next);
+        return next;
+      });
       bumpJobAlertUsageCaches(queryClient, 1);
       queryClient.invalidateQueries({ queryKey: ["job-alerts"], refetchType: "none" });
       queryClient.invalidateQueries({ queryKey: ["billing-overview"], refetchType: "none" });
@@ -309,19 +344,26 @@ export default function JobAlertsPage() {
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: ["job-alerts"] });
       const previousAlerts = queryClient.getQueryData(["job-alerts"]);
-      queryClient.setQueryData(["job-alerts"], (old = []) =>
-        old.map((alert) => (alert.id === id ? { ...alert, ...data, updated_at: new Date().toISOString() } : alert))
-      );
+      queryClient.setQueryData(["job-alerts"], (old = []) => {
+        const next = old.map((alert) => (alert.id === id ? { ...alert, ...data, updated_at: new Date().toISOString() } : alert));
+        syncStoredAlerts(next);
+        return next;
+      });
       return { previousAlerts };
     },
     onError: (err, _vars, context) => {
-      if (context?.previousAlerts) queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+      if (context?.previousAlerts) {
+        queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+        syncStoredAlerts(context.previousAlerts);
+      }
       toast.error(getApiErrorMessage(err, "Fehler beim Aktualisieren"));
     },
     onSuccess: (response) => {
-      queryClient.setQueryData(["job-alerts"], (old = []) =>
-        old.map((alert) => (alert.id === response.data.id ? response.data : alert))
-      );
+      queryClient.setQueryData(["job-alerts"], (old = []) => {
+        const next = old.map((alert) => (alert.id === response.data.id ? response.data : alert));
+        syncStoredAlerts(next);
+        return next;
+      });
       setEditingAlert(null);
       toast.success("Alert aktualisiert!");
     },
@@ -341,14 +383,21 @@ export default function JobAlertsPage() {
       const previousBilling = queryClient.getQueryData(["billing-overview"]);
       const previousInit = queryClient.getQueryData(["init"]);
 
-      queryClient.setQueryData(["job-alerts"], (old = []) => old.filter((alert) => alert.id !== id));
+      queryClient.setQueryData(["job-alerts"], (old = []) => {
+        const next = old.filter((alert) => alert.id !== id);
+        syncStoredAlerts(next);
+        return next;
+      });
       bumpJobAlertUsageCaches(queryClient, -1);
       toast.success("Alert gelöscht");
 
       return { previousAlerts, previousBilling, previousInit };
     },
     onError: (err, _id, context) => {
-      if (context?.previousAlerts) queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+      if (context?.previousAlerts) {
+        queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+        syncStoredAlerts(context.previousAlerts);
+      }
       if (context?.previousBilling) queryClient.setQueryData(["billing-overview"], context.previousBilling);
       if (context?.previousInit) queryClient.setQueryData(["init"], context.previousInit);
       toast.error(getApiErrorMessage(err, "Fehler beim Löschen"));

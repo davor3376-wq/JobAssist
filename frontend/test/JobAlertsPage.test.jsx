@@ -49,6 +49,7 @@ describe("JobAlertsPage", () => {
   });
 
   it("creates a new alert and bumps cached usage", async () => {
+    const currentWindowStart = new Date().toISOString();
     mockList.mockResolvedValue({
       data: [
         {
@@ -85,7 +86,7 @@ describe("JobAlertsPage", () => {
       me: {
         email: "user@example.com",
         alert_refresh_count: 1,
-        alert_refresh_window_start: "2026-03-26T09:00:00.000Z",
+        alert_refresh_window_start: currentWindowStart,
       },
       usage: [{ feature: "job_alerts", used: 1, limit: 2, remaining: 1 }],
     };
