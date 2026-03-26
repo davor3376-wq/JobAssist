@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Brain,
@@ -72,6 +73,7 @@ function ActionButton({ onClick, disabled, disabledReason, color, icon, label })
 }
 
 export default function ApplicationsList({ jobs, onJobsUpdate }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const notesTimeoutsRef = useRef({});
 
@@ -254,32 +256,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
     },
   });
 
-  const coverMutation = useMutation({
-    mutationFn: ({ jobId, resumeId }) => jobApi.generateCoverLetter(jobId, resumeId),
-    onSuccess: (res) => {
-      applyJobUpdate(res.data);
-      toast.success("Motivationsschreiben erstellt!");
-      setProcessing({ jobId: null, feature: null });
-    },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, "Motivationsschreiben konnte nicht erstellt werden"));
-      setProcessing({ jobId: null, feature: null });
-    },
-  });
-
-  const interviewMutation = useMutation({
-    mutationFn: ({ jobId, resumeId }) => jobApi.generateInterviewPrep(jobId, resumeId),
-    onSuccess: (res) => {
-      applyJobUpdate(res.data);
-      toast.success("Gesprächsvorbereitung erstellt!");
-      setProcessing({ jobId: null, feature: null });
-    },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden"));
-      setProcessing({ jobId: null, feature: null });
-    },
-  });
-
   const notesMutation = useMutation({
     mutationFn: ({ jobId, notes }) => jobApi.updateNotes(jobId, notes),
     onSuccess: (res, vars) => {
@@ -313,6 +289,18 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
 
   const hasResume = Boolean(selectedResumeId);
   const isProcessing = (jobId, feature) => processing.jobId === jobId && processing.feature === feature;
+
+  const openCoverLetterWorkspace = (job) => {
+    const params = new URLSearchParams({ jobId: String(job.id) });
+    if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
+    navigate(`/cover-letter?${params.toString()}`);
+  };
+
+  const openInterviewWorkspace = (job) => {
+    const params = new URLSearchParams({ tab: "interview" });
+    if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
+    navigate(`/jobs/${job.id}?${params.toString()}`);
+  };
 
   const handleDraftEmail = async (job) => {
     const userName = initData?.me?.full_name || initData?.me?.email?.split("@")[0] || "Bewerber";
@@ -451,11 +439,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate }) {
               <div className="flex flex-wrap gap-2">{STATUS_ORDER.filter((status) => status !== job.status).map((status) => <span key={status} title={isStatusUpdating ? "Status wird gerade aktualisiert" : ""}><button onClick={() => updateStatusMutation.mutate({ jobId: job.id, status })} disabled={isStatusUpdating} aria-disabled={isStatusUpdating} className="rounded border border-gray-300 px-3 py-1 text-xs hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">Als {STATUS_LABELS[status]} markieren</button></span>)}</div>
               {isStatusUpdating && <p className="text-xs text-gray-500">Status wird aktualisiert...</p>}
               {isDeleting && <p className="text-xs text-gray-500">Stelle wird gelöscht...</p>}
-              {showActionHint && <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-700">{!hasResume && <div>Bitte zuerst einen Lebenslauf auswählen, um Match, Motivationsschreiben und Gesprächsvorbereitung zu nutzen.</div>}{!job.company && <div>Recherche ist für diese Stelle nicht verfügbar, weil der Firmenname fehlt.</div>}</div>}
+              {showActionHint && <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-700">{!hasResume && <div>Bitte zuerst einen Lebenslauf auswählen, um Match und Gesprächsvorbereitung zu nutzen.</div>}{!job.company && <div>Recherche ist für diese Stelle nicht verfügbar, weil der Firmenname fehlt.</div>}</div>}
               <div className="flex flex-wrap gap-2">
                 <ActionButton color="blue" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-3 w-3" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match berechnen"} />
-                <ActionButton color="green" disabled={!hasResume || isProcessing(job.id, "cover")} disabledReason={getDisabledReason({ feature: "cover", job, hasResume, isProcessing: isProcessing(job.id, "cover"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "cover" }); coverMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<FileText className="h-3 w-3" />} label={isProcessing(job.id, "cover") ? "Wird erstellt..." : "Motivationsschreiben"} />
-                <ActionButton color="purple" disabled={!hasResume || isProcessing(job.id, "interview")} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: isProcessing(job.id, "interview"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "interview" }); interviewMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Brain className="h-3 w-3" />} label={isProcessing(job.id, "interview") ? "Wird vorbereitet..." : "Gesprächsvorbereitung"} />
+                <ActionButton color="green" disabled={false} disabledReason="" onClick={() => openCoverLetterWorkspace(job)} icon={<FileText className="h-3 w-3" />} label="Motivationsschreiben" />
+                <ActionButton color="purple" disabled={!hasResume} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => openInterviewWorkspace(job)} icon={<Brain className="h-3 w-3" />} label="Gesprächsvorbereitung" />
                 <ActionButton color="white" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /> : <Send className="h-3 w-3" />} label={draftLoading === job.id ? "Generiert..." : "Brief-Entwurf"} />
                 <ActionButton color={job.research_data ? "emerald-solid" : "emerald"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-3 w-3" />} label={job.research_data ? "Recherche ansehen" : "Recherche"} />
               </div>
