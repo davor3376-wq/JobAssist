@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -145,6 +145,7 @@ const TAG_COLORS = {
 export default function JobDetailPage() {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -193,7 +194,20 @@ export default function JobDetailPage() {
 
   const resumes = resumesQuery?.length ? resumesQuery : initData?.resumes || loadStored("resumes") || [];
   const resumeId = selectedResume ?? resumes[0]?.id;
+  const requestedTab = searchParams.get("tab");
+  const requestedResumeId = searchParams.get("resumeId");
   const invalidateJobs = () => queryClient.invalidateQueries({ queryKey: ["jobs"], exact: true });
+
+  useEffect(() => {
+    if (requestedTab === "interview" || requestedTab === "cover-letter" || requestedTab === "overview") {
+      setActiveTab(requestedTab);
+    }
+  }, [requestedTab]);
+
+  useEffect(() => {
+    if (!requestedResumeId || selectedResume != null) return;
+    setSelectedResume(Number(requestedResumeId));
+  }, [requestedResumeId, selectedResume]);
 
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
@@ -460,6 +474,26 @@ export default function JobDetailPage() {
             </div>
           </div>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{job.cover_letter}</p>
+        </div>
+      )}
+
+      {activeTab === "interview" && !interviewQA && (
+        <div className="animate-slide-up rounded-xl border border-amber-200 bg-white p-8 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900">Gesprächsvorbereitung</h3>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">
+            Für diese Stelle wurden noch keine Interviewfragen erstellt. Starte die Generierung hier im ausführlichen Detailbereich.
+          </p>
+          <div className="mt-5">
+            <ActionButton
+              pending={interviewMutation.isPending}
+              disabled={!resumeId}
+              onClick={() => interviewMutation.mutate()}
+              icon={<MessageSquare className="h-4 w-4" />}
+              pendingLabel="Wird erstellt..."
+              label="Gesprächsvorbereitung erstellen"
+              className="from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+            />
+          </div>
         </div>
       )}
 

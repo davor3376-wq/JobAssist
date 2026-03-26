@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FileText, Sparkles, Copy, Download, RefreshCw, Building2, ClipboardList } from "lucide-react";
@@ -28,7 +29,9 @@ const TONES = [
 ];
 
 export default function CoverLetterPage() {
+  const [searchParams] = useSearchParams();
   const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [selectedJobId, setSelectedJobId] = useState("");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -40,6 +43,8 @@ export default function CoverLetterPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const { guardedRun } = useUsageGuard("cover_letter");
+  const prefilledJobId = searchParams.get("jobId");
+  const prefilledResumeId = searchParams.get("resumeId");
 
   // Fetch uploaded resumes
   const { data: uploadedResumes = [] } = useQuery({
@@ -62,6 +67,22 @@ export default function CoverLetterPage() {
     initialData: () => loadStored("jobs"),
     staleTime: 1000 * 60 * 2,
   });
+
+  useEffect(() => {
+    if (prefilledResumeId && !selectedResumeId) {
+      setSelectedResumeId(Number(prefilledResumeId));
+    }
+  }, [prefilledResumeId, selectedResumeId]);
+
+  useEffect(() => {
+    if (!prefilledJobId || !savedJobs.length) return;
+    const job = savedJobs.find((entry) => String(entry.id) === String(prefilledJobId));
+    if (!job) return;
+    setSelectedJobId(String(job.id));
+    setCompany(job.company || "");
+    setRole(job.role || job.title || "");
+    setJobDescription(job.description || "");
+  }, [prefilledJobId, savedJobs]);
 
   const generateMutation = useMutation({
     mutationFn: (data) => motivationsschreibenApi.generate(data),
@@ -209,12 +230,13 @@ export default function CoverLetterPage() {
                 <div className="pb-3 mb-1 border-b border-gray-100 flex items-center gap-3">
                   <label className="text-xs font-semibold text-blue-600 uppercase tracking-wide whitespace-nowrap flex-shrink-0">Stelle importieren</label>
                   <select
-                    defaultValue=""
+                    value={selectedJobId}
                     onChange={(e) => {
+                      setSelectedJobId(e.target.value);
                       const job = savedJobs.find((j) => String(j.id) === e.target.value);
                       if (!job) return;
                       if (job.company) setCompany(job.company);
-                      if (job.role) setRole(job.role);
+                      if (job.role || job.title) setRole(job.role || job.title);
                       if (job.description) setJobDescription(job.description);
                     }}
                     className="min-w-0 flex-1 px-3 py-1.5 border border-blue-300 bg-blue-50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 truncate"
