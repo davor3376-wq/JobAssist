@@ -21,7 +21,8 @@ export default function VerifyEmailPage() {
       return;
     }
 
-    authApi.verifyEmail(token)
+    authApi
+      .verifyEmail(token)
       .then(async () => {
         setStatus("success");
         if (!hasSession) return;
@@ -47,7 +48,9 @@ export default function VerifyEmailPage() {
         try {
           await queryClient.invalidateQueries({ queryKey: ["init"] });
           const initRes = await initApi.fetch();
-          try { localStorage.setItem("init", JSON.stringify(initRes.data)); } catch {}
+          try {
+            localStorage.setItem("init", JSON.stringify(initRes.data));
+          } catch {}
           queryClient.setQueryData(["init"], initRes.data);
           if (initRes.data?.me) setUser(initRes.data.me);
         } catch {}
@@ -71,7 +74,9 @@ export default function VerifyEmailPage() {
               <CheckCircle className="w-7 h-7 text-green-500" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">E-Mail bestätigt</h2>
-            <p className="text-sm text-gray-500 mb-4">Deine E-Mail-Adresse wurde erfolgreich bestätigt.</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Deine E-Mail-Adresse wurde erfolgreich bestätigt.
+            </p>
             <Link to={hasSession ? "/dashboard" : "/login"} className="btn-primary inline-block">
               {hasSession ? "Zum Dashboard" : "Zum Login"}
             </Link>
@@ -85,7 +90,9 @@ export default function VerifyEmailPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Bestätigung fehlgeschlagen</h2>
             <p className="text-sm text-gray-500 mb-4">Der Link ist ungültig oder abgelaufen.</p>
-            <Link to="/login" className="btn-primary inline-block">Zum Login</Link>
+            <Link to="/login" className="btn-primary inline-block">
+              Zum Login
+            </Link>
           </>
         )}
       </div>

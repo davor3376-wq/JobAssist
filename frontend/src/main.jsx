@@ -14,7 +14,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <I18nProvider>
           <App />
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            gutter={10}
+            toastOptions={{
+              duration: 3500,
+              success: { duration: 3000 },
+              error: { duration: 4000 },
+              loading: { duration: 3000 },
+            }}
+          />
         </I18nProvider>
       </BrowserRouter>
     </QueryClientProvider>

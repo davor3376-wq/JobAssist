@@ -158,6 +158,7 @@ export default function JobDetailPage() {
   const updateJobCaches = (nextJob) => {
     if (!nextJob) return;
     queryClient.setQueryData(["jobs", jobId], nextJob);
+    queryClient.setQueryData(["jobs", Number(jobId)], nextJob);
     queryClient.setQueryData(["jobs"], (old = []) =>
       old.map((entry) => (String(entry.id) === String(nextJob.id) ? nextJob : entry))
     );
@@ -192,7 +193,7 @@ export default function JobDetailPage() {
 
   const resumes = resumesQuery?.length ? resumesQuery : initData?.resumes || loadStored("resumes") || [];
   const resumeId = selectedResume ?? resumes[0]?.id;
-  const invalidateJobs = () => queryClient.invalidateQueries({ queryKey: ["jobs"] });
+  const invalidateJobs = () => queryClient.invalidateQueries({ queryKey: ["jobs"], exact: true });
 
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
@@ -218,8 +219,11 @@ export default function JobDetailPage() {
   const interviewMutation = useMutation({
     mutationFn: () => interviewApi.generate(Number(jobId), resumeId),
     onSuccess: (res) => {
-      queryClient.setQueryData(["jobs", jobId], res.data);
-      updateJobCaches(res.data);
+      const mergedJob = {
+        ...(queryClient.getQueryData(["jobs", jobId]) || queryClient.getQueryData(["jobs", Number(jobId)]) || job || {}),
+        ...res.data,
+      };
+      updateJobCaches(mergedJob);
       invalidateJobs();
       setActiveTab("interview");
       toast.success("Gesprächsvorbereitung fertig!");
@@ -485,7 +489,7 @@ export default function JobDetailPage() {
                   interviewQA
                     .map((item, index) => `F${index + 1}: ${item.question}\n\nTyp: ${item.type}\n\nAntwort:\n${item.answer}${item.tip ? `\n\nTipp: ${item.tip}` : ""}`)
                     .join("\n\n--------------------\n\n"),
-                  `Gespraechsvorbereitung_${job.company || "Bewerbung"}.doc`
+                  `Gesprächsvorbereitung_${job.company || "Bewerbung"}.doc`
                 )
               }
             />

@@ -1,4 +1,8 @@
 export function getApiErrorMessage(err, fallback = "Ein Fehler ist aufgetreten") {
+  if (!err?.response) {
+    return "Server nicht erreichbar. Bitte prüfe API-URL, Domain und CORS-Konfiguration.";
+  }
+
   const detail = err?.response?.data?.detail;
 
   if (typeof detail === "string") return detail;

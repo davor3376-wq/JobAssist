@@ -1,11 +1,22 @@
-from pydantic_settings import BaseSettings
+import json
 from typing import List
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     # App
     APP_NAME: str = "Job Application Assistant"
     DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
+    SENTRY_DSN: str = ""
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/jobassist"
@@ -29,7 +40,7 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_PRICE_PRO: str = ""   # Stripe Price ID for Pro plan
     STRIPE_PRICE_MAX: str = ""   # Stripe Price ID for Max plan
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "https://jobassist.tech"
 
     # Email — Brevo HTTP API (replaces SMTP, works on Railway free tier)
     BREVO_API_KEY: str = ""
@@ -44,19 +55,25 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
 
     # CORS — comma-separated string, e.g. "https://app.vercel.app,http://localhost:5173"
-    ALLOWED_ORIGINS: str = "http://localhost:5173"
+    ALLOWED_ORIGINS: str = "http://localhost:5173,https://jobassist.tech,https://www.jobassist.tech"
     # Optional regex for dynamic origins like Vercel previews, e.g. "https://job-assist-.*\.vercel\.app"
     ALLOWED_ORIGIN_REGEX: str = ""
 
     @property
     def allowed_origins_list(self) -> List[str]:
-        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+        raw = (self.ALLOWED_ORIGINS or "").strip()
+        if not raw:
+            return []
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+        if raw.startswith("["):
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list):
+                    return [str(o).strip() for o in parsed if str(o).strip()]
+            except json.JSONDecodeError:
+                pass
 
+        return [o.strip() for o in raw.split(",") if o.strip()]
 
 settings = Settings()
 

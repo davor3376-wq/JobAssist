@@ -1,9 +1,10 @@
 import re
-from pydantic import BaseModel, field_validator, model_validator
 from datetime import datetime
 from typing import Optional
 
-# ~300 KB base64 ≈ ~225 KB decoded — enough for a 200×200 JPEG, blocks DB bloat
+from pydantic import BaseModel, field_validator, model_validator
+
+# ~300 KB base64 ~= ~225 KB decoded; enough for a 200x200 JPEG, blocks DB bloat
 _AVATAR_MAX_LEN = 400_000
 _AVATAR_PATTERN = re.compile(r"^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$")
 
@@ -16,7 +17,7 @@ class UserProfileUpdate(BaseModel):
     industries: Optional[list[str]] = None
     experience_level: Optional[str] = None
     is_open_to_relocation: Optional[bool] = None
-    avatar: Optional[str] = None   # base64 data URL
+    avatar: Optional[str] = None
 
     @field_validator("salary_min", "salary_max")
     @classmethod

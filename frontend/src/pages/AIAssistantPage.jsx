@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2, Lock } from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
+import { getApiErrorMessage } from "../utils/apiError";
 
 const loadStored = (key) => {
   try {
@@ -35,7 +36,7 @@ export default function AIAssistantPage() {
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const { guardedRun, atLimit } = useUsageGuard("ai_chat");
+  const { guardedRun } = useUsageGuard("ai_chat");
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -60,8 +61,8 @@ export default function AIAssistantPage() {
     onSuccess: (res) => {
       setMessages((prev) => [...prev, { role: "assistant", content: res.data.reply }]);
     },
-    onError: () => {
-      toast.error("Fehler bei der KI-Antwort");
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Fehler bei der KI-Antwort"));
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Entschuldigung, es gab einen Fehler. Bitte versuche es erneut." },

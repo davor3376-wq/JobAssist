@@ -1,5 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
+import logging
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +18,9 @@ import re
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 from app.core.config import settings
+from app.core.monitoring import configure_sentry
+from app.core.logging import configure_logging, elapsed_ms, new_request_id, reset_request_id, set_request_id
+from app.core.provider_health import get_provider_health
 from sqlalchemy import select, text
 from app.core.database import AsyncSessionLocal, engine, Base, get_db
 from app.core.security import get_current_user
@@ -23,6 +28,10 @@ from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research, billing
+
+configure_logging(settings.LOG_LEVEL)
+configure_sentry(settings.SENTRY_DSN, settings.SENTRY_TRACES_SAMPLE_RATE)
+logger = logging.getLogger(__name__)
 
 
 async def delete_stale_unverified_users():
@@ -40,6 +49,7 @@ async def delete_stale_unverified_users():
         for user in stale_users:
             await session.delete(user)
         await session.commit()
+        logger.info("Deleted stale unverified users", extra={"count": len(stale_users)})
 
 
 async def stale_user_cleanup_loop():
@@ -112,23 +122,46 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     if origin_allowed:
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
-    traceback.print_exc()
+    logger.exception("Unhandled exception", extra={"path": str(request.url.path), "method": request.method})
     detail = str(exc) if settings.DEBUG else "Internal server error"
     return JSONResponse(
         status_code=500,
-        content={"detail": detail},
+        content={"detail": detail, "request_id": getattr(request.state, "request_id", "-")},
         headers=headers,
     )
 
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
+    request_id = request.headers.get("x-request-id") or new_request_id()
+    request.state.request_id = request_id
+    token = set_request_id(request_id)
+    start_time = time.perf_counter()
+
     # Reject oversized request bodies (5 MB max, except file uploads handled by route)
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > 5 * 1024 * 1024:
-        return JSONResponse(status_code=413, content={"detail": "Request body too large"})
+        response = JSONResponse(status_code=413, content={"detail": "Request body too large", "request_id": request_id})
+        response.headers["X-Request-ID"] = request_id
+        reset_request_id(token)
+        return response
 
-    response: Response = await call_next(request)
+    try:
+        response: Response = await call_next(request)
+    finally:
+        duration_ms = elapsed_ms(start_time)
+        logger.info(
+            "HTTP request completed",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": getattr(locals().get("response"), "status_code", 500),
+                "duration_ms": duration_ms,
+            },
+        )
+        reset_request_id(token)
+
+    response.headers["X-Request-ID"] = request_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -151,8 +184,40 @@ app.include_router(research.router,           prefix="/api/research",           
 app.include_router(billing.router,           prefix="/api/billing",               tags=["Billing"])
 
 @app.get("/health")
-async def health_check():
-    return {"status": "ok", "version": "0.1.0"}
+async def health_check(request: Request):
+    return {
+        "status": "ok",
+        "version": "0.1.0",
+        "request_id": getattr(request.state, "request_id", "-"),
+    }
+
+
+@app.get("/health/dependencies")
+async def health_dependencies(request: Request):
+    database = {"ok": False}
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+        database = {"ok": True}
+    except Exception as exc:
+        logger.warning("Database health check failed", extra={"error": str(exc)})
+        database = {"ok": False, "error": str(exc) if settings.DEBUG else "unavailable"}
+
+    providers = get_provider_health()
+    providers_ok = (
+        providers["groq"]["configured"]
+        and providers["adzuna"]["configured"]
+        and providers["email"]["active_provider"] is not None
+        and providers["stripe"]["configured"]
+    )
+
+    return {
+        "status": "ok" if database["ok"] else "degraded",
+        "request_id": getattr(request.state, "request_id", "-"),
+        "database": database,
+        "providers": providers,
+        "ready": database["ok"] and providers_ok,
+    }
 
 
 @app.get("/api/init")

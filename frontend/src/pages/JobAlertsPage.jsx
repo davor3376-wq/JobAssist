@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, Briefcase, Mail, MapPin, Play, Plus, RefreshCw, Trash2, X, Pencil } from "lucide-react";
+import { Bell, BellOff, Briefcase, Mail, MapPin, Pencil, Play, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { jobAlertsApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
+import { getRefreshState, getRewriteState, REFRESH_MAX, updateUsageList } from "../utils/jobAlertsState";
 
 const JOB_TYPES = [
   { value: "", label: "Alle" },
@@ -20,57 +21,15 @@ const JOB_TYPES = [
 ];
 
 const FREQUENCIES = [
-  { value: "daily", label: "Täglich" },
-  { value: "weekly", label: "Wöchentlich" },
+  { value: "daily", label: "T\u00e4glich" },
+  { value: "weekly", label: "W\u00f6chentlich" },
 ];
 
-const REFRESH_MAX = 3;
-const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
-const REWRITE_WINDOW_MS = 3 * 60 * 60 * 1000;
-
-function getRefreshState(refreshState) {
-  const windowStart = refreshState?.manual_refresh_window_start
-    ? new Date(refreshState.manual_refresh_window_start)
-    : null;
-  const windowExpired = !windowStart || (Date.now() - windowStart.getTime()) >= REFRESH_WINDOW_MS;
-  const used = windowExpired ? 0 : (refreshState?.manual_refresh_count || 0);
-  const atLimit = used >= REFRESH_MAX;
-  let resetInMin = null;
-
-  if (atLimit && windowStart) {
-    const resetAt = windowStart.getTime() + REFRESH_WINDOW_MS;
-    resetInMin = Math.ceil((resetAt - Date.now()) / 60000);
-  }
-
-  return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
-}
-
-function getRewriteState(alert) {
-  const base = alert?.updated_at ? new Date(alert.updated_at) : alert?.created_at ? new Date(alert.created_at) : null;
-  if (!base) return { canRewrite: true, remainingMin: 0 };
-  const remainingMs = base.getTime() + REWRITE_WINDOW_MS - Date.now();
-  return remainingMs <= 0
-    ? { canRewrite: true, remainingMin: 0 }
-    : { canRewrite: false, remainingMin: Math.ceil(remainingMs / 60000) };
-}
-
-function updateUsageList(usage = [], delta) {
-  return usage.map((item) => {
-    if (item.feature !== "job_alerts") return item;
-    const nextUsed = Math.max(0, (item.used || 0) + delta);
-    return {
-      ...item,
-      used: nextUsed,
-      remaining: item.limit === -1 ? -1 : Math.max(0, item.limit - nextUsed),
-    };
-  });
-}
-
-function bumpJobAlertUsageCaches(qc, delta) {
-  qc.setQueryData(["billing-overview"], (old) =>
+function bumpJobAlertUsageCaches(queryClient, delta) {
+  queryClient.setQueryData(["billing-overview"], (old) =>
     old ? { ...old, usage: updateUsageList(old.usage, delta) } : old
   );
-  qc.setQueryData(["init"], (old) =>
+  queryClient.setQueryData(["init"], (old) =>
     old ? { ...old, usage: updateUsageList(old.usage, delta) } : old
   );
 }
@@ -98,7 +57,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
             )}
             {alert.job_type && (
               <span className="flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find((t) => t.value === alert.job_type)?.label || alert.job_type}
+                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find((type) => type.value === alert.job_type)?.label || alert.job_type}
               </span>
             )}
             <span className="flex items-center gap-1">
@@ -106,7 +65,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
             </span>
             <span className="flex items-center gap-1">
               <Bell className="w-3.5 h-3.5" />
-              {FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency}
+              {FREQUENCIES.find((frequency) => frequency.value === alert.frequency)?.label || alert.frequency}
             </span>
           </div>
 
@@ -117,12 +76,12 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
           )}
 
           <div className="flex items-center gap-1.5 mt-1.5">
-            {[...Array(REFRESH_MAX)].map((_, i) => (
-              <div key={i} className={`w-2 h-2 rounded-full ${i < used ? "bg-orange-400" : "bg-gray-200"}`} />
+            {[...Array(REFRESH_MAX)].map((_, index) => (
+              <div key={index} className={`w-2 h-2 rounded-full ${index < used ? "bg-orange-400" : "bg-gray-200"}`} />
             ))}
             <span className="text-xs text-gray-400">
               {atLimit
-                ? `Cooldown — verfügbar in ${resetInMin}min`
+                ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min`
                 : `${remaining} Aktualisierung${remaining !== 1 ? "en" : ""} heute (alle 4h)`}
             </span>
           </div>
@@ -132,7 +91,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
           <button
             onClick={() => onRunNow(alert.id)}
             disabled={isRunning || atLimit}
-            title={atLimit ? `Cooldown — verfügbar in ${resetInMin}min` : "Jetzt ausführen"}
+            title={atLimit ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min` : "Jetzt ausf\u00fchren"}
             className={`p-2 rounded-lg transition-colors ${atLimit ? "text-gray-300 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
           >
             {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
@@ -149,7 +108,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
           <button
             onClick={() => onEdit(alert)}
             disabled={!canRewrite}
-            title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verfügbar`}
+            title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verf\u00fcgbar`}
             className={`p-2 rounded-lg transition-colors ${canRewrite ? "text-gray-500 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
           >
             <Pencil className="w-4 h-4" />
@@ -157,7 +116,7 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
 
           <button
             onClick={() => onDelete(alert.id)}
-            title="Löschen"
+            title="L\u00f6schen"
             className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -168,7 +127,14 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
   );
 }
 
-function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title = "Neuer Job-Alert", submitLabel = "Alert erstellen" }) {
+function CreateAlertModal({
+  onClose,
+  onSubmit,
+  defaultEmail,
+  initialData,
+  title = "Neuer Job-Alert",
+  submitLabel = "Alert erstellen",
+}) {
   const [form, setForm] = useState({
     keywords: initialData?.keywords || "",
     location: initialData?.location || "",
@@ -177,10 +143,10 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
     frequency: initialData?.frequency || "daily",
   });
 
-  const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const setValue = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     if (!form.keywords.trim()) return toast.error("Bitte Suchbegriff eingeben");
     if (!form.email.trim()) return toast.error("Bitte E-Mail-Adresse eingeben");
 
@@ -209,7 +175,7 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
             <input
               type="text"
               value={form.keywords}
-              onChange={(e) => set("keywords", e.target.value)}
+              onChange={(event) => setValue("keywords", event.target.value)}
               placeholder="z.B. Software Engineer, Marketing Manager"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -221,8 +187,8 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
             <input
               type="text"
               value={form.location}
-              onChange={(e) => set("location", e.target.value)}
-              placeholder="z.B. Wien, Remote, Österreich"
+              onChange={(event) => setValue("location", event.target.value)}
+              placeholder="z.B. Wien, Remote, \u00d6sterreich"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -231,7 +197,7 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
             <label className="block text-sm font-medium text-gray-700 mb-1">Stellenart</label>
             <select
               value={form.job_type}
-              onChange={(e) => set("job_type", e.target.value)}
+              onChange={(event) => setValue("job_type", event.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {JOB_TYPES.map((type) => (
@@ -252,7 +218,7 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Häufigkeit</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">H\u00e4ufigkeit</label>
             <div className="flex gap-3">
               {FREQUENCIES.map((frequency) => (
                 <label key={frequency.value} className="flex items-center gap-2 cursor-pointer">
@@ -261,7 +227,7 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
                     name="frequency"
                     value={frequency.value}
                     checked={form.frequency === frequency.value}
-                    onChange={() => set("frequency", frequency.value)}
+                    onChange={() => setValue("frequency", frequency.value)}
                     className="accent-blue-600"
                   />
                   <span className="text-sm text-gray-700">{frequency.label}</span>
@@ -293,33 +259,41 @@ function CreateAlertModal({ onClose, onSubmit, defaultEmail, initialData, title 
 }
 
 export default function JobAlertsPage() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [editingAlert, setEditingAlert] = useState(null);
   const [runningId, setRunningId] = useState(null);
+  const [localRefreshState, setLocalRefreshState] = useState({
+    manual_refresh_count: 0,
+    manual_refresh_window_start: null,
+  });
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun } = useUsageGuard("job_alerts");
 
-  const refreshState = {
-    manual_refresh_count: me?.alert_refresh_count ?? 0,
-    manual_refresh_window_start: me?.alert_refresh_window_start ?? null,
-  };
+  useEffect(() => {
+    setLocalRefreshState({
+      manual_refresh_count: me?.alert_refresh_count ?? 0,
+      manual_refresh_window_start: me?.alert_refresh_window_start ?? null,
+    });
+  }, [me?.alert_refresh_count, me?.alert_refresh_window_start]);
+
+  const refreshState = localRefreshState;
 
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["job-alerts"],
-    queryFn: () => jobAlertsApi.list().then((r) => r.data),
+    queryFn: () => jobAlertsApi.list().then((response) => response.data),
     staleTime: 1000 * 60 * 2,
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
-    onSuccess: (res) => {
-      qc.setQueryData(["job-alerts"], (old = []) => [res.data, ...old]);
-      bumpJobAlertUsageCaches(qc, 1);
-      qc.invalidateQueries({ queryKey: ["job-alerts"] });
-      qc.invalidateQueries({ queryKey: ["billing-overview"] });
-      qc.invalidateQueries({ queryKey: ["init"] });
+    onSuccess: (response) => {
+      queryClient.setQueryData(["job-alerts"], (old = []) => [response.data, ...old]);
+      bumpJobAlertUsageCaches(queryClient, 1);
+      queryClient.invalidateQueries({ queryKey: ["job-alerts"], refetchType: "none" });
+      queryClient.invalidateQueries({ queryKey: ["billing-overview"], refetchType: "none" });
+      queryClient.invalidateQueries({ queryKey: ["init"], refetchType: "none" });
       setShowCreate(false);
       toast.success("Alert erstellt!");
     },
@@ -333,81 +307,125 @@ export default function JobAlertsPage() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => jobAlertsApi.update(id, data),
     onMutate: async ({ id, data }) => {
-      await qc.cancelQueries({ queryKey: ["job-alerts"] });
-      const prev = qc.getQueryData(["job-alerts"]);
-      qc.setQueryData(["job-alerts"], (old = []) =>
+      await queryClient.cancelQueries({ queryKey: ["job-alerts"] });
+      const previousAlerts = queryClient.getQueryData(["job-alerts"]);
+      queryClient.setQueryData(["job-alerts"], (old = []) =>
         old.map((alert) => (alert.id === id ? { ...alert, ...data, updated_at: new Date().toISOString() } : alert))
       );
-      return { prev };
+      return { previousAlerts };
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["job-alerts"], ctx.prev);
-      toast.error("Fehler beim Aktualisieren");
+    onError: (err, _vars, context) => {
+      if (context?.previousAlerts) queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+      toast.error(getApiErrorMessage(err, "Fehler beim Aktualisieren"));
     },
-    onSuccess: (res) => {
-      qc.setQueryData(["job-alerts"], (old = []) =>
-        old.map((alert) => (alert.id === res.data.id ? res.data : alert))
+    onSuccess: (response) => {
+      queryClient.setQueryData(["job-alerts"], (old = []) =>
+        old.map((alert) => (alert.id === response.data.id ? response.data : alert))
       );
       setEditingAlert(null);
       toast.success("Alert aktualisiert!");
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["job-alerts"] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["job-alerts"] }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => jobAlertsApi.delete(id),
     onMutate: async (id) => {
       await Promise.all([
-        qc.cancelQueries({ queryKey: ["job-alerts"] }),
-        qc.cancelQueries({ queryKey: ["billing-overview"] }),
-        qc.cancelQueries({ queryKey: ["init"] }),
+        queryClient.cancelQueries({ queryKey: ["job-alerts"] }),
+        queryClient.cancelQueries({ queryKey: ["billing-overview"] }),
+        queryClient.cancelQueries({ queryKey: ["init"] }),
       ]);
-      const prev = qc.getQueryData(["job-alerts"]);
-      const prevBilling = qc.getQueryData(["billing-overview"]);
-      const prevInit = qc.getQueryData(["init"]);
-      qc.setQueryData(["job-alerts"], (old = []) => old.filter((alert) => alert.id !== id));
-      bumpJobAlertUsageCaches(qc, -1);
+
+      const previousAlerts = queryClient.getQueryData(["job-alerts"]);
+      const previousBilling = queryClient.getQueryData(["billing-overview"]);
+      const previousInit = queryClient.getQueryData(["init"]);
+
+      queryClient.setQueryData(["job-alerts"], (old = []) => old.filter((alert) => alert.id !== id));
+      bumpJobAlertUsageCaches(queryClient, -1);
       toast.success("Alert gelöscht");
-      return { prev, prevBilling, prevInit };
+
+      return { previousAlerts, previousBilling, previousInit };
     },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["job-alerts"], ctx.prev);
-      if (ctx?.prevBilling) qc.setQueryData(["billing-overview"], ctx.prevBilling);
-      if (ctx?.prevInit) qc.setQueryData(["init"], ctx.prevInit);
-      toast.error("Fehler beim Löschen");
+    onError: (err, _id, context) => {
+      if (context?.previousAlerts) queryClient.setQueryData(["job-alerts"], context.previousAlerts);
+      if (context?.previousBilling) queryClient.setQueryData(["billing-overview"], context.previousBilling);
+      if (context?.previousInit) queryClient.setQueryData(["init"], context.previousInit);
+      toast.error(getApiErrorMessage(err, "Fehler beim Löschen"));
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["job-alerts"] });
-      qc.invalidateQueries({ queryKey: ["billing-overview"] });
-      qc.invalidateQueries({ queryKey: ["init"] });
+      queryClient.invalidateQueries({ queryKey: ["job-alerts"], refetchType: "none" });
+      queryClient.invalidateQueries({ queryKey: ["billing-overview"], refetchType: "none" });
+      queryClient.invalidateQueries({ queryKey: ["init"], refetchType: "none" });
     },
   });
 
   const handleRunNow = async (id) => {
     setRunningId(id);
 
-    const prevCount = me?.alert_refresh_count ?? 0;
-    qc.setQueryData(["init"], (old) =>
-      old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount + 1 } } : old
+    const previousCount = me?.alert_refresh_count ?? 0;
+    const previousWindowStart = me?.alert_refresh_window_start ?? null;
+    const nextWindowStart = previousWindowStart ?? new Date().toISOString();
+    setLocalRefreshState({
+      manual_refresh_count: previousCount + 1,
+      manual_refresh_window_start: nextWindowStart,
+    });
+    queryClient.setQueryData(["init"], (old) =>
+      old
+        ? {
+            ...old,
+            me: {
+              ...old.me,
+              alert_refresh_count: previousCount + 1,
+              alert_refresh_window_start: nextWindowStart,
+            },
+          }
+        : old
     );
 
     try {
-      const res = await jobAlertsApi.runNow(id);
-      const used = res.data?.refreshes_used ?? prevCount + 1;
-      const remaining = res.data?.refreshes_remaining ?? "?";
+      const response = await jobAlertsApi.runNow(id);
+      const used = response.data?.refreshes_used ?? previousCount + 1;
+      const remaining = response.data?.refreshes_remaining ?? "?";
+      setLocalRefreshState({
+        manual_refresh_count: used,
+        manual_refresh_window_start: nextWindowStart,
+      });
 
-      qc.setQueryData(["init"], (old) =>
-        old ? { ...old, me: { ...old.me, alert_refresh_count: used } } : old
+      queryClient.setQueryData(["init"], (old) =>
+        old
+          ? {
+              ...old,
+              me: {
+                ...old.me,
+                alert_refresh_count: used,
+                alert_refresh_window_start: nextWindowStart,
+              },
+            }
+          : old
       );
-      qc.invalidateQueries({ queryKey: ["init"] });
+      queryClient.invalidateQueries({ queryKey: ["init"] });
 
       toast.success(
         `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierung${remaining !== 1 ? "en" : ""})`,
         { duration: 5000 }
       );
     } catch (err) {
-      qc.setQueryData(["init"], (old) =>
-        old ? { ...old, me: { ...old.me, alert_refresh_count: prevCount } } : old
+      setLocalRefreshState({
+        manual_refresh_count: previousCount,
+        manual_refresh_window_start: previousWindowStart,
+      });
+      queryClient.setQueryData(["init"], (old) =>
+        old
+          ? {
+              ...old,
+              me: {
+                ...old.me,
+                alert_refresh_count: previousCount,
+                alert_refresh_window_start: previousWindowStart,
+              },
+            }
+          : old
       );
       if (err.response?.status === 429) return;
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;

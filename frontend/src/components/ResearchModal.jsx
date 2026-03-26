@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { jobApi } from "../services/api";
+import { getApiErrorMessage } from "../utils/apiError";
 
 export default function ResearchModal({ companyName, data, loading, onClose, jobId, onRefresh }) {
   const qc = useQueryClient();
@@ -36,8 +37,8 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
       qc.invalidateQueries({ queryKey: ["jobs"] });
       setSaved(true);
       toast.success("Recherche gespeichert!");
-    } catch {
-      toast.error("Speichern fehlgeschlagen");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Speichern fehlgeschlagen"));
     } finally {
       setSaving(false);
     }

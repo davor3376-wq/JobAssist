@@ -105,7 +105,9 @@ async def update_alert(
     current_user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(JobAlert).where(JobAlert.id == alert_id, JobAlert.user_id == current_user.id)
+        select(JobAlert)
+        .where(JobAlert.id == alert_id, JobAlert.user_id == current_user.id)
+        .with_for_update()
     )
     alert = result.scalar_one_or_none()
     if not alert:

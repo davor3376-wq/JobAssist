@@ -29,7 +29,7 @@ export default function ResumePage() {
       qc.invalidateQueries({ queryKey: ["resumes"] });
       toast.success("Lebenslauf gelöscht");
     },
-    onError: () => toast.error("Lebenslauf konnte nicht gelöscht werden"),
+    onError: (err) => toast.error(getApiErrorMessage(err, "Lebenslauf konnte nicht gelöscht werden")),
   });
 
   const onDrop = useCallback(async (acceptedFiles) => {

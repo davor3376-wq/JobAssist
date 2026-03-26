@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X, Zap } from "lucide-react";
@@ -23,10 +23,16 @@ export default function UpgradeModal() {
   }, []);
 
   useEffect(() => {
-    const handler = (e) => toast.error(e.detail.message, { duration: 5000 });
+    const handler = (e) => toast.error(e.detail.message, { duration: 5000, id: "rate-limit-toast" });
     window.addEventListener("rate-limited", handler);
     return () => window.removeEventListener("rate-limited", handler);
   }, []);
+
+  useEffect(() => {
+    if (!data) return undefined;
+    const timer = window.setTimeout(() => setData(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [data]);
 
   if (!data) return null;
 
@@ -35,43 +41,55 @@ export default function UpgradeModal() {
   return createPortal(
     <div
       style={{
-        position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
-        zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: "rgba(0,0,0,0.5)", padding: "16px",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        padding: "16px",
       }}
       onClick={() => setData(null)}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-start mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-white" />
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
+            <Zap className="h-6 w-6 text-white" />
           </div>
-          <button onClick={() => setData(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-            <X className="w-5 h-5" />
+          <button onClick={() => setData(null)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Limit erreicht</h2>
-        <p className="text-gray-600 mb-4">
-          Du hast <strong>{data.used}/{data.limit}</strong> {featureLabel} in deinem <strong>{data.plan === "basic" ? "Basic (Gratis)" : data.plan}</strong>-Plan verwendet.
+        <h2 className="mb-2 text-xl font-bold text-gray-900">Limit erreicht</h2>
+        <p className="mb-4 text-gray-600">
+          Du hast <strong>{data.used}/{data.limit}</strong> {featureLabel} in deinem{" "}
+          <strong>{data.plan === "basic" ? "Basic" : data.plan}</strong>-Plan verwendet.
         </p>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="mb-6 text-sm text-gray-500">
           Upgrade auf Pro oder Max, um mehr Funktionen freizuschalten.
         </p>
 
         <div className="flex gap-3">
           <button
-            onClick={() => { setData(null); navigate("/pricing"); }}
-            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            onClick={() => {
+              setData(null);
+              navigate("/pricing");
+            }}
+            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90"
           >
             Pläne ansehen
           </button>
           <button
             onClick={() => setData(null)}
-            className="px-4 py-2.5 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-colors"
+            className="rounded-xl px-4 py-2.5 font-medium text-gray-600 transition-colors hover:bg-gray-100"
           >
             Später
           </button>

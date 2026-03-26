@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, Send, SearchCheck } from "lucide-react";
 import { jobApi, aiAssistantApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
@@ -121,7 +120,6 @@ const CITY_DISTRICTS = {
 export default function JobsPage() {
   const qc = useQueryClient();
   const [mainTab, setMainTab] = useState("applications");
-  const [showForm, setShowForm] = useState(false);
   const [searchTab, setSearchTab] = useState("recommended");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [savingJobId, setSavingJobId] = useState(null);
@@ -146,8 +144,6 @@ export default function JobsPage() {
   // Tracks what was last submitted — drives the query key so cache is reused for identical searches
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
-
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
@@ -162,7 +158,7 @@ export default function JobsPage() {
   });
 
   // Tracked jobs
-  const { data: jobs = [], isLoading, error: jobsError } = useQuery({
+  const { data: jobs = [] } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => jobApi.list().then((r) => {
       saveStored("jobs", r.data);
@@ -176,7 +172,6 @@ export default function JobsPage() {
   const {
     data: recommendedResults = [],
     isFetching: recommendedLoading,
-    error: recommendedError,
   } = useQuery({
     queryKey: ["search", "recommended"],
     queryFn: () => jobApi.searchRecommended(1).then(r => r.data.jobs || []),
@@ -190,7 +185,6 @@ export default function JobsPage() {
   const {
     data: customResults = [],
     isFetching: customLoading,
-    error: customError,
   } = useQuery({
     queryKey: ["search", "custom", submittedCustomParams],
     retry: 1,
@@ -209,22 +203,10 @@ export default function JobsPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Create job mutation (manual form)
-  const createMutation = useMutation({
-    mutationFn: jobApi.create,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["jobs"] });
-      toast.success("Stelle hinzugefügt!");
-      reset();
-      setShowForm(false);
-    },
-    onError: () => toast.error("Stelle konnte nicht hinzugefügt werden"),
-  });
-
   // Save job from search results
   const saveJobMutation = useMutation({
     mutationFn: jobApi.create,
-    onSuccess: (_, __, context) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["jobs"] });
       toast.success("Stelle gespeichert!");
       setSavedJobIds((prev) => new Set([...prev, savingJobId]));
@@ -246,7 +228,7 @@ export default function JobsPage() {
     ) {
       setSubmittedCustomParams({ ...customSearchParams });
     }
-  }, [customSearchParams.bezirk]);
+  }, [customSearchParams, searchTab, submittedCustomParams]);
 
   const handleRecommendedSearch = () => {
     guardSearch(() => {
@@ -294,8 +276,8 @@ export default function JobsPage() {
         location: result.location,
       });
       setJobAnalyses((prev) => ({ ...prev, [idx]: res.data }));
-    } catch {
-      toast.error("KI-Analyse fehlgeschlagen");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "KI-Analyse fehlgeschlagen"));
     } finally {
       setAnalyzingJobId(null);
     }
@@ -387,15 +369,8 @@ export default function JobsPage() {
     }
   };
 
-  const getMatchScoreBadgeClasses = (score) => {
-    if (score >= 75) return "score-high";
-    if (score >= 50) return "score-mid";
-    return "score-low";
-  };
-
   const rawSearchResults = searchTab === "recommended" ? recommendedResults : customResults;
   const searchLoading = searchTab === "recommended" ? recommendedLoading : customLoading;
-  const searchError = searchTab === "recommended" ? recommendedError : customError;
 
   const activeBezirk = searchTab === "custom" ? customSearchParams.bezirk : "";
 

@@ -30,6 +30,7 @@ stripe==8.4.0
 
 # Rate limiting
 slowapi==0.1.9
+sentry-sdk[fastapi]==2.19.0
 
 # Dev/test
 pytest==8.3.2

@@ -8,6 +8,13 @@ client = Groq(api_key=settings.GROQ_API_KEY)
 MODEL = "llama-3.3-70b-versatile"
 
 
+def get_groq_provider_status() -> dict:
+    return {
+        "configured": bool(settings.GROQ_API_KEY),
+        "model": MODEL,
+    }
+
+
 def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperature: float = 0.3, **kwargs) -> str:
     """Base helper to call Groq and return text."""
     from fastapi import HTTPException

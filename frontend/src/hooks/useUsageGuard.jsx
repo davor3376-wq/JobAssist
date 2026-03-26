@@ -72,6 +72,7 @@ export default function useUsageGuard(feature) {
       toast(`Noch ${remaining} ${label} übrig ${periodLabel}`, {
         icon: "⚠️",
         duration: 4000,
+        id: `usage-warning-${feature}`,
       });
     }
 

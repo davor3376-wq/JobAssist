@@ -1,29 +1,61 @@
-import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import useAuthStore from "./hooks/useAuthStore";
+import { lazy, Suspense, useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+
+import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/layout/Layout";
 import UpgradeModal from "./components/UpgradeModal";
-import ErrorBoundary from "./components/ErrorBoundary";
+import useAuthStore from "./hooks/useAuthStore";
 
-const LoginPage      = lazy(() => import("./pages/LoginPage"));
-const RegisterPage   = lazy(() => import("./pages/RegisterPage"));
-const DashboardPage  = lazy(() => import("./pages/DashboardPage"));
-const ResumePage     = lazy(() => import("./pages/ResumePage"));
-const JobsPage       = lazy(() => import("./pages/JobsPage"));
-const JobDetailPage  = lazy(() => import("./pages/JobDetailPage"));
-const SettingsPage   = lazy(() => import("./pages/SettingsPage"));
-const CoverLetterPage = lazy(() => import("./pages/CoverLetterPage"));
-const AIAssistantPage = lazy(() => import("./pages/AIAssistantPage"));
-const JobAlertsPage  = lazy(() => import("./pages/JobAlertsPage"));
-const PricingPage    = lazy(() => import("./pages/PricingPage"));
-const BillingPage    = lazy(() => import("./pages/BillingPage"));
-const TermsPage      = lazy(() => import("./pages/TermsPage"));
-const PrivacyPage    = lazy(() => import("./pages/PrivacyPage"));
-const ImpressumPage  = lazy(() => import("./pages/ImpressumPage"));
-const ContactPage    = lazy(() => import("./pages/ContactPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
-const ResetPasswordPage  = lazy(() => import("./pages/ResetPasswordPage"));
-const VerifyEmailPage    = lazy(() => import("./pages/VerifyEmailPage"));
+const loadLoginPage = () => import("./pages/LoginPage");
+const loadRegisterPage = () => import("./pages/RegisterPage");
+const loadDashboardPage = () => import("./pages/DashboardPage");
+const loadResumePage = () => import("./pages/ResumePage");
+const loadJobsPage = () => import("./pages/JobsPage");
+const loadJobDetailPage = () => import("./pages/JobDetailPage");
+const loadSettingsPage = () => import("./pages/SettingsPage");
+const loadCoverLetterPage = () => import("./pages/CoverLetterPage");
+const loadAIAssistantPage = () => import("./pages/AIAssistantPage");
+const loadJobAlertsPage = () => import("./pages/JobAlertsPage");
+const loadPricingPage = () => import("./pages/PricingPage");
+const loadBillingPage = () => import("./pages/BillingPage");
+const loadTermsPage = () => import("./pages/TermsPage");
+const loadPrivacyPage = () => import("./pages/PrivacyPage");
+const loadImpressumPage = () => import("./pages/ImpressumPage");
+const loadContactPage = () => import("./pages/ContactPage");
+const loadForgotPasswordPage = () => import("./pages/ForgotPasswordPage");
+const loadResetPasswordPage = () => import("./pages/ResetPasswordPage");
+const loadVerifyEmailPage = () => import("./pages/VerifyEmailPage");
+
+const LoginPage = lazy(loadLoginPage);
+const RegisterPage = lazy(loadRegisterPage);
+const DashboardPage = lazy(loadDashboardPage);
+const ResumePage = lazy(loadResumePage);
+const JobsPage = lazy(loadJobsPage);
+const JobDetailPage = lazy(loadJobDetailPage);
+const SettingsPage = lazy(loadSettingsPage);
+const CoverLetterPage = lazy(loadCoverLetterPage);
+const AIAssistantPage = lazy(loadAIAssistantPage);
+const JobAlertsPage = lazy(loadJobAlertsPage);
+const PricingPage = lazy(loadPricingPage);
+const BillingPage = lazy(loadBillingPage);
+const TermsPage = lazy(loadTermsPage);
+const PrivacyPage = lazy(loadPrivacyPage);
+const ImpressumPage = lazy(loadImpressumPage);
+const ContactPage = lazy(loadContactPage);
+const ForgotPasswordPage = lazy(loadForgotPasswordPage);
+const ResetPasswordPage = lazy(loadResetPasswordPage);
+const VerifyEmailPage = lazy(loadVerifyEmailPage);
+
+const preloaders = [
+  loadDashboardPage,
+  loadJobsPage,
+  loadResumePage,
+  loadJobAlertsPage,
+  loadSettingsPage,
+  loadBillingPage,
+  loadCoverLetterPage,
+  loadAIAssistantPage,
+];
 
 function PrivateRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -35,7 +67,6 @@ function AppRoutes() {
   return (
     <ErrorBoundary resetKey={location.pathname}>
       <Routes>
-        {/* Public — wrapped in own Suspense so Layout is never affected */}
         <Route path="/login" element={<Suspense fallback={null}><LoginPage /></Suspense>} />
         <Route path="/register" element={<Suspense fallback={null}><RegisterPage /></Suspense>} />
         <Route path="/pricing" element={<Suspense fallback={null}><PricingPage /></Suspense>} />
@@ -47,7 +78,6 @@ function AppRoutes() {
         <Route path="/reset-password" element={<Suspense fallback={null}><ResetPasswordPage /></Suspense>} />
         <Route path="/verify-email" element={<Suspense fallback={null}><VerifyEmailPage /></Suspense>} />
 
-        {/* Protected — Layout has its own Suspense around Outlet */}
         <Route
           path="/"
           element={
@@ -73,6 +103,18 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const warm = () => preloaders.forEach((load) => load().catch(() => {}));
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 1200 });
+      return () => window.cancelIdleCallback(id);
+    }
+
+    const timer = window.setTimeout(warm, 300);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <UpgradeModal />

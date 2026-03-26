@@ -9,7 +9,11 @@ import { authApi, initApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export default function RegisterPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm();
   const login = useAuthStore((s) => s.login);
   const setUser = useAuthStore((s) => s.setUser);
   const navigate = useNavigate();
@@ -21,12 +25,17 @@ export default function RegisterPage() {
       queryClient.clear();
       navigate("/dashboard");
 
-      initApi.fetch().then((initRes) => {
-        const initData = initRes.data;
-        try { localStorage.setItem("init", JSON.stringify(initData)); } catch {}
-        queryClient.setQueryData(["init"], initData);
-        if (initData.me) setUser(initData.me);
-      }).catch(() => {});
+      initApi
+        .fetch()
+        .then((initRes) => {
+          const initData = initRes.data;
+          try {
+            localStorage.setItem("init", JSON.stringify(initData));
+          } catch {}
+          queryClient.setQueryData(["init"], initData);
+          if (initData.me) setUser(initData.me);
+        })
+        .catch(() => {});
 
       toast.success("Konto erstellt. Bitte bestätige deine E-Mail, um alle Funktionen freizuschalten.");
     } catch (err) {
@@ -38,7 +47,9 @@ export default function RegisterPage() {
     <AuthLayout>
       <div className="mb-6 sm:mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Konto erstellen</h2>
-        <p className="text-gray-500 text-sm sm:text-base">Starte jetzt mit deiner Bewerbung in Österreich</p>
+        <p className="text-gray-500 text-sm sm:text-base">
+          Starte jetzt mit deiner Bewerbung in Österreich
+        </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -69,19 +80,35 @@ export default function RegisterPage() {
               minLength: { value: 8, message: "Mindestens 8 Zeichen" },
             })}
           />
-          {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
+          )}
         </div>
 
         <button type="submit" className="btn-primary w-full !py-3 text-base" disabled={isSubmitting}>
           {isSubmitting ? (
             <span className="flex items-center gap-2">
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Konto wird erstellt...
             </span>
-          ) : "Konto erstellen"}
+          ) : (
+            "Konto erstellen"
+          )}
         </button>
       </form>
 
@@ -93,9 +120,15 @@ export default function RegisterPage() {
       </p>
 
       <div className="flex justify-center gap-4 mt-6 text-xs text-gray-400">
-        <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
-        <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
-        <Link to="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+        <Link to="/terms" className="hover:text-gray-600 transition-colors">
+          AGB
+        </Link>
+        <Link to="/privacy" className="hover:text-gray-600 transition-colors">
+          Datenschutz
+        </Link>
+        <Link to="/impressum" className="hover:text-gray-600 transition-colors">
+          Impressum
+        </Link>
       </div>
     </AuthLayout>
   );

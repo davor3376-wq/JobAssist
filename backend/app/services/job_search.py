@@ -46,8 +46,23 @@ class _CircuitBreaker:
         self._failures = 0
         self._tripped_at = None
 
+    def snapshot(self) -> dict:
+        return {
+            "open": self.is_open(),
+            "failures": self._failures,
+            "failure_threshold": self.FAILURE_THRESHOLD,
+            "reset_seconds": self.RESET_SECONDS,
+        }
+
 
 _breaker = _CircuitBreaker()
+
+
+def get_adzuna_provider_status() -> dict:
+    return {
+        "configured": bool(settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY),
+        "circuit_breaker": _breaker.snapshot(),
+    }
 
 # Adzuna Austrian endpoint — aggregates karriere.at, stepstone.at, etc.
 # Docs: https://developer.adzuna.com/docs/search

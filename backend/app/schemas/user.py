@@ -1,3 +1,4 @@
+import re
 from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
 from typing import Optional
@@ -55,5 +56,37 @@ class UserPreferencesUpdate(BaseModel):
     currency: Optional[str] = None
     location: Optional[str] = None
     language: Optional[str] = None
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        value = v.strip().upper()
+        if not re.fullmatch(r"[A-Z]{3}", value):
+            raise ValueError("Währung muss ein 3-stelliger ISO-Code wie EUR oder USD sein")
+        return value
+
+    @field_validator("location")
+    @classmethod
+    def validate_location(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        value = v.strip()
+        if not value:
+            raise ValueError("Standort darf nicht leer sein")
+        if len(value) > 120:
+            raise ValueError("Standort darf maximal 120 Zeichen lang sein")
+        return value
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        value = v.strip().lower()
+        if value not in {"de", "en"}:
+            raise ValueError("Sprache muss 'de' oder 'en' sein")
+        return value
 
     model_config = {"from_attributes": True}

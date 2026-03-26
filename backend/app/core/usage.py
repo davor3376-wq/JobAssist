@@ -1,4 +1,4 @@
-"""Usage tracking: check limits and increment counters."""
+﻿"""Usage tracking: check limits and increment counters."""
 
 from datetime import date
 
@@ -166,3 +166,4 @@ async def get_all_usage(db: AsyncSession, user_id: int, plan: str) -> list[dict]
           "remaining": -1 if limit == -1 else max(0, limit - used),
         })
     return result
+

@@ -15,6 +15,17 @@ logger = logging.getLogger(__name__)
 BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
 
 
+def get_email_provider_status() -> dict:
+    brevo_configured = bool(settings.BREVO_API_KEY)
+    smtp_configured = bool(settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD)
+    active_provider = "brevo" if brevo_configured else "smtp" if smtp_configured else None
+    return {
+        "brevo_configured": brevo_configured,
+        "smtp_configured": smtp_configured,
+        "active_provider": active_provider,
+    }
+
+
 def _safe_url(url: str) -> str:
     try:
         parsed = urlparse(url)
@@ -144,16 +155,16 @@ def send_verification_email(to_email: str, token: str) -> bool:
 <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">E-Mail-Adresse bestaetigen</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">E-Mail-Adresse bestätigen</h1>
     </div>
     <div style="padding:24px 32px;">
-      <p style="font-size:15px;color:#374151;">Klicke auf den Button, um deine E-Mail-Adresse zu bestaetigen:</p>
-      <a href="{html_lib.escape(verify_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">E-Mail bestaetigen</a>
-      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 24 Stunden gueltig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
+      <p style="font-size:15px;color:#374151;">Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen:</p>
+      <a href="{html_lib.escape(verify_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">E-Mail bestätigen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 24 Stunden gültig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>
     </div>
   </div>
 </body></html>"""
-    return _send_transactional_email(to_email, "JobAssist - E-Mail bestaetigen", html)
+    return _send_transactional_email(to_email, "JobAssist - E-Mail bestätigen", html)
 
 
 def send_password_reset_email(to_email: str, token: str) -> bool:
@@ -163,16 +174,16 @@ def send_password_reset_email(to_email: str, token: str) -> bool:
 <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
     <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">Passwort zuruecksetzen</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">Passwort zurücksetzen</h1>
     </div>
     <div style="padding:24px 32px;">
-      <p style="font-size:15px;color:#374151;">Du hast eine Passwort-Zuruecksetzung angefordert. Klicke auf den Button:</p>
-      <a href="{html_lib.escape(reset_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">Passwort zuruecksetzen</a>
-      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 1 Stunde gueltig. Falls du kein neues Passwort angefordert hast, ignoriere diese E-Mail.</p>
+      <p style="font-size:15px;color:#374151;">Du hast eine Passwort-Zurücksetzung angefordert. Klicke auf den Button:</p>
+      <a href="{html_lib.escape(reset_url)}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#3b82f6;color:#fff;font-weight:600;border-radius:8px;text-decoration:none;font-size:15px;">Passwort zurücksetzen</a>
+      <p style="font-size:13px;color:#9ca3af;margin-top:16px;">Dieser Link ist 1 Stunde gültig. Falls du kein neues Passwort angefordert hast, ignoriere diese E-Mail.</p>
     </div>
   </div>
 </body></html>"""
-    return _send_transactional_email(to_email, "JobAssist - Passwort zuruecksetzen", html)
+    return _send_transactional_email(to_email, "JobAssist - Passwort zurücksetzen", html)
 
 
 def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]]) -> bool:
@@ -181,5 +192,5 @@ def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List
         return False
 
     html_body = _build_job_alert_html(keywords, location or "", jobs)
-    subject = f"JobAssist: {len(jobs)} neue Stellen fuer '{keywords.strip()}'"
+    subject = f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'"
     return _send_transactional_email(to_email, subject, html_body)
