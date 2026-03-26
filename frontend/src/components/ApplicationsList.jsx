@@ -47,6 +47,64 @@ const STATUS_COLORS = {
 
 const STATUS_ORDER = ["bookmarked", "applied", "interviewing", "offered", "rejected"];
 
+const TYPE_MAP = {
+  behavioral: "Verhalten",
+  behaviour: "Verhalten",
+  "behaviour-based": "Verhalten",
+  technical: "Fachlich",
+  "technical knowledge": "Fachlich",
+  fachwissen: "Fachlich",
+  situational: "Situativ",
+  situation: "Situativ",
+  motivation: "Motivation",
+  motivational: "Motivation",
+  competency: "Kompetenz",
+  competence: "Kompetenz",
+  culture: "Kultur",
+  "cultural fit": "Kultur",
+  "culture fit": "Kultur",
+  leadership: "Führung",
+  management: "Führung",
+  "problem-solving": "Problemlösung",
+  "problem solving": "Problemlösung",
+  analytical: "Problemlösung",
+  creativity: "Kreativität",
+  creative: "Kreativität",
+  communication: "Kommunikation",
+  interpersonal: "Kommunikation",
+  teamwork: "Teamarbeit",
+  collaboration: "Teamarbeit",
+  team: "Teamarbeit",
+  adaptability: "Anpassung",
+  flexibility: "Anpassung",
+  stress: "Stressresistenz",
+  "stress management": "Stressresistenz",
+  "time management": "Zeitmanagement",
+  organization: "Zeitmanagement",
+  sales: "Vertrieb",
+  customer: "Kundenorientierung",
+  service: "Kundenorientierung",
+};
+
+const TAG_COLORS = {
+  Fachlich: "bg-blue-100 text-blue-700",
+  Verhalten: "bg-violet-100 text-violet-700",
+  Situativ: "bg-amber-100 text-amber-700",
+  Motivation: "bg-emerald-100 text-emerald-700",
+  Kompetenz: "bg-rose-100 text-rose-700",
+  Kultur: "bg-teal-100 text-teal-700",
+  Führung: "bg-indigo-100 text-indigo-700",
+  Problemlösung: "bg-orange-100 text-orange-700",
+  Kreativität: "bg-pink-100 text-pink-700",
+  Kommunikation: "bg-cyan-100 text-cyan-700",
+  Teamarbeit: "bg-lime-100 text-lime-700",
+  Anpassung: "bg-sky-100 text-sky-700",
+  Stressresistenz: "bg-red-100 text-red-700",
+  Zeitmanagement: "bg-yellow-100 text-yellow-700",
+  Vertrieb: "bg-green-100 text-green-700",
+  Kundenorientierung: "bg-purple-100 text-purple-700",
+};
+
 function ActionButton({ onClick, disabled, disabledReason, color, icon, label }) {
   const styles = {
     blue: "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100",
@@ -93,6 +151,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   const [notesInput, setNotesInput] = useState({});
   const [notesSaving, setNotesSaving] = useState({});
   const [jobUiState, setJobUiState] = useState({});
+  const [expandedQuestion, setExpandedQuestion] = useState(null);
   const [researchModal, setResearchModal] = useState(null);
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
@@ -456,7 +515,62 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 <ActionButton color={job.research_data ? "emerald-solid" : "emerald"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-3 w-3" />} label={job.research_data ? "Recherche ansehen" : "Recherche"} />
               </div>
               {job.cover_letter && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `cover-${job.id}` ? null : `cover-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-green-700"><FileText className="h-4 w-4" /> Erstelltes Motivationsschreiben</button>{expandedPanel === `cover-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-green-300 bg-white p-3 text-sm text-gray-700">{job.cover_letter}</div>}</div>}
-              {job.interview_qa && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `interview-${job.id}` ? null : `interview-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-purple-700"><Brain className="h-4 w-4" /> Fragen zur Gesprächsvorbereitung</button>{expandedPanel === `interview-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-purple-300 bg-white p-3 text-sm text-gray-700">{Array.isArray(interviewQa) ? <ol className="space-y-3">{interviewQa.map((qa, index) => <li key={index}><strong>{index + 1}. {qa.question || qa}</strong>{qa.suggested_answer && <div className="mt-1 text-xs italic text-gray-600">{qa.suggested_answer}</div>}</li>)}</ol> : job.interview_qa}</div>}</div>}
+              {job.interview_qa && (
+                <div className="border-t border-gray-300 pt-3">
+                  <button onClick={() => setExpandedPanel(expandedPanel === `interview-${job.id}` ? null : `interview-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-purple-700">
+                    <Brain className="h-4 w-4" /> Fragen zur Gesprächsvorbereitung
+                  </button>
+                  {expandedPanel === `interview-${job.id}` && (
+                    <div className="mt-3 space-y-3">
+                      {Array.isArray(interviewQa)
+                        ? interviewQa.map((item, index) => {
+                            const key = `${job.id}-${index}`;
+                            const type = TYPE_MAP[item.type] || TYPE_MAP[(item.type || "").toLowerCase()] || item.type || "Frage";
+                            const open = expandedQuestion === key;
+                            return (
+                              <div
+                                key={key}
+                                className={`overflow-hidden rounded-xl border transition-all duration-200 ${
+                                  open ? "border-indigo-200 bg-white shadow-md" : "border-gray-200 bg-white"
+                                }`}
+                              >
+                                <button
+                                  onClick={() => setExpandedQuestion(open ? null : key)}
+                                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="mb-1 flex items-start gap-3">
+                                      <span className="flex-shrink-0 text-xs font-semibold text-gray-400">Q{index + 1}</span>
+                                      <p className="text-sm font-semibold text-gray-900">{item.question || item}</p>
+                                    </div>
+                                    <div className="ml-6 flex flex-wrap gap-2">
+                                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${TAG_COLORS[type] || "bg-gray-100 text-gray-700"}`}>{type}</span>
+                                    </div>
+                                  </div>
+                                  <ChevronDown className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+                                </button>
+                                {open && (
+                                  <div className="space-y-3 border-t border-gray-200 bg-white px-4 py-3">
+                                    <div>
+                                      <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Antwort</h4>
+                                      <p className="text-sm leading-relaxed text-gray-700">{item.answer || item.suggested_answer || ""}</p>
+                                    </div>
+                                    {(item.tip || item.suggested_answer) && (
+                                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                        <p className="mb-1 text-[11px] font-semibold text-amber-900">PROFI-TIPP</p>
+                                        <p className="text-sm text-amber-900">{item.tip || item.suggested_answer}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        : <div className="rounded-lg border border-purple-300 bg-white p-3 text-sm text-gray-700">{job.interview_qa}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>}
           </div>
         );
