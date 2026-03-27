@@ -1,6 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Brain,
@@ -173,7 +172,6 @@ function ActionButton({ onClick, disabled, disabledReason, color, icon, label })
 }
 
 export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = null }) {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const notesTimeoutsRef = useRef({});
   const jobRefs = useRef({});
@@ -370,6 +368,18 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     },
   });
 
+  const interviewMutation = useMutation({
+    mutationFn: ({ jobId, resumeId }) => jobApi.generateInterviewPrep(jobId, resumeId),
+    onSuccess: (res, vars) => {
+      applyJobUpdate(res.data);
+      setExpandedPanel(`interview-${vars.jobId}`);
+      toast.success("Gesprächsvorbereitung fertig!");
+    },
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden"));
+    },
+  });
+
   const notesMutation = useMutation({
     mutationFn: ({ jobId, notes }) => jobApi.updateNotes(jobId, notes),
     onSuccess: (res, vars) => {
@@ -404,12 +414,12 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   const hasResume = Boolean(selectedResumeId);
   const isProcessing = (jobId, feature) => processing.jobId === jobId && processing.feature === feature;
 
-  const openInterviewWorkspace = (job) => {
-    document.body.classList.add("page-blur-transition");
-    window.setTimeout(() => document.body.classList.remove("page-blur-transition"), 420);
-    const params = new URLSearchParams({ tab: "interview" });
-    if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
-    navigate(`/jobs/${job.id}?${params.toString()}`);
+  const handleInterview = (job) => {
+    if (job.interview_qa) {
+      setExpandedPanel((old) => (old === `interview-${job.id}` ? null : `interview-${job.id}`));
+      return;
+    }
+    interviewMutation.mutate({ jobId: job.id, resumeId: selectedResumeId || resumes[0]?.id });
   };
 
   const handleDraftEmail = async (job) => {
@@ -530,7 +540,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" checked={selectedJobs.has(job.id)} onChange={() => setSelectedJobs((old) => { const next = new Set(old); next.has(job.id) ? next.delete(job.id) : next.add(job.id); return next; })} className="h-4 w-4 rounded" />
-                    <button onClick={() => navigate(`/jobs/${job.id}`)} className="truncate text-left text-base font-semibold text-gray-900 hover:text-indigo-700 sm:text-lg">{job.role || "Ohne Titel"}</button>
+                    <span className="truncate text-left text-base font-semibold text-gray-900 sm:text-lg">{job.role || "Ohne Titel"}</span>
                     {job.url && <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700" title="Stellenanzeige öffnen"><ExternalLink className="h-3.5 w-3.5" /></a>}
                   </div>
                   <p className="text-sm text-gray-600">{job.company || "Unbekanntes Unternehmen"}</p>
@@ -549,7 +559,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[400px]"}`}>
+                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[360px]"}`}>
                   <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-4"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
@@ -558,7 +568,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                       </button>
                     </div>
                     {!isMatchRailCollapsed && (
-                      <div className="mt-4 space-y-3">
+                      <div className="mt-4 space-y-2.5">
                         <MatchDetailCard
                           title="Stärken"
                           items={matchFeedback.strengths}
@@ -656,7 +666,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 <div className="flex flex-wrap gap-2">
                   <ActionButton color="indigo" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-4 w-4" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match-Bewertung"} />
                   <ActionButton color="emerald" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FileText className="h-4 w-4" />} label={draftLoading === job.id ? "Wird erstellt..." : "Anschreiben"} />
-                  <ActionButton color="amber" disabled={!hasResume} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => openInterviewWorkspace(job)} icon={<MessageSquare className="h-4 w-4" />} label="Gesprächsvorbereitung" />
+                  <ActionButton color="amber" disabled={!hasResume || interviewMutation.isPending} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: interviewMutation.isPending, draftLoading: draftLoading === job.id })} onClick={() => handleInterview(job)} icon={<MessageSquare className="h-4 w-4" />} label={interviewMutation.isPending ? "Wird erstellt..." : "Gesprächsvorbereitung"} />
                   <ActionButton color={job.research_data ? "emerald-solid" : "emerald-outline"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-4 w-4" />} label="Recherche" />
                 </div>
               </div>
