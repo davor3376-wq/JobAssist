@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { TrendingUp, Target, Award, ArrowRight, Sparkles, Activity } from "lucide-react";
+import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock } from "lucide-react";
 
 import { jobApi } from "../services/api";
 
@@ -120,10 +120,6 @@ export default function DashboardPage() {
     });
   }, [jobs, scoredJobs.length]);
 
-  const topMatchesThisWeek = useMemo(
-    () => (jobs || []).filter((job) => (job.match_score || 0) >= 75).slice(0, 3).length,
-    [jobs]
-  );
   const jobsNeedingReview = useMemo(
     () => (jobs || []).filter((job) => job.status === "bookmarked" || job.match_score == null).length,
     [jobs]
@@ -139,11 +135,7 @@ export default function DashboardPage() {
     return datedJobs[0] || null;
   }, [jobs]);
 
-  const chanceLift = useMemo(() => {
-    if (!scoredJobs.length) return 8;
-    const highMatches = scoredJobs.filter((job) => job.match_score >= 70).length;
-    return Math.min(24, Math.max(8, Math.round((highMatches / scoredJobs.length) * 20)));
-  }, [scoredJobs]);
+  const savedJobs = jobs?.length ?? 0;
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -161,27 +153,23 @@ export default function DashboardPage() {
           <div className="max-w-xl">
             <h1 className="mb-2 text-4xl font-bold text-gray-900">{greeting()}</h1>
             <p className="text-gray-600">
-              Übersicht über deine gespeicherten Stellen, offenen Reviews und die nächste relevante Frist.
+              Überblick über deine gespeicherten Stellen, den aktuellen Bearbeitungsstand und die nächste Frist.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Offene Reviews</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Gespeicherte Stellen</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{savedJobs}</p>
+                <p className="mt-1 text-xs text-gray-500">Aktuell in deiner Liste</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Offen zu prüfen</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">{jobsNeedingReview}</p>
-                <p className="mt-1 text-xs text-gray-500">Stellen ohne Abschlussentscheidung</p>
+                <p className="mt-1 text-xs text-gray-500">Ohne Abschluss oder noch ohne Match</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Interviews</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">{openInterviews}</p>
                 <p className="mt-1 text-xs text-gray-500">Status Vorstellungsgespräch</p>
-              </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Nächste Frist</p>
-                <p className="mt-2 text-sm font-bold text-gray-900">
-                  {nextDeadline ? new Date(nextDeadline.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
-                </p>
-                <p className="mt-1 truncate text-xs text-gray-500">
-                  {nextDeadline ? `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"}` : "Aktuell entspannt"}
-                </p>
               </div>
             </div>
           </div>
@@ -189,15 +177,13 @@ export default function DashboardPage() {
           <div className="w-full max-w-xl rounded-2xl border border-indigo-100 bg-white/90 p-5 shadow-sm">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">KI-Status</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">Aktivität</p>
                 <p className="mt-2 text-sm leading-6 text-gray-700">
-                  Heute gibt es <span className="font-semibold text-gray-900">{topMatchesThisWeek}</span> neue Top-Matches
-                  für dich. Deine Bewerbungschancen sind diese Woche um{" "}
-                  <span className="font-semibold text-emerald-600">{chanceLift}%</span> gestiegen.
+                  {scoredJobs.length} Stellen wurden bereits bewertet. {nextDeadline ? "Die nächste bekannte Frist ist bereits eingetragen." : "Aktuell ist keine Frist eingetragen."}
                 </p>
               </div>
               <div className="rounded-2xl bg-indigo-600 p-3 text-white shadow-sm">
-                <Sparkles className="h-5 w-5" />
+                <CalendarClock className="h-5 w-5" />
               </div>
             </div>
             <MiniActivityChart values={activitySeries} />
@@ -206,7 +192,12 @@ export default function DashboardPage() {
                 <span className="font-semibold text-slate-800">{recentJobs.length}</span> zuletzt bearbeitete Stellen im Fokus
               </div>
               <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-800">{scoredJobs.length}</span> Stellen haben bereits eine Match-Bewertung
+                <p className="mt-2 text-sm font-bold text-gray-900">
+                  {nextDeadline ? new Date(nextDeadline.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
+                </p>
+                <p className="mt-1 truncate text-xs text-gray-500">
+                  {nextDeadline ? `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"}` : "Aktuell entspannt"}
+                </p>
               </div>
             </div>
           </div>
