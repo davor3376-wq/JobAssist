@@ -28,7 +28,6 @@ const NAV_KEYS = [
   { to: "/dashboard", tKey: "navigation.dashboard", icon: LayoutDashboard },
   { to: "/resume", tKey: "navigation.myResumes", icon: FileText },
   { to: "/jobs", tKey: "navigation.jobs", icon: Briefcase },
-  { to: "/cover-letter", tKey: "navigation.coverLetter", icon: Mail },
   { to: "/ai-assistant", tKey: "navigation.aiAssistant", icon: Bot },
   { to: "/job-alerts", tKey: "navigation.jobAlerts", icon: Bell },
   { to: "/settings", tKey: "navigation.preferences", icon: Settings },

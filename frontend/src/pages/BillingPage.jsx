@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CreditCard, ExternalLink, Zap } from "lucide-react";
+import { ArrowRight, CreditCard, ExternalLink, Zap, AlertCircle, Star, Rocket, TrendingUp } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { CardSkeleton } from "../components/PageSkeleton";
@@ -9,75 +9,59 @@ import { billingApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 import { getCleanBillingUrl, getPlanName, getUsageBarState } from "../utils/billingState";
 
-function UsageRing({ feature, used, limit }) {
-  const { label, unlimited, pct, isNearLimit, displayLimit } = getUsageBarState(feature, used, limit);
-  const progress = unlimited ? 0 : Math.max(0, Math.min(100, pct));
-  const size = 112;
-  const stroke = 10;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-  const ringClass = isNearLimit ? "text-red-500" : "text-indigo-600";
-  const ringStroke = isNearLimit ? "#ef4444" : "#4f46e5";
+// ─── Linear usage bar (color-coded) ──────────────────────────────────────────
+// blue ≤ 60% · yellow 60–79% · red ≥ 80% (atLimit = red with "Limit erreicht")
+function UsageBar({ feature, used, limit }) {
+  const { label, unlimited, pct, displayLimit } = getUsageBarState(feature, used, limit);
+  const isAtLimit = !unlimited && pct >= 100;
+  const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
 
-  const isAtLimit = !unlimited && progress >= 100;
-  // separate "near limit" (80–99%) from "at limit" (100%) for clearer messaging
-  const isWarn = isNearLimit && !isAtLimit;
-  const actualRingStroke = isAtLimit ? "#ef4444" : isNearLimit ? "#f97316" : "#4f46e5";
-  const centreClass = isAtLimit ? "text-red-500" : isNearLimit ? "text-orange-500" : "text-indigo-600";
+  const barColor = isAtLimit ? "bg-red-500" : isWarn ? "bg-amber-400" : "bg-blue-500";
+  const textColor = isAtLimit ? "text-red-600" : isWarn ? "text-amber-600" : "text-slate-700";
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        {/* Label — "(Diesen Monat)" suffix already embedded in FEATURE_LABELS */}
-        <p className="text-sm font-semibold text-gray-900 leading-snug">{label}</p>
-        {isAtLimit && (
-          <span className="flex-shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-500">
-            Limit erreicht
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2 text-sm">
+        {/* Strip the "(Diesen Monat)" / "(Heute)" suffix for the bar label since it's shown in header */}
+        <span className="font-medium text-slate-700 truncate">{label}</span>
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          {isAtLimit && (
+            <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">
+              <AlertCircle className="h-2.5 w-2.5" />
+              Limit
+            </span>
+          )}
+          {isWarn && !isAtLimit && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-500">
+              Fast voll
+            </span>
+          )}
+          <span className={`text-xs font-semibold ${textColor}`}>
+            {unlimited ? "∞" : `${used} / ${displayLimit}`}
           </span>
-        )}
-        {isWarn && (
-          <span className="flex-shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-500">
-            Fast voll
-          </span>
-        )}
+        </div>
       </div>
-
-      <div className="mt-4 flex items-center gap-5">
-        <div className="relative flex-shrink-0">
-          <svg width={size} height={size} className="-rotate-90">
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
-            {!unlimited && (
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={actualRingStroke}
-                strokeWidth={stroke}
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                style={{ transition: "stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1)" }}
-              />
-            )}
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-lg font-bold ${centreClass}`}>{used}</span>
-            <span className="text-[11px] font-medium text-gray-400">von {displayLimit}</span>
-          </div>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className={`text-sm font-semibold ${centreClass}`}>
-            {unlimited ? "Unbegrenzt" : `${progress}% genutzt`}
-          </p>
-        </div>
+      {/* Track */}
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+          style={{ width: unlimited ? "0%" : `${Math.min(100, pct)}%` }}
+        />
       </div>
     </div>
   );
 }
 
+// ─── Premium benefits list ────────────────────────────────────────────────────
+const PREMIUM_BENEFITS = [
+  "Unbegrenzte KI-Nachrichten",
+  "Bis zu 20 Lebenslauf-Analysen/Monat",
+  "Bis zu 10 Job-Alerts",
+  "Prioritäts-Support",
+  "Erweiterte Bewerbungsanalysen",
+];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function BillingPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -101,18 +85,14 @@ export default function BillingPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["billing-overview"],
     queryFn: () => billingApi.overview().then((r) => {
-      try {
-        localStorage.setItem("billing", JSON.stringify(r.data));
-      } catch {}
+      try { localStorage.setItem("billing", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
     initialData: () => {
       try {
         const saved = localStorage.getItem("billing");
         return saved ? JSON.parse(saved) : undefined;
-      } catch {
-        return undefined;
-      }
+      } catch { return undefined; }
     },
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
@@ -133,11 +113,14 @@ export default function BillingPage() {
     return (
       <div className="space-y-6 animate-slide-up">
         <div>
-          <div className="mb-2 h-7 w-40 animate-pulse rounded bg-gray-200" />
-          <div className="h-4 w-64 animate-pulse rounded bg-gray-100" />
+          <div className="mb-2 h-7 w-40 animate-pulse rounded bg-slate-200" />
+          <div className="h-4 w-64 animate-pulse rounded bg-slate-100" />
         </div>
-        <CardSkeleton lines={3} />
-        <CardSkeleton lines={4} />
+        <div className="grid gap-5 lg:grid-cols-3">
+          <CardSkeleton lines={3} />
+          <CardSkeleton lines={5} />
+          <CardSkeleton lines={4} />
+        </div>
       </div>
     );
   }
@@ -146,61 +129,138 @@ export default function BillingPage() {
   const usage = initData?.usage || data?.usage || [];
   const planName = getPlanName(sub?.plan || initData?.plan);
   const isPaid = sub?.plan && sub.plan !== "basic";
+  const isMax = sub?.plan === "max" || sub?.plan === "enterprise";
+
+  // Next milestone: first feature that's nearest to its limit
+  const nextMilestone = usage.length
+    ? [...usage]
+        .filter((item) => item.limit > 0 && item.limit !== -1)
+        .sort((a, b) => (b.used / b.limit) - (a.used / a.limit))[0]
+    : null;
 
   return (
     <div className="space-y-6 animate-slide-up">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Abrechnung</h1>
-        <p className="mt-1 text-sm text-gray-500">Verwalte deinen Plan und deine Nutzung.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Abrechnung</h1>
+        <p className="mt-1 text-sm text-slate-500">Verwalte deinen Plan und deine Nutzung.</p>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-              <CreditCard className="h-6 w-6 text-white" />
+      {/* ── 3-column layout ── */}
+      <div className="grid gap-5 lg:grid-cols-3">
+
+        {/* Col 1 — Subscription management */}
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
+                <CreditCard className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Aktiver Plan</p>
+                <h2 className="text-lg font-bold text-slate-900 leading-tight">{planName}</h2>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">{planName}</h2>
-              <p className="text-sm text-gray-500">
-                {isPaid
-                  ? `Aktiv bis ${sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("de-AT") : "—"}`
-                  : "Kostenloses Konto"}
-              </p>
+
+            <p className="text-sm text-slate-500 mb-4">
+              {isPaid
+                ? `Aktiv bis ${sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString("de-AT") : "—"}`
+                : "Kostenloses Konto — auf Basis-Limits beschränkt"}
+            </p>
+
+            <div className="space-y-2">
+              {isPaid && (
+                <button
+                  onClick={handleManage}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Abo verwalten
+                </button>
+              )}
+              {!isMax && (
+                <button
+                  onClick={() => navigate("/pricing")}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                >
+                  <Zap className="h-4 w-4" />
+                  Upgrade auf Pro
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-3">
-            {isPaid && (
-              <button
-                onClick={handleManage}
-                className="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Abo verwalten
-              </button>
-            )}
+          {/* Dein nächster Meilenstein */}
+          {nextMilestone && (
+            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <p className="text-sm font-semibold text-slate-800">Nächster Meilenstein</p>
+              </div>
+              <p className="text-xs text-slate-500 mb-2">Am meisten genutzt diesen Monat:</p>
+              <UsageBar {...nextMilestone} />
+              {!isMax && (
+                <p className="mt-3 text-xs text-slate-400">
+                  Upgrade auf Pro für mehr Kapazität und unbegrenzte KI-Nutzung.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
-            {sub?.plan !== "max" && sub?.plan !== "enterprise" && (
+        {/* Col 2 — Usage Status */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <h3 className="mb-1 text-sm font-bold text-slate-800">Nutzungs-Status</h3>
+          <p className="mb-4 text-xs text-slate-400">Aktueller Verbrauch in diesem Zeitraum</p>
+
+          {usage.length === 0 ? (
+            <p className="text-xs text-slate-400">Keine Nutzungsdaten verfügbar.</p>
+          ) : (
+            <div className="space-y-4">
+              {usage.map((item) => (
+                <UsageBar key={item.feature} {...item} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Col 3 — Premium benefits */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500">
+              <Star className="h-4 w-4 text-white" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-800">Vorteile von Premium</h3>
+          </div>
+
+          <ul className="space-y-2.5 mb-5">
+            {PREMIUM_BENEFITS.map((benefit) => (
+              <li key={benefit} className="flex items-start gap-2 text-sm text-slate-700">
+                <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </span>
+                {benefit}
+              </li>
+            ))}
+          </ul>
+
+          {!isMax && (
+            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Rocket className="h-4 w-4 text-blue-600" />
+                <p className="text-xs font-semibold text-blue-700">Upgrade jetzt</p>
+              </div>
+              <p className="text-xs text-slate-600 mb-3">
+                Schalte alle Pro-Features frei und bewirb dich ohne Limits.
+              </p>
               <button
                 onClick={() => navigate("/pricing")}
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                className="w-full rounded-xl bg-blue-600 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                <Zap className="h-4 w-4" />
-                Upgrade
-                <ArrowRight className="h-4 w-4" />
+                Pläne vergleichen
               </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-base font-bold text-gray-900">Nutzung</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {usage.map((item) => (
-            <UsageRing key={item.feature} {...item} />
-          ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

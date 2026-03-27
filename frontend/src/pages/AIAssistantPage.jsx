@@ -35,12 +35,12 @@ function loadStoredResumes() {
 // ─── Suggestion chips ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText,      label: "Lebenslauf verbessern",    prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
-  { icon: Briefcase,     label: "Bewerbungstipps",          prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
-  { icon: GraduationCap, label: "Praktikum finden",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
-  { icon: Euro,          label: "Gehaltsauskunft",          prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
-  { icon: Lightbulb,     label: "Vorstellungsgespräch",     prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
-  { icon: Sparkles,      label: "Motivationsschreiben",     prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
+  { icon: FileText,      label: "Lebenslauf verbessern",    sub: "Stärken und Schwächen erkennen",   prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
+  { icon: Briefcase,     label: "Bewerbungstipps",          sub: "Erfolgreich bewerben in AT",        prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
+  { icon: GraduationCap, label: "Praktikum finden",         sub: "Als Student durchstarten",          prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
+  { icon: Euro,          label: "Gehaltsauskunft",          sub: "Marktübliche Gehälter kennen",      prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
+  { icon: Lightbulb,     label: "Vorstellungsgespräch",     sub: "Selbstsicher auftreten",             prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
+  { icon: Sparkles,      label: "Motivationsschreiben",     sub: "Überzeugend formulieren",            prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -72,12 +72,9 @@ export default function AIAssistantPage() {
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [sidebarOpen,   setSidebarOpen]   = useState(false);  // mobile sidebar
   const [simulationMode, setSimulationMode] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(290);
-  const [isResizing, setIsResizing] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
-  const resizeStateRef = useRef({ startX: 0, startWidth: 290 });
   const { guardedRun } = useUsageGuard("ai_chat");
 
   const { data: uploadedResumes = [] } = useQuery({
@@ -94,24 +91,6 @@ export default function AIAssistantPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  useEffect(() => {
-    if (!isResizing) return undefined;
-
-    const handleMouseMove = (event) => {
-      const next = resizeStateRef.current.startWidth + (event.clientX - resizeStateRef.current.startX);
-      setSidebarWidth(Math.max(250, Math.min(420, next)));
-    };
-
-    const handleMouseUp = () => setIsResizing(false);
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isResizing]);
 
   // ── Persist conversation to history whenever messages change ──────────────
   useEffect(() => {
@@ -270,22 +249,10 @@ export default function AIAssistantPage() {
         */}
         <aside className={`
           absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
-          md:relative md:translate-x-0 md:shadow-sm md:z-auto
+          md:relative md:w-64 md:translate-x-0 md:shadow-sm md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
         `}
-        style={sidebarOpen ? undefined : { width: `${sidebarWidth}px` }}
         >
-          <div className="absolute inset-y-0 -right-2 z-10 hidden w-4 cursor-col-resize md:block">
-            <button
-              type="button"
-              onMouseDown={(event) => {
-                resizeStateRef.current = { startX: event.clientX, startWidth: sidebarWidth };
-                setIsResizing(true);
-              }}
-              className="h-full w-full"
-              aria-label="Verlauf verbreitern"
-            />
-          </div>
           <div className="flex-shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
             <span className="text-xs font-semibold text-slate-600">Verlauf</span>
             <button
@@ -294,18 +261,6 @@ export default function AIAssistantPage() {
             >
               <Plus className="w-3 h-3" /> Neu
             </button>
-          </div>
-
-          <div className="hidden border-b border-slate-100 bg-slate-50/80 px-3 py-2 md:block">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Chat-Historie</p>
-                <p className="mt-1 text-xs text-slate-500">{conversations.length} gespeicherte Gespräche</p>
-              </div>
-              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-slate-500">
-                {sidebarWidth}px
-              </span>
-            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
@@ -424,19 +379,29 @@ export default function AIAssistantPage() {
                             if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                             handleSend(s.prompt);
                           }}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all
+                          className="text-left w-full"
+                        >
+                          <div className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl border text-left transition-all
                             ${locked
                               ? "border-gray-100 bg-gray-50 cursor-not-allowed"
                               : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
                             }`}
-                        >
-                          {locked
-                            ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                            : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                          }
-                          <span className={`text-xs font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
-                            {s.label}
-                          </span>
+                          >
+                            <div className="flex items-center gap-2">
+                              {locked
+                                ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                                : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              }
+                              <span className={`text-xs font-semibold truncate ${locked ? "text-gray-300" : "text-gray-800"}`}>
+                                {s.label}
+                              </span>
+                            </div>
+                            {s.sub && (
+                              <span className={`text-[11px] leading-tight pl-5 ${locked ? "text-gray-200" : "text-slate-500"}`}>
+                                {s.sub}
+                              </span>
+                            )}
+                          </div>
                         </button>
                       );
                     })}

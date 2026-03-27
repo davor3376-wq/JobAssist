@@ -12,7 +12,6 @@ const loadDashboardPage = () => import("./pages/DashboardPage");
 const loadResumePage = () => import("./pages/ResumePage");
 const loadJobsPage = () => import("./pages/JobsPage");
 const loadSettingsPage = () => import("./pages/SettingsPage");
-const loadCoverLetterPage = () => import("./pages/CoverLetterPage");
 const loadAIAssistantPage = () => import("./pages/AIAssistantPage");
 const loadJobAlertsPage = () => import("./pages/JobAlertsPage");
 const loadPricingPage = () => import("./pages/PricingPage");
@@ -31,7 +30,6 @@ const DashboardPage = lazy(loadDashboardPage);
 const ResumePage = lazy(loadResumePage);
 const JobsPage = lazy(loadJobsPage);
 const SettingsPage = lazy(loadSettingsPage);
-const CoverLetterPage = lazy(loadCoverLetterPage);
 const AIAssistantPage = lazy(loadAIAssistantPage);
 const JobAlertsPage = lazy(loadJobAlertsPage);
 const PricingPage = lazy(loadPricingPage);
@@ -51,7 +49,6 @@ const preloaders = [
   loadJobAlertsPage,
   loadSettingsPage,
   loadBillingPage,
-  loadCoverLetterPage,
   loadAIAssistantPage,
 ];
 
@@ -89,7 +86,6 @@ function AppRoutes() {
           <Route path="resume" element={<ResumePage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/:jobId" element={<Navigate to="/jobs" replace />} />
-          <Route path="cover-letter" element={<CoverLetterPage />} />
           <Route path="ai-assistant" element={<AIAssistantPage />} />
           <Route path="job-alerts" element={<JobAlertsPage />} />
           <Route path="settings" element={<SettingsPage />} />

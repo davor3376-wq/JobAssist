@@ -1,20 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Upload, Trash2, FileText, ScanSearch, BadgeCheck } from "lucide-react";
+import { Upload, Trash2, FileText } from "lucide-react";
 
-import { resumeApi, jobApi } from "../services/api";
+import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { getApiErrorMessage } from "../utils/apiError";
-
-const STOP_WORDS = new Set([
-  "und", "oder", "mit", "fuer", "für", "bei", "der", "die", "das", "ein", "eine", "einer", "eines",
-  "von", "des", "den", "dem", "auf", "im", "in", "zu", "als", "ist", "sind", "wir", "du",
-  "sie", "er", "es", "auch", "dein", "deine", "ihre", "ihrer", "ueber", "über", "durch",
-  "mehr", "remote", "wien", "oesterreich", "österreich", "team", "job", "stelle", "junior", "senior",
-]);
 
 function loadStoredResumes() {
   try {
@@ -23,53 +16,6 @@ function loadStoredResumes() {
   } catch {
     return undefined;
   }
-}
-
-function loadStoredJobs() {
-  try {
-    const raw = localStorage.getItem("jobs");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function extractKeywords(jobs) {
-  const scoreMap = new Map();
-
-  jobs.forEach((job) => {
-    const text = [job.role, job.title, job.company, job.description].filter(Boolean).join(" ");
-    text
-      .toLowerCase()
-      .replace(/[^a-zA-Zäöüß0-9\s/-]/g, " ")
-      .split(/\s+/)
-      .filter((word) => word.length > 3 && !STOP_WORDS.has(word))
-      .forEach((word) => {
-        scoreMap.set(word, (scoreMap.get(word) || 0) + 1);
-      });
-  });
-
-  return [...scoreMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 18)
-    .map(([label]) => label);
-}
-
-function keywordState(resume, keyword, index) {
-  const resumeText = [
-    resume.filename,
-    resume.name,
-    resume.full_name,
-    resume.summary,
-    resume.parsed_text,
-    Array.isArray(resume.skills) ? resume.skills.join(" ") : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (resumeText.includes(keyword.toLowerCase())) return "vorhanden";
-  return index < 6 ? "fehlend" : "beobachten";
 }
 
 function PdfSkeleton({ resume }) {
@@ -113,7 +59,6 @@ function PdfSkeleton({ resume }) {
 export default function ResumePage() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
-  const [previewedResumeId, setPreviewedResumeId] = useState(null);
   const { guardedRun } = useUsageGuard("cv_analysis");
 
   const { data: initData } = useQuery({
@@ -138,19 +83,6 @@ export default function ResumePage() {
         return r.data;
       }),
     initialData: () => queryClient.getQueryData(["resumes"]) || loadStoredResumes() || resumePlaceholder || [],
-    staleTime: 1000 * 60 * 2,
-  });
-
-  const { data: jobs = [] } = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () =>
-      jobApi.list().then((r) => {
-        try {
-          localStorage.setItem("jobs", JSON.stringify(r.data));
-        } catch {}
-        return r.data;
-      }),
-    initialData: () => queryClient.getQueryData(["jobs"]) || loadStoredJobs(),
     staleTime: 1000 * 60 * 2,
   });
 
@@ -195,23 +127,6 @@ export default function ResumePage() {
     maxFiles: 1,
     disabled: uploading,
   });
-
-  const previewedResume = resumes.find((resume) => resume.id === previewedResumeId) || resumes[0] || null;
-
-  const trackedKeywords = useMemo(() => extractKeywords(jobs), [jobs]);
-  const keywordCloud = useMemo(() => {
-    if (!previewedResume) return [];
-    return trackedKeywords.map((keyword, index) => ({
-      keyword,
-      state: keywordState(previewedResume, keyword, index),
-    }));
-  }, [previewedResume, trackedKeywords]);
-
-  const healthScore = useMemo(() => {
-    if (!keywordCloud.length) return null; // no jobs to compare → show "—"
-    const present = keywordCloud.filter((entry) => entry.state === "vorhanden").length;
-    return Math.round((present / keywordCloud.length) * 100);
-  }, [keywordCloud]);
 
   const formatFileSize = (bytes) => {
     if (!bytes) return "Unbekannte Größe";
@@ -291,7 +206,7 @@ export default function ResumePage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+        <div>
           <div className="animate-slide-up">
             <div className="mb-6">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -304,11 +219,7 @@ export default function ResumePage() {
               {resumes.map((resume, idx) => (
                 <div
                   key={resume.id}
-                  onMouseEnter={() => setPreviewedResumeId(resume.id)}
-                  onClick={() => setPreviewedResumeId(resume.id)}
-                  className={`card card-hover group flex items-center justify-between p-5 transition-all duration-300 animate-slide-up ${
-                    previewedResume?.id === resume.id ? "ring-2 ring-indigo-200 border-indigo-200" : ""
-                  }`}
+                  className="card card-hover group flex items-center justify-between p-5 transition-all duration-300 animate-slide-up"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -362,76 +273,6 @@ export default function ResumePage() {
             </div>
           </div>
 
-          {previewedResume && (
-            <div className="animate-slide-up space-y-4">
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">Stellenabgleich</p>
-                    <h3 className="mt-2 text-lg font-semibold text-gray-900">Wichtige Begriffe aus deinen gespeicherten Jobs</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Rechts siehst du, welche Begriffe in deinem Lebenslauf klar auftauchen und welche noch fehlen.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-right">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Abdeckung</p>
-                    <p className={`text-xl font-bold ${
-                      healthScore == null ? "text-gray-400"
-                        : healthScore >= 60 ? "text-indigo-600"
-                        : healthScore >= 30 ? "text-amber-600"
-                        : "text-red-500"
-                    }`}>
-                      {healthScore == null ? "—" : `${healthScore}%`}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.95fr)]">
-                  <PdfSkeleton resume={previewedResume} />
-
-                  <div className="rounded-2xl border border-gray-200 bg-slate-50 p-5">
-                    <div className="mb-4 flex items-center gap-2">
-                      <ScanSearch className="h-4 w-4 text-indigo-500" />
-                      <p className="text-sm font-semibold text-gray-900">Begriffsabgleich</p>
-                    </div>
-
-                    {/* When the resume has no parsed text the analysis is unreliable */}
-                    {!previewedResume.parsed_text && (
-                      <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
-                        Vollständige Analyse erst nach erfolgreicher KI-Verarbeitung des Lebenslaufs verfügbar.
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {keywordCloud.map(({ keyword, state }) => (
-                        <span
-                          key={keyword}
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            state === "vorhanden"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : state === "fehlend"
-                                ? "bg-rose-100 text-rose-700"
-                                : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-5 space-y-2 text-xs text-gray-600">
-                      <div className="flex items-center gap-2 font-semibold text-gray-800">
-                        <BadgeCheck className="h-4 w-4 text-emerald-500" />
-                        So liest du die Markierungen
-                      </div>
-                      <p>Grün: bereits klar im Lebenslauf sichtbar.</p>
-                      <p>Rot: wichtiger Begriff fehlt oder ist nicht direkt erkennbar.</p>
-                      <p>Gelb: Thema ist vorhanden, könnte aber präziser formuliert werden.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

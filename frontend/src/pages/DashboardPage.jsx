@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock } from "lucide-react";
+import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock, AlertTriangle } from "lucide-react";
 
 import { jobApi } from "../services/api";
 
@@ -46,21 +46,36 @@ function StatSkeleton() {
 function MiniActivityChart({ values }) {
   const max = Math.max(...values, 1);
   const total = values.reduce((s, v) => s + v, 0);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
 
   return (
     <div className="space-y-3">
       <div className="flex items-end gap-2">
         {values.map((value, index) => (
-          <div key={DAY_LABELS[index]} className="flex flex-1 flex-col items-center gap-2">
+          <div
+            key={DAY_LABELS[index]}
+            className="relative flex flex-1 flex-col items-center gap-2"
+            onMouseEnter={() => setHoveredIdx(index)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            {/* Tooltip */}
+            {hoveredIdx === index && (
+              <div className="absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-semibold text-white shadow-lg">
+                {value} Job{value !== 1 ? "s" : ""}
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+              </div>
+            )}
             <div className="relative flex h-24 w-full items-end">
-              {/* Gray track so empty days are still visible */}
+              {/* Gray track */}
               <div className="absolute inset-x-0 bottom-0 h-full rounded-full bg-gray-100" />
-              {/* Filled bar — min 14% height only if value > 0, else just a 3px stub */}
+              {/* Filled bar */}
               <div
-                className="relative w-full rounded-full bg-gradient-to-t from-indigo-500 to-violet-400 transition-all duration-500"
-                style={{
-                  height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "3px",
-                }}
+                className={`relative w-full rounded-full transition-all duration-500 ${
+                  hoveredIdx === index
+                    ? "bg-gradient-to-t from-indigo-600 to-violet-500"
+                    : "bg-gradient-to-t from-indigo-500 to-violet-400"
+                }`}
+                style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "3px" }}
               />
             </div>
             <span className="text-[11px] font-medium text-gray-400">{DAY_LABELS[index]}</span>
@@ -193,19 +208,53 @@ export default function DashboardPage() {
               </div>
             </div>
             <MiniActivityChart values={activitySeries} />
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-800">{recentJobs.length}</span> zuletzt bearbeitete Stellen im Fokus
+
+            {/* Frist-Monitor */}
+            {nextDeadline ? (() => {
+              const daysLeft = Math.ceil(
+                (new Date(nextDeadline.deadline).setHours(0,0,0,0) - new Date().setHours(0,0,0,0))
+                / (1000 * 60 * 60 * 24)
+              );
+              const isUrgent = daysLeft <= 7;
+              return (
+                <div className={`mt-4 rounded-xl border p-4 ${
+                  isUrgent ? "border-red-200 bg-red-50" : "border-amber-100 bg-amber-50"
+                }`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className={`mt-0.5 h-4 w-4 flex-shrink-0 ${isUrgent ? "text-red-500" : "text-amber-500"}`} />
+                      <div>
+                        {isUrgent && (
+                          <span className="mb-1 inline-block rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-600">
+                            Dringend
+                          </span>
+                        )}
+                        <p className="text-xs font-semibold text-slate-700">
+                          {nextDeadline.role || "Stelle"} · {nextDeadline.company || "Unternehmen"}
+                        </p>
+                        <p className={`mt-0.5 text-xs ${isUrgent ? "text-red-600" : "text-amber-700"}`}>
+                          Bewerbungsfrist: {new Date(nextDeadline.deadline).toLocaleDateString("de-AT")}
+                          {" · "}
+                          <strong>noch {daysLeft > 0 ? `${daysLeft} Tag${daysLeft !== 1 ? "e" : ""}` : "heute"}</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      to={`/jobs?jobId=${nextDeadline.id}`}
+                      className={`flex-shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                        isUrgent ? "bg-red-600 text-white hover:bg-red-700" : "bg-amber-500 text-white hover:bg-amber-600"
+                      }`}
+                    >
+                      Details
+                    </Link>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                Keine offenen Fristen — entspannt!
               </div>
-              <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <p className="mt-2 text-sm font-bold text-gray-900">
-                  {nextDeadline ? new Date(nextDeadline.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
-                </p>
-                <p className="mt-1 truncate text-xs text-gray-500">
-                  {nextDeadline ? `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"}` : "Aktuell entspannt"}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -272,12 +321,6 @@ export default function DashboardPage() {
             className="btn-primary flex-1 text-center transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/30 sm:flex-none"
           >
             Lebenslauf hochladen
-          </Link>
-          <Link
-            to="/cover-letter"
-            className="btn-secondary flex-1 text-center transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 sm:flex-none"
-          >
-            Motivationsschreiben
           </Link>
           <Link
             to="/jobs"
