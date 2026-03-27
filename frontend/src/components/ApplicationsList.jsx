@@ -528,7 +528,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
       {filteredJobs.map((job) => {
         const meta = getDeadlineMeta(job.deadline);
         const matchFeedback = parseJson(job.match_feedback);
-        const isCollapsed = !!collapsedJobCards[job.id];
+        const isCollapsed = collapsedJobCards[job.id] !== false;
         const interviewQa = parseJson(job.interview_qa);
         const showActionHint = !hasResume || !job.company;
         const isDeleting = isJobFlagActive(job.id, "delete");
@@ -555,7 +555,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                   <div className="mt-3 flex flex-wrap gap-1.5">{meta && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}>{meta.label}</span>}{job.match_score != null && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}%</span>}<span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span></div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setCollapsedJobCards((old) => ({ ...old, [job.id]: !old[job.id] }))} className="p-1 text-gray-500 hover:text-gray-700">{isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</button>
+                  <button onClick={() => setCollapsedJobCards((old) => { const currentlyCollapsed = old[job.id] !== false; return { ...old, [job.id]: !currentlyCollapsed }; })} className="p-1 text-gray-500 hover:text-gray-700">{isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</button>
                   <span title={isDeleting ? "Stelle wird gerade gelöscht" : "Stelle löschen"}>
                     <button onClick={() => deleteMutation.mutate(job.id)} disabled={isDeleting} aria-disabled={isDeleting} className="p-1 text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
                   </span>
