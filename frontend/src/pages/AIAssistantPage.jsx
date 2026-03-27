@@ -1,61 +1,118 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Bot, Send, Sparkles, FileText, Briefcase, GraduationCap, Euro, Lightbulb, Trash2, Lock } from "lucide-react";
+import {
+  Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
+  Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, ChevronLeft, Clock,
+} from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { getApiErrorMessage } from "../utils/apiError";
 
-const loadStored = (key) => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : undefined;
-  } catch {
-    return undefined;
-  }
-};
+// ─── localStorage helpers ─────────────────────────────────────────────────────
 
-const saveStored = (key, value) => {
+const LS_HISTORY_KEY = "ai_chat_history";
+const MAX_HISTORY = 30;
+
+function loadHistory() {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
-};
+    const raw = localStorage.getItem(LS_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveHistory(history) {
+  try { localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+
+function loadStoredResumes() {
+  try {
+    const raw = localStorage.getItem("resumes");
+    return raw ? JSON.parse(raw) : undefined;
+  } catch { return undefined; }
+}
+
+// ─── Suggestion chips ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText, label: "Lebenslauf verbessern", prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
-  { icon: Briefcase, label: "Bewerbungstipps", prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
-  { icon: GraduationCap, label: "Praktikum finden", prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
-  { icon: Euro, label: "Gehaltsauskunft", prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
-  { icon: Lightbulb, label: "Vorstellungsgespräch", prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
-  { icon: Sparkles, label: "Motivationsschreiben", prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
+  { icon: FileText,      label: "Lebenslauf verbessern",    prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
+  { icon: Briefcase,     label: "Bewerbungstipps",          prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
+  { icon: GraduationCap, label: "Praktikum finden",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
+  { icon: Euro,          label: "Gehaltsauskunft",          prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
+  { icon: Lightbulb,     label: "Vorstellungsgespräch",     prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
+  { icon: Sparkles,      label: "Motivationsschreiben",     prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
 ];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function makeId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function makeTitle(messages) {
+  const first = messages.find((m) => m.role === "user");
+  if (!first) return "Neues Gespräch";
+  const text = first.content.slice(0, 40);
+  return text.length < first.content.length ? text + "…" : text;
+}
+
+function relativeTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60_000)  return "Gerade eben";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
+  return new Date(ts).toLocaleDateString("de-AT", { day: "numeric", month: "short" });
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function AIAssistantPage() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [conversations, setConversations] = useState(() => loadHistory());
+  const [activeId,      setActiveId]      = useState(null);   // null = new chat
+  const [messages,      setMessages]      = useState([]);
+  const [input,         setInput]         = useState("");
   const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);  // mobile sidebar
+
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const inputRef       = useRef(null);
   const { guardedRun } = useUsageGuard("ai_chat");
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
     queryFn: () => resumeApi.list().then((r) => {
-      saveStored("resumes", r.data);
+      try { localStorage.setItem("resumes", JSON.stringify(r.data)); } catch {}
       return r.data;
     }),
-    initialData: () => loadStored("resumes"),
+    initialData: () => loadStoredResumes(),
     staleTime: 1000 * 60 * 2,
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Auto-scroll to latest message
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ── Persist conversation to history whenever messages change ──────────────
+  useEffect(() => {
+    if (messages.length === 0) return;
+    setConversations((prev) => {
+      const title = makeTitle(messages);
+      if (activeId) {
+        const updated = prev.map((c) =>
+          c.id === activeId ? { ...c, messages, title, updatedAt: Date.now() } : c
+        );
+        saveHistory(updated);
+        return updated;
+      }
+      // New conversation — create entry
+      const newConv = { id: makeId(), title, messages, createdAt: Date.now(), updatedAt: Date.now() };
+      setActiveId(newConv.id);
+      const updated = [newConv, ...prev].slice(0, MAX_HISTORY);
+      saveHistory(updated);
+      return updated;
+    });
+  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Chat mutation ─────────────────────────────────────────────────────────
   const chatMutation = useMutation({
     mutationFn: (data) => aiAssistantApi.chat(data),
     onSuccess: (res) => {
@@ -70,192 +127,299 @@ export default function AIAssistantPage() {
     },
   });
 
-  const handleSend = (text) => {
-    const message = text || input.trim();
+  const handleSend = useCallback((text) => {
+    const message = (text ?? input).trim();
     if (!message) return;
 
     guardedRun(() => {
-      const userMsg = { role: "user", content: message };
-      setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [...prev, { role: "user", content: message }]);
       setInput("");
-
-      const data = {
+      chatMutation.mutate({
         message,
         history: messages.slice(-10),
-      };
-
-      if (selectedResumeId) {
-        data.resume_id = selectedResumeId;
-      }
-
-      chatMutation.mutate(data);
+        ...(selectedResumeId ? { resume_id: selectedResumeId } : {}),
+      });
     });
-  };
+  }, [input, messages, selectedResumeId, guardedRun, chatMutation]);
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  // Start a brand-new conversation
+  const handleNewChat = () => {
+    setActiveId(null);
+    setMessages([]);
+    setInput("");
+    setSidebarOpen(false);
+    inputRef.current?.focus();
+  };
+
+  // Restore a past conversation
+  const handleSelectConversation = (conv) => {
+    setActiveId(conv.id);
+    setMessages(conv.messages);
+    setSidebarOpen(false);
+  };
+
+  // Delete a conversation from history
+  const handleDeleteConversation = (e, id) => {
+    e.stopPropagation();
+    setConversations((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      saveHistory(updated);
+      return updated;
+    });
+    if (activeId === id) {
+      setActiveId(null);
+      setMessages([]);
     }
   };
 
-  const handleClear = () => {
-    setMessages([]);
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-4xl mx-auto flex flex-col animate-slide-up h-[calc(100svh-160px)] md:h-[calc(100vh-120px)]">
-      {/* Header */}
-      <div className="mb-3 flex-shrink-0">
-        <div className="flex items-center justify-between gap-2">
+    <div className="max-w-6xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
+
+      {/* ── Page header ───────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile: sidebar toggle */}
+          <button
+            onClick={() => setSidebarOpen((v) => !v)}
+            className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+            title="Gesprächsverlauf"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
               KI-Bewerbungsassistent
             </h1>
-            <p className="text-gray-600 mt-0.5 text-sm sm:text-base hidden sm:block">
-              Dein intelligenter Helfer für Bewerbungen in Österreich
-            </p>
           </div>
-          {messages.length > 0 && (
-            <button
-              onClick={handleClear}
-              className="p-2 sm:px-3 sm:py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-1.5 flex-shrink-0"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Chat leeren</span>
-            </button>
-          )}
         </div>
-
-        {/* Resume context selector */}
-        <div className="mt-2 flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-gray-500">Kontext:</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Resume context */}
           <select
             value={selectedResumeId || ""}
             onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-            className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="hidden sm:block px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
           >
-            <option value="">Ohne Lebenslauf</option>
+            <option value="">Kein Lebenslauf</option>
             {uploadedResumes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.filename || r.name || `Lebenslauf ${r.id}`}
-              </option>
+              <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
             ))}
           </select>
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Neues Gespräch</span>
+          </button>
         </div>
       </div>
 
-      {/* Chat area */}
-      <div className="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 mb-3 min-h-0">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-4 sm:p-8">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-3 sm:mb-4">
-              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-            </div>
-            <h3 className="font-semibold text-gray-800 mb-1 text-sm sm:text-base">Hallo! Wie kann ich dir helfen?</h3>
-            <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 text-center max-w-md">
-              Ich bin dein KI-Bewerbungsassistent für Österreich. Stelle mir Fragen zu Bewerbungen, Lebensläufen, Motivationsschreiben oder Vorstellungsgesprächen.
-            </p>
+      {/* ── Main layout: sidebar + chat ───────────────────────────────────── */}
+      <div className="flex-1 flex gap-3 min-h-0 relative">
 
-            {/* Suggestion chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 w-full max-w-2xl">
-              {SUGGESTIONS.map((s) => {
-                const locked = s.requiresResume && uploadedResumes.length === 0;
-                return (
-                  <button
-                    key={s.label}
-                    onClick={() => {
-                      if (locked) {
-                        toast("Lade zuerst einen Lebenslauf hoch um diese Funktion zu nutzen.", { icon: "📄" });
-                        return;
-                      }
-                      handleSend(s.prompt);
-                    }}
-                    className={`flex items-center gap-2 px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-lg border transition-all text-left min-w-0 ${
-                      locked
-                        ? "border-gray-100 bg-gray-50 cursor-not-allowed"
-                        : "border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300"
-                    }`}
-                  >
-                    {locked
-                      ? <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 flex-shrink-0" />
-                      : <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
-                    }
-                    <span className={`text-xs sm:text-sm font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
-                      {s.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* ── History Sidebar ─────────────────────────────────────────────── */}
+        {/*
+          Mobile: fixed overlay from left (translate-x-0 when open, -translate-x-full when closed)
+          Desktop: always visible flex column at fixed width
+        */}
+        <aside className={`
+          absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
+          md:relative md:translate-x-0 md:shadow-sm md:z-auto
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
+        `}>
+          <div className="flex-shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
+            <span className="text-xs font-semibold text-slate-600">Verlauf</span>
+            <button
+              onClick={handleNewChat}
+              className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+            >
+              <Plus className="w-3 h-3" /> Neu
+            </button>
           </div>
-        ) : (
-          <div className="p-4 space-y-4">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-md"
-                      : "bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm"
-                  }`}
+
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+            {conversations.length === 0 ? (
+              <p className="px-2 py-6 text-center text-[11px] text-slate-400">Noch kein Verlauf</p>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => handleSelectConversation(conv)}
+                  className={`group w-full text-left px-2.5 py-2 rounded-lg transition-colors flex items-start gap-2
+                    ${conv.id === activeId
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
-                  {msg.role === "assistant" && (
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Bot className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="text-xs font-semibold text-blue-600">KI-Assistent</span>
-                    </div>
-                  )}
-                  <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {msg.content}
-                  </div>
+                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 opacity-50" />
+                  <span className="flex-1 min-w-0">
+                    <span className="block truncate text-xs font-medium leading-tight">{conv.title}</span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      {relativeTime(conv.updatedAt)}
+                      <span className="opacity-50">· {conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                    </span>
+                  </span>
+                  <button
+                    onClick={(e) => handleDeleteConversation(e, conv.id)}
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-red-500 transition-opacity"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </button>
+              ))
+            )}
+          </div>
+        </aside>
+
+        {/* Backdrop for mobile sidebar */}
+        {sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-20 bg-black/20"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* ── Chat Panel ──────────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
+            {messages.length === 0 ? (
+              /* ── Empty state / suggestions ── */
+              <div className="flex flex-col items-center justify-center h-full gap-4 py-8">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Bot className="w-7 h-7 text-white" />
+                </div>
+                <div className="text-center">
+                  <h3 className="font-semibold text-gray-800 text-base mb-1">Wie kann ich helfen?</h3>
+                  <p className="text-xs text-gray-500 max-w-sm">
+                    Bewerbungen, Lebensläufe, Motivationsschreiben, Vorstellungsgespräche — frag mich alles.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full max-w-xl mt-2">
+                  {SUGGESTIONS.map((s) => {
+                    const locked = s.requiresResume && uploadedResumes.length === 0;
+                    return (
+                      <button
+                        key={s.label}
+                        onClick={() => {
+                          if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
+                          handleSend(s.prompt);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all
+                          ${locked
+                            ? "border-gray-100 bg-gray-50 cursor-not-allowed"
+                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
+                          }`}
+                      >
+                        {locked
+                          ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                          : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        }
+                        <span className={`text-xs font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
+                          {s.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
+            ) : (
+              /* ── Message bubbles ── */
+              <div className="space-y-4">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex items-end gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    {/* Bot avatar */}
+                    {msg.role === "assistant" && (
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-0.5">
+                        <Bot className="w-4 h-4 text-white" />
+                      </div>
+                    )}
 
-            {chatMutation.isPending && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <div className={`max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                      {/* Bubble */}
+                      <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
+                        ${msg.role === "user"
+                          ? "bg-blue-600 text-white rounded-2xl rounded-br-sm shadow-sm"
+                          : "bg-slate-100 text-gray-800 rounded-2xl rounded-bl-sm"
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-500">Denkt nach...</span>
                   </div>
-                </div>
+                ))}
+
+                {/* Typing indicator */}
+                {chatMutation.isPending && (
+                  <div className="flex items-end gap-2 justify-start">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-slate-100 rounded-2xl rounded-bl-sm px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        {[0, 150, 300].map((delay) => (
+                          <div
+                            key={delay}
+                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
+                            style={{ animationDelay: `${delay}ms` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* ── Input bar ─────────────────────────────────────────────────── */}
+          <div className="flex-shrink-0 border-t border-slate-200 p-3 bg-white">
+            {/* Mobile resume selector */}
+            {uploadedResumes.length > 0 && (
+              <div className="sm:hidden mb-2">
+                <select
+                  value={selectedResumeId || ""}
+                  onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none bg-slate-50"
+                >
+                  <option value="">Kein Lebenslauf</option>
+                  {uploadedResumes.map((r) => (
+                    <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
+                  ))}
+                </select>
               </div>
             )}
 
-            <div ref={messagesEndRef} />
+            <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Stelle eine Frage… (Enter zum Senden)"
+                rows={1}
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-sm leading-relaxed max-h-32 text-gray-800 placeholder:text-slate-400"
+                style={{ minHeight: "32px" }}
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || chatMutation.isPending}
+                className="flex-shrink-0 p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Input area */}
-      <div className="flex-shrink-0 bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3 flex items-end gap-2">
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Stelle eine Frage..."
-          rows={1}
-          className="flex-1 resize-none border-0 focus:outline-none text-sm leading-relaxed max-h-32"
-          style={{ minHeight: "36px" }}
-        />
-        <button
-          onClick={() => handleSend()}
-          disabled={!input.trim() || chatMutation.isPending}
-          className="p-2 sm:px-4 sm:py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 flex-shrink-0"
-        >
-          <Send className="w-4 h-4" />
-          <span className="hidden sm:inline text-sm font-medium">Senden</span>
-        </button>
+        </div>
       </div>
     </div>
   );

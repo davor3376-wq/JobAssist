@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Award, Bookmark, Brain, ChevronDown, ChevronLeft,
-  DollarSign, ExternalLink, FileText, MapPin, MessageSquare,
+  DollarSign, Download, ExternalLink, FileText, MapPin, MessageSquare,
   Search, SearchCheck, Send, Trash2, X, XCircle, Zap,
 } from "lucide-react";
 import { jobApi, motivationsschreibenApi, researchApi, resumeApi } from "../services/api";
@@ -22,6 +22,99 @@ import {
   getMatchColorClass, getMatchSummary, parseJson, updateJobList,
 } from "../utils/applicationsState";
 import ResearchModal from "./ResearchModal";
+
+// ─── Download helpers ─────────────────────────────────────────────────────────
+
+function _triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function _qaToPlainText(job, qaList) {
+  const lines = [
+    `Gesprächsvorbereitung — ${job.role || "Stelle"} bei ${job.company || "Unternehmen"}`,
+    "=".repeat(60),
+    "",
+  ];
+  qaList.forEach((item, i) => {
+    lines.push(`Frage ${i + 1}: ${item.question || item}`);
+    if (item.answer) lines.push(`Antwort: ${item.answer}`);
+    if (item.tip)    lines.push(`Tipp: ${item.tip}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
+export function downloadQaTxt(job, qaList) {
+  const text = _qaToPlainText(job, qaList);
+  _triggerDownload(
+    new Blob([text], { type: "text/plain;charset=utf-8" }),
+    `gesprächsvorbereitung-${(job.company || "job").replace(/\s+/g, "-").toLowerCase()}.txt`
+  );
+}
+
+export function downloadQaPdf(job, qaList) {
+  const rows = qaList.map((item, i) => `
+    <div class="qa">
+      <p class="q">Frage ${i + 1}: ${item.question || item}</p>
+      ${item.answer ? `<p class="a"><strong>Antwort:</strong> ${item.answer}</p>` : ""}
+      ${item.tip    ? `<p class="tip"><strong>Tipp:</strong> ${item.tip}</p>` : ""}
+    </div>`).join("");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Gesprächsvorbereitung</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 740px; margin: 40px auto; color: #111; }
+      h1 { font-size: 20px; margin-bottom: 4px; }
+      h2 { font-size: 14px; font-weight: normal; color: #555; margin-bottom: 32px; }
+      .qa { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+      .q  { font-weight: 700; margin-bottom: 8px; }
+      .a  { color: #374151; margin-bottom: 6px; }
+      .tip { color: #92400e; background: #fef3c7; padding: 8px 12px; border-radius: 6px; }
+      @media print { body { margin: 20px; } }
+    </style></head><body>
+    <h1>Gesprächsvorbereitung</h1>
+    <h2>${job.role || "Stelle"} bei ${job.company || "Unternehmen"}</h2>
+    ${rows}
+  </body></html>`;
+
+  const win = window.open("", "_blank", "width=800,height=900");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
+}
+
+export function downloadQaDocx(job, qaList) {
+  const rows = qaList.map((item, i) => `
+    <p style="font-weight:bold;margin-bottom:4px;">Frage ${i + 1}: ${item.question || item}</p>
+    ${item.answer ? `<p style="margin-bottom:4px;"><b>Antwort:</b> ${item.answer}</p>` : ""}
+    ${item.tip    ? `<p style="color:#92400e;margin-bottom:4px;"><b>Tipp:</b> ${item.tip}</p>` : ""}
+    <p>&nbsp;</p>`).join("");
+
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office'
+    xmlns:w='urn:schemas-microsoft-com:office:word'
+    xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset="utf-8">
+    <style>body{font-family:Arial,sans-serif;font-size:11pt;}</style></head>
+    <body>
+    <h1 style="font-size:16pt;">Gesprächsvorbereitung</h1>
+    <p style="color:#555;">${job.role || "Stelle"} bei ${job.company || "Unternehmen"}</p>
+    <hr>${rows}
+    </body></html>`;
+
+  _triggerDownload(
+    new Blob(["\ufeff", html], { type: "application/msword" }),
+    `gesprächsvorbereitung-${(job.company || "job").replace(/\s+/g, "-").toLowerCase()}.doc`
+  );
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -93,7 +186,14 @@ function CircularGauge({ score, size = 48 }) {
   const circ = 2 * Math.PI * r;
   const pct  = score != null ? Math.max(0, Math.min(100, score)) : null;
   const dash = pct != null ? circ - (pct / 100) * circ : circ;
-  const color = pct == null ? "#94a3b8" : pct >= 70 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#ef4444";
+  const color =
+    pct == null ? "#94a3b8"   // slate-400 — no score yet
+    : pct >= 70 ? "#16a34a"  // green-600  (matches getMatchColorClass ≥70)
+    : pct >= 60 ? "#15803d"  // green-700  (matches ≥60)
+    : pct >= 50 ? "#ca8a04"  // yellow-600 (matches ≥50)
+    : pct >= 40 ? "#d97706"  // amber-600  (matches ≥40)
+    : pct >= 30 ? "#ea580c"  // orange-600 (matches ≥30)
+    : "#dc2626";             // red-600    (<30)
 
   return (
     // relative (position context for the score label overlay)
@@ -583,14 +683,40 @@ function DetailPanel({
         {/* ── Expanded: Interview Q&A ──────────────────────────────────────── */}
         {job.interview_qa && Array.isArray(interviewQa) && (
           <div className="rounded-xl border border-purple-200 bg-white shadow-sm">
-            <button
-              onClick={() => setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`))}
-              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-purple-700"
-            >
-              <Brain className="w-4 h-4 flex-shrink-0" />
-              Gesprächsvorbereitung
-              <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
-            </button>
+            <div className="flex items-center px-4 py-3 gap-2">
+              <button
+                onClick={() => setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`))}
+                className="flex flex-1 items-center gap-2 text-sm font-semibold text-purple-700 text-left"
+              >
+                <Brain className="w-4 h-4 flex-shrink-0" />
+                Gesprächsvorbereitung
+                <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
+              </button>
+              {/* Download buttons — only visible when there's Q&A data */}
+              <div className="flex items-center gap-1 flex-shrink-0 border-l border-purple-100 pl-2">
+                <button
+                  onClick={() => downloadQaTxt(job, interviewQa)}
+                  title="Als TXT herunterladen"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                >
+                  <Download className="w-3 h-3" /> TXT
+                </button>
+                <button
+                  onClick={() => downloadQaPdf(job, interviewQa)}
+                  title="Als PDF drucken / speichern"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                >
+                  <Download className="w-3 h-3" /> PDF
+                </button>
+                <button
+                  onClick={() => downloadQaDocx(job, interviewQa)}
+                  title="Als Word-Dokument herunterladen"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                >
+                  <Download className="w-3 h-3" /> DOCX
+                </button>
+              </div>
+            </div>
             {expandedPanel === `interview-${job.id}` && (
               // space-y-2 (8px between Q&A cards), border-t (separator from header)
               <div className="border-t border-purple-200 px-4 py-3 space-y-2">

@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, Send, SearchCheck } from "lucide-react";
 import { jobApi, aiAssistantApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
-import PipelineStats from "../components/PipelineStats";
 import ApplicationsList from "../components/ApplicationsList";
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
@@ -473,8 +472,7 @@ export default function JobsPage() {
 
       {/* My Applications Tab */}
       {mainTab === "applications" && (
-        <div className="space-y-6 animate-slide-up">
-          <PipelineStats jobs={jobs} />
+        <div className="animate-slide-up">
           <ApplicationsList jobs={jobs} focusedJobId={focusedJobId} />
         </div>
       )}
