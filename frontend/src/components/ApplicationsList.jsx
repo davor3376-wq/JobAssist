@@ -548,6 +548,47 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
             {!isCollapsed && <div className="space-y-5 bg-white p-4">
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
+              {matchFeedback && (
+                <aside className={`hidden lg:float-right lg:mb-4 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-80"}`}>
+                  <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
+                    <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
+                      {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
+                      <button onClick={() => setCollapsedMatchRail((old) => ({ ...old, [job.id]: !old[job.id] }))} className="rounded-lg border border-slate-200 p-2 text-gray-500 hover:bg-slate-50 hover:text-gray-700" title={isMatchRailCollapsed ? "Seitenleiste anzeigen" : "Seitenleiste minimieren"}>
+                        {isMatchRailCollapsed ? <ChevronDown className="h-4 w-4 -rotate-90" /> : <ChevronDown className="h-4 w-4 rotate-90" />}
+                      </button>
+                    </div>
+                    {!isMatchRailCollapsed && (
+                      <div className="mt-3 space-y-3">
+                        <MatchDetailCard
+                          title="Stärken"
+                          items={matchFeedback.strengths}
+                          tone="success"
+                          collapsed={isMatchSectionCollapsed("strengths")}
+                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
+                          className="w-full"
+                        />
+                        <MatchDetailCard
+                          title="Verbesserungsvorschläge"
+                          items={matchFeedback.gaps}
+                          tone="danger"
+                          collapsed={isMatchSectionCollapsed("gaps")}
+                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
+                          className="w-full"
+                        />
+                        <MatchDetailCard
+                          title="Empfehlungen"
+                          items={matchFeedback.recommendations}
+                          tone="info"
+                          collapsed={isMatchSectionCollapsed("recommendations")}
+                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </aside>
+              )}
+
               {(job.match_score != null || matchFeedback) && (
                 <div className="border-t border-slate-200 pt-4">
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
@@ -592,46 +633,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 </div>
               </div>
 
-              {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-4 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-80"}`}>
-                  <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
-                    <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
-                      {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
-                      <button onClick={() => setCollapsedMatchRail((old) => ({ ...old, [job.id]: !old[job.id] }))} className="rounded-lg border border-slate-200 p-2 text-gray-500 hover:bg-slate-50 hover:text-gray-700" title={isMatchRailCollapsed ? "Seitenleiste anzeigen" : "Seitenleiste minimieren"}>
-                        {isMatchRailCollapsed ? <ChevronDown className="h-4 w-4 -rotate-90" /> : <ChevronDown className="h-4 w-4 rotate-90" />}
-                      </button>
-                    </div>
-                    {!isMatchRailCollapsed && (
-                      <div className="mt-3 space-y-3">
-                        <MatchDetailCard
-                          title="Stärken"
-                          items={matchFeedback.strengths}
-                          tone="success"
-                          collapsed={isMatchSectionCollapsed("strengths")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
-                          className="w-full"
-                        />
-                        <MatchDetailCard
-                          title="Verbesserungsvorschläge"
-                          items={matchFeedback.gaps}
-                          tone="danger"
-                          collapsed={isMatchSectionCollapsed("gaps")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
-                          className="w-full"
-                        />
-                        <MatchDetailCard
-                          title="Empfehlungen"
-                          items={matchFeedback.recommendations}
-                          tone="info"
-                          collapsed={isMatchSectionCollapsed("recommendations")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                          className="w-full"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </aside>
-              )}
               {matchFeedback && <div className="hidden clear-both lg:block" />}
               {job.cover_letter && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `cover-${job.id}` ? null : `cover-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-green-700"><FileText className="h-4 w-4" /> Erstelltes Motivationsschreiben</button>{expandedPanel === `cover-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-green-300 bg-white p-3 text-sm text-gray-700">{job.cover_letter}</div>}</div>}
               {job.interview_qa && (
