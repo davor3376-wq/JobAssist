@@ -18,7 +18,7 @@ export default function PipelineStats({ jobs = [] }) {
   ];
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-6 sm:mb-8">
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
       {statuses.map(({ key, label, icon: Icon, iconColor, color }) => (
         <div key={key} className={`p-3 sm:p-4 rounded-xl border ${color} animate-slide-up`}>
           <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">

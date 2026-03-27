@@ -361,6 +361,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   const isProcessing = (jobId, feature) => processing.jobId === jobId && processing.feature === feature;
 
   const openInterviewWorkspace = (job) => {
+    document.body.classList.add("page-blur-transition");
+    window.setTimeout(() => document.body.classList.remove("page-blur-transition"), 420);
     const params = new URLSearchParams({ tab: "interview" });
     if (selectedResumeId) params.set("resumeId", String(selectedResumeId));
     navigate(`/jobs/${job.id}?${params.toString()}`);

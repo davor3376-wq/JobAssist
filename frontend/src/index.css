@@ -88,3 +88,19 @@
   transform: none;
 }
 
+body.page-blur-transition #root {
+  animation: pageBlurOut 0.35s ease-out both;
+}
+
+@keyframes pageBlurOut {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.86;
+    filter: blur(5px);
+    transform: translateY(6px);
+  }
+}
