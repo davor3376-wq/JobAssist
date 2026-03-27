@@ -49,13 +49,72 @@ function syncStoredAlerts(alerts) {
   } catch {}
 }
 
+function getHeatmapMetrics(alert) {
+  const keywordCount = (alert.keywords || "").split(/[,\s/]+/).filter(Boolean).length;
+  return [
+    { label: "Skills", value: Math.min(100, 45 + keywordCount * 9) },
+    { label: "Erfahrung", value: alert.job_type === "Internship" ? 48 : alert.job_type ? 72 : 58 },
+    { label: "Ort", value: alert.location ? 76 : 42 },
+    { label: "Timing", value: alert.frequency === "daily" ? 88 : 63 },
+  ];
+}
+
+function RadarChart({ metrics }) {
+  const size = 150;
+  const center = size / 2;
+  const radius = 48;
+  const levels = [0.25, 0.5, 0.75, 1];
+  const points = metrics.map((metric, index) => {
+    const angle = (-Math.PI / 2) + ((Math.PI * 2) / metrics.length) * index;
+    const pointRadius = radius * (metric.value / 100);
+    const x = center + Math.cos(angle) * pointRadius;
+    const y = center + Math.sin(angle) * pointRadius;
+    const labelX = center + Math.cos(angle) * (radius + 22);
+    const labelY = center + Math.sin(angle) * (radius + 22);
+    return { ...metric, angle, x, y, labelX, labelY };
+  });
+
+  const polygonPoints = points.map((point) => `${point.x},${point.y}`).join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="h-40 w-full">
+      {levels.map((level) => {
+        const path = metrics.map((_, index) => {
+          const angle = (-Math.PI / 2) + ((Math.PI * 2) / metrics.length) * index;
+          const x = center + Math.cos(angle) * radius * level;
+          const y = center + Math.sin(angle) * radius * level;
+          return `${x},${y}`;
+        }).join(" ");
+        return <polygon key={level} points={path} fill="none" stroke="#dbeafe" strokeWidth="1" />;
+      })}
+      {points.map((point) => {
+        const axisX = center + Math.cos(point.angle) * radius;
+        const axisY = center + Math.sin(point.angle) * radius;
+        return (
+          <g key={point.label}>
+            <line x1={center} y1={center} x2={axisX} y2={axisY} stroke="#cbd5e1" strokeWidth="1" />
+            <text x={point.labelX} y={point.labelY} textAnchor="middle" className="fill-slate-500 text-[10px] font-semibold">
+              {point.label}
+            </text>
+          </g>
+        );
+      })}
+      <polygon points={polygonPoints} fill="rgba(59,130,246,0.18)" stroke="#2563eb" strokeWidth="2" />
+      {points.map((point) => (
+        <circle key={point.label} cx={point.x} cy={point.y} r="3.5" fill="#2563eb" />
+      ))}
+    </svg>
+  );
+}
+
 function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
   const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
   const { canRewrite, remainingMin } = getRewriteState(alert);
+  const heatmapMetrics = getHeatmapMetrics(alert);
 
   return (
     <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-gray-900 text-base">{alert.keywords}</span>
@@ -102,40 +161,50 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            onClick={() => onRunNow(alert.id)}
-            disabled={isRunning || atLimit}
-            title={atLimit ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min` : "Jetzt ausf\u00fchren"}
-            className={`p-2 rounded-lg transition-colors ${atLimit ? "text-gray-300 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
-          >
-            {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-          </button>
+        <div className="flex w-full flex-col gap-3 lg:max-w-[280px]">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Match-Heatmap</p>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-blue-700">Top-Match</span>
+            </div>
+            <RadarChart metrics={heatmapMetrics} />
+          </div>
 
-          <button
-            onClick={() => onToggle(alert.id, !alert.is_active)}
-            title={alert.is_active ? "Pausieren" : "Aktivieren"}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-          >
-            {alert.is_active ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={() => onRunNow(alert.id)}
+              disabled={isRunning || atLimit}
+              title={atLimit ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min` : "Jetzt ausf\u00fchren"}
+              className={`p-2 rounded-lg transition-colors ${atLimit ? "text-gray-300 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
+            >
+              {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            </button>
 
-          <button
-            onClick={() => onEdit(alert)}
-            disabled={!canRewrite}
-            title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verf\u00fcgbar`}
-            className={`p-2 rounded-lg transition-colors ${canRewrite ? "text-gray-500 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => onToggle(alert.id, !alert.is_active)}
+              title={alert.is_active ? "Pausieren" : "Aktivieren"}
+              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              {alert.is_active ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+            </button>
 
-          <button
-            onClick={() => onDelete(alert.id)}
-            title="L\u00f6schen"
-            className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => onEdit(alert)}
+              disabled={!canRewrite}
+              title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verf\u00fcgbar`}
+              className={`p-2 rounded-lg transition-colors ${canRewrite ? "text-gray-500 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => onDelete(alert.id)}
+              title="L\u00f6schen"
+              className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

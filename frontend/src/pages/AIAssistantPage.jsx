@@ -71,6 +71,7 @@ export default function AIAssistantPage() {
   const [input,         setInput]         = useState("");
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [sidebarOpen,   setSidebarOpen]   = useState(false);  // mobile sidebar
+  const [simulationMode, setSimulationMode] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -176,6 +177,17 @@ export default function AIAssistantPage() {
     }
   };
 
+  const startSimulation = useCallback(() => {
+    setSimulationMode(true);
+    handleSend("Starte bitte einen Interview-Simulator für mich. Stelle mir nacheinander präzise Fragen und warte jeweils auf meine Antwort.");
+  }, [handleSend]);
+
+  const simulatorActions = [
+    { label: "Nächste Frage", prompt: "Stelle mir bitte die nächste Interviewfrage für diese Simulation." },
+    { label: "Feedback geben", prompt: "Gib mir bitte direktes Feedback auf meine letzte Antwort und sage mir, was ich verbessern soll." },
+    { label: "Tipp anzeigen", prompt: "Gib mir bitte einen kurzen Tipp, wie ich die aktuelle Interviewfrage stärker beantworten kann." },
+  ];
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-6xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
@@ -209,6 +221,13 @@ export default function AIAssistantPage() {
               <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
             ))}
           </select>
+          <button
+            onClick={startSimulation}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 text-xs font-semibold hover:bg-violet-200 transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Simulation starten
+          </button>
           <button
             onClick={handleNewChat}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
@@ -287,6 +306,35 @@ export default function AIAssistantPage() {
 
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          {simulationMode && (
+            <div className="border-b border-violet-100 bg-violet-50/70 px-4 py-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">Interview-Simulator</p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    Die KI stellt dir gezielte Fragen und reagiert auf deine Antworten wie in einem Probeinterview.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {simulatorActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => handleSend(action.prompt)}
+                      className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setSimulationMode(false)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    Simulation beenden
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Messages area */}
           <div className="flex-1 overflow-y-auto p-4 min-h-0">
@@ -302,6 +350,13 @@ export default function AIAssistantPage() {
                     Bewerbungen, Lebensläufe, Motivationsschreiben, Vorstellungsgespräche — frag mich alles.
                   </p>
                 </div>
+                <button
+                  onClick={startSimulation}
+                  className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Simulation starten
+                </button>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full max-w-xl mt-2">
                   {SUGGESTIONS.map((s) => {
                     const locked = s.requiresResume && uploadedResumes.length === 0;

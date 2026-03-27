@@ -295,6 +295,57 @@ function MatchSection({ title, items = [], barColor, bgColor }) {
   );
 }
 
+function ApplicationPhaseStepper({ status }) {
+  const currentStep = status === "bookmarked"
+    ? 0
+    : status === "applied"
+      ? 1
+      : status === "interviewing"
+        ? 2
+        : 3;
+
+  const finalLabel = status === "rejected" ? "Absage" : "Zusage";
+  const steps = ["Entwurf", "Beworben", "Interview", finalLabel];
+
+  return (
+    <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-500">Bewerbungs-Phase</p>
+          <p className="mt-1 text-sm font-semibold text-gray-900">Fortschritt bis zur Entscheidung</p>
+        </div>
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_COLORS[status]}`}>
+          {status === "bookmarked" ? "Entwurf" : STATUS_LABELS[status]}
+        </span>
+      </div>
+
+      <div className="flex items-start gap-2 overflow-x-auto pb-1">
+        {steps.map((step, index) => {
+          const active = index <= currentStep;
+          const isFinal = index === steps.length - 1;
+          return (
+            <div key={step} className="flex min-w-[88px] flex-1 items-center gap-2">
+              <div className="flex flex-col items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                  active ? "bg-indigo-600 text-white" : "border border-slate-200 bg-white text-slate-400"
+                }`}>
+                  {index + 1}
+                </div>
+                <span className={`text-[11px] font-semibold ${active ? "text-gray-900" : "text-gray-400"}`}>{step}</span>
+              </div>
+              {!isFinal && (
+                <div className="mt-4 h-[2px] flex-1 rounded-full bg-slate-200">
+                  <div className={`h-full rounded-full ${index < currentStep ? "bg-indigo-500" : "bg-slate-200"}`} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── JobListCard ──────────────────────────────────────────────────────────────
 
 /**
@@ -498,6 +549,7 @@ function DetailPanel({
       {/* overflow-y-auto (scroll just this section, not the whole page) */}
       {/* space-y-5 (20px between each section block) */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 bg-slate-50">
+        <ApplicationPhaseStepper status={job.status} />
 
         {/* Resume selector */}
         {resumes.length > 0 && (

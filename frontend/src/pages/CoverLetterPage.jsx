@@ -23,9 +23,9 @@ const saveStored = (key, value) => {
 };
 
 const TONES = [
-  { value: "formell", label: "Formell", desc: "Klassisch und professionell" },
-  { value: "modern", label: "Modern", desc: "Dynamisch und zeitgemäß" },
-  { value: "kreativ", label: "Kreativ", desc: "Individuell und persönlich" },
+  { value: "konservativ", apiTone: "formell", label: "Konservativ", desc: "Klar, seriös und klassisch" },
+  { value: "kreativ", apiTone: "kreativ", label: "Kreativ", desc: "Persönlich, lebendig und markant" },
+  { value: "aggressiv", apiTone: "modern", label: "Aggressiv", desc: "Direkt, offensiv und selbstbewusst" },
 ];
 
 export default function CoverLetterPage() {
@@ -35,7 +35,7 @@ export default function CoverLetterPage() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [tone, setTone] = useState("formell");
+  const [tone, setTone] = useState("konservativ");
   const [applicantName, setApplicantName] = useState("");
   const [applicantAddress, setApplicantAddress] = useState("");
   const [generatedText, setGeneratedText] = useState("");
@@ -117,7 +117,7 @@ export default function CoverLetterPage() {
         company,
         role,
         job_description: jobDescription,
-        tone,
+        tone: TONES.find((entry) => entry.value === tone)?.apiTone || "formell",
         applicant_name: applicantName,
         applicant_address: applicantAddress,
       };
@@ -319,25 +319,30 @@ export default function CoverLetterPage() {
           <div className="card bg-white border border-gray-200 shadow-sm p-5 rounded-lg">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-amber-500" />
-              <h2 className="font-semibold text-gray-900">Stil</h2>
+              <h2 className="font-semibold text-gray-900">Tonalität</h2>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {TONES.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setTone(t.value)}
-                  className={`px-3 py-3 rounded-lg text-sm font-medium transition-all border ${
-                    tone === t.value
-                      ? "bg-blue-50 text-blue-700 border-blue-300"
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="font-semibold">{t.label}</div>
-                  <div className="text-xs mt-0.5 text-gray-500">{t.desc}</div>
-                </button>
-              ))}
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-1">
+              <div className="grid grid-cols-3 gap-1">
+                {TONES.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setTone(t.value)}
+                    className={`px-3 py-3 rounded-xl text-sm font-medium transition-all border ${
+                      tone === t.value
+                        ? "bg-white text-blue-700 border-blue-300 shadow-sm"
+                        : "bg-transparent text-gray-600 border-transparent hover:bg-white/70"
+                    }`}
+                  >
+                    <div className="font-semibold">{t.label}</div>
+                    <div className="text-xs mt-0.5 text-gray-500">{t.desc}</div>
+                  </button>
+                ))}
+              </div>
             </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Der Regler verändert die Formulierung, nicht die Fakten aus Stelle und Lebenslauf.
+            </p>
           </div>
 
           {/* Generate Button */}
