@@ -129,7 +129,7 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle }) {
   const toneStyle = styles[tone] || styles.info;
 
   return (
-    <div className={`rounded-xl border p-4 ${toneStyle.card}`}>
+    <div className={`h-fit self-start rounded-xl border p-4 ${toneStyle.card}`}>
       <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
         <h4 className={`text-base font-semibold ${toneStyle.title}`}>{title}</h4>
         <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
