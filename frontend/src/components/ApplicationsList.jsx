@@ -651,6 +651,34 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                     </div>
                   </div>
                   {job.match_score != null && job.match_feedback && <p className="max-w-4xl text-sm leading-relaxed text-gray-700">{getMatchSummary(job.match_feedback)}</p>}
+                  {matchFeedback && (
+                    <div className="mt-4 space-y-3 lg:hidden">
+                      <MatchDetailCard
+                        title="Stärken"
+                        items={matchFeedback.strengths}
+                        tone="success"
+                        collapsed={isMatchSectionCollapsed("strengths")}
+                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
+                        className="w-full"
+                      />
+                      <MatchDetailCard
+                        title="Verbesserungsvorschläge"
+                        items={matchFeedback.gaps}
+                        tone="danger"
+                        collapsed={isMatchSectionCollapsed("gaps")}
+                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
+                        className="w-full"
+                      />
+                      <MatchDetailCard
+                        title="Empfehlungen"
+                        items={matchFeedback.recommendations}
+                        tone="info"
+                        collapsed={isMatchSectionCollapsed("recommendations")}
+                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
