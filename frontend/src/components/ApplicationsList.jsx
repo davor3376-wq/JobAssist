@@ -126,15 +126,16 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
   };
 
   const toneStyle = styles[tone] || styles.info;
+  const compact = className.includes("match-rail-card");
 
   return (
-    <div className={`h-fit self-start rounded-xl border p-4 ${toneStyle.card} ${className}`}>
+    <div className={`h-fit self-start rounded-xl border ${compact ? "p-3" : "p-4"} ${toneStyle.card} ${className}`}>
       <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
-        <h4 className={`text-base font-semibold ${toneStyle.title}`}>{title}</h4>
+        <h4 className={`${compact ? "text-sm" : "text-base"} font-semibold ${toneStyle.title}`}>{title}</h4>
         <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
       </button>
       {!collapsed && (
-        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-gray-700">
+        <ul className={`${compact ? "mt-2 max-h-48 space-y-1.5 overflow-y-auto pr-1 text-[13px] leading-6" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
           {items.map((item, index) => (
             <li key={`${title}-${index}`} className="flex items-start gap-2">
               <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
@@ -559,7 +560,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[360px]"}`}>
+                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[320px]"}`}>
                   <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-4"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
@@ -575,7 +576,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                           tone="success"
                           collapsed={isMatchSectionCollapsed("strengths")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
-                          className="w-full"
+                          className="match-rail-card w-full"
                         />
                         <MatchDetailCard
                           title="Verbesserungsvorschläge"
@@ -583,7 +584,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                           tone="danger"
                           collapsed={isMatchSectionCollapsed("gaps")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
-                          className="w-full"
+                          className="match-rail-card w-full"
                         />
                         <MatchDetailCard
                           title="Empfehlungen"
@@ -591,7 +592,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                           tone="info"
                           collapsed={isMatchSectionCollapsed("recommendations")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                          className="w-full"
+                          className="match-rail-card w-full"
                         />
                       </div>
                     )}
