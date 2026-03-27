@@ -178,14 +178,14 @@ function MatchRailFlyout({ title, items, tone, collapsed, onToggle }) {
         className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left shadow-sm ${toneStyle.shell}`}
       >
         <span className={`text-sm font-semibold ${toneStyle.title}`}>{title}</span>
-        <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "-rotate-90" : "rotate-90"} ${toneStyle.title}`} />
+        <ChevronDown className={`h-4 w-4 flex-shrink-0 -rotate-90 ${toneStyle.title}`} />
       </button>
       {!collapsed && (
         <div className="absolute left-[calc(100%+12px)] top-0 z-20 w-[320px] rounded-xl border bg-white p-4 shadow-xl">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h4 className={`text-sm font-semibold ${toneStyle.title}`}>{title}</h4>
             <button onClick={onToggle} className="rounded-md p-1 text-gray-400 hover:bg-slate-50 hover:text-gray-600">
-              <ChevronDown className="h-4 w-4 rotate-90" />
+              <ChevronDown className="h-4 w-4 -rotate-90" />
             </button>
           </div>
           <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
