@@ -340,7 +340,11 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
 
   const deleteMutation = useMutation({
     mutationFn: (jobId) => jobApi.delete(jobId),
-    onMutate: (jobId) => setJobFlag(jobId, "delete", true),
+    onMutate: (jobId) => {
+      setJobFlag(jobId, "delete", true);
+      clearTimeout(notesTimeoutsRef.current[jobId]);
+      delete notesTimeoutsRef.current[jobId];
+    },
     onSuccess: (_res, jobId) => {
       queryClient.removeQueries({ queryKey: ["jobs", String(jobId)], exact: true });
       syncJobs((old = []) => old.filter((job) => job.id !== jobId));
@@ -352,7 +356,13 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   });
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: async (jobIds) => Promise.all(jobIds.map((jobId) => jobApi.delete(jobId))),
+    mutationFn: async (jobIds) => {
+      jobIds.forEach((jobId) => {
+        clearTimeout(notesTimeoutsRef.current[jobId]);
+        delete notesTimeoutsRef.current[jobId];
+      });
+      return Promise.all(jobIds.map((jobId) => jobApi.delete(jobId)));
+    },
     onSuccess: (_res, jobIds) => {
       const deletedIds = new Set(jobIds);
       syncJobs((old = []) => old.filter((job) => !deletedIds.has(job.id)));
@@ -396,7 +406,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     },
     onError: (err, vars) => {
       setNotesSaving((old) => ({ ...old, [vars.jobId]: false }));
-      toast.error(getApiErrorMessage(err, "Notizen konnten nicht gespeichert werden"));
+      if (err?.response?.status !== 404) {
+        toast.error(getApiErrorMessage(err, "Notizen konnten nicht gespeichert werden"));
+      }
     },
   });
 
