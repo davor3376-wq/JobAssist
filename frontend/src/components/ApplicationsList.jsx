@@ -466,6 +466,13 @@ function DetailPanel({
   const isUrlSave      = Boolean(jobUiState[job.id]?.url);
   const isDeleting     = Boolean(jobUiState[job.id]?.delete);
   const isMatchProc    = processing.jobId === job.id && processing.feature === "match";
+  const [urlInput, setUrlInput] = useState(job.url || "");
+  const [deadlineInput, setDeadlineInput] = useState(job.deadline ? job.deadline.split("T")[0] : "");
+
+  useEffect(() => {
+    setUrlInput(job.url || "");
+    setDeadlineInput(job.deadline ? job.deadline.split("T")[0] : "");
+  }, [job.id, job.url, job.deadline]);
 
   return (
     // flex flex-col (stack header, scrollable body, action bar vertically)
@@ -660,17 +667,35 @@ function DetailPanel({
           {/* URL */}
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-600">Stellenanzeige Link</label>
-            <input
-              type="url"
-              defaultValue={job.url || ""}
-              onBlur={(e) => {
-                const value = e.target.value.trim() || null;
-                if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value });
-              }}
-              disabled={isUrlSave}
-              className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:bg-slate-100 disabled:cursor-not-allowed"
-              placeholder="https://..."
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onBlur={() => {
+                  const value = urlInput.trim() || null;
+                  if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value });
+                }}
+                disabled={isUrlSave}
+                className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:bg-slate-100 disabled:cursor-not-allowed"
+                placeholder="https://..."
+              />
+              <a
+                href={job.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!job.url) e.preventDefault();
+                }}
+                className={`inline-flex flex-shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  job.url
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                    : "cursor-not-allowed bg-slate-100 text-slate-400"
+                }`}
+              >
+                Zur Stelle
+              </a>
+            </div>
           </div>
 
           {/* Deadline */}
@@ -678,13 +703,17 @@ function DetailPanel({
             <label className="mb-1 block text-xs font-semibold text-gray-600">Bewerbungsfrist</label>
             <input
               type="date"
-              defaultValue={job.deadline ? job.deadline.split("T")[0] : ""}
-              onBlur={(e) =>
-                deadlineMutation.mutate({
-                  jobId: job.id,
-                  deadline: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : null,
-                })
-              }
+              value={deadlineInput}
+              onChange={(e) => setDeadlineInput(e.target.value)}
+              onBlur={() => {
+                const nextDeadline = deadlineInput ? new Date(`${deadlineInput}T12:00:00`).toISOString() : null;
+                if (nextDeadline !== (job.deadline || null)) {
+                  deadlineMutation.mutate({
+                    jobId: job.id,
+                    deadline: nextDeadline,
+                  });
+                }
+              }}
               disabled={isDeadlineSave}
               className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:bg-slate-100 disabled:cursor-not-allowed"
             />
@@ -1295,6 +1324,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
         ─────────────────────────────────────────────────────────────────────── */}
         <div className="hidden md:flex flex-1 flex-col overflow-hidden">
           <DetailPanel
+            key={selectedJob?.id || "desktop-empty"}
             {...detailProps}
             isMobileOverlay={false}
             onClose={() => {}}
@@ -1312,6 +1342,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
       {mobileDetailOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-white md:hidden overflow-hidden">
           <DetailPanel
+            key={selectedJob?.id || "mobile-empty"}
             {...detailProps}
             isMobileOverlay={true}
             onClose={() => setMobileDetailOpen(false)}

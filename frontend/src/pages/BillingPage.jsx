@@ -63,13 +63,6 @@ function UsageRing({ feature, used, limit }) {
           <p className={`text-sm font-semibold ${ringClass}`}>
             {unlimited ? "Unbegrenzt verfügbar" : `${progress}% genutzt`}
           </p>
-          <p className="mt-1 text-xs leading-5 text-gray-500">
-            {unlimited
-              ? "Dieses Feature ist in deinem Plan ohne festes Limit enthalten."
-              : isNearLimit
-                ? "Du bist am aktuellen Limit. Der Ring markiert den dringenden Handlungsbedarf."
-                : "Deine Nutzung liegt im grünen Bereich und kann weiter wachsen."}
-          </p>
         </div>
       </div>
     </div>
@@ -195,7 +188,7 @@ export default function BillingPage() {
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-base font-bold text-gray-900">Nutzung</h3>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {usage.map((item) => (
             <UsageRing key={item.feature} {...item} />
           ))}

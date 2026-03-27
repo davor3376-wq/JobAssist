@@ -161,18 +161,18 @@ export default function DashboardPage() {
           <div className="max-w-xl">
             <h1 className="mb-2 text-4xl font-bold text-gray-900">{greeting()}</h1>
             <p className="text-gray-600">
-              Deine Stellen-Pipeline ist aktiv. {jobsNeedingReview} Stellen brauchen Review, {openInterviews} sind aktuell in Gesprächsphase.
+              Übersicht über deine gespeicherten Stellen, offenen Reviews und die nächste relevante Frist.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Offene Reviews</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">{jobsNeedingReview}</p>
-                <p className="mt-1 text-xs text-gray-500">Gespeichert oder noch ohne Match</p>
+                <p className="mt-1 text-xs text-gray-500">Stellen ohne Abschlussentscheidung</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Interviews</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">{openInterviews}</p>
-                <p className="mt-1 text-xs text-gray-500">Aktive Gesprächsvorbereitung</p>
+                <p className="mt-1 text-xs text-gray-500">Status Vorstellungsgespräch</p>
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Nächste Frist</p>
