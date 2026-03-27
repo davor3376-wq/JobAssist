@@ -127,25 +127,25 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
 
   const toneStyle = styles[tone] || styles.info;
   const compact = className.includes("match-rail-card");
-  const visibleItems = compact ? items.slice(0, 4) : items;
+  const visibleItems = compact ? items.slice(0, 2) : items;
   const hiddenCount = compact ? Math.max(0, items.length - visibleItems.length) : 0;
 
   return (
-    <div className={`h-fit self-start rounded-xl border ${compact ? "p-3" : "p-4"} ${toneStyle.card} ${className}`}>
+    <div className={`h-fit self-start rounded-xl border ${compact ? "p-2.5" : "p-4"} ${toneStyle.card} ${className}`}>
       <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
-        <h4 className={`${compact ? "text-sm" : "text-base"} font-semibold ${toneStyle.title}`}>{title}</h4>
-        <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
+        <h4 className={`${compact ? "text-[13px]" : "text-base"} font-semibold ${toneStyle.title}`}>{title}</h4>
+        <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
       </button>
       {!collapsed && (
-        <ul className={`${compact ? "mt-2 space-y-1.5 text-[12px] leading-5" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
+        <ul className={`${compact ? "mt-1.5 space-y-1 text-[11px] leading-4" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
           {visibleItems.map((item, index) => (
             <li key={`${title}-${index}`} className="flex items-start gap-2">
-              <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
+              <span className={`mt-0.5 text-[11px] font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
               <span>{item}</span>
             </li>
           ))}
           {hiddenCount > 0 && (
-            <li className={`pt-1 text-[11px] font-semibold ${toneStyle.title}`}>
+            <li className={`pt-0.5 text-[10px] font-semibold ${toneStyle.title}`}>
               +{hiddenCount} weitere Punkte
             </li>
           )}
@@ -567,8 +567,8 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[320px]"}`}>
-                  <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-4"}`}>
+                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[270px]"}`}>
+                  <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
                       <button onClick={() => setCollapsedMatchRail((old) => ({ ...old, [job.id]: !old[job.id] }))} className="rounded-lg border border-slate-200 p-2 text-gray-500 hover:bg-slate-50 hover:text-gray-700" title={isMatchRailCollapsed ? "Seitenleiste anzeigen" : "Seitenleiste minimieren"}>
@@ -576,7 +576,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                       </button>
                     </div>
                     {!isMatchRailCollapsed && (
-                      <div className="mt-4 space-y-2.5">
+                      <div className="mt-3 space-y-2">
                         <MatchDetailCard
                           title="Stärken"
                           items={matchFeedback.strengths}
