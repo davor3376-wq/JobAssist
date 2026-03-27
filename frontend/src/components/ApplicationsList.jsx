@@ -549,7 +549,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-4 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[440px]"}`}>
+                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-8 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[400px]"}`}>
                   <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-4"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}

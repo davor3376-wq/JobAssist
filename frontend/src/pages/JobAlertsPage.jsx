@@ -233,7 +233,7 @@ function CreateAlertModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">H\u00e4ufigkeit</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Häufigkeit</label>
             <div className="flex gap-3">
               {FREQUENCIES.map((frequency) => (
                 <label key={frequency.value} className="flex items-center gap-2 cursor-pointer">
