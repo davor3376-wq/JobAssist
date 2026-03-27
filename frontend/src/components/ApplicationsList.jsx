@@ -105,6 +105,44 @@ const TAG_COLORS = {
   Kundenorientierung: "bg-purple-100 text-purple-700",
 };
 
+function MatchDetailCard({ title, items, tone }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  const styles = {
+    success: {
+      card: "border-emerald-300 bg-white",
+      title: "text-emerald-700",
+      bullet: "text-emerald-500",
+    },
+    danger: {
+      card: "border-red-300 bg-white",
+      title: "text-red-700",
+      bullet: "text-red-400",
+    },
+    info: {
+      card: "border-blue-300 bg-white",
+      title: "text-blue-700",
+      bullet: "text-blue-500",
+    },
+  };
+
+  const toneStyle = styles[tone] || styles.info;
+
+  return (
+    <div className={`rounded-xl border p-4 ${toneStyle.card}`}>
+      <h4 className={`mb-3 text-base font-semibold ${toneStyle.title}`}>{title}</h4>
+      <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`} className="flex items-start gap-2">
+            <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ActionButton({ onClick, disabled, disabledReason, color, icon, label }) {
   const styles = {
     indigo: "border-indigo-600 bg-indigo-600 text-white shadow-sm hover:border-indigo-700 hover:bg-indigo-700",
@@ -464,6 +502,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
 
       {filteredJobs.map((job) => {
         const meta = getDeadlineMeta(job.deadline);
+        const matchFeedback = parseJson(job.match_feedback);
         const isCollapsed = !!collapsedJobCards[job.id];
         const interviewQa = parseJson(job.interview_qa);
         const showActionHint = !hasResume || !job.company;
@@ -489,7 +528,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                   <div className="mt-3 flex flex-wrap gap-1.5">{meta && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}>{meta.label}</span>}{job.match_score != null && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}%</span>}<span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span></div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => navigate(`/jobs/${job.id}`)} className="hidden rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 sm:block">Details</button>
                   <button onClick={() => setCollapsedJobCards((old) => ({ ...old, [job.id]: !old[job.id] }))} className="p-1 text-gray-500 hover:text-gray-700">{isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</button>
                   <span title={isDeleting ? "Stelle wird gerade gelöscht" : "Stelle löschen"}>
                     <button onClick={() => deleteMutation.mutate(job.id)} disabled={isDeleting} aria-disabled={isDeleting} className="p-1 text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
@@ -501,6 +539,15 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
             {!isCollapsed && <div className="space-y-4 bg-gray-50 p-4">
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
               {job.match_score != null && job.match_feedback && <div className="border-t border-gray-300 pt-3"><p className="mb-1 text-xs font-semibold text-gray-700">Match-Analyse</p><p className="text-xs leading-relaxed text-gray-600">{getMatchSummary(job.match_feedback)}</p></div>}
+              {matchFeedback && (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <MatchDetailCard title="Stärken" items={matchFeedback.strengths} tone="success" />
+                  <MatchDetailCard title="Verbesserungsvorschläge" items={matchFeedback.gaps} tone="danger" />
+                  <div className="md:col-span-2">
+                    <MatchDetailCard title="Empfehlungen" items={matchFeedback.recommendations} tone="info" />
+                  </div>
+                </div>
+              )}
               {job.description && <div className="border-t border-gray-300 pt-3"><div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-700">Stellenbeschreibung</p><button onClick={() => setCollapsedDescriptions((old) => ({ ...old, [job.id]: !isDescriptionCollapsed }))} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">{isDescriptionCollapsed ? "Anzeigen" : "Minimieren"}</button></div>{!isDescriptionCollapsed && <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-blue-300 bg-white p-3 text-sm leading-relaxed text-gray-700">{job.description}</div>}</div>}
               <div className="border-t border-gray-300 pt-3"><label className="mb-2 block text-sm font-semibold text-gray-700">Stellenanzeige Link</label><input type="url" defaultValue={job.url || ""} onBlur={(e) => { const value = e.target.value.trim() || null; if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value }); }} disabled={isUrlSaving} className="w-full rounded border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isUrlSaving && <p className="mt-1 text-xs text-gray-500">Link wird gespeichert...</p>}</div>
               <div className="border-t border-gray-300 pt-3"><label className="mb-2 block text-sm font-semibold text-gray-700">Bewerbungsfrist</label><input type="date" defaultValue={job.deadline ? job.deadline.split("T")[0] : ""} onBlur={(e) => deadlineMutation.mutate({ jobId: job.id, deadline: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : null })} disabled={isDeadlineSaving} className="w-full max-w-xs rounded border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isDeadlineSaving && <p className="mt-1 text-xs text-gray-500">Frist wird gespeichert...</p>}</div>
