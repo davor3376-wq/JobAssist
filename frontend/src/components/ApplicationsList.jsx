@@ -545,7 +545,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               </div>
             </div>
 
-            {!isCollapsed && <div className={`relative space-y-5 bg-white p-4 ${matchFeedback ? (isMatchRailCollapsed ? "lg:pr-16" : "lg:pr-[352px]") : ""}`}>
+            {!isCollapsed && <div className="space-y-5 bg-white p-4">
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {(job.match_score != null || matchFeedback) && (
@@ -593,7 +593,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               </div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:block lg:absolute lg:right-4 lg:top-4 ${isMatchRailCollapsed ? "w-10" : "w-80"}`}>
+                <aside className={`hidden lg:float-right lg:mb-4 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-80"}`}>
                   <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
@@ -632,6 +632,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                   </div>
                 </aside>
               )}
+              {matchFeedback && <div className="hidden clear-both lg:block" />}
               {job.cover_letter && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `cover-${job.id}` ? null : `cover-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-green-700"><FileText className="h-4 w-4" /> Erstelltes Motivationsschreiben</button>{expandedPanel === `cover-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-green-300 bg-white p-3 text-sm text-gray-700">{job.cover_letter}</div>}</div>}
               {job.interview_qa && (
                 <div className="border-t border-gray-300 pt-3">
