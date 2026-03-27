@@ -45,16 +45,22 @@ function StatSkeleton() {
 
 function MiniActivityChart({ values }) {
   const max = Math.max(...values, 1);
+  const total = values.reduce((s, v) => s + v, 0);
 
   return (
     <div className="space-y-3">
       <div className="flex items-end gap-2">
         {values.map((value, index) => (
           <div key={DAY_LABELS[index]} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-24 w-full items-end">
+            <div className="relative flex h-24 w-full items-end">
+              {/* Gray track so empty days are still visible */}
+              <div className="absolute inset-x-0 bottom-0 h-full rounded-full bg-gray-100" />
+              {/* Filled bar — min 14% height only if value > 0, else just a 3px stub */}
               <div
-                className="w-full rounded-full bg-gradient-to-t from-indigo-500 to-violet-400 transition-all duration-500"
-                style={{ height: `${Math.max(12, (value / max) * 100)}%` }}
+                className="relative w-full rounded-full bg-gradient-to-t from-indigo-500 to-violet-400 transition-all duration-500"
+                style={{
+                  height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "3px",
+                }}
               />
             </div>
             <span className="text-[11px] font-medium text-gray-400">{DAY_LABELS[index]}</span>
@@ -63,7 +69,7 @@ function MiniActivityChart({ values }) {
       </div>
       <div className="flex items-center justify-between text-[11px] text-gray-500">
         <span>Analysierte Jobs diese Woche</span>
-        <span>{values.reduce((sum, value) => sum + value, 0)} gesamt</span>
+        <span>{total} gesamt</span>
       </div>
     </div>
   );
@@ -116,7 +122,7 @@ export default function DashboardPage() {
         return parsed >= day && parsed < new Date(day.getTime() + 24 * 60 * 60 * 1000);
       }).length;
 
-      return count || (index >= 4 && scoredJobs.length ? 1 : 0);
+      return count;
     });
   }, [jobs, scoredJobs.length]);
 

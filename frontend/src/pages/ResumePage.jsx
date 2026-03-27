@@ -208,7 +208,7 @@ export default function ResumePage() {
   }, [previewedResume, trackedKeywords]);
 
   const healthScore = useMemo(() => {
-    if (!keywordCloud.length) return 72;
+    if (!keywordCloud.length) return null; // no jobs to compare → show "—"
     const present = keywordCloud.filter((entry) => entry.state === "vorhanden").length;
     return Math.round((present / keywordCloud.length) * 100);
   }, [keywordCloud]);
@@ -375,7 +375,14 @@ export default function ResumePage() {
                   </div>
                   <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-right">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Abdeckung</p>
-                    <p className="text-xl font-bold text-indigo-600">{healthScore}</p>
+                    <p className={`text-xl font-bold ${
+                      healthScore == null ? "text-gray-400"
+                        : healthScore >= 60 ? "text-indigo-600"
+                        : healthScore >= 30 ? "text-amber-600"
+                        : "text-red-500"
+                    }`}>
+                      {healthScore == null ? "—" : `${healthScore}%`}
+                    </p>
                   </div>
                 </div>
 
@@ -387,6 +394,14 @@ export default function ResumePage() {
                       <ScanSearch className="h-4 w-4 text-indigo-500" />
                       <p className="text-sm font-semibold text-gray-900">Begriffsabgleich</p>
                     </div>
+
+                    {/* When the resume has no parsed text the analysis is unreliable */}
+                    {!previewedResume.parsed_text && (
+                      <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+                        Vollständige Analyse erst nach erfolgreicher KI-Verarbeitung des Lebenslaufs verfügbar.
+                      </p>
+                    )}
+
                     <div className="flex flex-wrap gap-2">
                       {keywordCloud.map(({ keyword, state }) => (
                         <span

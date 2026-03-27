@@ -20,21 +20,30 @@ function UsageRing({ feature, used, limit }) {
   const ringClass = isNearLimit ? "text-red-500" : "text-indigo-600";
   const ringStroke = isNearLimit ? "#ef4444" : "#4f46e5";
 
+  const isAtLimit = !unlimited && progress >= 100;
+  // separate "near limit" (80–99%) from "at limit" (100%) for clearer messaging
+  const isWarn = isNearLimit && !isAtLimit;
+  const actualRingStroke = isAtLimit ? "#ef4444" : isNearLimit ? "#f97316" : "#4f46e5";
+  const centreClass = isAtLimit ? "text-red-500" : isNearLimit ? "text-orange-500" : "text-indigo-600";
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-gray-900">{label}</p>
-          <p className="mt-1 text-xs text-gray-500">Diesen Monat</p>
-        </div>
-        {isNearLimit && (
-          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-500 animate-pulse">
+      <div className="flex items-start justify-between gap-3">
+        {/* Label — "(Diesen Monat)" suffix already embedded in FEATURE_LABELS */}
+        <p className="text-sm font-semibold text-gray-900 leading-snug">{label}</p>
+        {isAtLimit && (
+          <span className="flex-shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-500">
             Limit erreicht
+          </span>
+        )}
+        {isWarn && (
+          <span className="flex-shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-500">
+            Fast voll
           </span>
         )}
       </div>
 
-      <div className="mt-5 flex items-center gap-5">
+      <div className="mt-4 flex items-center gap-5">
         <div className="relative flex-shrink-0">
           <svg width={size} height={size} className="-rotate-90">
             <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
@@ -44,24 +53,24 @@ function UsageRing({ feature, used, limit }) {
                 cy={size / 2}
                 r={radius}
                 fill="none"
-                stroke={ringStroke}
+                stroke={actualRingStroke}
                 strokeWidth={stroke}
                 strokeDasharray={circumference}
                 strokeDashoffset={offset}
                 strokeLinecap="round"
-                className={isNearLimit ? "animate-pulse" : ""}
+                style={{ transition: "stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1)" }}
               />
             )}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-lg font-bold ${ringClass}`}>{used}</span>
+            <span className={`text-lg font-bold ${centreClass}`}>{used}</span>
             <span className="text-[11px] font-medium text-gray-400">von {displayLimit}</span>
           </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className={`text-sm font-semibold ${ringClass}`}>
-            {unlimited ? "Unbegrenzt verfügbar" : `${progress}% genutzt`}
+          <p className={`text-sm font-semibold ${centreClass}`}>
+            {unlimited ? "Unbegrenzt" : `${progress}% genutzt`}
           </p>
         </div>
       </div>
