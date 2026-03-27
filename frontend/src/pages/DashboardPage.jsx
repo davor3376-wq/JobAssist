@@ -124,6 +124,20 @@ export default function DashboardPage() {
     () => (jobs || []).filter((job) => (job.match_score || 0) >= 75).slice(0, 3).length,
     [jobs]
   );
+  const jobsNeedingReview = useMemo(
+    () => (jobs || []).filter((job) => job.status === "bookmarked" || job.match_score == null).length,
+    [jobs]
+  );
+  const openInterviews = useMemo(
+    () => (jobs || []).filter((job) => job.status === "interviewing").length,
+    [jobs]
+  );
+  const nextDeadline = useMemo(() => {
+    const datedJobs = (jobs || [])
+      .filter((job) => job.deadline)
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    return datedJobs[0] || null;
+  }, [jobs]);
 
   const chanceLift = useMemo(() => {
     if (!scoredJobs.length) return 8;
@@ -144,9 +158,32 @@ export default function DashboardPage() {
     <div className="max-w-6xl space-y-8">
       <div className="animate-slide-up rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-violet-50 p-6 shadow-sm">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+          <div className="max-w-xl">
             <h1 className="mb-2 text-4xl font-bold text-gray-900">{greeting()}</h1>
-            <p className="text-gray-500">Hier ist der aktuelle Stand deiner Stellensuche</p>
+            <p className="text-gray-600">
+              Deine Stellen-Pipeline ist aktiv. {jobsNeedingReview} Stellen brauchen Review, {openInterviews} sind aktuell in Gesprächsphase.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Offene Reviews</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{jobsNeedingReview}</p>
+                <p className="mt-1 text-xs text-gray-500">Gespeichert oder noch ohne Match</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Interviews</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{openInterviews}</p>
+                <p className="mt-1 text-xs text-gray-500">Aktive Gesprächsvorbereitung</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Nächste Frist</p>
+                <p className="mt-2 text-sm font-bold text-gray-900">
+                  {nextDeadline ? new Date(nextDeadline.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
+                </p>
+                <p className="mt-1 truncate text-xs text-gray-500">
+                  {nextDeadline ? `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"}` : "Aktuell entspannt"}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="w-full max-w-xl rounded-2xl border border-indigo-100 bg-white/90 p-5 shadow-sm">
@@ -164,6 +201,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <MiniActivityChart values={activitySeries} />
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                <span className="font-semibold text-slate-800">{recentJobs.length}</span> zuletzt bearbeitete Stellen im Fokus
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                <span className="font-semibold text-slate-800">{scoredJobs.length}</span> Stellen haben bereits eine Match-Bewertung
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -72,9 +72,12 @@ export default function AIAssistantPage() {
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [sidebarOpen,   setSidebarOpen]   = useState(false);  // mobile sidebar
   const [simulationMode, setSimulationMode] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(290);
+  const [isResizing, setIsResizing] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
+  const resizeStateRef = useRef({ startX: 0, startWidth: 290 });
   const { guardedRun } = useUsageGuard("ai_chat");
 
   const { data: uploadedResumes = [] } = useQuery({
@@ -91,6 +94,24 @@ export default function AIAssistantPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isResizing) return undefined;
+
+    const handleMouseMove = (event) => {
+      const next = resizeStateRef.current.startWidth + (event.clientX - resizeStateRef.current.startX);
+      setSidebarWidth(Math.max(250, Math.min(420, next)));
+    };
+
+    const handleMouseUp = () => setIsResizing(false);
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
 
   // ── Persist conversation to history whenever messages change ──────────────
   useEffect(() => {
@@ -187,6 +208,7 @@ export default function AIAssistantPage() {
     { label: "Feedback geben", prompt: "Gib mir bitte direktes Feedback auf meine letzte Antwort und sage mir, was ich verbessern soll." },
     { label: "Tipp anzeigen", prompt: "Gib mir bitte einen kurzen Tipp, wie ich die aktuelle Interviewfrage stärker beantworten kann." },
   ];
+  const resumeContextLabel = uploadedResumes.find((resume) => resume.id === selectedResumeId)?.filename;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -250,7 +272,20 @@ export default function AIAssistantPage() {
           absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
           md:relative md:translate-x-0 md:shadow-sm md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
-        `}>
+        `}
+        style={sidebarOpen ? undefined : { width: `${sidebarWidth}px` }}
+        >
+          <div className="absolute inset-y-0 -right-2 z-10 hidden w-4 cursor-col-resize md:block">
+            <button
+              type="button"
+              onMouseDown={(event) => {
+                resizeStateRef.current = { startX: event.clientX, startWidth: sidebarWidth };
+                setIsResizing(true);
+              }}
+              className="h-full w-full"
+              aria-label="Verlauf verbreitern"
+            />
+          </div>
           <div className="flex-shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
             <span className="text-xs font-semibold text-slate-600">Verlauf</span>
             <button
@@ -259,6 +294,18 @@ export default function AIAssistantPage() {
             >
               <Plus className="w-3 h-3" /> Neu
             </button>
+          </div>
+
+          <div className="hidden border-b border-slate-100 bg-slate-50/80 px-3 py-2 md:block">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Chat-Historie</p>
+                <p className="mt-1 text-xs text-slate-500">{conversations.length} gespeicherte Gespräche</p>
+              </div>
+              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-slate-500">
+                {sidebarWidth}px
+              </span>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
@@ -337,52 +384,66 @@ export default function AIAssistantPage() {
           )}
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 min-h-0 bg-slate-50/40">
             {messages.length === 0 ? (
               /* ── Empty state / suggestions ── */
-              <div className="flex flex-col items-center justify-center h-full gap-4 py-8">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <Bot className="w-7 h-7 text-white" />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-gray-800 text-base mb-1">Wie kann ich helfen?</h3>
-                  <p className="text-xs text-gray-500 max-w-sm">
-                    Bewerbungen, Lebensläufe, Motivationsschreiben, Vorstellungsgespräche — frag mich alles.
-                  </p>
-                </div>
-                <button
-                  onClick={startSimulation}
-                  className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Simulation starten
-                </button>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full max-w-xl mt-2">
-                  {SUGGESTIONS.map((s) => {
-                    const locked = s.requiresResume && uploadedResumes.length === 0;
-                    return (
-                      <button
-                        key={s.label}
-                        onClick={() => {
-                          if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                          handleSend(s.prompt);
-                        }}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all
-                          ${locked
-                            ? "border-gray-100 bg-gray-50 cursor-not-allowed"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
-                          }`}
-                      >
-                        {locked
-                          ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                          : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        }
-                        <span className={`text-xs font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
-                          {s.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+              <div className="flex flex-col items-center justify-center h-full py-8">
+                <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-5 flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <Bot className="w-7 h-7 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-lg">Hallo. Woran arbeitest du gerade?</h3>
+                      <p className="mt-1 text-sm text-gray-500 max-w-xl">
+                        Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Antworten und beim Weiterführen bestehender Gespräche.
+                      </p>
+                      {resumeContextLabel && (
+                        <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+                          Aktiver Lebenslauf: {resumeContextLabel}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    <button
+                      onClick={startSimulation}
+                      className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Simulation starten
+                    </button>
+                    <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-500">
+                      Verlauf links ist skalierbar von 250 bis 420 px
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    {SUGGESTIONS.map((s) => {
+                      const locked = s.requiresResume && uploadedResumes.length === 0;
+                      return (
+                        <button
+                          key={s.label}
+                          onClick={() => {
+                            if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
+                            handleSend(s.prompt);
+                          }}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all
+                            ${locked
+                              ? "border-gray-100 bg-gray-50 cursor-not-allowed"
+                              : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
+                            }`}
+                        >
+                          {locked
+                            ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                            : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                          }
+                          <span className={`text-xs font-medium truncate ${locked ? "text-gray-300" : "text-gray-700"}`}>
+                            {s.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : (

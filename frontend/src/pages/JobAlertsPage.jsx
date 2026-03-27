@@ -52,10 +52,10 @@ function syncStoredAlerts(alerts) {
 function getHeatmapMetrics(alert) {
   const keywordCount = (alert.keywords || "").split(/[,\s/]+/).filter(Boolean).length;
   return [
-    { label: "Skills", value: Math.min(100, 45 + keywordCount * 9) },
-    { label: "Erfahrung", value: alert.job_type === "Internship" ? 48 : alert.job_type ? 72 : 58 },
+    { label: "Suchbegriff", value: Math.min(100, 48 + keywordCount * 10) },
+    { label: "Stellenart", value: alert.job_type ? 78 : 52 },
     { label: "Ort", value: alert.location ? 76 : 42 },
-    { label: "Timing", value: alert.frequency === "daily" ? 88 : 63 },
+    { label: "Abdeckung", value: alert.frequency === "daily" ? 82 : 66 },
   ];
 }
 
@@ -164,10 +164,13 @@ function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, 
         <div className="flex w-full flex-col gap-3 lg:max-w-[280px]">
           <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Match-Heatmap</p>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-blue-700">Top-Match</span>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Passform-Überblick</p>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-blue-700">Alert-Profil</span>
             </div>
             <RadarChart metrics={heatmapMetrics} />
+            <p className="mt-2 text-[11px] leading-5 text-slate-500">
+              Die Grafik zeigt, wie präzise dein Alert gefiltert ist: Suchbegriff, Stellenart, Ort und Markt-Abdeckung.
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">

@@ -364,25 +364,28 @@ export default function ResumePage() {
 
           {previewedResume && (
             <div className="animate-slide-up space-y-4">
-              <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-5 shadow-sm">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">Dokumenten-Intelligenz</p>
-                    <h3 className="mt-2 text-lg font-semibold text-gray-900">Keyword-Check</h3>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">Lebenslauf-Check</p>
+                    <h3 className="mt-2 text-lg font-semibold text-gray-900">Abgleich mit deinen Stellen</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Die Begriffe rechts zeigen, welche Anforderungen aus deinen Stellen bereits erkennbar sind.
+                    </p>
                   </div>
-                  <div className="rounded-2xl bg-white px-3 py-2 text-right shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Health Score</p>
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-right">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Trefferquote</p>
                     <p className="text-xl font-bold text-indigo-600">{healthScore}</p>
                   </div>
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(220px,0.9fr)]">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.95fr)]">
                   <PdfSkeleton resume={previewedResume} />
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-2xl border border-gray-200 bg-slate-50 p-5">
                     <div className="mb-4 flex items-center gap-2">
                       <ScanSearch className="h-4 w-4 text-indigo-500" />
-                      <p className="text-sm font-semibold text-gray-900">Skill-Cloud</p>
+                      <p className="text-sm font-semibold text-gray-900">Begriffsabgleich</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {keywordCloud.map(({ keyword, state }) => (
@@ -400,15 +403,14 @@ export default function ResumePage() {
                         </span>
                       ))}
                     </div>
-                    <div className="mt-5 rounded-xl bg-slate-50 p-3 text-xs text-gray-600">
-                      <div className="mb-2 flex items-center gap-2 font-semibold text-gray-800">
+                    <div className="mt-5 space-y-2 text-xs text-gray-600">
+                      <div className="flex items-center gap-2 font-semibold text-gray-800">
                         <BadgeCheck className="h-4 w-4 text-emerald-500" />
-                        Abgleich mit getrackten Stellen
+                        So liest du die Markierungen
                       </div>
-                      <p>
-                        Grün = bereits erkennbar im Lebenslauf, Rot = fehlt aktuell, Gelb = sollte präziser
-                        ausformuliert werden.
-                      </p>
+                      <p>Grün: bereits klar im Lebenslauf sichtbar.</p>
+                      <p>Rot: wichtiger Begriff fehlt oder ist nicht direkt erkennbar.</p>
+                      <p>Gelb: Thema ist vorhanden, könnte aber präziser formuliert werden.</p>
                     </div>
                   </div>
                 </div>

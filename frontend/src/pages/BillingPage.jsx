@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CreditCard, ExternalLink, Zap } from "lucide-react";
@@ -9,22 +9,68 @@ import { billingApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 import { getCleanBillingUrl, getPlanName, getUsageBarState } from "../utils/billingState";
 
-function UsageBar({ feature, used, limit }) {
+function UsageRing({ feature, used, limit }) {
   const { label, unlimited, pct, isNearLimit, displayLimit } = getUsageBarState(feature, used, limit);
+  const progress = unlimited ? 0 : Math.max(0, Math.min(100, pct));
+  const size = 112;
+  const stroke = 10;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+  const ringClass = isNearLimit ? "text-red-500" : "text-indigo-600";
+  const ringStroke = isNearLimit ? "#ef4444" : "#4f46e5";
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-sm">
-        <span className="font-medium text-gray-700">{label}</span>
-        <span className={`font-semibold ${isNearLimit ? "text-red-500" : "text-gray-900"}`}>
-          {used} / {displayLimit}
-        </span>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{label}</p>
+          <p className="mt-1 text-xs text-gray-500">Diesen Monat</p>
+        </div>
+        {isNearLimit && (
+          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-500 animate-pulse">
+            Limit erreicht
+          </span>
+        )}
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-        <div
-          className={`h-full rounded-full transition-all ${isNearLimit ? "bg-red-400" : "bg-blue-500"}`}
-          style={{ width: unlimited ? "0%" : `${pct}%` }}
-        />
+
+      <div className="mt-5 flex items-center gap-5">
+        <div className="relative flex-shrink-0">
+          <svg width={size} height={size} className="-rotate-90">
+            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
+            {!unlimited && (
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke={ringStroke}
+                strokeWidth={stroke}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                className={isNearLimit ? "animate-pulse" : ""}
+              />
+            )}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={`text-lg font-bold ${ringClass}`}>{used}</span>
+            <span className="text-[11px] font-medium text-gray-400">von {displayLimit}</span>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm font-semibold ${ringClass}`}>
+            {unlimited ? "Unbegrenzt verfügbar" : `${progress}% genutzt`}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-gray-500">
+            {unlimited
+              ? "Dieses Feature ist in deinem Plan ohne festes Limit enthalten."
+              : isNearLimit
+                ? "Du bist am aktuellen Limit. Der Ring markiert den dringenden Handlungsbedarf."
+                : "Deine Nutzung liegt im grünen Bereich und kann weiter wachsen."}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -149,13 +195,12 @@ export default function BillingPage() {
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-base font-bold text-gray-900">Nutzung</h3>
-        <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {usage.map((item) => (
-            <UsageBar key={item.feature} {...item} />
+            <UsageRing key={item.feature} {...item} />
           ))}
         </div>
       </div>
     </div>
   );
 }
-
