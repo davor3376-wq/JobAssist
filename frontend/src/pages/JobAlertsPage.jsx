@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, Briefcase, Mail, MapPin, Pencil, Play, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Bell, BellOff, Briefcase, Mail, MapPin, Pencil, Play, Plus, RefreshCw, Trash2, X, Gauge, Radio, Clock3 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { ListSkeleton } from "../components/PageSkeleton";
@@ -21,8 +21,8 @@ const JOB_TYPES = [
 ];
 
 const FREQUENCIES = [
-  { value: "daily", label: "T\u00e4glich" },
-  { value: "weekly", label: "W\u00f6chentlich" },
+  { value: "daily", label: "Täglich" },
+  { value: "weekly", label: "Wöchentlich" },
 ];
 
 function bumpJobAlertUsageCaches(queryClient, delta) {
@@ -49,130 +49,198 @@ function syncStoredAlerts(alerts) {
   } catch {}
 }
 
-function getHeatmapMetrics(alert) {
+function getCoverageMetrics(alert) {
   const keywordCount = (alert.keywords || "").split(/[,\s/]+/).filter(Boolean).length;
   return [
-    { label: "Suchbegriff", value: Math.min(100, 48 + keywordCount * 10) },
-    { label: "Stellenart", value: alert.job_type ? 78 : 52 },
-    { label: "Ort", value: alert.location ? 76 : 42 },
-    { label: "Abdeckung", value: alert.frequency === "daily" ? 82 : 66 },
+    {
+      label: "Suchpräzision",
+      value: Math.min(100, 42 + keywordCount * 12),
+      hint: keywordCount > 2 ? "Mehrere Begriffe verengen die Suche." : "Ein breiter Suchbegriff liefert mehr Streuung.",
+    },
+    {
+      label: "Ortsfilter",
+      value: alert.location ? 84 : 38,
+      hint: alert.location ? `Gefiltert auf ${alert.location}.` : "Kein Ortsfilter gesetzt.",
+    },
+    {
+      label: "Stellenart",
+      value: alert.job_type ? 78 : 44,
+      hint: alert.job_type ? `Fokus auf ${JOB_TYPES.find((type) => type.value === alert.job_type)?.label || alert.job_type}.` : "Alle Stellenarten erlaubt.",
+    },
+    {
+      label: "Rhythmus",
+      value: alert.frequency === "daily" ? 86 : 62,
+      hint: alert.frequency === "daily" ? "Tägliche Aktualisierung." : "Wöchentliche Zusammenfassung.",
+    },
   ];
 }
 
-function AlertCard({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
+function MetricBar({ label, value, hint }) {
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-300">
+        <span>{label}</span>
+        <span>{value}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-slate-800">
+        <div className="h-full rounded-full bg-indigo-500" style={{ width: `${value}%` }} />
+      </div>
+      <p className="mt-1 text-[11px] text-slate-400">{hint}</p>
+    </div>
+  );
+}
+
+function AlertListCard({ alert, isSelected, onSelect }) {
+  const typeLabel = JOB_TYPES.find((type) => type.value === alert.job_type)?.label || alert.job_type || "Alle Stellen";
+  return (
+    <button
+      onClick={onSelect}
+      className={`w-full rounded-2xl border p-4 text-left transition-all ${
+        isSelected
+          ? "border-indigo-500 bg-slate-900 text-white shadow-lg shadow-indigo-950/40"
+          : "border-slate-800 bg-slate-900/50 text-slate-200 hover:border-slate-700"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{alert.keywords}</p>
+          <p className="mt-1 text-xs text-slate-400">{alert.location || "Ohne Ortsfilter"}</p>
+        </div>
+        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${alert.is_active ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-800 text-slate-400"}`}>
+          {alert.is_active ? "Aktiv" : "Pausiert"}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+        <span className="rounded-full bg-slate-800 px-2 py-1">{typeLabel}</span>
+        <span className="rounded-full bg-slate-800 px-2 py-1">
+          {FREQUENCIES.find((frequency) => frequency.value === alert.frequency)?.label || alert.frequency}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AlertDetailPanel({ alert, refreshState, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
   const { used, remaining, atLimit, resetInMin } = getRefreshState(refreshState);
-  const { canRewrite, remainingMin } = getRewriteState(alert);
-  const heatmapMetrics = getHeatmapMetrics(alert);
+  const metrics = getCoverageMetrics(alert);
+  const typeLabel = JOB_TYPES.find((type) => type.value === alert.job_type)?.label || "Alle Stellenarten";
+  const frequencyLabel = FREQUENCIES.find((frequency) => frequency.value === alert.frequency)?.label || alert.frequency;
 
   return (
-    <div className={`bg-white rounded-xl border p-5 flex flex-col gap-3 shadow-sm transition-opacity ${!alert.is_active ? "opacity-60" : ""}`}>
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900 text-base">{alert.keywords}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${alert.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-              {alert.is_active ? "Aktiv" : "Pausiert"}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-3 mt-1.5 text-sm text-gray-500">
-            {alert.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" /> {alert.location}
-              </span>
-            )}
-            {alert.job_type && (
-              <span className="flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5" /> {JOB_TYPES.find((type) => type.value === alert.job_type)?.label || alert.job_type}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5" /> {alert.email}
-            </span>
-            <span className="flex items-center gap-1">
-              <Bell className="w-3.5 h-3.5" />
-              {FREQUENCIES.find((frequency) => frequency.value === alert.frequency)?.label || alert.frequency}
-            </span>
-          </div>
-
-          {alert.last_sent_at && (
-            <p className="text-xs text-gray-400 mt-1">
-              Zuletzt gesendet: {new Date(alert.last_sent_at).toLocaleString("de-AT")}
-            </p>
-          )}
-
-          <div className="flex items-center gap-1.5 mt-1.5">
-            {[...Array(REFRESH_MAX)].map((_, index) => (
-              <div key={index} className={`w-2 h-2 rounded-full ${index < used ? "bg-orange-400" : "bg-gray-200"}`} />
-            ))}
-            <span className="text-xs text-gray-400">
-              {atLimit
-                ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min`
-                : `${remaining} Aktualisierung${remaining !== 1 ? "en" : ""} heute (alle 4h)`}
-            </span>
-          </div>
+    <div className="h-full rounded-3xl border border-slate-800 bg-slate-900/60 p-6 text-slate-100 shadow-2xl shadow-black/20">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl bg-slate-900/70 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Status</p>
+          <p className="mt-2 text-2xl font-bold">{alert.is_active ? "Aktiv" : "Pausiert"}</p>
+          <p className="mt-1 text-xs text-slate-400">Alert {alert.is_active ? "wird ausgeführt" : "liefert aktuell keine Mails"}</p>
         </div>
+        <div className="rounded-2xl bg-slate-900/70 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Rhythmus</p>
+          <p className="mt-2 text-2xl font-bold">{frequencyLabel}</p>
+          <p className="mt-1 text-xs text-slate-400">Benachrichtigung an {alert.email}</p>
+        </div>
+        <div className="rounded-2xl bg-slate-900/70 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Refresh-Limit</p>
+          <p className="mt-2 text-2xl font-bold">{atLimit ? "Limit" : remaining}</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {atLimit ? `Erneut verfügbar in ${resetInMin} Minuten` : `${remaining} manuelle Aktualisierungen heute`}
+          </p>
+        </div>
+      </div>
 
-        <div className="flex w-full flex-col gap-3 lg:max-w-[280px]">
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Alert-Zusammenfassung</p>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-blue-700">Filter</span>
-            </div>
-            <div className="space-y-2.5">
-              {heatmapMetrics.map((metric) => (
-                <div key={metric.label}>
-                  <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-600">
-                    <span>{metric.label}</span>
-                    <span>{metric.value}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/80">
-                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${metric.value}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 rounded-xl bg-white/80 p-2.5 text-[11px] text-slate-600">
-              {alert.location
-                ? `Dieser Alert sucht gezielt nach ${alert.keywords} in ${alert.location}.`
-                : `Dieser Alert sucht breit nach ${alert.keywords} ohne festen Ortsfilter.`}
+      <div className="mt-6 rounded-2xl bg-slate-900/70 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-300">Alert-Details</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">{alert.keywords}</h2>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-3 py-1">
+                <MapPin className="h-3.5 w-3.5" /> {alert.location || "Ohne Ortsfilter"}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-3 py-1">
+                <Briefcase className="h-3.5 w-3.5" /> {typeLabel}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-3 py-1">
+                <Mail className="h-3.5 w-3.5" /> {alert.email}
+              </span>
             </div>
           </div>
-
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => onRunNow(alert.id)}
               disabled={isRunning || atLimit}
-              title={atLimit ? `Cooldown \u2014 verf\u00fcgbar in ${resetInMin}min` : "Jetzt ausf\u00fchren"}
-              className={`p-2 rounded-lg transition-colors ${atLimit ? "text-gray-300 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"} disabled:opacity-50`}
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+                atLimit ? "cursor-not-allowed bg-slate-800 text-slate-500" : "bg-indigo-600 text-white hover:bg-indigo-700"
+              }`}
             >
-              {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {isRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              Jetzt ausführen
             </button>
-
             <button
               onClick={() => onToggle(alert.id, !alert.is_active)}
-              title={alert.is_active ? "Pausieren" : "Aktivieren"}
-              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"
             >
-              {alert.is_active ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+              {alert.is_active ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+              {alert.is_active ? "Pausieren" : "Aktivieren"}
             </button>
-
             <button
               onClick={() => onEdit(alert)}
-              disabled={!canRewrite}
-              title={canRewrite ? "Alert bearbeiten" : `Bearbeiten in ${remainingMin}min verf\u00fcgbar`}
-              className={`p-2 rounded-lg transition-colors ${canRewrite ? "text-gray-500 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"
             >
-              <Pencil className="w-4 h-4" />
+              <Pencil className="h-4 w-4" />
+              Bearbeiten
             </button>
-
             <button
               onClick={() => onDelete(alert.id)}
-              title="L\u00f6schen"
-              className="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/25"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="h-4 w-4" />
+              Löschen
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="rounded-2xl bg-slate-900/70 p-5">
+          <div className="flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-indigo-300" />
+            <h3 className="text-sm font-semibold text-white">So ist dieser Alert konfiguriert</h3>
+          </div>
+          <div className="mt-4 space-y-4">
+            {metrics.map((metric) => (
+              <MetricBar key={metric.label} {...metric} />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-slate-900/70 p-5">
+            <div className="flex items-center gap-2">
+              <Radio className="h-4 w-4 text-emerald-300" />
+              <h3 className="text-sm font-semibold text-white">Nächster Versand</h3>
+            </div>
+            <p className="mt-3 text-sm text-slate-300">
+              {alert.last_sent_at
+                ? `Zuletzt gesendet am ${new Date(alert.last_sent_at).toLocaleString("de-AT")}.`
+                : "Noch kein Versand protokolliert."}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-900/70 p-5">
+            <div className="flex items-center gap-2">
+              <Clock3 className="h-4 w-4 text-amber-300" />
+              <h3 className="text-sm font-semibold text-white">Manuelle Aktualisierung</h3>
+            </div>
+            <div className="mt-3 flex items-center gap-1.5">
+              {[...Array(REFRESH_MAX)].map((_, index) => (
+                <div key={index} className={`h-2 w-2 rounded-full ${index < used ? "bg-amber-400" : "bg-slate-700"}`} />
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-slate-300">
+              {atLimit
+                ? `Heute keine weitere manuelle Aktualisierung möglich. Wieder frei in ${resetInMin} Minuten.`
+                : `${remaining} manuelle Aktualisierungen verbleiben heute.`}
+            </p>
           </div>
         </div>
       </div>
@@ -213,45 +281,45 @@ function CreateAlertModal({
   };
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)", padding: "16px", margin: 0 }}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-            <X className="w-5 h-5" />
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(2,6,23,0.65)", padding: "16px", margin: 0 }}>
+      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-6 text-slate-100 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">{title}</h2>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-900">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Suchbegriff *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Suchbegriff *</label>
             <input
               type="text"
               value={form.keywords}
               onChange={(event) => setValue("keywords", event.target.value)}
-              placeholder="z.B. Software Engineer, Marketing Manager"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="z. B. Marketing, Teilzeit Verkauf oder Software-Test"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ort</label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Ort</label>
             <input
               type="text"
               value={form.location}
               onChange={(event) => setValue("location", event.target.value)}
-              placeholder="z.B. Wien, Remote, \u00d6sterreich"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="z. B. Wien, Linz oder Remote"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Stellenart</label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Stellenart</label>
             <select
               value={form.job_type}
               onChange={(event) => setValue("job_type", event.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {JOB_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>{type.label}</option>
@@ -260,30 +328,30 @@ function CreateAlertModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">E-Mail</label>
             <input
               type="email"
               value={form.email}
               disabled
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full cursor-not-allowed rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-slate-500"
             />
-            <p className="text-xs text-gray-400 mt-1">Alerts werden nur an deine registrierte E-Mail-Adresse gesendet.</p>
+            <p className="mt-1 text-xs text-slate-500">Alerts werden nur an deine registrierte E-Mail-Adresse gesendet.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Häufigkeit</label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Häufigkeit</label>
             <div className="flex gap-3">
               {FREQUENCIES.map((frequency) => (
-                <label key={frequency.value} className="flex items-center gap-2 cursor-pointer">
+                <label key={frequency.value} className="flex cursor-pointer items-center gap-2">
                   <input
                     type="radio"
                     name="frequency"
                     value={frequency.value}
                     checked={form.frequency === frequency.value}
                     onChange={() => setValue("frequency", frequency.value)}
-                    className="accent-blue-600"
+                    className="accent-indigo-500"
                   />
-                  <span className="text-sm text-gray-700">{frequency.label}</span>
+                  <span className="text-sm text-slate-300">{frequency.label}</span>
                 </label>
               ))}
             </div>
@@ -293,13 +361,13 @@ function CreateAlertModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-900"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
             >
               {submitLabel}
             </button>
@@ -316,6 +384,7 @@ export default function JobAlertsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingAlert, setEditingAlert] = useState(null);
   const [runningId, setRunningId] = useState(null);
+  const [selectedAlertId, setSelectedAlertId] = useState(null);
   const [localRefreshState, setLocalRefreshState] = useState({
     manual_refresh_count: 0,
     manual_refresh_window_start: null,
@@ -355,6 +424,16 @@ export default function JobAlertsPage() {
     staleTime: 1000 * 60 * 2,
   });
 
+  useEffect(() => {
+    if (!alerts.length) {
+      setSelectedAlertId(null);
+      return;
+    }
+    if (!alerts.some((alert) => alert.id === selectedAlertId)) {
+      setSelectedAlertId(alerts[0].id);
+    }
+  }, [alerts, selectedAlertId]);
+
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
     onSuccess: (response) => {
@@ -363,6 +442,7 @@ export default function JobAlertsPage() {
         syncStoredAlerts(next);
         return next;
       });
+      setSelectedAlertId(response.data.id);
       bumpJobAlertUsageCaches(queryClient, 1);
       queryClient.invalidateQueries({ queryKey: ["job-alerts"], refetchType: "none" });
       queryClient.invalidateQueries({ queryKey: ["billing-overview"], refetchType: "none" });
@@ -494,7 +574,7 @@ export default function JobAlertsPage() {
       queryClient.invalidateQueries({ queryKey: ["init"] });
 
       toast.success(
-        `Suche gestartet! Falls Stellen gefunden werden, erhältst du eine E-Mail. (Noch ${remaining} Aktualisierung${remaining !== 1 ? "en" : ""})`,
+        `Suche gestartet. Noch ${remaining} Aktualisierung${remaining !== 1 ? "en" : ""} heute verfügbar.`,
         { duration: 5000 }
       );
     } catch (err) {
@@ -523,67 +603,85 @@ export default function JobAlertsPage() {
   };
 
   const activeCount = alerts.filter((alert) => alert.is_active).length;
+  const selectedAlert = alerts.find((alert) => alert.id === selectedAlertId) || null;
 
-  return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="flex items-start justify-between gap-4 animate-slide-up">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Job-Alerts</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Lass neue Stellenangebote automatisch per E-Mail zu dir kommen.
-          </p>
+  if (isLoading) {
+    return <div className="animate-slide-up"><ListSkeleton rows={4} /></div>;
+  }
+
+  if (alerts.length === 0) {
+    return (
+      <div className="animate-slide-up rounded-3xl border border-slate-800 bg-slate-950 p-10 text-center text-slate-200 shadow-2xl">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900">
+          <Bell className="h-8 w-8 text-indigo-300" />
         </div>
+        <h1 className="text-2xl font-bold text-white">Noch keine Job-Alerts</h1>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+          Erstelle deinen ersten Alert und lasse passende Stellen automatisch an deine E-Mail-Adresse senden.
+        </p>
         <button
           onClick={() => guardedRun(() => setShowCreate(true))}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
         >
-          <Plus className="w-4 h-4" />
-          Neuer Alert
+          <Plus className="h-4 w-4" />
+          Alert erstellen
         </button>
+
+        {showCreate && (
+          <CreateAlertModal
+            onClose={() => setShowCreate(false)}
+            onSubmit={(data) => createMutation.mutate(data)}
+            defaultEmail={me?.email || ""}
+          />
+        )}
       </div>
+    );
+  }
 
-      {alerts.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 animate-slide-up">
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{alerts.length}</p>
-            <p className="text-sm text-gray-500 mt-0.5">Alerts gesamt</p>
-          </div>
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{activeCount}</p>
-            <p className="text-sm text-gray-500 mt-0.5">Aktiv</p>
-          </div>
-          <div className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-2xl font-bold text-gray-400">{alerts.length - activeCount}</p>
-            <p className="text-sm text-gray-500 mt-0.5">Pausiert</p>
-          </div>
+  return (
+    <div className="animate-slide-up rounded-3xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl">
+      <div className="grid gap-4 border-b border-slate-800 p-6 md:grid-cols-3">
+        <div className="rounded-2xl bg-slate-900/70 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Alerts gesamt</p>
+          <p className="mt-2 text-2xl font-bold text-white">{alerts.length}</p>
         </div>
-      )}
-
-      {isLoading ? (
-        <div className="animate-slide-up"><ListSkeleton rows={3} /></div>
-      ) : alerts.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
-            <Bell className="w-8 h-8 text-blue-400" />
+        <div className="rounded-2xl bg-slate-900/70 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Aktiv</p>
+          <p className="mt-2 text-2xl font-bold text-emerald-300">{activeCount}</p>
+        </div>
+        <div className="flex items-center justify-between rounded-2xl bg-slate-900/70 p-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Aktion</p>
+            <p className="mt-2 text-sm text-slate-300">Neuen Alert hinzufügen oder bestehende Alerts prüfen</p>
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Noch keine Job-Alerts</h3>
-          <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-            Erstelle deinen ersten Alert und erhalte passende Stellenangebote direkt per E-Mail.
-          </p>
           <button
             onClick={() => guardedRun(() => setShowCreate(true))}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
           >
-            <Plus className="w-4 h-4" />
-            Alert erstellen
+            <Plus className="h-4 w-4" />
+            Neuer Alert
           </button>
         </div>
-      ) : (
-        <div className="space-y-3 animate-slide-up">
-          {alerts.map((alert) => (
-            <AlertCard
-              key={alert.id}
-              alert={alert}
+      </div>
+
+      <div className="grid min-h-[720px] grid-cols-1 md:grid-cols-12">
+        <aside className="border-b border-slate-800 p-4 md:col-span-4 md:h-full md:overflow-y-auto md:border-b-0 md:border-r">
+          <div className="space-y-3">
+            {alerts.map((alert) => (
+              <AlertListCard
+                key={alert.id}
+                alert={alert}
+                isSelected={alert.id === selectedAlertId}
+                onSelect={() => setSelectedAlertId(alert.id)}
+              />
+            ))}
+          </div>
+        </aside>
+
+        <main className="bg-slate-900/20 p-4 md:col-span-8 md:h-full md:overflow-y-auto md:p-8">
+          {selectedAlert && (
+            <AlertDetailPanel
+              alert={selectedAlert}
               refreshState={refreshState}
               onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
               onDelete={(id) => deleteMutation.mutate(id)}
@@ -596,11 +694,11 @@ export default function JobAlertsPage() {
                 }
                 setEditingAlert(currentAlert);
               }}
-              isRunning={runningId === alert.id}
+              isRunning={runningId === selectedAlert.id}
             />
-          ))}
-        </div>
-      )}
+          )}
+        </main>
+      </div>
 
       {showCreate && (
         <CreateAlertModal
