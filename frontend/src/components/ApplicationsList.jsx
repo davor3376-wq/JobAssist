@@ -10,8 +10,8 @@ import {
   ExternalLink,
   FileText,
   MapPin,
+  MessageSquare,
   SearchCheck,
-  Send,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -107,12 +107,11 @@ const TAG_COLORS = {
 
 function ActionButton({ onClick, disabled, disabledReason, color, icon, label }) {
   const styles = {
-    blue: "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100",
-    green: "border-green-300 bg-green-50 text-green-700 hover:bg-green-100",
-    purple: "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100",
-    white: "border-blue-300 bg-white text-blue-700 hover:bg-blue-50",
-    emerald: "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50",
-    "emerald-solid": "border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700",
+    indigo: "border-indigo-600 bg-indigo-600 text-white shadow-sm hover:border-indigo-700 hover:bg-indigo-700",
+    emerald: "border-emerald-600 bg-emerald-600 text-white shadow-sm hover:border-emerald-700 hover:bg-emerald-700",
+    amber: "border-amber-500 bg-amber-500 text-white shadow-sm hover:border-amber-600 hover:bg-amber-600",
+    "emerald-outline": "border-emerald-300 bg-white text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50",
+    "emerald-solid": "border-emerald-500 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700",
   };
 
   return (
@@ -121,7 +120,7 @@ function ActionButton({ onClick, disabled, disabledReason, color, icon, label })
         onClick={onClick}
         disabled={disabled}
         aria-disabled={disabled}
-        className={`flex items-center gap-1 rounded border px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50 ${styles[color]}`}
+        className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${styles[color]}`}
       >
         {icon}
         {label}
@@ -511,10 +510,10 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               {isDeleting && <p className="text-xs text-gray-500">Stelle wird gelöscht...</p>}
               {showActionHint && <div className="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-700">{!hasResume && <div>Bitte zuerst einen Lebenslauf auswählen, um Match und Gesprächsvorbereitung zu nutzen.</div>}{!job.company && <div>Recherche ist für diese Stelle nicht verfügbar, weil der Firmenname fehlt.</div>}</div>}
               <div className="flex flex-wrap gap-2">
-                <ActionButton color="blue" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-3 w-3" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match berechnen"} />
-                <ActionButton color="purple" disabled={!hasResume} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => openInterviewWorkspace(job)} icon={<Brain className="h-3 w-3" />} label="Gesprächsvorbereitung" />
-                <ActionButton color="white" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /> : <Send className="h-3 w-3" />} label={draftLoading === job.id ? "Generiert..." : "Brief-Entwurf"} />
-                <ActionButton color={job.research_data ? "emerald-solid" : "emerald"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-3 w-3" />} label={job.research_data ? "Recherche ansehen" : "Recherche"} />
+                <ActionButton color="indigo" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-4 w-4" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match-Bewertung"} />
+                <ActionButton color="emerald" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FileText className="h-4 w-4" />} label={draftLoading === job.id ? "Wird erstellt..." : "Anschreiben"} />
+                <ActionButton color="amber" disabled={!hasResume} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => openInterviewWorkspace(job)} icon={<MessageSquare className="h-4 w-4" />} label="Gesprächsvorbereitung" />
+                <ActionButton color={job.research_data ? "emerald-solid" : "emerald-outline"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-4 w-4" />} label="Recherche" />
               </div>
               {job.cover_letter && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `cover-${job.id}` ? null : `cover-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-green-700"><FileText className="h-4 w-4" /> Erstelltes Motivationsschreiben</button>{expandedPanel === `cover-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-green-300 bg-white p-3 text-sm text-gray-700">{job.cover_letter}</div>}</div>}
               {job.interview_qa && (
