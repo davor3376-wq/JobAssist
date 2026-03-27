@@ -17,13 +17,12 @@ function UsageBar({ feature, used, limit }) {
   const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
 
   const barColor = isAtLimit ? "bg-red-500" : isWarn ? "bg-amber-400" : "bg-blue-500";
-  const textColor = isAtLimit ? "text-red-600" : isWarn ? "text-amber-600" : "text-slate-700";
+  const textColor = isAtLimit ? "text-red-600" : isWarn ? "text-amber-600" : "text-slate-900";
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-sm">
-        {/* Strip the "(Diesen Monat)" / "(Heute)" suffix for the bar label since it's shown in header */}
-        <span className="font-medium text-slate-700 truncate">{label}</span>
+        <span className="font-semibold text-slate-900 truncate">{label}</span>
         <div className="flex flex-shrink-0 items-center gap-1.5">
           {isAtLimit && (
             <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">
@@ -52,8 +51,8 @@ function UsageBar({ feature, used, limit }) {
   );
 }
 
-// ─── Premium benefits list ────────────────────────────────────────────────────
-const PREMIUM_BENEFITS = [
+// ─── Pro & Max benefits list ──────────────────────────────────────────────────
+const PLAN_BENEFITS = [
   "Unbegrenzte KI-Nachrichten",
   "Bis zu 20 Lebenslauf-Analysen/Monat",
   "Bis zu 10 Job-Alerts",
@@ -210,8 +209,8 @@ export default function BillingPage() {
 
         {/* Col 2 — Usage Status */}
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <h3 className="mb-1 text-sm font-bold text-slate-800">Nutzungs-Status</h3>
-          <p className="mb-4 text-xs text-slate-400">Aktueller Verbrauch in diesem Zeitraum</p>
+          <h3 className="mb-1 text-sm font-bold text-slate-900">Nutzungs-Status</h3>
+          <p className="mb-4 text-xs text-slate-500">Aktueller Verbrauch in diesem Zeitraum</p>
 
           {usage.length === 0 ? (
             <p className="text-xs text-slate-400">Keine Nutzungsdaten verfügbar.</p>
@@ -230,11 +229,14 @@ export default function BillingPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500">
               <Star className="h-4 w-4 text-white" />
             </div>
-            <h3 className="text-sm font-bold text-slate-800">Vorteile von Premium</h3>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">Pro & Max Vorteile</h3>
+              <p className="text-[11px] text-slate-500">Verfügbar mit Pro oder Max</p>
+            </div>
           </div>
 
           <ul className="space-y-2.5 mb-5">
-            {PREMIUM_BENEFITS.map((benefit) => (
+            {PLAN_BENEFITS.map((benefit) => (
               <li key={benefit} className="flex items-start gap-2 text-sm text-slate-700">
                 <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

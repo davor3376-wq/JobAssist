@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, Send, SearchCheck } from "lucide-react";
-import { jobApi, aiAssistantApi, motivationsschreibenApi, resumeApi, researchApi } from "../services/api";
-import { generateMailtoLink } from "../utils/emailHelpers";
+import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck } from "lucide-react";
+import { jobApi, aiAssistantApi, researchApi } from "../services/api";
 import ApplicationsList from "../components/ApplicationsList";
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
@@ -128,8 +127,6 @@ export default function JobsPage() {
   const [expandedJob, setExpandedJob] = useState(null);
   const [jobAnalyses, setJobAnalyses] = useState({});
   const [analyzingJobId, setAnalyzingJobId] = useState(null);
-  const [draftTexts, setDraftTexts] = useState(() => loadStored("job-search-drafts") || {});   // source_id -> generated text
-  const [draftLoading, setDraftLoading] = useState(null); // source_id being generated
   const [researchModal, setResearchModal] = useState(null); // { companyName, jobDescription }
   const [researchData, setResearchData] = useState(null);
   const [researchCache, setResearchCache] = useState(() => loadStored("job-search-research") || {});
@@ -149,15 +146,6 @@ export default function JobsPage() {
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const me = initData?.me;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
-  const { data: resumes = [] } = useQuery({
-    queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then((r) => {
-      saveStored("resumes", r.data);
-      return r.data;
-    }),
-    initialData: () => loadStored("resumes"),
-    staleTime: 1000 * 60 * 5,
-  });
 
   // Tracked jobs
   const { data: jobs = [] } = useQuery({
@@ -288,42 +276,6 @@ export default function JobsPage() {
       toast.error(getApiErrorMessage(err, "KI-Analyse fehlgeschlagen"));
     } finally {
       setAnalyzingJobId(null);
-    }
-  };
-
-  const handleDraftEmail = async (result) => {
-    const id = result.source_id;
-    const userName = me?.full_name || me?.email?.split("@")[0] || "Bewerber";
-
-    // Use cached text if available
-    if (draftTexts[id]) {
-      window.location.href = generateMailtoLink(result, draftTexts[id], userName, result.contact_email);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
-      return;
-    }
-
-    setDraftLoading(id);
-    try {
-      const res = await motivationsschreibenApi.generate({
-        company: result.company || "",
-        role: result.title || "",
-        job_description: result.description || `${result.title} bei ${result.company}`,
-        tone: "formell",
-        resume_id: resumes[0]?.id || null,
-        applicant_name: me?.full_name || "",
-      });
-      const text = res.data?.text || "";
-      setDraftTexts((prev) => {
-        const next = { ...prev, [id]: text };
-        saveStored("job-search-drafts", next);
-        return next;
-      });
-      window.location.href = generateMailtoLink(result, text, userName, result.contact_email);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Brief-Entwurf konnte nicht generiert werden"));
-    } finally {
-      setDraftLoading(null);
     }
   };
 
@@ -816,17 +768,6 @@ export default function JobsPage() {
                                   >
                                     <Sparkles className="w-3.5 h-3.5" />
                                     {analyzingJobId === index ? "Analysiert…" : "KI-Analyse"}
-                                  </button>
-                                  <button
-                                    onClick={() => handleDraftEmail(result)}
-                                    disabled={draftLoading === result.source_id}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 transition-colors disabled:opacity-50"
-                                  >
-                                    {draftLoading === result.source_id ? (
-                                      <><div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />Generiert…</>
-                                    ) : (
-                                      <><Send className="w-3.5 h-3.5" />Brief-Entwurf</>
-                                    )}
                                   </button>
                                   <button
                                     onClick={() => handleResearch(result)}

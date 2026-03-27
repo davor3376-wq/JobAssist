@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AlertCircle, ArrowRight } from "lucide-react";
 
 const FEATURE_LABELS = {
   cv_analysis: "Lebenslauf-Analysen",
@@ -39,31 +40,36 @@ export default function useUsageGuard(feature) {
     if (atLimit) {
       toast(
         (t) => (
-          <div className="flex flex-col gap-2">
-            <p className="font-semibold text-gray-900">Limit erreicht</p>
-            <p className="text-sm text-gray-600">
-              Du hast alle {limit} {label} {periodLabel} verbraucht.
-            </p>
-            <div className="mt-1 flex gap-2">
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  navigate("/pricing");
-                }}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                Upgrade
-              </button>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100"
-              >
-                OK
-              </button>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 text-base">Limit erreicht</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Du hast {used}/{limit} {label} {periodLabel} verbraucht.
+                  Upgrade auf Pro oder Max für mehr Kapazität.
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => { toast.dismiss(t.id); navigate("/pricing"); }}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Upgrade <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Schließen
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ),
-        { duration: 8000, style: { maxWidth: "360px" } }
+        { duration: 10000, style: { maxWidth: "448px", padding: 0, background: "transparent", boxShadow: "none" } }
       );
       return;
     }

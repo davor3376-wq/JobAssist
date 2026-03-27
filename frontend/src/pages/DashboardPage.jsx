@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock, AlertTriangle } from "lucide-react";
+import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock, AlertTriangle, Upload, Search } from "lucide-react";
 
 import { jobApi } from "../services/api";
 
@@ -268,6 +268,7 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
+            {/* CV tile with upload CTA */}
             <div className="card card-hover group rounded-2xl">
               <div className="flex items-start justify-between">
                 <div>
@@ -278,9 +279,18 @@ export default function DashboardPage() {
                   <TrendingUp className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <p className="mt-4 text-xs text-gray-500">Verwalte alle deine Dokumente</p>
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-xs text-gray-500">Verwalte alle deine Dokumente</p>
+                <Link
+                  to="/resume"
+                  className="flex items-center gap-1 rounded-lg border border-indigo-200 px-2.5 py-1 text-[11px] font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                >
+                  <Upload className="h-3 w-3" /> Hochladen
+                </Link>
+              </div>
             </div>
 
+            {/* Jobs tracked tile */}
             <div className="card card-hover group rounded-2xl">
               <div className="flex items-start justify-between">
                 <div>
@@ -291,17 +301,41 @@ export default function DashboardPage() {
                   <Target className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <p className="mt-4 text-xs text-gray-500">Behalte den Überblick über Möglichkeiten</p>
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-xs text-gray-500">Behalte den Überblick über Möglichkeiten</p>
+                <Link
+                  to="/jobs"
+                  className="flex items-center gap-1 rounded-lg border border-purple-200 px-2.5 py-1 text-[11px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                >
+                  <Search className="h-3 w-3" /> Suchen
+                </Link>
+              </div>
             </div>
 
+            {/* Match score tile with ring gauge */}
             <div className="card card-hover group rounded-2xl">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="mb-1 text-sm font-medium text-gray-500">Match-Bewertung</p>
                   <p className="text-4xl font-bold text-gray-900">{avgScore ? `${avgScore}%` : "—"}</p>
                 </div>
-                <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-emerald-500/30">
-                  <Award className="h-6 w-6 text-white" />
+                {/* Circular ring gauge */}
+                <div className="relative flex-shrink-0">
+                  <svg width="56" height="56" className="-rotate-90" aria-hidden="true">
+                    <circle cx="28" cy="28" r="22" fill="none" stroke="#d1fae5" strokeWidth="6" />
+                    {avgScore != null && (
+                      <circle
+                        cx="28" cy="28" r="22"
+                        fill="none"
+                        stroke={avgScore >= 70 ? "#16a34a" : avgScore >= 50 ? "#ca8a04" : "#dc2626"}
+                        strokeWidth="6"
+                        strokeDasharray={2 * Math.PI * 22}
+                        strokeDashoffset={2 * Math.PI * 22 * (1 - avgScore / 100)}
+                        strokeLinecap="round"
+                      />
+                    )}
+                  </svg>
+                  <Award className="absolute inset-0 m-auto h-5 w-5 text-emerald-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
@@ -318,14 +352,16 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             to="/resume"
-            className="btn-primary flex-1 text-center transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/30 sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-sm sm:flex-none"
           >
+            <Upload className="h-4 w-4" />
             Lebenslauf hochladen
           </Link>
           <Link
             to="/jobs"
-            className="btn-secondary flex-1 text-center transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm sm:flex-none"
           >
+            <Search className="h-4 w-4" />
             Stelle hinzufügen
           </Link>
         </div>
@@ -339,26 +375,49 @@ export default function DashboardPage() {
               Alle anzeigen <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="space-y-3">
-            {recentJobs.map((job) => (
-              <Link
-                key={job.id}
-                to={`/jobs?jobId=${job.id}`}
-                className="card-hover block rounded-xl p-4 transition-all duration-300 hover:shadow-md"
-              >
-                <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2">
+            {recentJobs.map((job) => {
+              const initials = (job.company || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+              const score = job.match_score;
+              const ringColor = score == null ? "#94a3b8" : score >= 70 ? "#16a34a" : score >= 50 ? "#ca8a04" : "#dc2626";
+              const circ = 2 * Math.PI * 14;
+              return (
+                <Link
+                  key={job.id}
+                  to={`/jobs?jobId=${job.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-transparent p-3 transition-all duration-200 hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm"
+                >
+                  {/* Company initials avatar */}
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-[11px] font-bold text-slate-600">
+                    {initials}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-gray-900">{job.role || "Ohne Titel"}</p>
                     <p className="truncate text-xs text-gray-500">{job.company || "Unbekanntes Unternehmen"}</p>
                   </div>
-                  {job.match_score != null && (
-                    <span className={`flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getMatchColorClass(job.match_score)}`}>
-                      {job.match_score}%
-                    </span>
+                  {/* Match ring */}
+                  {score != null ? (
+                    <div className="relative flex-shrink-0">
+                      <svg width="36" height="36" className="-rotate-90">
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                        <circle
+                          cx="18" cy="18" r="14" fill="none"
+                          stroke={ringColor} strokeWidth="4"
+                          strokeDasharray={circ}
+                          strokeDashoffset={circ * (1 - score / 100)}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold" style={{ color: ringColor }}>
+                        {Math.round(score)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="flex-shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-400">—</span>
                   )}
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
