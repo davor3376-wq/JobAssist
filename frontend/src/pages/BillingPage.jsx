@@ -53,11 +53,11 @@ function UsageBar({ feature, used, limit }) {
 
 // ─── Pro & Max benefits list ──────────────────────────────────────────────────
 const PLAN_BENEFITS = [
-  "Unbegrenzte KI-Nachrichten",
-  "Bis zu 20 Lebenslauf-Analysen/Monat",
-  "Bis zu 10 Job-Alerts",
-  "Prioritäts-Support",
-  "Erweiterte Bewerbungsanalysen",
+  { label: "Mehr KI-Nachrichten pro Monat",       sub: "Deutlich höheres Nachrichtenlimit" },
+  { label: "20 Lebenslauf-Analysen / Monat",       sub: "KI-Feedback zu deinen Unterlagen" },
+  { label: "Bis zu 10 Job-Alerts",                 sub: "Automatisch passende Stellen" },
+  { label: "Mehr Jobsuchen täglich",                sub: "Kein frühzeitiges Tageslimit" },
+  { label: "Prioritäts-Support",                   sub: "Schnellere Antwortzeiten" },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -189,6 +189,25 @@ export default function BillingPage() {
             </div>
           </div>
 
+          {/* Zahlungsmethoden */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <CreditCard className="h-4 w-4 text-slate-400" />
+              <p className="text-sm font-semibold text-slate-800">Zahlungsmethoden</p>
+            </div>
+            {isPaid ? (
+              <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-500 tracking-wider">KARTE</span>
+                  <span className="text-sm text-slate-700">•••• {sub?.last4 || "****"}</span>
+                </div>
+                <button onClick={handleManage} className="text-xs font-semibold text-blue-600 hover:text-blue-700">Bearbeiten</button>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Keine Zahlungsmethode hinterlegt — kostenloser Plan.</p>
+            )}
+          </div>
+
           {/* Dein nächster Meilenstein */}
           {nextMilestone && (
             <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -235,13 +254,16 @@ export default function BillingPage() {
             </div>
           </div>
 
-          <ul className="space-y-2.5 mb-5">
+          <ul className="space-y-3 mb-5">
             {PLAN_BENEFITS.map((benefit) => (
-              <li key={benefit} className="flex items-start gap-2 text-sm text-slate-700">
+              <li key={benefit.label} className="flex items-start gap-2.5">
                 <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </span>
-                {benefit}
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{benefit.label}</p>
+                  <p className="text-[11px] text-slate-500">{benefit.sub}</p>
+                </div>
               </li>
             ))}
           </ul>

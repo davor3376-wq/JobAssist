@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock, AlertTriangle, Upload, Search } from "lucide-react";
+import { TrendingUp, Target, Award, ArrowRight, Activity, CalendarClock, AlertTriangle, Upload, Search, CheckCircle, Bookmark, MessageSquare, XCircle } from "lucide-react";
 
 import { jobApi } from "../services/api";
 
@@ -75,7 +75,7 @@ function MiniActivityChart({ values }) {
                     ? "bg-gradient-to-t from-indigo-600 to-violet-500"
                     : "bg-gradient-to-t from-indigo-500 to-violet-400"
                 }`}
-                style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "3px" }}
+                style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : 0 }}
               />
             </div>
             <span className="text-[11px] font-medium text-gray-400">{DAY_LABELS[index]}</span>
@@ -210,6 +210,47 @@ export default function DashboardPage() {
             <MiniActivityChart values={activitySeries} />
 
             {/* Frist-Monitor */}
+            {/* ── Letzte Aktionen feed ──────────────────────── */}
+            {jobs && jobs.length > 0 && (() => {
+              const STATUS_META = {
+                bookmarked:   { Icon: Bookmark,     color: "text-blue-500",   bg: "bg-blue-50",   label: "Gespeichert" },
+                applied:      { Icon: CheckCircle,  color: "text-green-500",  bg: "bg-green-50",  label: "Beworben" },
+                interviewing: { Icon: MessageSquare,color: "text-purple-500", bg: "bg-purple-50", label: "Gespräch" },
+                offered:      { Icon: Award,        color: "text-amber-500",  bg: "bg-amber-50",  label: "Angebot" },
+                rejected:     { Icon: XCircle,      color: "text-red-400",    bg: "bg-red-50",    label: "Abgelehnt" },
+              };
+              const recentActions = [...jobs]
+                .sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0))
+                .slice(0, 4);
+              return (
+                <div className="mt-4 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Letzte Aktionen</p>
+                  {recentActions.map((job) => {
+                    const meta = STATUS_META[job.status] || STATUS_META.bookmarked;
+                    const { Icon } = meta;
+                    const stamp = job.updated_at || job.created_at;
+                    const when = stamp ? new Date(stamp).toLocaleDateString("de-AT", { day: "numeric", month: "short" }) : "";
+                    return (
+                      <Link
+                        key={job.id}
+                        to={`/jobs?jobId=${job.id}`}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-white/70 transition-colors"
+                      >
+                        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${meta.bg}`}>
+                          <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-semibold text-slate-800">{job.role || "Stelle"}</span>
+                          <span className="block truncate text-[10px] text-slate-500">{job.company || ""}</span>
+                        </span>
+                        <span className="flex-shrink-0 text-[10px] text-slate-400">{when}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {nextDeadline ? (() => {
               const daysLeft = Math.ceil(
                 (new Date(nextDeadline.deadline).setHours(0,0,0,0) - new Date().setHours(0,0,0,0))
@@ -269,7 +310,7 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* CV tile with upload CTA */}
-            <div className="card card-hover group rounded-2xl">
+            <div className="card group rounded-2xl hover:shadow-md transition-shadow duration-150">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="mb-1 text-sm font-medium text-gray-500">Lebensläufe hochgeladen</p>
@@ -291,7 +332,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Jobs tracked tile */}
-            <div className="card card-hover group rounded-2xl">
+            <div className="card group rounded-2xl hover:shadow-md transition-shadow duration-150">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="mb-1 text-sm font-medium text-gray-500">Stellen verfolgt</p>
@@ -313,21 +354,21 @@ export default function DashboardPage() {
             </div>
 
             {/* Match score tile with ring gauge */}
-            <div className="card card-hover group rounded-2xl">
+            <div className="card group rounded-2xl hover:shadow-md transition-shadow duration-150">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="mb-1 text-sm font-medium text-gray-500">Match-Bewertung</p>
                   <p className="text-4xl font-bold text-gray-900">{avgScore ? `${avgScore}%` : "—"}</p>
                 </div>
-                {/* Circular ring gauge */}
+                {/* Circular ring gauge — always green */}
                 <div className="relative flex-shrink-0">
                   <svg width="56" height="56" className="-rotate-90" aria-hidden="true">
-                    <circle cx="28" cy="28" r="22" fill="none" stroke="#d1fae5" strokeWidth="6" />
+                    <circle cx="28" cy="28" r="22" fill="none" stroke="#bbf7d0" strokeWidth="6" />
                     {avgScore != null && (
                       <circle
                         cx="28" cy="28" r="22"
                         fill="none"
-                        stroke={avgScore >= 70 ? "#16a34a" : avgScore >= 50 ? "#ca8a04" : "#dc2626"}
+                        stroke="#16a34a"
                         strokeWidth="6"
                         strokeDasharray={2 * Math.PI * 22}
                         strokeDashoffset={2 * Math.PI * 22 * (1 - avgScore / 100)}
