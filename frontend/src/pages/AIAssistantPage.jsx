@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
-  Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, ChevronLeft, Clock,
+  Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
+  ClipboardList, Upload, Search,
 } from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
@@ -32,7 +34,7 @@ function loadStoredResumes() {
   } catch { return undefined; }
 }
 
-// ─── Suggestion chips ─────────────────────────────────────────────────────────
+// ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
   { icon: FileText,      label: "Lebenslauf verbessern",    sub: "Stärken und Schwächen erkennen",   prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
@@ -66,12 +68,14 @@ function relativeTime(ts) {
 
 export default function AIAssistantPage() {
   const [conversations, setConversations] = useState(() => loadHistory());
-  const [activeId,      setActiveId]      = useState(null);   // null = new chat
+  const [activeId,      setActiveId]      = useState(null);
   const [messages,      setMessages]      = useState([]);
   const [input,         setInput]         = useState("");
   const [selectedResumeId, setSelectedResumeId] = useState(null);
-  const [sidebarOpen,   setSidebarOpen]   = useState(false);  // mobile sidebar
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [simulationMode, setSimulationMode] = useState(false);
+  const [assessmentMode, setAssessmentMode] = useState(false);
+  const [historySearch,  setHistorySearch]  = useState("");
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -87,12 +91,10 @@ export default function AIAssistantPage() {
     staleTime: 1000 * 60 * 2,
   });
 
-  // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Persist conversation to history whenever messages change ──────────────
   useEffect(() => {
     if (messages.length === 0) return;
     setConversations((prev) => {
@@ -104,7 +106,6 @@ export default function AIAssistantPage() {
         saveHistory(updated);
         return updated;
       }
-      // New conversation — create entry
       const newConv = { id: makeId(), title, messages, createdAt: Date.now(), updatedAt: Date.now() };
       setActiveId(newConv.id);
       const updated = [newConv, ...prev].slice(0, MAX_HISTORY);
@@ -113,7 +114,6 @@ export default function AIAssistantPage() {
     });
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Chat mutation ─────────────────────────────────────────────────────────
   const chatMutation = useMutation({
     mutationFn: (data) => aiAssistantApi.chat(data),
     onSuccess: (res) => {
@@ -131,7 +131,6 @@ export default function AIAssistantPage() {
   const handleSend = useCallback((text) => {
     const message = (text ?? input).trim();
     if (!message) return;
-
     guardedRun(() => {
       setMessages((prev) => [...prev, { role: "user", content: message }]);
       setInput("");
@@ -147,23 +146,22 @@ export default function AIAssistantPage() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // Start a brand-new conversation
   const handleNewChat = () => {
     setActiveId(null);
     setMessages([]);
     setInput("");
+    setSimulationMode(false);
+    setAssessmentMode(false);
     setSidebarOpen(false);
     inputRef.current?.focus();
   };
 
-  // Restore a past conversation
   const handleSelectConversation = (conv) => {
     setActiveId(conv.id);
     setMessages(conv.messages);
     setSidebarOpen(false);
   };
 
-  // Delete a conversation from history
   const handleDeleteConversation = (e, id) => {
     e.stopPropagation();
     setConversations((prev) => {
@@ -179,15 +177,32 @@ export default function AIAssistantPage() {
 
   const startSimulation = useCallback(() => {
     setSimulationMode(true);
+    setAssessmentMode(false);
     handleSend("Starte bitte einen Interview-Simulator für mich. Stelle mir nacheinander präzise Fragen und warte jeweils auf meine Antwort.");
   }, [handleSend]);
 
+  const startAssessment = useCallback(() => {
+    setAssessmentMode(true);
+    setSimulationMode(false);
+    handleSend("Starte bitte ein strukturiertes Karriere-Assessment für mich. Analysiere meine Stärken, Interessen und Fähigkeiten durch gezielte Fragen, und gib mir am Ende eine fundierte Einschätzung meines Bewerberprofils.");
+  }, [handleSend]);
+
   const simulatorActions = [
-    { label: "Nächste Frage", prompt: "Stelle mir bitte die nächste Interviewfrage für diese Simulation." },
+    { label: "Nächste Frage",  prompt: "Stelle mir bitte die nächste Interviewfrage für diese Simulation." },
     { label: "Feedback geben", prompt: "Gib mir bitte direktes Feedback auf meine letzte Antwort und sage mir, was ich verbessern soll." },
-    { label: "Tipp anzeigen", prompt: "Gib mir bitte einen kurzen Tipp, wie ich die aktuelle Interviewfrage stärker beantworten kann." },
+    { label: "Tipp anzeigen",  prompt: "Gib mir bitte einen kurzen Tipp, wie ich die aktuelle Interviewfrage stärker beantworten kann." },
   ];
-  const resumeContextLabel = uploadedResumes.find((resume) => resume.id === selectedResumeId)?.filename;
+
+  const assessmentActions = [
+    { label: "Weiter",           prompt: "Fahre mit der nächsten Assessment-Frage fort." },
+    { label: "Auswertung jetzt", prompt: "Gib mir jetzt schon eine Zwischenauswertung meines Bewerberprofils basierend auf dem bisherigen Gespräch." },
+    { label: "Abschließen",      prompt: "Schließe das Assessment ab und gib mir eine vollständige Profilauswertung mit konkreten Empfehlungen." },
+  ];
+
+  const resumeContextLabel = uploadedResumes.find((r) => r.id === selectedResumeId)?.filename;
+  const filteredConversations = historySearch.trim()
+    ? conversations.filter((c) => c.title.toLowerCase().includes(historySearch.toLowerCase()))
+    : conversations;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -196,22 +211,19 @@ export default function AIAssistantPage() {
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          {/* Mobile: sidebar toggle */}
           <button
             onClick={() => setSidebarOpen((v) => !v)}
             className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
-            title="Gesprächsverlauf"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
-              KI-Bewerbungsassistent
-            </h1>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
+            KI-Bewerbungsassistent
+          </h1>
         </div>
+
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Resume context */}
+          {/* Resume context selector */}
           <select
             value={selectedResumeId || ""}
             onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
@@ -222,6 +234,16 @@ export default function AIAssistantPage() {
               <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
             ))}
           </select>
+
+          {/* Lebenslauf hochladen CTA */}
+          <Link
+            to="/resume"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Lebenslauf hochladen
+          </Link>
+
           <button
             onClick={startSimulation}
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 text-xs font-semibold hover:bg-violet-200 transition-colors"
@@ -229,6 +251,7 @@ export default function AIAssistantPage() {
             <Sparkles className="w-3.5 h-3.5" />
             Simulation starten
           </button>
+
           <button
             onClick={handleNewChat}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
@@ -242,32 +265,44 @@ export default function AIAssistantPage() {
       {/* ── Main layout: sidebar + chat ───────────────────────────────────── */}
       <div className="flex-1 flex gap-3 min-h-0 relative">
 
-        {/* ── History Sidebar ─────────────────────────────────────────────── */}
-        {/*
-          Mobile: fixed overlay from left (translate-x-0 when open, -translate-x-full when closed)
-          Desktop: always visible flex column at fixed width
-        */}
+        {/* ── Chat-Historie Sidebar ────────────────────────────────────────── */}
         <aside className={`
           absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
           md:relative md:w-64 md:translate-x-0 md:shadow-sm md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
-        `}
-        >
-          <div className="flex-shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
-            <span className="text-xs font-semibold text-slate-600">Verlauf</span>
-            <button
-              onClick={handleNewChat}
-              className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
-            >
-              <Plus className="w-3 h-3" /> Neu
-            </button>
+        `}>
+          {/* Sidebar header */}
+          <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-bold text-slate-800 tracking-wide">Chat-Historie</span>
+              <button
+                onClick={handleNewChat}
+                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+              >
+                <Plus className="w-3 h-3" /> Neu
+              </button>
+            </div>
+            {/* Search input */}
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+              <Search className="w-3 h-3 text-slate-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                placeholder="Stelle eine Frage…"
+                className="flex-1 bg-transparent text-[11px] text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
+              />
+            </div>
           </div>
 
+          {/* Conversation list */}
           <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
-            {conversations.length === 0 ? (
-              <p className="px-2 py-6 text-center text-[11px] text-slate-400">Noch kein Verlauf</p>
+            {filteredConversations.length === 0 ? (
+              <p className="px-2 py-6 text-center text-[11px] text-slate-400">
+                {historySearch ? "Keine Treffer" : "Noch kein Verlauf"}
+              </p>
             ) : (
-              conversations.map((conv) => (
+              filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv)}
@@ -279,7 +314,7 @@ export default function AIAssistantPage() {
                 >
                   <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 opacity-50" />
                   <span className="flex-1 min-w-0">
-                    <span className="block truncate text-xs font-medium leading-tight">{conv.title}</span>
+                    <span className="block truncate text-xs font-semibold leading-tight">{conv.title}</span>
                     <span className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
                       <Clock className="w-2.5 h-2.5" />
                       {relativeTime(conv.updatedAt)}
@@ -308,6 +343,8 @@ export default function AIAssistantPage() {
 
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+          {/* Simulation mode banner */}
           {simulationMode && (
             <div className="border-b border-violet-100 bg-violet-50/70 px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -338,54 +375,119 @@ export default function AIAssistantPage() {
             </div>
           )}
 
+          {/* Assessment mode banner */}
+          {assessmentMode && (
+            <div className="border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-500">Assessment Center</p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    Strukturierte Analyse deines Bewerberprofils — Stärken, Fähigkeiten und Potenziale.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {assessmentActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => handleSend(action.prompt)}
+                      className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setAssessmentMode(false)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    Assessment beenden
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Messages area */}
           <div className="flex-1 overflow-y-auto p-4 min-h-0 bg-slate-50/40">
             {messages.length === 0 ? (
-              /* ── Empty state / suggestions ── */
-              <div className="flex flex-col items-center justify-center h-full py-8">
-                <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-5 flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                      <Bot className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-lg">Hallo. Woran arbeitest du gerade?</h3>
-                      <p className="mt-1 text-sm text-gray-500 max-w-xl">
-                        Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Antworten und beim Weiterführen bestehender Gespräche.
-                      </p>
-                      {resumeContextLabel && (
-                        <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
-                          Aktiver Lebenslauf: {resumeContextLabel}
+              /* ── Empty state / hub ── */
+              <div className="flex flex-col h-full">
+                <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 py-2">
+
+                  {/* Purple hero banner */}
+                  <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-5 text-white shadow-lg">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-lg leading-tight">Hallo. Woran arbeitest du gerade?</h3>
+                        <p className="mt-1 text-sm text-violet-200 max-w-md">
+                          Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Vorbereitung und gezielter Karriereberatung.
                         </p>
-                      )}
+                        {resumeContextLabel && (
+                          <span className="mt-3 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+                            Aktiver Lebenslauf: {resumeContextLabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="mb-4 flex flex-wrap gap-2">
+
+                  {/* Two feature cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Interview Simulation */}
                     <button
                       onClick={startSimulation}
-                      className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+                      className="group text-left rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-4 hover:border-violet-400 hover:shadow-md transition-all"
                     >
-                      <Sparkles className="w-4 h-4" />
-                      Simulation starten
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                        <Sparkles className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="font-bold text-sm text-slate-900">Interview Simulation</p>
+                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                        Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
+                      </p>
+                      <span className="mt-3 inline-block text-xs font-semibold text-violet-600 group-hover:text-violet-700">
+                        Jetzt starten →
+                      </span>
+                    </button>
+
+                    {/* Assessment Center */}
+                    <button
+                      onClick={startAssessment}
+                      className="group text-left rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-blue-400 hover:shadow-md transition-all"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                        <ClipboardList className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="font-bold text-sm text-slate-900">Assessment Center</p>
+                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                        Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
+                      </p>
+                      <span className="mt-3 inline-block text-xs font-semibold text-blue-600 group-hover:text-blue-700">
+                        Assessment starten →
+                      </span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                    {SUGGESTIONS.map((s) => {
-                      const locked = s.requiresResume && uploadedResumes.length === 0;
-                      return (
-                        <button
-                          key={s.label}
-                          onClick={() => {
-                            if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                            handleSend(s.prompt);
-                          }}
-                          className="text-left w-full"
-                        >
-                          <div className={`flex flex-col gap-1 px-3 py-2.5 rounded-xl border text-left transition-all
-                            ${locked
-                              ? "border-gray-100 bg-gray-50 cursor-not-allowed"
-                              : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
-                            }`}
+
+                  {/* Schnell-Aktionen 3×2 grid */}
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide">Schnell-Aktionen</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {SUGGESTIONS.map((s) => {
+                        const locked = s.requiresResume && uploadedResumes.length === 0;
+                        return (
+                          <button
+                            key={s.label}
+                            onClick={() => {
+                              if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
+                              handleSend(s.prompt);
+                            }}
+                            className={`text-left flex flex-col gap-1 px-3 py-2.5 rounded-xl border transition-all
+                              ${locked
+                                ? "border-gray-100 bg-gray-50 cursor-not-allowed"
+                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
+                              }`}
                           >
                             <div className="flex items-center gap-2">
                               {locked
@@ -401,11 +503,12 @@ export default function AIAssistantPage() {
                                 {s.sub}
                               </span>
                             )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
+
                 </div>
               </div>
             ) : (
@@ -413,15 +516,12 @@ export default function AIAssistantPage() {
               <div className="space-y-4">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex items-end gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    {/* Bot avatar */}
                     {msg.role === "assistant" && (
                       <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-0.5">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                     )}
-
                     <div className={`max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                      {/* Bubble */}
                       <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
                         ${msg.role === "user"
                           ? "bg-blue-600 text-white rounded-2xl rounded-br-sm shadow-sm"
@@ -434,7 +534,6 @@ export default function AIAssistantPage() {
                   </div>
                 ))}
 
-                {/* Typing indicator */}
                 {chatMutation.isPending && (
                   <div className="flex items-end gap-2 justify-start">
                     <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -461,7 +560,6 @@ export default function AIAssistantPage() {
 
           {/* ── Input bar ─────────────────────────────────────────────────── */}
           <div className="flex-shrink-0 border-t border-slate-200 p-3 bg-white">
-            {/* Mobile resume selector */}
             {uploadedResumes.length > 0 && (
               <div className="sm:hidden mb-2">
                 <select
@@ -476,7 +574,6 @@ export default function AIAssistantPage() {
                 </select>
               </div>
             )}
-
             <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
               <textarea
                 ref={inputRef}
