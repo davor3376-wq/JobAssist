@@ -148,6 +148,60 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
   );
 }
 
+function MatchRailFlyout({ title, items, tone, collapsed, onToggle }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  const styles = {
+    success: {
+      shell: "border-emerald-300 bg-white",
+      title: "text-emerald-700",
+      bullet: "text-emerald-500",
+    },
+    danger: {
+      shell: "border-red-300 bg-white",
+      title: "text-red-700",
+      bullet: "text-red-400",
+    },
+    info: {
+      shell: "border-blue-300 bg-white",
+      title: "text-blue-700",
+      bullet: "text-blue-500",
+    },
+  };
+
+  const toneStyle = styles[tone] || styles.info;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left shadow-sm ${toneStyle.shell}`}
+      >
+        <span className={`text-sm font-semibold ${toneStyle.title}`}>{title}</span>
+        <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "-rotate-90" : "rotate-90"} ${toneStyle.title}`} />
+      </button>
+      {!collapsed && (
+        <div className="absolute right-[calc(100%+12px)] top-0 z-20 w-[320px] rounded-xl border bg-white p-4 shadow-xl">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h4 className={`text-sm font-semibold ${toneStyle.title}`}>{title}</h4>
+            <button onClick={onToggle} className="rounded-md p-1 text-gray-400 hover:bg-slate-50 hover:text-gray-600">
+              <ChevronDown className="h-4 w-4 rotate-90" />
+            </button>
+          </div>
+          <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
+            {items.map((item, index) => (
+              <li key={`${title}-${index}`} className="flex items-start gap-2">
+                <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ActionButton({ onClick, disabled, disabledReason, color, icon, label }) {
   const styles = {
     indigo: "border-indigo-600 bg-indigo-600 text-white shadow-sm hover:border-indigo-700 hover:bg-indigo-700",
@@ -559,29 +613,26 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                     </div>
                     {!isMatchRailCollapsed && (
                       <div className="mt-3 space-y-3">
-                        <MatchDetailCard
+                        <MatchRailFlyout
                           title="Stärken"
                           items={matchFeedback.strengths}
                           tone="success"
                           collapsed={isMatchSectionCollapsed("strengths")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
-                          className="w-full"
                         />
-                        <MatchDetailCard
+                        <MatchRailFlyout
                           title="Verbesserungsvorschläge"
                           items={matchFeedback.gaps}
                           tone="danger"
                           collapsed={isMatchSectionCollapsed("gaps")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
-                          className="w-full"
                         />
-                        <MatchDetailCard
+                        <MatchRailFlyout
                           title="Empfehlungen"
                           items={matchFeedback.recommendations}
                           tone="info"
                           collapsed={isMatchSectionCollapsed("recommendations")}
                           onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                          className="w-full"
                         />
                       </div>
                     )}
