@@ -127,6 +127,8 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
 
   const toneStyle = styles[tone] || styles.info;
   const compact = className.includes("match-rail-card");
+  const visibleItems = compact ? items.slice(0, 4) : items;
+  const hiddenCount = compact ? Math.max(0, items.length - visibleItems.length) : 0;
 
   return (
     <div className={`h-fit self-start rounded-xl border ${compact ? "p-3" : "p-4"} ${toneStyle.card} ${className}`}>
@@ -135,13 +137,18 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
         <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
       </button>
       {!collapsed && (
-        <ul className={`${compact ? "mt-2 max-h-48 space-y-1.5 overflow-y-auto pr-1 text-[13px] leading-6" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
-          {items.map((item, index) => (
+        <ul className={`${compact ? "mt-2 space-y-1.5 text-[12px] leading-5" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
+          {visibleItems.map((item, index) => (
             <li key={`${title}-${index}`} className="flex items-start gap-2">
               <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
               <span>{item}</span>
             </li>
           ))}
+          {hiddenCount > 0 && (
+            <li className={`pt-1 text-[11px] font-semibold ${toneStyle.title}`}>
+              +{hiddenCount} weitere Punkte
+            </li>
+          )}
         </ul>
       )}
     </div>
