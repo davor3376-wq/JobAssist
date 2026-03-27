@@ -105,7 +105,7 @@ const TAG_COLORS = {
   Kundenorientierung: "bg-purple-100 text-purple-700",
 };
 
-function MatchDetailCard({ title, items, tone, collapsed, onToggle }) {
+function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = "" }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   const styles = {
@@ -129,7 +129,7 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle }) {
   const toneStyle = styles[tone] || styles.info;
 
   return (
-    <div className={`h-fit self-start rounded-xl border p-4 ${toneStyle.card}`}>
+    <div className={`h-fit self-start rounded-xl border p-4 ${toneStyle.card} ${className}`}>
       <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
         <h4 className={`text-base font-semibold ${toneStyle.title}`}>{title}</h4>
         <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
@@ -547,13 +547,14 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
               {job.match_score != null && job.match_feedback && <div className="border-t border-gray-300 pt-3"><p className="mb-1 text-xs font-semibold text-gray-700">Match-Analyse</p><p className="text-xs leading-relaxed text-gray-600">{getMatchSummary(job.match_feedback)}</p></div>}
               {matchFeedback && (
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="flex flex-wrap items-start gap-3">
                   <MatchDetailCard
                     title="Stärken"
                     items={matchFeedback.strengths}
                     tone="success"
                     collapsed={isMatchSectionCollapsed("strengths")}
                     onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
+                    className={isMatchSectionCollapsed("strengths") ? "w-full md:w-64" : "min-w-0 w-full md:flex-1"}
                   />
                   <MatchDetailCard
                     title="Verbesserungsvorschläge"
@@ -561,16 +562,16 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                     tone="danger"
                     collapsed={isMatchSectionCollapsed("gaps")}
                     onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
+                    className={isMatchSectionCollapsed("gaps") ? "w-full md:w-64" : "min-w-0 w-full md:flex-1"}
                   />
-                  <div className="md:col-span-2">
-                    <MatchDetailCard
-                      title="Empfehlungen"
-                      items={matchFeedback.recommendations}
-                      tone="info"
-                      collapsed={isMatchSectionCollapsed("recommendations")}
-                      onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                    />
-                  </div>
+                  <MatchDetailCard
+                    title="Empfehlungen"
+                    items={matchFeedback.recommendations}
+                    tone="info"
+                    collapsed={isMatchSectionCollapsed("recommendations")}
+                    onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
+                    className="w-full"
+                  />
                 </div>
               )}
               {job.description && <div className="border-t border-gray-300 pt-3"><div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-700">Stellenbeschreibung</p><button onClick={() => setCollapsedDescriptions((old) => ({ ...old, [job.id]: !isDescriptionCollapsed }))} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">{isDescriptionCollapsed ? "Anzeigen" : "Minimieren"}</button></div>{!isDescriptionCollapsed && <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-blue-300 bg-white p-3 text-sm leading-relaxed text-gray-700">{job.description}</div>}</div>}
