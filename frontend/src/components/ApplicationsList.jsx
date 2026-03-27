@@ -1,211 +1,739 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+/**
+ * ApplicationsList — Split-View Job Tracking Dashboard
+ *
+ * Desktop: 1 (list) : 2 (detail) flex split with fixed panel heights
+ * Mobile:  single-column list → full-screen overlay on tap
+ *
+ * Tailwind explanations are written as comments on key layout elements.
+ */
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
-  Brain,
-  ChevronDown,
-  ChevronUp,
-  DollarSign,
-  ExternalLink,
-  FileText,
-  MapPin,
-  MessageSquare,
-  SearchCheck,
-  Trash2,
-  Zap,
+  Award, Bookmark, Brain, ChevronDown, ChevronLeft,
+  DollarSign, ExternalLink, FileText, MapPin, MessageSquare,
+  Search, SearchCheck, Send, Trash2, X, XCircle, Zap,
 } from "lucide-react";
 import { jobApi, motivationsschreibenApi, researchApi, resumeApi } from "../services/api";
 import { generateMailtoLink } from "../utils/emailHelpers";
 import { getApiErrorMessage } from "../utils/apiError";
 import {
-  filterAndSortJobs,
-  getDeadlineMeta,
-  getDisabledReason,
-  getMatchColorClass,
-  getMatchSummary,
-  parseJson,
-  updateJobList,
+  filterAndSortJobs, getDeadlineMeta, getDisabledReason,
+  getMatchColorClass, getMatchSummary, parseJson, updateJobList,
 } from "../utils/applicationsState";
 import ResearchModal from "./ResearchModal";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const STATUS_LABELS = {
-  bookmarked: "Gespeichert",
-  applied: "Beworben",
+  bookmarked:   "Gespeichert",
+  applied:      "Beworben",
   interviewing: "Vorstellungsgespräch",
-  offered: "Angebot",
-  rejected: "Abgelehnt",
+  offered:      "Angebot",
+  rejected:     "Abgelehnt",
 };
 
 const STATUS_COLORS = {
-  bookmarked: "bg-blue-100 text-blue-800",
-  applied: "bg-green-100 text-green-800",
+  bookmarked:   "bg-blue-100 text-blue-800",
+  applied:      "bg-green-100 text-green-800",
   interviewing: "bg-purple-100 text-purple-800",
-  offered: "bg-amber-100 text-amber-800",
-  rejected: "bg-red-100 text-red-800",
+  offered:      "bg-amber-100 text-amber-800",
+  rejected:     "bg-red-100 text-red-800",
 };
 
 const STATUS_ORDER = ["bookmarked", "applied", "interviewing", "offered", "rejected"];
 
+const PIPELINE_CONFIG = [
+  { key: "bookmarked",   label: "Gespeichert", icon: Bookmark,      cardCls: "bg-blue-50   border-blue-200",   iconCls: "text-blue-500"   },
+  { key: "applied",      label: "Beworben",    icon: Send,           cardCls: "bg-green-50  border-green-200",  iconCls: "text-green-500"  },
+  { key: "interviewing", label: "Gespräch",    icon: MessageSquare,  cardCls: "bg-purple-50 border-purple-200", iconCls: "text-purple-500" },
+  { key: "offered",      label: "Angebot",     icon: Award,          cardCls: "bg-amber-50  border-amber-200",  iconCls: "text-amber-500"  },
+  { key: "rejected",     label: "Abgelehnt",   icon: XCircle,        cardCls: "bg-red-50    border-red-200",    iconCls: "text-red-500"    },
+];
+
 const TYPE_MAP = {
-  behavioral: "Verhalten",
-  behaviour: "Verhalten",
-  "behaviour-based": "Verhalten",
-  technical: "Fachlich",
-  "technical knowledge": "Fachlich",
-  fachwissen: "Fachlich",
-  situational: "Situativ",
-  situation: "Situativ",
-  motivation: "Motivation",
-  motivational: "Motivation",
-  competency: "Kompetenz",
-  competence: "Kompetenz",
-  culture: "Kultur",
-  "cultural fit": "Kultur",
-  "culture fit": "Kultur",
-  leadership: "Führung",
-  management: "Führung",
-  "problem-solving": "Problemlösung",
-  "problem solving": "Problemlösung",
-  analytical: "Problemlösung",
-  creativity: "Kreativität",
-  creative: "Kreativität",
-  communication: "Kommunikation",
-  interpersonal: "Kommunikation",
-  teamwork: "Teamarbeit",
-  collaboration: "Teamarbeit",
-  team: "Teamarbeit",
-  adaptability: "Anpassung",
-  flexibility: "Anpassung",
-  stress: "Stressresistenz",
-  "stress management": "Stressresistenz",
-  "time management": "Zeitmanagement",
-  organization: "Zeitmanagement",
+  behavioral: "Verhalten", behaviour: "Verhalten", "behaviour-based": "Verhalten",
+  technical: "Fachlich", "technical knowledge": "Fachlich", fachwissen: "Fachlich",
+  situational: "Situativ", situation: "Situativ",
+  motivation: "Motivation", motivational: "Motivation",
+  competency: "Kompetenz", competence: "Kompetenz",
+  culture: "Kultur", "cultural fit": "Kultur", "culture fit": "Kultur",
+  leadership: "Führung", management: "Führung",
+  "problem-solving": "Problemlösung", "problem solving": "Problemlösung", analytical: "Problemlösung",
+  creativity: "Kreativität", creative: "Kreativität",
+  communication: "Kommunikation", interpersonal: "Kommunikation",
+  teamwork: "Teamarbeit", collaboration: "Teamarbeit", team: "Teamarbeit",
+  adaptability: "Anpassung", flexibility: "Anpassung",
+  stress: "Stressresistenz", "stress management": "Stressresistenz",
+  "time management": "Zeitmanagement", organization: "Zeitmanagement",
   sales: "Vertrieb",
-  customer: "Kundenorientierung",
-  service: "Kundenorientierung",
+  customer: "Kundenorientierung", service: "Kundenorientierung",
 };
 
 const TAG_COLORS = {
-  Fachlich: "bg-blue-100 text-blue-700",
-  Verhalten: "bg-violet-100 text-violet-700",
-  Situativ: "bg-amber-100 text-amber-700",
-  Motivation: "bg-emerald-100 text-emerald-700",
-  Kompetenz: "bg-rose-100 text-rose-700",
-  Kultur: "bg-teal-100 text-teal-700",
-  Führung: "bg-indigo-100 text-indigo-700",
-  Problemlösung: "bg-orange-100 text-orange-700",
-  Kreativität: "bg-pink-100 text-pink-700",
-  Kommunikation: "bg-cyan-100 text-cyan-700",
-  Teamarbeit: "bg-lime-100 text-lime-700",
-  Anpassung: "bg-sky-100 text-sky-700",
-  Stressresistenz: "bg-red-100 text-red-700",
-  Zeitmanagement: "bg-yellow-100 text-yellow-700",
-  Vertrieb: "bg-green-100 text-green-700",
-  Kundenorientierung: "bg-purple-100 text-purple-700",
+  Fachlich: "bg-blue-100 text-blue-700", Verhalten: "bg-violet-100 text-violet-700",
+  Situativ: "bg-amber-100 text-amber-700", Motivation: "bg-emerald-100 text-emerald-700",
+  Kompetenz: "bg-rose-100 text-rose-700", Kultur: "bg-teal-100 text-teal-700",
+  Führung: "bg-indigo-100 text-indigo-700", Problemlösung: "bg-orange-100 text-orange-700",
+  Kreativität: "bg-pink-100 text-pink-700", Kommunikation: "bg-cyan-100 text-cyan-700",
+  Teamarbeit: "bg-lime-100 text-lime-700", Anpassung: "bg-sky-100 text-sky-700",
+  Stressresistenz: "bg-red-100 text-red-700", Zeitmanagement: "bg-yellow-100 text-yellow-700",
+  Vertrieb: "bg-green-100 text-green-700", Kundenorientierung: "bg-purple-100 text-purple-700",
 };
 
-function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = "" }) {
-  if (!Array.isArray(items) || items.length === 0) return null;
+// ─── CircularGauge ────────────────────────────────────────────────────────────
 
-  const styles = {
-    success: {
-      card: "border-emerald-300 bg-white",
-      title: "text-emerald-700",
-      bullet: "text-emerald-500",
-    },
-    danger: {
-      card: "border-red-300 bg-white",
-      title: "text-red-700",
-      bullet: "text-red-400",
-    },
-    info: {
-      card: "border-blue-300 bg-white",
-      title: "text-blue-700",
-      bullet: "text-blue-500",
-    },
-  };
-
-  const toneStyle = styles[tone] || styles.info;
-  const compact = className.includes("match-rail-card");
-  const visibleItems = compact ? items.slice(0, 1) : items;
-  const hiddenCount = compact ? Math.max(0, items.length - visibleItems.length) : 0;
+/**
+ * SVG ring gauge for match score.
+ * The SVG is rotated -90° so the arc starts at 12 o'clock.
+ */
+function CircularGauge({ score, size = 48 }) {
+  const sw = 5; // strokeWidth
+  const r  = (size - sw) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct  = score != null ? Math.max(0, Math.min(100, score)) : null;
+  const dash = pct != null ? circ - (pct / 100) * circ : circ;
+  const color = pct == null ? "#94a3b8" : pct >= 70 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#ef4444";
 
   return (
-    <div className={`h-fit self-start rounded-xl border ${compact ? "p-2.5" : "p-4"} ${toneStyle.card} ${className}`}>
-      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
-        <h4 className={`${compact ? "text-[13px]" : "text-base"} font-semibold ${toneStyle.title}`}>{title}</h4>
-        <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
-      </button>
-      {!collapsed && (
-        <ul className={`${compact ? "mt-1.5 space-y-1 text-[11px] leading-4" : "mt-3 space-y-2 text-sm leading-relaxed"} text-gray-700`}>
-          {visibleItems.map((item, index) => (
-            <li key={`${title}-${index}`} className="flex items-start gap-2">
-              <span className={`mt-0.5 text-[11px] font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
-              <span>{item}</span>
-            </li>
-          ))}
-          {hiddenCount > 0 && (
-            <li className={`pt-0.5 text-[10px] font-semibold ${toneStyle.title}`}>
-              +{hiddenCount} weitere Punkte
-            </li>
-          )}
-        </ul>
+    // relative (position context for the score label overlay)
+    // flex-shrink-0 (prevent the gauge from being squished in a flex row)
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      {/* -rotate-90 (rotate so the arc starts at top instead of right) */}
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
+        {/* Track ring (always visible grey circle) */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e8f0" strokeWidth={sw} />
+        {/* Coloured progress arc */}
+        {pct != null && (
+          <circle
+            cx={size / 2} cy={size / 2} r={r}
+            fill="none" stroke={color} strokeWidth={sw}
+            strokeDasharray={circ}
+            strokeDashoffset={dash}
+            strokeLinecap="round"
+          />
+        )}
+      </svg>
+      {/* absolute inset-0 (overlay div fills the same space as the SVG) */}
+      {/* flex items-center justify-center (centres the score text) */}
+      <span
+        className="absolute inset-0 flex items-center justify-center text-[10px] font-bold leading-none"
+        style={{ color }}
+      >
+        {pct != null ? `${Math.round(pct)}%` : "–"}
+      </span>
+    </div>
+  );
+}
+
+// ─── MatchBar ─────────────────────────────────────────────────────────────────
+
+/**
+ * A single horizontal progress bar representing one feedback point.
+ * Hover on desktop / click on mobile reveals the full text as a tooltip.
+ * Width decreases for later items to visually rank importance.
+ */
+function MatchBar({ text, index, barColor, bgColor, isLast }) {
+  const [open, setOpen] = useState(false);
+  const barWidth = Math.max(22, 100 - index * 16); // First bar is widest
+
+  return (
+    // relative (tooltip is positioned relative to this container)
+    // mb-2 (8px margin between bars, except the last)
+    <div className={`relative ${!isLast ? "mb-2" : ""}`}>
+      <div
+        className="flex items-center gap-2 cursor-pointer group"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onClick={() => setOpen((v) => !v)}
+        role="button"
+        aria-expanded={open}
+      >
+        {/* flex-1 (track stretches to fill remaining width) */}
+        {/* h-4 (16px height for the bar) */}
+        {/* rounded-full (pill shape) */}
+        {/* overflow-hidden (keeps the fill within the track's rounded corners) */}
+        <div className={`relative flex-1 h-4 ${bgColor} rounded-full overflow-hidden`}>
+          {/* transition-all duration-500 (smooth width animation on mount) */}
+          <div
+            className={`h-full ${barColor} rounded-full transition-all duration-500 ease-out`}
+            style={{ width: `${barWidth}%` }}
+          />
+        </div>
+        {/* Index bubble — flex-shrink-0 (never compress the number badge) */}
+        <span className="w-4 h-4 flex-shrink-0 rounded-full bg-slate-100 text-slate-500 text-[9px] flex items-center justify-center font-bold group-hover:bg-slate-200 transition-colors">
+          {index + 1}
+        </span>
+      </div>
+
+      {/* Tooltip — absolute (detaches from flow), z-20 (above other content) */}
+      {open && (
+        <div className="absolute z-20 left-0 top-6 w-full max-w-xs rounded-xl border border-slate-200 bg-white p-3 shadow-xl text-xs text-gray-700 leading-relaxed">
+          {text}
+        </div>
       )}
     </div>
   );
 }
 
-function ActionButton({ onClick, disabled, disabledReason, color, icon, label }) {
-  const styles = {
-    indigo: "border-indigo-600 bg-indigo-600 text-white shadow-sm hover:border-indigo-700 hover:bg-indigo-700",
-    emerald: "border-emerald-600 bg-emerald-600 text-white shadow-sm hover:border-emerald-700 hover:bg-emerald-700",
-    amber: "border-amber-500 bg-amber-500 text-white shadow-sm hover:border-amber-600 hover:bg-amber-600",
-    "emerald-outline": "border-emerald-300 bg-white text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50",
-    "emerald-solid": "border-emerald-500 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700",
-  };
+// ─── MatchSection ─────────────────────────────────────────────────────────────
 
+function MatchSection({ title, items = [], barColor, bgColor }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
   return (
-    <span title={disabled ? disabledReason : ""}>
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-disabled={disabled}
-        className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${styles[color]}`}
-      >
-        {icon}
-        {label}
-      </button>
-    </span>
+    // space-y-1 (4px between the label and bars)
+    <div className="space-y-1">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{title}</p>
+      {items.map((text, i) => (
+        <MatchBar
+          key={i} text={text} index={i}
+          barColor={barColor} bgColor={bgColor}
+          isLast={i === items.length - 1}
+        />
+      ))}
+    </div>
   );
 }
+
+// ─── JobListCard ──────────────────────────────────────────────────────────────
+
+/**
+ * Condensed card shown in the left list panel.
+ * Shows: circular gauge, job title, company, status badge, deadline badge.
+ */
+function JobListCard({ job, isSelected, onClick }) {
+  const deadlineMeta = getDeadlineMeta(job.deadline);
+
+  return (
+    <button
+      onClick={onClick}
+      // w-full (stretch to parent width), text-left (override button centering)
+      // rounded-xl (12px rounded corners — SaaS aesthetic)
+      // border (1px stroke), transition-all duration-150 (smooth state change)
+      className={`w-full text-left p-3 rounded-xl border transition-all duration-150
+        ${isSelected
+          ? "border-blue-400 bg-blue-50 shadow-sm ring-1 ring-blue-200"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+        }`}
+    >
+      {/* flex items-start (align at top), gap-3 (12px between gauge and text) */}
+      <div className="flex items-start gap-3">
+        <CircularGauge score={job.match_score} size={44} />
+
+        {/* min-w-0 (allow flex child to shrink and trigger text truncation) */}
+        {/* flex-1 (grow to fill remaining space) */}
+        <div className="min-w-0 flex-1">
+          {/* truncate (single-line ellipsis overflow) */}
+          <p className="truncate text-sm font-semibold text-gray-900 leading-tight">
+            {job.role || "Ohne Titel"}
+          </p>
+          <p className="truncate text-xs text-gray-500 mt-0.5">
+            {job.company || "Unbekannt"}
+          </p>
+          {/* flex-wrap (wrap badges to next line on narrow cards) */}
+          {/* gap-1 (4px between badges) */}
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight ${STATUS_COLORS[job.status]}`}>
+              {STATUS_LABELS[job.status]}
+            </span>
+            {deadlineMeta && (
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight ${deadlineMeta.className}`}>
+                {deadlineMeta.label}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* External link icon — flex-shrink-0 prevents compression */}
+        {job.url && (
+          <a
+            href={job.url} target="_blank" rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex-shrink-0 text-slate-400 hover:text-blue-500 transition-colors mt-0.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ─── DetailPanel ─────────────────────────────────────────────────────────────
+
+/**
+ * The full detail view for a selected job.
+ * Rendered both in the right desktop column and the mobile full-screen overlay.
+ */
+function DetailPanel({
+  job,
+  resumes,
+  selectedResumeId,
+  onResumeChange,
+  processing,
+  draftLoading,
+  notesSaving,
+  notesInput,
+  jobUiState,
+  expandedPanel,
+  setExpandedPanel,
+  descCollapsed,
+  setDescCollapsed,
+  notesTimeoutsRef,
+  updateStatusMutation,
+  deleteMutation,
+  matchMutation,
+  interviewMutation,
+  notesMutation,
+  deadlineMutation,
+  urlMutation,
+  onDraftEmail,
+  onResearch,
+  setNotesInput,
+  setNotesSaving,
+  onClose,        // mobile back button callback
+  isMobileOverlay,
+}) {
+  if (!job) {
+    return (
+      // flex-1 (fill all available space in the right panel)
+      // flex items-center justify-center (centre the placeholder text)
+      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-3 p-8">
+        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+          <Search className="w-7 h-7" />
+        </div>
+        <p className="text-sm font-medium">Stelle auswählen um Details zu sehen</p>
+      </div>
+    );
+  }
+
+  const matchFeedback  = parseJson(job.match_feedback);
+  const interviewQa    = parseJson(job.interview_qa);
+  const hasResume      = Boolean(selectedResumeId);
+  const isStatusUp     = Boolean(jobUiState[job.id]?.status);
+  const isDeadlineSave = Boolean(jobUiState[job.id]?.deadline);
+  const isUrlSave      = Boolean(jobUiState[job.id]?.url);
+  const isDeleting     = Boolean(jobUiState[job.id]?.delete);
+  const isMatchProc    = processing.jobId === job.id && processing.feature === "match";
+
+  return (
+    // flex flex-col (stack header, scrollable body, action bar vertically)
+    // h-full (fill the panel — the parent controls height)
+    <div className="flex flex-col h-full">
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* flex-shrink-0 (header never shrinks, stays fixed at top) */}
+      {/* border-b (separator line between header and body) */}
+      <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-slate-200 bg-white">
+        {/* flex items-start justify-between (title on left, actions on right) */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            {/* Mobile back button */}
+            {isMobileOverlay && (
+              <button
+                onClick={onClose}
+                // mb-2 (8px below back button before the title)
+                // flex items-center (icon + label inline)
+                className="mb-2 flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Zurück
+              </button>
+            )}
+            <h2 className="text-lg font-bold text-gray-900 leading-tight">
+              {job.role || "Ohne Titel"}
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">{job.company || "Unbekanntes Unternehmen"}</p>
+          </div>
+          {/* Header action cluster */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {job.url && (
+              <a
+                href={job.url} target="_blank" rel="noopener noreferrer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                title="Stellenanzeige öffnen"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+            <button
+              onClick={() => deleteMutation.mutate(job.id)}
+              disabled={isDeleting}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              title="Stelle löschen"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Meta row: location, salary, status badge, match score */}
+        {/* flex-wrap (wrap to next line on narrow panels) */}
+        <div className="flex flex-wrap items-center gap-2">
+          {job.location && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <MapPin className="w-3 h-3 flex-shrink-0" />
+              {job.location}
+            </span>
+          )}
+          {job.salary && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <DollarSign className="w-3 h-3 flex-shrink-0" />
+              {job.salary}
+            </span>
+          )}
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>
+            {STATUS_LABELS[job.status]}
+          </span>
+          {job.match_score != null && (
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>
+              {Math.round(job.match_score)}% Match
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Scrollable Body ─────────────────────────────────────────────────── */}
+      {/* flex-1 (expand to fill all space between header and action bar) */}
+      {/* overflow-y-auto (scroll just this section, not the whole page) */}
+      {/* space-y-5 (20px between each section block) */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 bg-slate-50">
+
+        {/* Resume selector */}
+        {resumes.length > 0 && (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Lebenslauf</label>
+            <select
+              value={selectedResumeId || ""}
+              onChange={(e) => onResumeChange(Number(e.target.value))}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm"
+            >
+              {resumes.map((r) => (
+                <option key={r.id} value={r.id}>{r.name || r.filename || `Lebenslauf ${r.id}`}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* ── Match Analysis ──────────────────────────────────────────────── */}
+        {(matchFeedback || job.match_score != null) && (
+          // rounded-xl (SaaS card corners), shadow-sm (subtle elevation)
+          // bg-white (white card on the slate-50 background)
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Match-Analyse</h3>
+              {job.match_score != null && (
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${getMatchColorClass(job.match_score)}`}>
+                  {Math.round(job.match_score)}%
+                </span>
+              )}
+            </div>
+
+            {/* Summary text */}
+            {job.match_score != null && matchFeedback?.summary && (
+              <p className="text-xs leading-relaxed text-gray-600">{matchFeedback.summary}</p>
+            )}
+
+            {/* Progress bars — hover for text tooltip, click on mobile */}
+            {matchFeedback && (
+              // space-y-4 (16px between Stärken / Verbesserungen / Empfehlungen blocks)
+              <div className="space-y-4">
+                <MatchSection
+                  title="Stärken"
+                  items={matchFeedback.strengths}
+                  barColor="bg-emerald-500"   // Green bars for strengths
+                  bgColor="bg-emerald-100"
+                />
+                <MatchSection
+                  title="Verbesserungen"
+                  items={matchFeedback.gaps}
+                  barColor="bg-red-400"        // Red bars for gaps
+                  bgColor="bg-red-100"
+                />
+                <MatchSection
+                  title="Empfehlungen"
+                  items={matchFeedback.recommendations}
+                  barColor="bg-blue-400"       // Blue bars for recommendations
+                  bgColor="bg-blue-100"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Status Switcher ─────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
+          <h3 className="mb-3 text-sm font-semibold text-gray-900">Status ändern</h3>
+          {/* flex-wrap (wrap status pills to multiple rows if needed) */}
+          <div className="flex flex-wrap gap-1.5">
+            {STATUS_ORDER.filter((s) => s !== job.status).map((status) => (
+              <button
+                key={status}
+                onClick={() => updateStatusMutation.mutate({ jobId: job.id, status })}
+                disabled={isStatusUp}
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {STATUS_LABELS[status]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Details (description, URL, deadline, notes) ─────────────────── */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
+          <h3 className="text-sm font-semibold text-gray-900">Details</h3>
+
+          {/* Description */}
+          {job.description && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-semibold text-gray-600">Stellenbeschreibung</p>
+                <button
+                  onClick={() => setDescCollapsed((v) => !v)}
+                  className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700"
+                >
+                  {descCollapsed ? "Anzeigen" : "Minimieren"}
+                </button>
+              </div>
+              {!descCollapsed && (
+                // max-h-48 (192px max height — scroll rather than grow infinitely)
+                // overflow-y-auto (scroll inside the description box)
+                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-gray-700">
+                  {job.description}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* URL */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Stellenanzeige Link</label>
+            <input
+              type="url"
+              defaultValue={job.url || ""}
+              onBlur={(e) => {
+                const value = e.target.value.trim() || null;
+                if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value });
+              }}
+              disabled={isUrlSave}
+              className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:bg-slate-100 disabled:cursor-not-allowed"
+              placeholder="https://..."
+            />
+          </div>
+
+          {/* Deadline */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Bewerbungsfrist</label>
+            <input
+              type="date"
+              defaultValue={job.deadline ? job.deadline.split("T")[0] : ""}
+              onBlur={(e) =>
+                deadlineMutation.mutate({
+                  jobId: job.id,
+                  deadline: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : null,
+                })
+              }
+              disabled={isDeadlineSave}
+              className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:bg-slate-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Notizen</label>
+            <textarea
+              value={notesInput[job.id] ?? job.notes ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNotesInput((old) => ({ ...old, [job.id]: value }));
+                setNotesSaving((old) => ({ ...old, [job.id]: true }));
+                clearTimeout(notesTimeoutsRef.current[job.id]);
+                notesTimeoutsRef.current[job.id] = setTimeout(
+                  () => notesMutation.mutate({ jobId: job.id, notes: value }),
+                  800
+                );
+              }}
+              placeholder="Persönliche Notizen..."
+              className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-xs"
+              rows={3}
+            />
+            {notesSaving[job.id] && <p className="mt-0.5 text-[10px] text-slate-400">Speichert…</p>}
+          </div>
+        </div>
+
+        {/* ── Expanded: Cover Letter ───────────────────────────────────────── */}
+        {job.cover_letter && (
+          <div className="rounded-xl border border-green-200 bg-white shadow-sm">
+            <button
+              onClick={() => setExpandedPanel((v) => (v === `cover-${job.id}` ? null : `cover-${job.id}`))}
+              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-green-700"
+            >
+              <FileText className="w-4 h-4 flex-shrink-0" />
+              Motivationsschreiben
+              <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${expandedPanel === `cover-${job.id}` ? "rotate-180" : ""}`} />
+            </button>
+            {expandedPanel === `cover-${job.id}` && (
+              <div className="max-h-64 overflow-y-auto whitespace-pre-wrap border-t border-green-200 px-4 py-3 text-xs leading-relaxed text-gray-700">
+                {job.cover_letter}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Expanded: Interview Q&A ──────────────────────────────────────── */}
+        {job.interview_qa && Array.isArray(interviewQa) && (
+          <div className="rounded-xl border border-purple-200 bg-white shadow-sm">
+            <button
+              onClick={() => setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`))}
+              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-purple-700"
+            >
+              <Brain className="w-4 h-4 flex-shrink-0" />
+              Gesprächsvorbereitung
+              <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
+            </button>
+            {expandedPanel === `interview-${job.id}` && (
+              // space-y-2 (8px between Q&A cards), border-t (separator from header)
+              <div className="border-t border-purple-200 px-4 py-3 space-y-2">
+                {interviewQa.map((item, idx) => {
+                  const type = TYPE_MAP[(item.type || "").toLowerCase()] || item.type || "Frage";
+                  return (
+                    <div key={idx} className="rounded-lg border border-gray-100 bg-slate-50 p-3">
+                      <div className="flex items-start gap-2 mb-1.5">
+                        <span className="text-[10px] font-bold text-gray-400 flex-shrink-0 mt-0.5">Q{idx + 1}</span>
+                        <p className="text-xs font-semibold text-gray-800">{item.question || item}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TAG_COLORS[type] || "bg-gray-100 text-gray-700"}`}>
+                          {type}
+                        </span>
+                      </div>
+                      {item.answer && (
+                        <p className="text-xs leading-relaxed text-gray-600">{item.answer}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bottom spacer so content clears the action bar on mobile */}
+        {isMobileOverlay && <div className="h-20" />}
+      </div>
+
+      {/* ── Action Bar ──────────────────────────────────────────────────────── */}
+      {/*
+        Desktop: flex-shrink-0 at bottom of the detail column
+        Mobile:  sticky bottom-0 with shadow-up — always visible above keyboard
+        In both cases: flex items-center gap-2, wrap on small widths
+      */}
+      <div className={`flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3
+        ${isMobileOverlay ? "sticky bottom-0 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" : ""}
+      `}>
+        {!hasResume && (
+          <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5">
+            Wähle einen Lebenslauf für Match, Anschreiben &amp; Gespräch.
+          </p>
+        )}
+        {/* flex-wrap (wrap to a second line on very narrow panels) */}
+        <div className="flex flex-wrap gap-2">
+          {/* Match-Bewertung */}
+          <button
+            onClick={() => {
+              if (!hasResume || isMatchProc) return;
+              onDraftEmail._setProcessing({ jobId: job.id, feature: "match" });
+              onDraftEmail._matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId });
+            }}
+            disabled={!hasResume || isMatchProc}
+            title={!hasResume ? "Lebenslauf auswählen" : ""}
+            // flex items-center gap-1.5 (icon + label inline with 6px gap)
+            // flex-1 (each button grows equally to fill the row)
+            // min-w-0 (allow flex children to shrink)
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-indigo-600 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isMatchProc
+              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              : <Zap className="w-3.5 h-3.5 flex-shrink-0" />
+            }
+            <span className="truncate">{isMatchProc ? "Berechne…" : "Match"}</span>
+          </button>
+
+          {/* Anschreiben */}
+          <button
+            onClick={() => onDraftEmail(job)}
+            disabled={draftLoading === job.id}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {draftLoading === job.id
+              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              : <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+            }
+            <span className="truncate">{draftLoading === job.id ? "Erstelle…" : "Anschreiben"}</span>
+          </button>
+
+          {/* Gesprächsvorbereitung */}
+          <button
+            onClick={() => {
+              if (job.interview_qa) {
+                setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`));
+              } else {
+                interviewMutation.mutate({ jobId: job.id, resumeId: selectedResumeId || undefined });
+              }
+            }}
+            disabled={!hasResume || interviewMutation.isPending}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Gespräch</span>
+          </button>
+
+          {/* Recherche */}
+          <button
+            onClick={() => onResearch(job)}
+            disabled={!job.company}
+            title={!job.company ? "Firmenname fehlt" : ""}
+            className={`flex flex-1 min-w-[100px] items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+              ${job.research_data
+                ? "border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700"
+                : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
+              }`}
+          >
+            <SearchCheck className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Recherche</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = null }) {
   const queryClient = useQueryClient();
   const notesTimeoutsRef = useRef({});
-  const jobRefs = useRef({});
 
-  const [collapsedJobCards, setCollapsedJobCards] = useState({});
-  const [collapsedDescriptions, setCollapsedDescriptions] = useState({});
-  const [collapsedMatchSections, setCollapsedMatchSections] = useState({});
-  const [collapsedMatchRail, setCollapsedMatchRail] = useState({});
-  const [expandedPanel, setExpandedPanel] = useState(null);
-  const [selectedJobs, setSelectedJobs] = useState(new Set());
+  // ── UI State ─────────────────────────────────────────────────────────────────
+  const [selectedJobId,    setSelectedJobId]    = useState(null);
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+  const [searchQuery,      setSearchQuery]      = useState("");
+  const [filterStatus,     setFilterStatus]     = useState("all");
+  const [sortBy,           setSortBy]           = useState("recent");
   const [selectedResumeId, setSelectedResumeId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterMinMatch, setFilterMinMatch] = useState(0);
-  const [sortBy, setSortBy] = useState("recent");
-  const [processing, setProcessing] = useState({ jobId: null, feature: null });
-  const [draftLoading, setDraftLoading] = useState(null);
-  const [draftTexts, setDraftTexts] = useState({});
-  const [notesInput, setNotesInput] = useState({});
-  const [notesSaving, setNotesSaving] = useState({});
-  const [jobUiState, setJobUiState] = useState({});
-  const [expandedQuestion, setExpandedQuestion] = useState(null);
-  const [researchModal, setResearchModal] = useState(null);
-  const [researchData, setResearchData] = useState(null);
-  const [researchLoading, setResearchLoading] = useState(false);
+  const [processing,       setProcessing]       = useState({ jobId: null, feature: null });
+  const [draftLoading,     setDraftLoading]     = useState(null);
+  const [draftTexts,       setDraftTexts]       = useState({});
+  const [notesInput,       setNotesInput]       = useState({});
+  const [notesSaving,      setNotesSaving]      = useState({});
+  const [jobUiState,       setJobUiState]       = useState({});
+  const [expandedPanel,    setExpandedPanel]    = useState(null);
+  const [descCollapsed,    setDescCollapsed]    = useState(true);
+  const [researchModal,    setResearchModal]    = useState(null);
+  const [researchData,     setResearchData]     = useState(null);
+  const [researchLoading,  setResearchLoading]  = useState(false);
 
+  // ── Queries ──────────────────────────────────────────────────────────────────
   const { data: initData } = useQuery({ queryKey: ["init"] });
   const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -216,36 +744,44 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     if (resumes.length > 0 && !selectedResumeId) setSelectedResumeId(resumes[0].id);
   }, [resumes, selectedResumeId]);
 
+  // Auto-expand focused job from URL param
+  useEffect(() => {
+    if (!focusedJobId) return;
+    setSelectedJobId(Number(focusedJobId));
+    setMobileDetailOpen(true);
+  }, [focusedJobId]);
+
+  // Clear notes timers on unmount
   useEffect(() => {
     const timeouts = notesTimeoutsRef.current;
     return () => Object.values(timeouts).forEach(clearTimeout);
   }, []);
 
-  useEffect(() => {
-    if (!focusedJobId) return;
-    setCollapsedJobCards((old) => ({ ...old, [focusedJobId]: false }));
-    const timer = window.setTimeout(() => {
-      jobRefs.current[focusedJobId]?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [focusedJobId]);
+  // ── Derived State ────────────────────────────────────────────────────────────
+  const selectedJob = useMemo(
+    () => jobs.find((j) => j.id === selectedJobId) || null,
+    [jobs, selectedJobId]
+  );
 
+  const filteredJobs = useMemo(
+    () => filterAndSortJobs(jobs, { searchQuery, filterStatus, filterMinMatch: 0, sortBy }),
+    [jobs, searchQuery, filterStatus, sortBy]
+  );
+
+  const pipelineStats = useMemo(() => {
+    const out = {};
+    PIPELINE_CONFIG.forEach(({ key }) => { out[key] = jobs.filter((j) => j.status === key).length; });
+    return out;
+  }, [jobs]);
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
   const syncJobs = (updater) => {
     queryClient.setQueryData(["jobs"], (old = []) => updater(old));
     if (typeof onJobsUpdate === "function") onJobsUpdate((old = []) => updater(old));
   };
 
-  const setJobFlag = (jobId, key, value) => {
-    setJobUiState((old) => ({
-      ...old,
-      [jobId]: {
-        ...(old[jobId] || {}),
-        [key]: value,
-      },
-    }));
-  };
-
-  const isJobFlagActive = (jobId, key) => Boolean(jobUiState[jobId]?.[key]);
+  const setJobFlag = (jobId, key, value) =>
+    setJobUiState((old) => ({ ...old, [jobId]: { ...(old[jobId] || {}), [key]: value } }));
 
   const applyJobUpdate = (job) => {
     if (!job) return;
@@ -253,89 +789,36 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     syncJobs((old = []) => updateJobList(old, job));
   };
 
-  const filteredJobs = useMemo(() => {
-    return filterAndSortJobs(jobs, { searchQuery, filterStatus, filterMinMatch, sortBy });
-  }, [jobs, searchQuery, filterStatus, filterMinMatch, sortBy]);
+  const handleSelectJob = (jobId) => {
+    setSelectedJobId(jobId);
+    setDescCollapsed(true);
+    setExpandedPanel(null);
+    setMobileDetailOpen(true);
+  };
+
+  // ── Mutations ────────────────────────────────────────────────────────────────
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ jobId, status }) => jobApi.updateStatus(jobId, status),
     onMutate: async ({ jobId, status }) => {
       setJobFlag(jobId, "status", true);
       await queryClient.cancelQueries({ queryKey: ["jobs"] });
-      const previousJobs = queryClient.getQueryData(["jobs"]);
-      const previousJob = queryClient.getQueryData(["jobs", String(jobId)]);
-
+      const prev = queryClient.getQueryData(["jobs"]);
       syncJobs((old = []) =>
-        old.map((job) =>
-          job.id === jobId
-            ? {
-                ...job,
-                status,
-                updated_at: new Date().toISOString(),
-              }
-            : job
-        )
+        old.map((j) => (j.id === jobId ? { ...j, status, updated_at: new Date().toISOString() } : j))
       );
-      if (previousJob) {
-        queryClient.setQueryData(["jobs", String(jobId)], {
-          ...previousJob,
-          status,
-          updated_at: new Date().toISOString(),
-        });
-      }
-
-      return { previousJobs, previousJob };
+      return { prev };
     },
     onSuccess: (res) => {
       applyJobUpdate(res.data);
       queryClient.invalidateQueries({ queryKey: ["pipeline", "stats"] });
       toast.success("Status aktualisiert!");
     },
-    onError: (err, vars, context) => {
-      if (context?.previousJobs) queryClient.setQueryData(["jobs"], context.previousJobs);
-      if (context?.previousJob) queryClient.setQueryData(["jobs", String(vars.jobId)], context.previousJob);
-      if (typeof onJobsUpdate === "function" && context?.previousJobs) onJobsUpdate(context.previousJobs);
+    onError: (err, _, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["jobs"], ctx.prev);
       toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden"));
     },
-    onSettled: (_data, _error, vars) => setJobFlag(vars.jobId, "status", false),
-  });
-
-  const bulkStatusMutation = useMutation({
-    mutationFn: async ({ status, jobIds }) => {
-      const results = await Promise.all(jobIds.map((jobId) => jobApi.updateStatus(jobId, status)));
-      return results.map((result) => result.data);
-    },
-    onMutate: async ({ status, jobIds }) => {
-      await queryClient.cancelQueries({ queryKey: ["jobs"] });
-      const previousJobs = queryClient.getQueryData(["jobs"]);
-      const jobIdSet = new Set(jobIds);
-      syncJobs((old = []) =>
-        old.map((job) =>
-          jobIdSet.has(job.id)
-            ? {
-                ...job,
-                status,
-                updated_at: new Date().toISOString(),
-              }
-            : job
-        )
-      );
-      return { previousJobs };
-    },
-    onSuccess: (updatedJobs) => {
-      const byId = new Map(updatedJobs.map((job) => [job.id, job]));
-      syncJobs((old = []) => old.map((job) => byId.get(job.id) || job));
-      queryClient.invalidateQueries({ queryKey: ["pipeline", "stats"] });
-      toast.success(`${updatedJobs.length} Stellen aktualisiert!`);
-      setSelectedJobs(new Set());
-    },
-    onError: (err, _vars, context) => {
-      if (context?.previousJobs) {
-        queryClient.setQueryData(["jobs"], context.previousJobs);
-        if (typeof onJobsUpdate === "function") onJobsUpdate(context.previousJobs);
-      }
-      toast.error(getApiErrorMessage(err, "Stellen konnten nicht aktualisiert werden"));
-    },
+    onSettled: (_, __, vars) => setJobFlag(vars.jobId, "status", false),
   });
 
   const deleteMutation = useMutation({
@@ -345,32 +828,19 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
       clearTimeout(notesTimeoutsRef.current[jobId]);
       delete notesTimeoutsRef.current[jobId];
     },
-    onSuccess: (_res, jobId) => {
+    onSuccess: (_, jobId) => {
       queryClient.removeQueries({ queryKey: ["jobs", String(jobId)], exact: true });
-      syncJobs((old = []) => old.filter((job) => job.id !== jobId));
+      syncJobs((old = []) => old.filter((j) => j.id !== jobId));
       queryClient.invalidateQueries({ queryKey: ["pipeline", "stats"] });
+      // Deselect if the deleted job was selected
+      if (selectedJobId === jobId) {
+        setSelectedJobId(null);
+        setMobileDetailOpen(false);
+      }
       toast.success("Stelle entfernt");
     },
     onError: (err) => toast.error(getApiErrorMessage(err, "Stelle konnte nicht gelöscht werden")),
-    onSettled: (_data, _error, jobId) => setJobFlag(jobId, "delete", false),
-  });
-
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (jobIds) => {
-      jobIds.forEach((jobId) => {
-        clearTimeout(notesTimeoutsRef.current[jobId]);
-        delete notesTimeoutsRef.current[jobId];
-      });
-      return Promise.all(jobIds.map((jobId) => jobApi.delete(jobId)));
-    },
-    onSuccess: (_res, jobIds) => {
-      const deletedIds = new Set(jobIds);
-      syncJobs((old = []) => old.filter((job) => !deletedIds.has(job.id)));
-      queryClient.invalidateQueries({ queryKey: ["pipeline", "stats"] });
-      toast.success(`${jobIds.length} Stellen gelöscht`);
-      setSelectedJobs(new Set());
-    },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Stellen konnten nicht gelöscht werden")),
+    onSettled: (_, __, jobId) => setJobFlag(jobId, "delete", false),
   });
 
   const matchMutation = useMutation({
@@ -393,9 +863,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
       setExpandedPanel(`interview-${vars.jobId}`);
       toast.success("Gesprächsvorbereitung fertig!");
     },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden"));
-    },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden")),
   });
 
   const notesMutation = useMutation({
@@ -415,12 +883,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   const deadlineMutation = useMutation({
     mutationFn: ({ jobId, deadline }) => jobApi.updateDeadline(jobId, deadline),
     onMutate: ({ jobId }) => setJobFlag(jobId, "deadline", true),
-    onSuccess: (res) => {
-      applyJobUpdate(res.data);
-      toast.success("Frist aktualisiert!");
-    },
+    onSuccess: (res) => { applyJobUpdate(res.data); toast.success("Frist aktualisiert!"); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Frist konnte nicht gespeichert werden")),
-    onSettled: (_data, _error, vars) => setJobFlag(vars.jobId, "deadline", false),
+    onSettled: (_, __, vars) => setJobFlag(vars.jobId, "deadline", false),
   });
 
   const urlMutation = useMutation({
@@ -428,49 +893,55 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     onMutate: ({ jobId }) => setJobFlag(jobId, "url", true),
     onSuccess: (res) => applyJobUpdate(res.data),
     onError: (err) => toast.error(getApiErrorMessage(err, "Link konnte nicht gespeichert werden")),
-    onSettled: (_data, _error, vars) => setJobFlag(vars.jobId, "url", false),
+    onSettled: (_, __, vars) => setJobFlag(vars.jobId, "url", false),
   });
 
-  const hasResume = Boolean(selectedResumeId);
-  const isProcessing = (jobId, feature) => processing.jobId === jobId && processing.feature === feature;
-
-  const handleInterview = (job) => {
-    if (job.interview_qa) {
-      setExpandedPanel((old) => (old === `interview-${job.id}` ? null : `interview-${job.id}`));
-      return;
-    }
-    interviewMutation.mutate({ jobId: job.id, resumeId: selectedResumeId || resumes[0]?.id });
-  };
+  // ── Action Handlers ───────────────────────────────────────────────────────────
 
   const handleDraftEmail = async (job) => {
     const userName = initData?.me?.full_name || initData?.me?.email?.split("@")[0] || "Bewerber";
     const jobForLink = { ...job, title: job.role || job.title, role: job.role || job.title };
     if (draftTexts[job.id]) {
       window.location.href = generateMailtoLink(jobForLink, draftTexts[job.id], userName);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+      toast.success("Brief-Entwurf geöffnet!");
       return;
     }
     if (job.cover_letter) {
       window.location.href = generateMailtoLink(jobForLink, job.cover_letter, userName);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+      toast.success("Brief-Entwurf geöffnet!");
       return;
     }
     setDraftLoading(job.id);
     try {
-      const res = await motivationsschreibenApi.generate({ company: job.company || "", role: job.role || "", job_description: job.description || `${job.role} bei ${job.company}`, tone: "formell", resume_id: selectedResumeId || resumes[0]?.id || null, applicant_name: initData?.me?.full_name || "" });
+      const res = await motivationsschreibenApi.generate({
+        company: job.company || "",
+        role: job.role || "",
+        job_description: job.description || `${job.role} bei ${job.company}`,
+        tone: "formell",
+        resume_id: selectedResumeId || resumes[0]?.id || null,
+        applicant_name: initData?.me?.full_name || "",
+      });
       const text = res.data?.text || "";
       if (!text) throw new Error("empty");
       setDraftTexts((old) => ({ ...old, [job.id]: text }));
       window.location.href = generateMailtoLink(jobForLink, text, userName);
-      toast.success("Brief-Entwurf geöffnet! Vergiss nicht, deinen Lebenslauf als Anhang hinzuzufügen.");
+      toast.success("Brief-Entwurf geöffnet!");
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
       if (err.response?.status === 429) return;
-      toast.error(err.message === "empty" ? "KI hat keinen Text zurückgegeben. Bitte erneut versuchen." : getApiErrorMessage(err, "Brief-Entwurf konnte nicht generiert werden"));
+      toast.error(
+        err.message === "empty"
+          ? "KI hat keinen Text zurückgegeben."
+          : getApiErrorMessage(err, "Brief-Entwurf konnte nicht generiert werden")
+      );
     } finally {
       setDraftLoading(null);
     }
   };
+
+  // Attach helpers that DetailPanel needs to call match inline
+  handleDraftEmail._setProcessing = setProcessing;
+  handleDraftEmail._matchMutation = matchMutation;
 
   const handleResearch = async (job, force = false) => {
     if (!force && job.research_data) {
@@ -494,267 +965,196 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     }
   };
 
+  // ── Empty State ───────────────────────────────────────────────────────────────
   if (jobs.length === 0) {
-    return <div className="animate-slide-up py-12 text-center text-gray-500">Noch keine Stellen gespeichert. Starte mit der Stellensuche!</div>;
+    return (
+      <div className="py-12 text-center text-gray-500 animate-slide-up">
+        Noch keine Stellen gespeichert. Starte mit der Stellensuche!
+      </div>
+    );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="animate-slide-up rounded-lg border border-gray-200 bg-white p-4">
-        {resumes.length > 0 ? (
-          <>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Lebenslauf für Inhaltserstellung auswählen</label>
-            <select value={selectedResumeId || ""} onChange={(e) => setSelectedResumeId(Number(e.target.value))} className="mb-4 w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm">
-              {resumes.map((resume) => <option key={resume.id} value={resume.id}>{resume.name || resume.filename || `Lebenslauf ${resume.id}`}</option>)}
-            </select>
-          </>
-        ) : (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Für Match, Motivationsschreiben und Gesprächsvorbereitung brauchst du zuerst einen Lebenslauf.</div>
-        )}
+  // ── Shared DetailPanel props ──────────────────────────────────────────────────
+  const detailProps = {
+    job: selectedJob,
+    resumes,
+    selectedResumeId,
+    onResumeChange: setSelectedResumeId,
+    processing,
+    draftLoading,
+    notesSaving,
+    notesInput,
+    jobUiState,
+    expandedPanel,
+    setExpandedPanel,
+    descCollapsed,
+    setDescCollapsed,
+    notesTimeoutsRef,
+    updateStatusMutation,
+    deleteMutation,
+    matchMutation,
+    interviewMutation,
+    notesMutation,
+    deadlineMutation,
+    urlMutation,
+    onDraftEmail: handleDraftEmail,
+    onResearch: handleResearch,
+    setNotesInput,
+    setNotesSaving,
+  };
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Stellentitel oder Unternehmen..." className="rounded border border-gray-300 px-3 py-2 text-sm" />
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded border border-gray-300 px-3 py-2 text-sm"><option value="all">Alle Status</option>{STATUS_ORDER.map((status) => <option key={status} value={status}>{STATUS_LABELS[status]}</option>)}</select>
-          <div><label className="mb-1 block text-xs font-medium text-gray-700">Min. Match: {filterMinMatch}%</label><input type="range" min="0" max="100" value={filterMinMatch} onChange={(e) => setFilterMinMatch(Number(e.target.value))} className="w-full" /></div>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded border border-gray-300 px-3 py-2 text-sm"><option value="recent">Neueste zuerst</option><option value="match-high">Match (höchste)</option><option value="match-low">Match (niedrigste)</option><option value="salary-high">Gehalt (höchste)</option><option value="salary-low">Gehalt (niedrigste)</option></select>
+  // ── Render ────────────────────────────────────────────────────────────────────
+  return (
+    // animate-slide-up (page entrance animation from globals)
+    <div className="animate-slide-up space-y-4">
+
+      {/* ══ Pipeline Stats Header ════════════════════════════════════════════════
+          Mobile:  flex-nowrap overflow-x-auto → horizontally scrollable row
+          Desktop: grid grid-cols-5            → full-width 5-column grid
+      ══════════════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:pb-0">
+        {/* flex-nowrap (prevent cards from wrapping — forces horizontal scroll on mobile) */}
+        {/* md:grid md:grid-cols-5 (switch to 5-column grid on medium+ screens) */}
+        {PIPELINE_CONFIG.map(({ key, label, icon: Icon, cardCls, iconCls }) => (
+          <button
+            key={key}
+            onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
+            // min-w-[120px] (min card width so cards don't get too squished in scroll)
+            // flex-shrink-0 (prevent cards from shrinking below min-w in the flex row)
+            // rounded-xl border (SaaS card style)
+            // ring-2 (highlight ring when this status is actively filtered)
+            className={`min-w-[120px] flex-shrink-0 rounded-xl border p-3 text-left transition-all duration-150 md:min-w-0
+              ${cardCls}
+              ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-md" : "hover:shadow-sm"}
+            `}
+          >
+            <div className="flex items-center gap-1.5 mb-2">
+              <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${iconCls}`} />
+              <span className="text-[11px] font-semibold text-gray-600 truncate">{label}</span>
+            </div>
+            {/* text-2xl font-bold (large counter number) */}
+            <div className="text-2xl font-bold text-gray-900">{pipelineStats[key] ?? 0}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* ══ Split-View Dashboard ════════════════════════════════════════════════
+          Mobile:  flex-col  → stacked (list only; detail opens as overlay)
+          Desktop: flex-row  → side-by-side (left list + right detail)
+
+          h-[calc(100svh-320px)]  →  fixed height so both columns scroll
+                                      independently without the page scrolling
+      ══════════════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col md:flex-row rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden md:h-[calc(100svh-320px)]">
+        {/* ── Left Column: Job List ─────────────────────────────────────────────
+            w-full (full width on mobile), md:w-72 lg:w-80 (fixed width on desktop)
+            flex-shrink-0 (never compress the list column)
+            flex flex-col (stack search bar + list vertically)
+            border-r (separator line between list and detail on desktop)
+            overflow-hidden (clip children; individual sections scroll)
+        ─────────────────────────────────────────────────────────────────────── */}
+        <div className="w-full md:w-72 lg:w-80 flex-shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-slate-200 overflow-hidden">
+
+          {/* Search + Sort bar */}
+          {/* flex-shrink-0 (search bar never shrinks; only the list scrolls) */}
+          <div className="flex-shrink-0 p-3 border-b border-slate-100 space-y-2">
+            {/* relative (position the search icon inside the input) */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              {/* pl-8 (left padding clears the icon) */}
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Suche…"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            {/* grid grid-cols-2 (sort and status filter side by side) */}
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs"
+              >
+                <option value="all">Alle Status</option>
+                {STATUS_ORDER.map((s) => (
+                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                ))}
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs"
+              >
+                <option value="recent">Neueste</option>
+                <option value="match-high">Match ↓</option>
+                <option value="match-low">Match ↑</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Job list — flex-1 (fill remaining height), overflow-y-auto (scroll) */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            {filteredJobs.length === 0 ? (
+              <p className="py-8 text-center text-xs text-slate-400">Keine Stellen gefunden</p>
+            ) : (
+              filteredJobs.map((job) => (
+                <JobListCard
+                  key={job.id}
+                  job={job}
+                  isSelected={job.id === selectedJobId}
+                  onClick={() => handleSelectJob(job.id)}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* ── Right Column: Detail Panel (desktop only) ─────────────────────────
+            hidden md:flex  (invisible on mobile, flex column on desktop)
+            flex-1          (grow to fill all remaining horizontal space)
+            overflow-hidden (DetailPanel manages its own internal scroll)
+        ─────────────────────────────────────────────────────────────────────── */}
+        <div className="hidden md:flex flex-1 flex-col overflow-hidden">
+          <DetailPanel
+            {...detailProps}
+            isMobileOverlay={false}
+            onClose={() => {}}
+          />
         </div>
       </div>
 
-      {selectedJobs.size > 0 && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-sm font-medium text-blue-900">{selectedJobs.size} Stelle{selectedJobs.size !== 1 ? "n" : ""} ausgewählt</span>
-            <div className="flex flex-wrap gap-2">
-              <select defaultValue="" disabled={bulkStatusMutation.isPending || bulkDeleteMutation.isPending} onChange={(e) => { if (e.target.value) { bulkStatusMutation.mutate({ status: e.target.value, jobIds: Array.from(selectedJobs) }); e.target.value = ""; } }} className="rounded border border-blue-300 bg-white px-3 py-1 text-xs disabled:cursor-not-allowed disabled:bg-gray-100">
-                <option value="">Auswahl markieren als...</option>
-                {STATUS_ORDER.map((status) => <option key={status} value={status}>{STATUS_LABELS[status]}</option>)}
-              </select>
-              <button onClick={() => { const ids = Array.from(selectedJobs); if (window.confirm(`${ids.length} Stelle(n) löschen?`)) bulkDeleteMutation.mutate(ids); }} disabled={bulkDeleteMutation.isPending || bulkStatusMutation.isPending} className="rounded border border-red-300 bg-red-50 px-3 py-1 text-xs text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60">{bulkDeleteMutation.isPending ? "Lösche Auswahl..." : "Auswahl löschen"}</button>
-              <button onClick={() => setSelectedJobs(new Set())} disabled={bulkDeleteMutation.isPending || bulkStatusMutation.isPending} className="rounded border border-blue-300 bg-white px-3 py-1 text-xs text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60">Auswahl aufheben</button>
-            </div>
-          </div>
-          {(bulkStatusMutation.isPending || bulkDeleteMutation.isPending) && <p className="mt-2 text-xs text-blue-800">{bulkStatusMutation.isPending ? "Auswahl wird aktualisiert..." : "Auswahl wird gelöscht..."}</p>}
+      {/* ══ Mobile Full-Screen Overlay ══════════════════════════════════════════
+          fixed inset-0  (covers the entire viewport — top/right/bottom/left: 0)
+          z-50           (above all other content)
+          md:hidden      (only visible on mobile; desktop uses the split panel)
+          flex flex-col  (DetailPanel fills the height)
+          bg-white       (solid white background)
+      ══════════════════════════════════════════════════════════════════════════ */}
+      {mobileDetailOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white md:hidden overflow-hidden">
+          <DetailPanel
+            {...detailProps}
+            isMobileOverlay={true}
+            onClose={() => setMobileDetailOpen(false)}
+          />
         </div>
       )}
 
-      {filteredJobs.map((job) => {
-        const meta = getDeadlineMeta(job.deadline);
-        const matchFeedback = parseJson(job.match_feedback);
-        const isCollapsed = collapsedJobCards[job.id] !== false;
-        const interviewQa = parseJson(job.interview_qa);
-        const showActionHint = !hasResume || !job.company;
-        const isDeleting = isJobFlagActive(job.id, "delete");
-        const isStatusUpdating = isJobFlagActive(job.id, "status");
-        const isDeadlineSaving = isJobFlagActive(job.id, "deadline");
-        const isUrlSaving = isJobFlagActive(job.id, "url");
-
-        const isDescriptionCollapsed = collapsedDescriptions[job.id] ?? true;
-        const isFocused = focusedJobId != null && String(focusedJobId) === String(job.id);
-        const isMatchSectionCollapsed = (section) => Boolean(collapsedMatchSections[`${job.id}-${section}`]);
-        const isMatchRailCollapsed = Boolean(collapsedMatchRail[job.id]);
-
-        return (
-          <div key={job.id} ref={(node) => { jobRefs.current[job.id] = node; }} className={`card card-hover rounded-xl border bg-white shadow-sm transition-all duration-300 ${isFocused ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
-            <div className="border-b border-gray-100 p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={selectedJobs.has(job.id)} onChange={() => setSelectedJobs((old) => { const next = new Set(old); next.has(job.id) ? next.delete(job.id) : next.add(job.id); return next; })} className="h-4 w-4 rounded" />
-                    <span className="truncate text-left text-base font-semibold text-gray-900 sm:text-lg">{job.role || "Ohne Titel"}</span>
-                    {job.url && <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700" title="Stellenanzeige öffnen"><ExternalLink className="h-3.5 w-3.5" /></a>}
-                  </div>
-                  <p className="text-sm text-gray-600">{job.company || "Unbekanntes Unternehmen"}</p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">{meta && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.className}`}>{meta.label}</span>}{job.match_score != null && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}%</span>}<span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span></div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setCollapsedJobCards((old) => { const currentlyCollapsed = old[job.id] !== false; return { ...old, [job.id]: !currentlyCollapsed }; })} className="p-1 text-gray-500 hover:text-gray-700">{isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</button>
-                  <span title={isDeleting ? "Stelle wird gerade gelöscht" : "Stelle löschen"}>
-                    <button onClick={() => deleteMutation.mutate(job.id)} disabled={isDeleting} aria-disabled={isDeleting} className="p-1 text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {!isCollapsed && <div className="space-y-5 bg-white p-4">
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
-
-              {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-5 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[240px]"}`}>
-                  <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
-                    <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
-                      {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
-                      <button onClick={() => setCollapsedMatchRail((old) => ({ ...old, [job.id]: !old[job.id] }))} className="rounded-lg border border-slate-200 p-2 text-gray-500 hover:bg-slate-50 hover:text-gray-700" title={isMatchRailCollapsed ? "Seitenleiste anzeigen" : "Seitenleiste minimieren"}>
-                        {isMatchRailCollapsed ? <ChevronDown className="h-4 w-4 -rotate-90" /> : <ChevronDown className="h-4 w-4 rotate-90" />}
-                      </button>
-                    </div>
-                    {!isMatchRailCollapsed && (
-                      <div className="mt-3 space-y-2">
-                        <MatchDetailCard
-                          title="Stärken"
-                          items={matchFeedback.strengths}
-                          tone="success"
-                          collapsed={isMatchSectionCollapsed("strengths")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
-                          className="match-rail-card w-full"
-                        />
-                        <MatchDetailCard
-                          title="Verbesserungsvorschläge"
-                          items={matchFeedback.gaps}
-                          tone="danger"
-                          collapsed={isMatchSectionCollapsed("gaps")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
-                          className="match-rail-card w-full"
-                        />
-                        <MatchDetailCard
-                          title="Empfehlungen"
-                          items={matchFeedback.recommendations}
-                          tone="info"
-                          collapsed={isMatchSectionCollapsed("recommendations")}
-                          onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                          className="match-rail-card w-full"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </aside>
-              )}
-
-              {(job.match_score != null || matchFeedback) && (
-                <div className="border-t border-slate-200 pt-4">
-                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Match-Analyse</h3>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {job.match_score != null && <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}% Match</span>}
-                    </div>
-                  </div>
-                  {job.match_score != null && job.match_feedback && <p className="max-w-4xl text-sm leading-relaxed text-gray-700">{getMatchSummary(job.match_feedback)}</p>}
-                  {matchFeedback && (
-                    <div className="mt-4 space-y-3 lg:hidden">
-                      <MatchDetailCard
-                        title="Stärken"
-                        items={matchFeedback.strengths}
-                        tone="success"
-                        collapsed={isMatchSectionCollapsed("strengths")}
-                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
-                        className="w-full"
-                      />
-                      <MatchDetailCard
-                        title="Verbesserungsvorschläge"
-                        items={matchFeedback.gaps}
-                        tone="danger"
-                        collapsed={isMatchSectionCollapsed("gaps")}
-                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
-                        className="w-full"
-                      />
-                      <MatchDetailCard
-                        title="Empfehlungen"
-                        items={matchFeedback.recommendations}
-                        tone="info"
-                        collapsed={isMatchSectionCollapsed("recommendations")}
-                        onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Details</h3>
-                </div>
-                <div className="space-y-4">
-                  {job.description && <div><div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-700">Stellenbeschreibung</p><button onClick={() => setCollapsedDescriptions((old) => ({ ...old, [job.id]: !old[job.id] }))} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">{isDescriptionCollapsed ? "Anzeigen" : "Minimieren"}</button></div>{!isDescriptionCollapsed && <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-gray-700">{job.description}</div>}</div>}
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-                    <div><label className="mb-2 block text-sm font-semibold text-gray-700">Stellenanzeige Link</label><input type="url" defaultValue={job.url || ""} onBlur={(e) => { const value = e.target.value.trim() || null; if (value !== (job.url || null)) urlMutation.mutate({ jobId: job.id, url: value }); }} disabled={isUrlSaving} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isUrlSaving && <p className="mt-1 text-xs text-gray-500">Link wird gespeichert...</p>}</div>
-                    <div><label className="mb-2 block text-sm font-semibold text-gray-700">Bewerbungsfrist</label><input type="date" defaultValue={job.deadline ? job.deadline.split("T")[0] : ""} onBlur={(e) => deadlineMutation.mutate({ jobId: job.id, deadline: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : null })} disabled={isDeadlineSaving} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100" />{isDeadlineSaving && <p className="mt-1 text-xs text-gray-500">Frist wird gespeichert...</p>}</div>
-                  </div>
-                  <div><label className="mb-2 block text-sm font-semibold text-gray-700">Notizen</label><textarea value={notesInput[job.id] ?? job.notes ?? ""} onChange={(e) => { const value = e.target.value; setNotesInput((old) => ({ ...old, [job.id]: value })); setNotesSaving((old) => ({ ...old, [job.id]: true })); clearTimeout(notesTimeoutsRef.current[job.id]); notesTimeoutsRef.current[job.id] = setTimeout(() => notesMutation.mutate({ jobId: job.id, notes: value }), 800); }} placeholder="Persönliche Notizen zu dieser Bewerbung..." className="w-full resize-none rounded-xl border border-slate-300 px-3 py-2 text-sm" rows={3} />{notesSaving[job.id] && <p className="mt-1 text-xs text-gray-500">Wird gespeichert...</p>}</div>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4">
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Status & Tools</h3>
-                </div>
-                <div className="mb-4 flex flex-wrap gap-2">{STATUS_ORDER.filter((status) => status !== job.status).map((status) => <span key={status} title={isStatusUpdating ? "Status wird gerade aktualisiert" : ""}><button onClick={() => updateStatusMutation.mutate({ jobId: job.id, status })} disabled={isStatusUpdating} aria-disabled={isStatusUpdating} className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50">Als {STATUS_LABELS[status]} markieren</button></span>)}</div>
-                {isStatusUpdating && <p className="mb-3 text-xs text-gray-500">Status wird aktualisiert...</p>}
-                {isDeleting && <p className="mb-3 text-xs text-gray-500">Stelle wird gelöscht...</p>}
-                {showActionHint && <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">{!hasResume && <div>Bitte zuerst einen Lebenslauf auswählen, um Match und Gesprächsvorbereitung zu nutzen.</div>}{!job.company && <div>Recherche ist für diese Stelle nicht verfügbar, weil der Firmenname fehlt.</div>}</div>}
-                <div className="flex flex-wrap gap-2">
-                  <ActionButton color="indigo" disabled={!hasResume || isProcessing(job.id, "match")} disabledReason={getDisabledReason({ feature: "match", job, hasResume, isProcessing: isProcessing(job.id, "match"), draftLoading: draftLoading === job.id })} onClick={() => { setProcessing({ jobId: job.id, feature: "match" }); matchMutation.mutate({ jobId: job.id, resumeId: selectedResumeId }); }} icon={<Zap className="h-4 w-4" />} label={isProcessing(job.id, "match") ? "Wird berechnet..." : "Match-Bewertung"} />
-                  <ActionButton color="emerald" disabled={draftLoading === job.id} disabledReason={getDisabledReason({ feature: "draft", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleDraftEmail(job)} icon={draftLoading === job.id ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <FileText className="h-4 w-4" />} label={draftLoading === job.id ? "Wird erstellt..." : "Anschreiben"} />
-                  <ActionButton color="amber" disabled={!hasResume || interviewMutation.isPending} disabledReason={getDisabledReason({ feature: "interview", job, hasResume, isProcessing: interviewMutation.isPending, draftLoading: draftLoading === job.id })} onClick={() => handleInterview(job)} icon={<MessageSquare className="h-4 w-4" />} label={interviewMutation.isPending ? "Wird erstellt..." : "Gesprächsvorbereitung"} />
-                  <ActionButton color={job.research_data ? "emerald-solid" : "emerald-outline"} disabled={!job.company} disabledReason={getDisabledReason({ feature: "research", job, hasResume, isProcessing: false, draftLoading: draftLoading === job.id })} onClick={() => handleResearch(job)} icon={<SearchCheck className="h-4 w-4" />} label="Recherche" />
-                </div>
-              </div>
-
-              {matchFeedback && <div className="hidden clear-both lg:block" />}
-              {job.cover_letter && <div className="border-t border-gray-300 pt-3"><button onClick={() => setExpandedPanel(expandedPanel === `cover-${job.id}` ? null : `cover-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-green-700"><FileText className="h-4 w-4" /> Erstelltes Motivationsschreiben</button>{expandedPanel === `cover-${job.id}` && <div className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-green-300 bg-white p-3 text-sm text-gray-700">{job.cover_letter}</div>}</div>}
-              {job.interview_qa && (
-                <div className="border-t border-gray-300 pt-3">
-                  <button onClick={() => setExpandedPanel(expandedPanel === `interview-${job.id}` ? null : `interview-${job.id}`)} className="flex items-center gap-2 text-sm font-semibold text-purple-700">
-                    <Brain className="h-4 w-4" /> Fragen zur Gesprächsvorbereitung
-                  </button>
-                  {expandedPanel === `interview-${job.id}` && (
-                    <div className="mt-3 space-y-3">
-                      {Array.isArray(interviewQa)
-                        ? interviewQa.map((item, index) => {
-                            const key = `${job.id}-${index}`;
-                            const type = TYPE_MAP[item.type] || TYPE_MAP[(item.type || "").toLowerCase()] || item.type || "Frage";
-                            const open = expandedQuestion === key;
-                            return (
-                              <div
-                                key={key}
-                                className={`overflow-hidden rounded-xl border transition-all duration-200 ${
-                                  open ? "border-indigo-200 bg-white shadow-md" : "border-gray-200 bg-white"
-                                }`}
-                              >
-                                <button
-                                  onClick={() => setExpandedQuestion(open ? null : key)}
-                                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    <div className="mb-1 flex items-start gap-3">
-                                      <span className="flex-shrink-0 text-xs font-semibold text-gray-400">Q{index + 1}</span>
-                                      <p className="text-sm font-semibold text-gray-900">{item.question || item}</p>
-                                    </div>
-                                    <div className="ml-6 flex flex-wrap gap-2">
-                                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${TAG_COLORS[type] || "bg-gray-100 text-gray-700"}`}>{type}</span>
-                                    </div>
-                                  </div>
-                                  <ChevronDown className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
-                                </button>
-                                {open && (
-                                  <div className="space-y-3 border-t border-gray-200 bg-white px-4 py-3">
-                                    <div>
-                                      <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Antwort</h4>
-                                      <p className="text-sm leading-relaxed text-gray-700">{item.answer || item.suggested_answer || ""}</p>
-                                    </div>
-                                    {(item.tip || item.suggested_answer) && (
-                                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                                        <p className="mb-1 text-[11px] font-semibold text-amber-900">PROFI-TIPP</p>
-                                        <p className="text-sm text-amber-900">{item.tip || item.suggested_answer}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
-                        : <div className="rounded-lg border border-purple-300 bg-white p-3 text-sm text-gray-700">{job.interview_qa}</div>}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>}
-          </div>
-        );
-      })}
-
-      {researchModal && <ResearchModal companyName={researchModal.companyName} data={researchData} loading={researchLoading} jobId={researchModal.jobId} onRefresh={() => { const job = jobs.find((entry) => entry.id === researchModal.jobId); if (job) handleResearch(job, true); }} onClose={() => { setResearchModal(null); setResearchData(null); }} />}
+      {/* Research Modal (portal-style, sits outside the layout) */}
+      {researchModal && (
+        <ResearchModal
+          companyName={researchModal.companyName}
+          data={researchData}
+          loading={researchLoading}
+          jobId={researchModal.jobId}
+          onRefresh={() => {
+            const job = jobs.find((j) => j.id === researchModal.jobId);
+            if (job) handleResearch(job, true);
+          }}
+          onClose={() => { setResearchModal(null); setResearchData(null); }}
+        />
+      )}
     </div>
   );
 }
