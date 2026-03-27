@@ -543,19 +543,17 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               </div>
             </div>
 
-            {!isCollapsed && <div className="space-y-4 bg-slate-50 p-4">
+            {!isCollapsed && <div className="space-y-5 bg-white p-4">
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {(job.match_score != null || matchFeedback) && (
-                <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/50 to-sky-50/60 p-4 sm:p-5">
-                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-500">Analyse</p>
-                      <h3 className="mt-1 text-lg font-semibold text-gray-900">Match-Überblick</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">Match-Analyse</h3>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      {job.match_score != null && <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}% Match</span>}
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[job.status]}`}>{STATUS_LABELS[job.status]}</span>
+                      {job.match_score != null && <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getMatchColorClass(job.match_score)}`}>{Math.round(job.match_score)}% Match</span>}
                     </div>
                   </div>
                   {job.match_score != null && job.match_feedback && <p className="mb-4 max-w-4xl text-sm leading-relaxed text-gray-700">{getMatchSummary(job.match_feedback)}</p>}
@@ -590,10 +588,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 </div>
               )}
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+              <div className="border-t border-slate-200 pt-4">
                 <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Bewerbungsdetails</p>
-                  <h3 className="mt-1 text-lg font-semibold text-gray-900">Details</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Details</h3>
                 </div>
                 <div className="space-y-4">
                   {job.description && <div><div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-gray-700">Stellenbeschreibung</p><button onClick={() => setCollapsedDescriptions((old) => ({ ...old, [job.id]: !old[job.id] }))} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">{isDescriptionCollapsed ? "Anzeigen" : "Minimieren"}</button></div>{!isDescriptionCollapsed && <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-gray-700">{job.description}</div>}</div>}
@@ -605,10 +602,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+              <div className="border-t border-slate-200 pt-4">
                 <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Aktionen</p>
-                  <h3 className="mt-1 text-lg font-semibold text-gray-900">Status & Tools</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Status & Tools</h3>
                 </div>
                 <div className="mb-4 flex flex-wrap gap-2">{STATUS_ORDER.filter((status) => status !== job.status).map((status) => <span key={status} title={isStatusUpdating ? "Status wird gerade aktualisiert" : ""}><button onClick={() => updateStatusMutation.mutate({ jobId: job.id, status })} disabled={isStatusUpdating} aria-disabled={isStatusUpdating} className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50">Als {STATUS_LABELS[status]} markieren</button></span>)}</div>
                 {isStatusUpdating && <p className="mb-3 text-xs text-gray-500">Status wird aktualisiert...</p>}
