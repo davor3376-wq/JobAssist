@@ -105,7 +105,7 @@ const TAG_COLORS = {
   Kundenorientierung: "bg-purple-100 text-purple-700",
 };
 
-function MatchDetailCard({ title, items, tone }) {
+function MatchDetailCard({ title, items, tone, collapsed, onToggle }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   const styles = {
@@ -130,15 +130,20 @@ function MatchDetailCard({ title, items, tone }) {
 
   return (
     <div className={`rounded-xl border p-4 ${toneStyle.card}`}>
-      <h4 className={`mb-3 text-base font-semibold ${toneStyle.title}`}>{title}</h4>
-      <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
-        {items.map((item, index) => (
-          <li key={`${title}-${index}`} className="flex items-start gap-2">
-            <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
+        <h4 className={`text-base font-semibold ${toneStyle.title}`}>{title}</h4>
+        <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${collapsed ? "" : "rotate-180"} ${toneStyle.title}`} />
+      </button>
+      {!collapsed && (
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-gray-700">
+          {items.map((item, index) => (
+            <li key={`${title}-${index}`} className="flex items-start gap-2">
+              <span className={`mt-0.5 text-sm font-bold ${toneStyle.bullet}`}>{tone === "success" ? "+" : "-"}</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -175,6 +180,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
 
   const [collapsedJobCards, setCollapsedJobCards] = useState({});
   const [collapsedDescriptions, setCollapsedDescriptions] = useState({});
+  const [collapsedMatchSections, setCollapsedMatchSections] = useState({});
   const [expandedPanel, setExpandedPanel] = useState(null);
   const [selectedJobs, setSelectedJobs] = useState(new Set());
   const [selectedResumeId, setSelectedResumeId] = useState(null);
@@ -513,6 +519,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
 
         const isDescriptionCollapsed = collapsedDescriptions[job.id] ?? true;
         const isFocused = focusedJobId != null && String(focusedJobId) === String(job.id);
+        const isMatchSectionCollapsed = (section) => Boolean(collapsedMatchSections[`${job.id}-${section}`]);
 
         return (
           <div key={job.id} ref={(node) => { jobRefs.current[job.id] = node; }} className={`card card-hover overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-300 ${isFocused ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
@@ -541,10 +548,28 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               {job.match_score != null && job.match_feedback && <div className="border-t border-gray-300 pt-3"><p className="mb-1 text-xs font-semibold text-gray-700">Match-Analyse</p><p className="text-xs leading-relaxed text-gray-600">{getMatchSummary(job.match_feedback)}</p></div>}
               {matchFeedback && (
                 <div className="grid gap-3 md:grid-cols-2">
-                  <MatchDetailCard title="Stärken" items={matchFeedback.strengths} tone="success" />
-                  <MatchDetailCard title="Verbesserungsvorschläge" items={matchFeedback.gaps} tone="danger" />
+                  <MatchDetailCard
+                    title="Stärken"
+                    items={matchFeedback.strengths}
+                    tone="success"
+                    collapsed={isMatchSectionCollapsed("strengths")}
+                    onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-strengths`]: !old[`${job.id}-strengths`] }))}
+                  />
+                  <MatchDetailCard
+                    title="Verbesserungsvorschläge"
+                    items={matchFeedback.gaps}
+                    tone="danger"
+                    collapsed={isMatchSectionCollapsed("gaps")}
+                    onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-gaps`]: !old[`${job.id}-gaps`] }))}
+                  />
                   <div className="md:col-span-2">
-                    <MatchDetailCard title="Empfehlungen" items={matchFeedback.recommendations} tone="info" />
+                    <MatchDetailCard
+                      title="Empfehlungen"
+                      items={matchFeedback.recommendations}
+                      tone="info"
+                      collapsed={isMatchSectionCollapsed("recommendations")}
+                      onToggle={() => setCollapsedMatchSections((old) => ({ ...old, [`${job.id}-recommendations`]: !old[`${job.id}-recommendations`] }))}
+                    />
                   </div>
                 </div>
               )}
