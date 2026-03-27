@@ -127,7 +127,7 @@ function MatchDetailCard({ title, items, tone, collapsed, onToggle, className = 
 
   const toneStyle = styles[tone] || styles.info;
   const compact = className.includes("match-rail-card");
-  const visibleItems = compact ? items.slice(0, 2) : items;
+  const visibleItems = compact ? items.slice(0, 1) : items;
   const hiddenCount = compact ? Math.max(0, items.length - visibleItems.length) : 0;
 
   return (
@@ -567,7 +567,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">{job.location && <div className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /><span>{job.location}</span></div>}{job.salary && <div className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /><span>{job.salary}</span></div>}</div>
 
               {matchFeedback && (
-                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-6 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[270px]"}`}>
+                <aside className={`hidden lg:float-right lg:mb-6 lg:ml-5 lg:block ${isMatchRailCollapsed ? "w-10" : "w-[240px]"}`}>
                   <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isMatchRailCollapsed ? "p-1.5" : "p-3"}`}>
                     <div className={`flex items-center ${isMatchRailCollapsed ? "justify-center" : "justify-between gap-2"}`}>
                       {!isMatchRailCollapsed && <h3 className="text-sm font-semibold text-gray-900">Match-Widgets</h3>}
