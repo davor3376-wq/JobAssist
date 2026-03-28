@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight, CreditCard, ExternalLink, Zap, AlertCircle,
-  CheckCircle2, XCircle, Rocket, Crown, Sparkles, Shield,
+  CheckCircle2, Rocket, Crown, Sparkles, Shield, Building2, Star,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -12,70 +12,97 @@ import { billingApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
 import { getCleanBillingUrl, getPlanName, getUsageBarState } from "../utils/billingState";
 
-// ─── Plan definitions (static) ────────────────────────────────────────────────
+// ─── Plan definitions — sourced from pricing page screenshot ──────────────────
+// soon:true = grayed-out "coming soon" feature (shown muted, not crossed out)
 const PLANS = [
   {
     key: "basic",
     name: "Basic",
-    price: "0",
-    period: "kostenlos",
+    sub: "Zum Ausprobieren",
+    price: "Gratis",
+    period: "",
     iconCls: "from-slate-400 to-slate-500",
     borderCls: "border-slate-200",
-    badgeCls: "bg-slate-100 text-slate-600",
-    btnCls: "border border-slate-300 text-slate-700 hover:bg-slate-50",
-    Icon: Shield,
+    badgeCls: "",
+    btnCls: "border border-slate-200 text-slate-500 cursor-default bg-slate-50",
+    Icon: Star,
     features: [
-      { label: "KI-Nachrichten / Monat",   value: "20" },
-      { label: "Lebenslauf-Analysen",       value: "3" },
-      { label: "Job-Alerts",                value: "1" },
-      { label: "Jobsuchen täglich",         value: "10" },
-      { label: "Anschreiben",               value: "3" },
-      { label: "Prioritäts-Support",        value: false },
-      { label: "Interview-Simulator",       value: true },
-      { label: "Assessment Center",         value: true },
+      { label: "5 Lebenslauf-Analysen / Monat" },
+      { label: "5 Anschreiben / Monat" },
+      { label: "2 Aktive Job-Alerts" },
+      { label: "15 KI-Nachrichten / Monat" },
+      { label: "5 Jobsuche / Tag" },
+      { label: "Lebenslauf hochladen",    soon: true },
+      { label: "Job-Suche",               soon: true },
+      { label: "Pipeline-Tracking",       soon: true },
     ],
   },
   {
     key: "pro",
     name: "Pro",
-    price: "9,99€",
+    sub: "Für aktive Bewerber",
+    price: "€4,99",
     period: "/ Monat",
     badge: "Beliebt",
-    iconCls: "from-indigo-500 to-violet-600",
-    borderCls: "border-indigo-300",
-    badgeCls: "bg-indigo-600 text-white",
-    btnCls: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200",
-    Icon: Sparkles,
+    iconCls: "from-blue-500 to-indigo-600",
+    borderCls: "border-blue-400",
+    badgeCls: "bg-blue-600 text-white",
+    btnCls: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200",
+    Icon: Zap,
     features: [
-      { label: "KI-Nachrichten / Monat",   value: "200" },
-      { label: "Lebenslauf-Analysen",       value: "20" },
-      { label: "Job-Alerts",                value: "10" },
-      { label: "Jobsuchen täglich",         value: "100" },
-      { label: "Anschreiben",               value: "Unbegrenzt" },
-      { label: "Prioritäts-Support",        value: true },
-      { label: "Interview-Simulator",       value: true },
-      { label: "Assessment Center",         value: true },
+      { label: "15 Lebenslauf-Analysen / Monat" },
+      { label: "25 Anschreiben / Monat" },
+      { label: "10 Aktive Job-Alerts" },
+      { label: "200 KI-Nachrichten / Monat" },
+      { label: "20 Jobsuche / Tag" },
+      { label: "Prioritäts-Support",      soon: true },
+      { label: "Alles aus Basic",         soon: true },
     ],
   },
   {
     key: "max",
     name: "Max",
-    price: "19,99€",
+    sub: "Unbegrenzte Power",
+    price: "€14,99",
     period: "/ Monat",
-    iconCls: "from-amber-400 to-orange-500",
-    borderCls: "border-amber-300",
-    badgeCls: "bg-amber-500 text-white",
-    btnCls: "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 shadow-md shadow-amber-200",
+    badge: "Bestes Angebot",
+    iconCls: "from-violet-500 to-purple-600",
+    borderCls: "border-violet-400",
+    badgeCls: "bg-violet-600 text-white",
+    btnCls: "bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-200",
     Icon: Crown,
     features: [
-      { label: "KI-Nachrichten / Monat",   value: "Unbegrenzt" },
-      { label: "Lebenslauf-Analysen",       value: "Unbegrenzt" },
-      { label: "Job-Alerts",                value: "Unbegrenzt" },
-      { label: "Jobsuchen täglich",         value: "Unbegrenzt" },
-      { label: "Anschreiben",               value: "Unbegrenzt" },
-      { label: "Prioritäts-Support",        value: true },
-      { label: "Interview-Simulator",       value: true },
-      { label: "Assessment Center",         value: true },
+      { label: "Unbegrenzt Lebenslauf-Analysen / Monat" },
+      { label: "Unbegrenzt Anschreiben / Monat" },
+      { label: "Unbegrenzt Aktive Job-Alerts" },
+      { label: "Unbegrenzt KI-Nachrichten / Monat" },
+      { label: "Unbegrenzt Jobsuche / Tag" },
+      { label: "24h Support",             soon: true },
+      { label: "Alles aus Pro",           soon: true },
+      { label: "Unbegrenzte Nutzung",     soon: true },
+    ],
+  },
+  {
+    key: "enterprise",
+    name: "Enterprise",
+    sub: "Für Teams & Agenturen",
+    price: "Auf Anfrage",
+    period: "",
+    iconCls: "from-slate-500 to-slate-700",
+    borderCls: "border-slate-300",
+    badgeCls: "",
+    btnCls: "bg-slate-900 text-white hover:bg-slate-800 shadow-sm",
+    btnLabel: "Kontaktiere uns",
+    Icon: Building2,
+    features: [
+      { label: "Unbegrenzt Lebenslauf-Analysen / Monat" },
+      { label: "Unbegrenzt Anschreiben / Monat" },
+      { label: "Unbegrenzt Aktive Job-Alerts" },
+      { label: "Unbegrenzt KI-Nachrichten / Monat" },
+      { label: "Unbegrenzt Jobsuche / Tag" },
+      { label: "Dedizierter Manager",     soon: true },
+      { label: "Custom Integrationen",    soon: true },
+      { label: "SLA & Compliance",        soon: true },
     ],
   },
 ];
@@ -165,60 +192,65 @@ function UsageRow({ feature, used, limit }) {
 function PlanCard({ plan, isCurrent, onUpgrade }) {
   const { Icon } = plan;
   return (
-    <div className={`relative flex flex-col rounded-2xl border-2 bg-white p-5 sm:p-6 transition-shadow hover:shadow-lg ${
+    <div className={`relative flex flex-col rounded-2xl border-2 bg-white p-5 transition-shadow hover:shadow-lg ${
       isCurrent ? plan.borderCls + " shadow-md" : "border-slate-100"
     }`}>
+      {/* Badge (Beliebt / Bestes Angebot) */}
       {plan.badge && (
-        <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-[11px] font-bold shadow-sm ${plan.badgeCls}`}>
+        <span className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-bold shadow-sm whitespace-nowrap ${plan.badgeCls}`}>
           {plan.badge}
         </span>
       )}
+      {/* Current plan indicator */}
       {isCurrent && (
-        <span className="absolute -top-3 right-4 rounded-full bg-emerald-500 px-3 py-0.5 text-[11px] font-bold text-white shadow-sm">
+        <span className="absolute -top-3.5 right-4 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
           Aktuell
         </span>
       )}
 
-      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${plan.iconCls}`}>
-        <Icon className="h-5 w-5 text-white" />
+      {/* Icon + name */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${plan.iconCls}`}>
+          <Icon className="h-4 w-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-slate-900 leading-tight">{plan.name}</h3>
+          <p className="text-[11px] text-slate-400">{plan.sub}</p>
+        </div>
       </div>
 
-      <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
-      <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-2xl sm:text-3xl font-bold text-slate-900">{plan.price}</span>
-        <span className="text-sm text-slate-400">{plan.period}</span>
+      {/* Price */}
+      <div className="mb-4 flex items-baseline gap-1">
+        <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
+        {plan.period && <span className="text-sm text-slate-400">{plan.period}</span>}
       </div>
 
-      <ul className="mt-5 flex-1 space-y-2.5">
+      {/* Features */}
+      <ul className="flex-1 space-y-2 mb-5">
         {plan.features.map((f) => (
-          <li key={f.label} className="flex items-start gap-2.5">
-            {f.value === false ? (
-              <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-300" />
-            ) : (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
-            )}
-            <span className="text-xs sm:text-sm text-slate-600">
-              {f.value === true || f.value === false
-                ? f.label
-                : <><span className="font-semibold text-slate-800">{f.value}</span> {f.label}</>
-              }
+          <li key={f.label} className="flex items-start gap-2">
+            <CheckCircle2 className={`mt-0.5 h-4 w-4 flex-shrink-0 ${f.soon ? "text-slate-300" : "text-emerald-500"}`} />
+            <span className={`text-xs leading-snug ${f.soon ? "text-slate-400" : "text-slate-700"}`}>
+              {f.label}
             </span>
           </li>
         ))}
       </ul>
 
-      {!isCurrent && onUpgrade && (
+      {/* CTA button */}
+      {isCurrent ? (
+        <div className="w-full rounded-xl bg-slate-100 py-2.5 text-center text-sm font-semibold text-slate-500">
+          Aktueller Plan
+        </div>
+      ) : (
         <button
           onClick={onUpgrade}
-          className={`mt-6 w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${plan.btnCls}`}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${plan.btnCls}`}
+          disabled={!onUpgrade}
         >
-          {plan.key === "basic" ? "Aktueller Plan" : `Zu ${plan.name} wechseln`}
+          {plan.btnLabel || "Jetzt upgraden"}
+          {!plan.btnLabel && <ArrowRight className="h-4 w-4" />}
         </button>
-      )}
-      {isCurrent && (
-        <div className="mt-6 w-full rounded-xl bg-emerald-50 py-2.5 text-center text-sm font-semibold text-emerald-600">
-          ✓ Dein aktueller Plan
-        </div>
       )}
     </div>
   );
@@ -294,6 +326,7 @@ export default function BillingPage() {
   const planName = getPlanName(planKey);
   const isPaid   = planKey && planKey !== "basic";
   const isMax    = planKey === "max" || planKey === "enterprise";
+
   const currentPlan = PLANS.find((p) => p.key === planKey) || PLANS[0];
 
   const periodEnd = sub?.current_period_end
@@ -430,30 +463,28 @@ export default function BillingPage() {
       <div>
         <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">Planvergleich</h3>
 
-        {/* Cards — horizontal scroll on mobile, grid on desktop */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* Cards: 1-col mobile → 2-col sm → 4-col xl */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.key}
               plan={plan}
               isCurrent={plan.key === planKey}
-              onUpgrade={plan.key !== "basic" && plan.key !== planKey && !isMax
-                ? () => navigate("/pricing")
-                : null}
+              onUpgrade={() => navigate("/pricing")}
             />
           ))}
         </div>
 
-        {/* Feature comparison table — desktop only, hidden on mobile */}
-        <div className="mt-6 hidden sm:block overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-          <table className="w-full text-sm">
+        {/* Feature comparison table — scrollable on all screen sizes */}
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-5 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400 w-2/5">Feature</th>
+                <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Feature</th>
                 {PLANS.map((p) => (
-                  <th key={p.key} className={`px-4 py-4 text-center text-sm font-bold ${p.key === planKey ? "text-indigo-600" : "text-slate-700"}`}>
-                    <span className="flex items-center justify-center gap-1.5">
-                      {p.key === planKey && <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />}
+                  <th key={p.key} className={`px-3 py-4 text-center text-xs font-bold ${p.key === planKey ? "text-blue-600" : "text-slate-600"}`}>
+                    <span className="flex flex-col items-center gap-0.5">
+                      {p.key === planKey && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
                       {p.name}
                     </span>
                   </th>
@@ -461,46 +492,62 @@ export default function BillingPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {PLANS[0].features.map((f, i) => (
-                <tr key={f.label} className={i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                  <td className="px-5 py-3.5 text-sm font-medium text-slate-700">{f.label}</td>
-                  {PLANS.map((p) => {
-                    const v = p.features[i].value;
+              {[
+                { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
+                { row: "Anschreiben / Monat",          vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
+                { row: "Aktive Job-Alerts",             vals: ["2", "10", "Unbegrenzt", "Unbegrenzt"] },
+                { row: "KI-Nachrichten / Monat",       vals: ["15", "200", "Unbegrenzt", "Unbegrenzt"] },
+                { row: "Jobsuche / Tag",                vals: ["5", "20", "Unbegrenzt", "Unbegrenzt"] },
+                { row: "Prioritäts-Support",            vals: [null, null, null, true], soon: [false, true, true, false] },
+                { row: "24h Support",                   vals: [null, null, null, true], soon: [false, false, true, false] },
+                { row: "Dedizierter Manager",           vals: [null, null, null, null], soon: [false, false, false, true] },
+              ].map(({ row, vals, soon = [] }, ri) => (
+                <tr key={row} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50/40"}>
+                  <td className="px-4 py-3 text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap">{row}</td>
+                  {vals.map((v, ci) => {
+                    const isCur = PLANS[ci].key === planKey;
+                    const isSoon = soon[ci];
                     return (
-                      <td key={p.key} className={`px-4 py-3.5 text-center ${p.key === planKey ? "bg-indigo-50/40" : ""}`}>
-                        {v === true  ? <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-500" /> :
-                         v === false ? <XCircle      className="mx-auto h-4 w-4 text-slate-300" /> :
-                         <span className={`text-sm font-semibold ${p.key === planKey ? "text-indigo-700" : "text-slate-700"}`}>{v}</span>}
+                      <td key={ci} className={`px-3 py-3 text-center ${isCur ? "bg-blue-50/30" : ""}`}>
+                        {v === true ? (
+                          <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-500" />
+                        ) : v === null ? (
+                          isSoon
+                            ? <span className="text-[10px] font-semibold text-slate-300">Bald</span>
+                            : <span className="text-slate-200 text-base leading-none">—</span>
+                        ) : (
+                          <span className={`text-xs sm:text-sm font-semibold ${isCur ? "text-blue-700" : "text-slate-700"}`}>{v}</span>
+                        )}
                       </td>
                     );
                   })}
                 </tr>
               ))}
-              {/* Pricing row */}
-              <tr className="bg-slate-50 border-t-2 border-slate-200">
-                <td className="px-5 py-4 text-sm font-bold text-slate-800">Preis</td>
+              {/* Price row */}
+              <tr className="border-t-2 border-slate-100 bg-slate-50">
+                <td className="px-4 py-3.5 text-xs sm:text-sm font-bold text-slate-800">Preis / Monat</td>
                 {PLANS.map((p) => (
-                  <td key={p.key} className={`px-4 py-4 text-center ${p.key === planKey ? "bg-indigo-50/40" : ""}`}>
-                    <span className={`text-base font-bold ${p.key === planKey ? "text-indigo-700" : "text-slate-800"}`}>{p.price}</span>
-                    <span className="text-xs text-slate-400 ml-1">{p.period}</span>
+                  <td key={p.key} className={`px-3 py-3.5 text-center ${p.key === planKey ? "bg-blue-50/30" : ""}`}>
+                    <span className={`text-sm sm:text-base font-bold ${p.key === planKey ? "text-blue-700" : "text-slate-800"}`}>{p.price}</span>
+                    {p.period && <span className="text-[10px] text-slate-400 ml-0.5">{p.period}</span>}
                   </td>
                 ))}
               </tr>
               {/* CTA row */}
               <tr className="bg-white">
-                <td className="px-5 py-4" />
+                <td className="px-4 py-3" />
                 {PLANS.map((p) => (
-                  <td key={p.key} className={`px-4 py-4 ${p.key === planKey ? "bg-indigo-50/40" : ""}`}>
+                  <td key={p.key} className={`px-3 py-3 ${p.key === planKey ? "bg-blue-50/30" : ""}`}>
                     {p.key === planKey ? (
-                      <div className="w-full rounded-xl bg-emerald-50 py-2 text-center text-xs font-semibold text-emerald-600">✓ Aktuell</div>
-                    ) : p.key !== "basic" && !isMax ? (
+                      <div className="rounded-lg bg-slate-100 py-1.5 text-center text-[11px] font-semibold text-slate-500">Aktuell</div>
+                    ) : (
                       <button
                         onClick={() => navigate("/pricing")}
-                        className={`w-full rounded-xl py-2 text-xs font-semibold transition-all ${p.btnCls}`}
+                        className={`w-full rounded-lg py-1.5 text-[11px] font-semibold transition-all ${p.btnCls}`}
                       >
-                        Wechseln
+                        {p.btnLabel || "Upgraden"}
                       </button>
-                    ) : null}
+                    )}
                   </td>
                 ))}
               </tr>
