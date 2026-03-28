@@ -276,21 +276,31 @@ function MatchBar({ text, index, barColor, bgColor, isLast }) {
   );
 }
 
-// ─── MatchSection ─────────────────────────────────────────────────────────────
+// ─── SkillGrid (high-density 2-col chip layout) ───────────────────────────────
 
-function MatchSection({ title, items = [], barColor, bgColor }) {
+function SkillTag({ text, dotCls, chipCls }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      onClick={() => setOpen((v) => !v)}
+      className={`flex w-full items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-opacity hover:opacity-80 ${chipCls}`}
+    >
+      <span className={`mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full ${dotCls}`} />
+      <span className={`text-[11px] leading-snug text-gray-700 ${open ? "" : "line-clamp-2"}`}>{text}</span>
+    </button>
+  );
+}
+
+function SkillGrid({ title, items = [], dotCls, chipCls }) {
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
-    // space-y-1 (4px between the label and bars)
-    <div className="space-y-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{title}</p>
-      {items.map((text, i) => (
-        <MatchBar
-          key={i} text={text} index={i}
-          barColor={barColor} bgColor={bgColor}
-          isLast={i === items.length - 1}
-        />
-      ))}
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{title}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {items.map((text, i) => (
+          <SkillTag key={i} text={text} dotCls={dotCls} chipCls={chipCls} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -308,10 +318,10 @@ function ApplicationPhaseStepper({ status }) {
   const steps = ["Entwurf", "Beworben", "Interview", finalLabel];
 
   return (
-    <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-500">Bewerbungs-Phase</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-500">Bewerbungs-Phase</p>
           <p className="mt-1 text-sm font-semibold text-gray-900">Fortschritt bis zur Entscheidung</p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_COLORS[status]}`}>
@@ -319,23 +329,30 @@ function ApplicationPhaseStepper({ status }) {
         </span>
       </div>
 
-      <div className="flex items-start gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-0">
         {steps.map((step, index) => {
-          const active = index <= currentStep;
-          const isFinal = index === steps.length - 1;
+          const completed = index < currentStep;
+          const active    = index === currentStep;
+          const isFinal   = index === steps.length - 1;
           return (
-            <div key={step} className="flex min-w-[88px] flex-1 items-center gap-2">
-              <div className="flex flex-col items-center gap-2">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                  active ? "bg-indigo-600 text-white" : "border border-slate-200 bg-white text-slate-400"
+            <div key={step} className="flex flex-1 items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
+                  completed || active
+                    ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
+                    : "border-2 border-slate-200 bg-white text-slate-400"
                 }`}>
-                  {index + 1}
+                  {completed ? (
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : index + 1}
                 </div>
-                <span className={`text-[11px] font-semibold ${active ? "text-gray-900" : "text-gray-400"}`}>{step}</span>
+                <span className={`text-[10px] font-semibold whitespace-nowrap ${completed || active ? "text-gray-800" : "text-gray-400"}`}>{step}</span>
               </div>
               {!isFinal && (
-                <div className="mt-4 h-[2px] flex-1 rounded-full bg-slate-200">
-                  <div className={`h-full rounded-full ${index < currentStep ? "bg-indigo-500" : "bg-slate-200"}`} />
+                <div className="mx-1 mb-3 h-[2px] flex-1 rounded-full bg-slate-200">
+                  <div className={`h-full rounded-full transition-all duration-500 ${completed ? "w-full bg-blue-500" : "w-0"}`} />
                 </div>
               )}
             </div>
@@ -369,7 +386,7 @@ function JobListCard({ job, isSelected, onClick }) {
     >
       {/* flex items-start (align at top), gap-3 (12px between gauge and text) */}
       <div className="flex items-start gap-3">
-        <CircularGauge score={job.match_score} size={44} />
+        <CircularGauge score={job.match_score} size={32} />
 
         {/* min-w-0 (allow flex child to shrink and trigger text truncation) */}
         {/* flex-1 (grow to fill remaining space) */}
@@ -378,7 +395,7 @@ function JobListCard({ job, isSelected, onClick }) {
           <p className="truncate text-sm font-semibold text-gray-900 leading-tight">
             {job.role || "Ohne Titel"}
           </p>
-          <p className="truncate text-xs text-gray-500 mt-0.5">
+          <p className="truncate text-xs text-slate-500 mt-0.5">
             {job.company || "Unbekannt"}
           </p>
           {/* flex-wrap (wrap badges to next line on narrow cards) */}
@@ -603,9 +620,9 @@ function DetailPanel({
                 {/* Progress bars */}
                 {matchFeedback && (
                   <div className="space-y-4">
-                    <MatchSection title="Stärken" items={matchFeedback.strengths} barColor="bg-emerald-500" bgColor="bg-emerald-100" />
-                    <MatchSection title="Verbesserungen" items={matchFeedback.gaps} barColor="bg-red-400" bgColor="bg-red-100" />
-                    <MatchSection title="Empfehlungen" items={matchFeedback.recommendations} barColor="bg-blue-400" bgColor="bg-blue-100" />
+                    <SkillGrid title="Stärken" items={matchFeedback.strengths} dotCls="bg-emerald-500" chipCls="bg-emerald-50" />
+                    <SkillGrid title="Verbesserungen" items={matchFeedback.gaps} dotCls="bg-red-400" chipCls="bg-red-50" />
+                    <SkillGrid title="Empfehlungen" items={matchFeedback.recommendations} dotCls="bg-blue-400" chipCls="bg-blue-50" />
                   </div>
                 )}
               </>
@@ -1212,27 +1229,20 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           Mobile:  flex-nowrap overflow-x-auto → horizontally scrollable row
           Desktop: grid grid-cols-5            → full-width 5-column grid
       ══════════════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:pb-0">
-        {/* flex-nowrap (prevent cards from wrapping — forces horizontal scroll on mobile) */}
-        {/* md:grid md:grid-cols-5 (switch to 5-column grid on medium+ screens) */}
+      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:overflow-visible md:pb-0">
         {PIPELINE_CONFIG.map(({ key, label, icon: Icon, cardCls, iconCls }) => (
           <button
             key={key}
             onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
-            // min-w-[120px] (min card width so cards don't get too squished in scroll)
-            // flex-shrink-0 (prevent cards from shrinking below min-w in the flex row)
-            // rounded-xl border (SaaS card style)
-            // ring-2 (highlight ring when this status is actively filtered)
-            className={`min-w-[120px] flex-shrink-0 rounded-xl border p-3 text-left transition-all duration-150 md:min-w-0
+            className={`min-w-[140px] flex-shrink-0 rounded-xl border p-5 text-left transition-all duration-150 md:min-w-0
               ${cardCls}
               ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-md" : "hover:shadow-sm"}
             `}
           >
-            <div className="flex items-center gap-1.5 mb-2">
-              <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${iconCls}`} />
-              <span className="text-[11px] font-semibold text-gray-600 truncate">{label}</span>
+            <div className="flex items-center gap-1.5 mb-3">
+              <Icon className={`w-4 h-4 flex-shrink-0 ${iconCls}`} />
+              <span className="text-xs font-semibold text-gray-600 truncate">{label}</span>
             </div>
-            {/* text-2xl font-bold (large counter number) */}
             <div className="text-2xl font-bold text-gray-900">{pipelineStats[key] ?? 0}</div>
           </button>
         ))}
