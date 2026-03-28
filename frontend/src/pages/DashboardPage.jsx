@@ -79,17 +79,17 @@ function MiniActivityChart({ values }) {
 // ── Slim stat card ────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconCls, Icon }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
+    <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
+      <div className="flex items-center gap-4">
+        <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ${iconCls}`}>
           <Icon className="h-5 w-5 text-white" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 text-left">
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-          <p className="mt-0.5 text-2xl font-bold leading-none text-slate-900">{value}</p>
+          <p className="mt-1 text-3xl font-bold leading-none text-slate-900">{value}</p>
         </div>
       </div>
-      <p className="mt-3 text-xs text-slate-500">{sub}</p>
+      <p className="mt-4 text-xs text-slate-500">{sub}</p>
     </div>
   );
 }
@@ -193,10 +193,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Row 1: slim stats (left) + Activity widget (right) ─────────────── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
 
-        {/* Left: 3 slim stat cards stacked */}
-        <div className="space-y-3">
+        {/* Left: 3 slim stat cards stacked vertically — full-width in 280px column */}
+        <div className="flex flex-col gap-4">
           <StatCard
             label="Gespeicherte Stellen"
             value={jobs?.length ?? 0}
@@ -221,7 +221,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right: Activity widget */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Aktivität</p>
@@ -239,34 +239,36 @@ export default function DashboardPage() {
 
           {/* Recent actions feed */}
           {recentActions.length > 0 && (
-            <div className="mt-5 space-y-1">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <div className="mt-5">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Letzte Aktionen
               </p>
-              {recentActions.map((job) => {
-                const meta = STATUS_META[job.status] || STATUS_META.bookmarked;
-                const { Icon } = meta;
-                const stamp = job.updated_at || job.created_at;
-                const when = stamp
-                  ? new Date(stamp).toLocaleDateString("de-AT", { day: "numeric", month: "short" })
-                  : "";
-                return (
-                  <Link
-                    key={job.id}
-                    to={`/jobs?jobId=${job.id}`}
-                    className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors hover:bg-slate-50"
-                  >
-                    <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${meta.bg}`}>
-                      <Icon className={`h-5 w-5 ${meta.color}`} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold text-slate-800">{job.role || "Stelle"}</span>
-                      <span className="block truncate text-[10px] text-slate-500">{job.company || ""}</span>
-                    </span>
-                    <span className="flex-shrink-0 text-[10px] text-slate-400">{when}</span>
-                  </Link>
-                );
-              })}
+              <div className="space-y-1.5">
+                {recentActions.map((job) => {
+                  const meta = STATUS_META[job.status] || STATUS_META.bookmarked;
+                  const { Icon } = meta;
+                  const stamp = job.updated_at || job.created_at;
+                  const when = stamp
+                    ? new Date(stamp).toLocaleDateString("de-AT", { day: "numeric", month: "short" })
+                    : "";
+                  return (
+                    <Link
+                      key={job.id}
+                      to={`/jobs?jobId=${job.id}`}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-slate-50"
+                    >
+                      <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${meta.bg}`}>
+                        <Icon className={`h-4.5 w-4.5 ${meta.color}`} style={{ width: "1.125rem", height: "1.125rem" }} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-slate-800">{job.role || "Stelle"}</span>
+                        <span className="block truncate text-[10px] text-slate-500">{job.company || ""}</span>
+                      </span>
+                      <span className="flex-shrink-0 text-[10px] text-slate-400">{when}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -321,7 +323,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
         {/* CVs */}
-        <div className="group rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Lebensläufe</p>
@@ -343,7 +345,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Jobs tracked */}
-        <div className="group rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Stellen verfolgt</p>
@@ -365,7 +367,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Match score with ring */}
-        <div className="group rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Ø Match-Score</p>
@@ -398,7 +400,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Schnellzugriff ─────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
         <h2 className="mb-4 text-sm font-bold text-slate-900">Schnellzugriff</h2>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
@@ -420,7 +422,7 @@ export default function DashboardPage() {
 
       {/* ── Letzte Stellen ─────────────────────────────────────────────────── */}
       {recentJobs.length > 0 && (
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-900">Letzte Stellen</h2>
             <Link
