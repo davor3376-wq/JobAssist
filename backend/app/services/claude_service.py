@@ -6,7 +6,8 @@ from groq import Groq
 from app.core.config import settings
 
 client = Groq(api_key=settings.GROQ_API_KEY)
-MODEL = "llama-3.3-70b-versatile"
+MODEL          = "llama-3.3-70b-versatile"
+MODEL_FALLBACK = "llama-3.1-8b-instant"   # Higher TPM limit — used after rate-limit hits
 
 
 def get_groq_provider_status() -> dict:
@@ -19,8 +20,12 @@ def get_groq_provider_status() -> dict:
 def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperature: float = 0.3, **kwargs) -> str:
     """Base helper to call Groq and return text.
 
-    Retries up to 3 times with exponential backoff (1 s → 2 s → 4 s) on
-    rate-limit (429) responses before surfacing the error to the caller.
+    Strategy on 429:
+      attempt 0 → primary model, immediate
+      attempt 1 → primary model, wait 3 s
+      attempt 2 → fallback model (llama-3.1-8b-instant, higher TPM), wait 5 s
+      attempt 3 → fallback model, wait 10 s
+    This avoids long blocking waits while still recovering gracefully.
     """
     from fastapi import HTTPException
     messages = []
@@ -28,11 +33,20 @@ def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperatur
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
 
-    max_retries = 3
-    for attempt in range(max_retries):
+    schedule = [
+        (MODEL,          0),
+        (MODEL,          3),
+        (MODEL_FALLBACK, 5),
+        (MODEL_FALLBACK, 10),
+    ]
+
+    last_err = None
+    for model_to_use, wait in schedule:
+        if wait:
+            time.sleep(wait)
         try:
             response = client.chat.completions.create(
-                model=MODEL,
+                model=model_to_use,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -47,13 +61,13 @@ def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperatur
         except Exception as e:
             err = str(e).lower()
             if "rate" in err or "429" in err:
-                if attempt < max_retries - 1:
-                    time.sleep(2 ** attempt)   # 1 s, 2 s, 4 s
-                    continue
-                raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte in einigen Sekunden erneut versuchen.")
+                last_err = e
+                continue
             if "api key" in err or "authentication" in err or "401" in err:
                 raise HTTPException(status_code=503, detail="KI-Dienst temporär nicht verfügbar.")
             raise HTTPException(status_code=502, detail="Fehler beim KI-Dienst. Bitte erneut versuchen.")
+
+    raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte in einigen Sekunden erneut versuchen.")
 
 
 def _strip_code_fences(text: str) -> str:
