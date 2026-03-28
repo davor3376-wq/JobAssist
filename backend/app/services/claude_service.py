@@ -127,42 +127,46 @@ def _translate_match_to_german(match: dict) -> dict:
 
 
 def match_resume_to_job(resume_text: str, job_description: str) -> dict:
-    """Score how well a resume matches a job description."""
+    """Score how well a resume matches a job description.
+
+    The final score is computed in Python from per-requirement evaluations
+    so the LLM cannot anchor to a fixed number.
+    """
     system = (
-        "Du bist ein erfahrener österreichischer Personalvermittler mit motivierendem Coaching-Ansatz. "
+        "Du bist ein erfahrener österreichischer Personalvermittler. "
         "Antworte AUSSCHLIESSLICH auf Deutsch. "
         "Antworte nur mit gültigem JSON — kein Markdown, keine Code-Blöcke, kein Kommentar. "
         "Alle Textwerte im JSON müssen auf Deutsch sein."
     )
     prompt = f"""Analysiere die Übereinstimmung zwischen Lebenslauf und Stellenbeschreibung.
-WICHTIG: Alle Texte im JSON müssen auf Deutsch sein.
+Alle Texte im JSON müssen auf Deutsch sein.
 
-SCORING-METHODE (Schritt für Schritt — führe diese Berechnung intern durch):
-1. Identifiziere die 6 wichtigsten Anforderungen aus der Stellenbeschreibung
-2. Prüfe jede Anforderung gegen den Lebenslauf:
-   - Vollständig erfüllt → 2 Punkte
-   - Teilweise erfüllt / Potenzial vorhanden → 1 Punkt
-   - Nicht erfüllt → 0 Punkte
-3. Basis-Score = (Summe / 12) × 100
-4. Addiere Bonus-Punkte (je +3–8):
-   - Passende Ausbildung im Fachbereich
-   - Relevante Berufserfahrung in der Branche
-   - Soft Skills und Sprachen passen
-5. Ziehe Punkte ab (-5 bis -15) für fehlende Kernanforderungen
-6. Endergebnis: Basis-Score + Boni - Abzüge. Minimum 52, Maximum 94.
+AUFGABE:
+1. Identifiziere die 6 wichtigsten Anforderungen der Stelle.
+2. Bewerte jede Anforderung einzeln gegen den Lebenslauf:
+   - 2 = vollständig erfüllt
+   - 1 = teilweise erfüllt / verwandtes Potenzial vorhanden
+   - 0 = nicht erfüllt / keine Hinweise
+3. Schätze Bonus- und Abzugspunkte (ganze Zahlen):
+   - bonus: 0–20 (für passende Ausbildung, Branchenerfahrung, Soft Skills, Sprachen)
+   - penalty: 0–20 (für fehlende Kernanforderungen, Qualifikationslücken)
 
-WICHTIG: Da jede Stelle andere Anforderungen hat, MUSS der Score von Stelle zu Stelle variieren.
-Beispiele: Eine Pflegestelle für einen IT-Kandidaten ohne Pflegeerfahrung → ~54%. Eine Marketingstelle für einen Wirtschaftskandidaten → ~81%.
-
-Du MUSST mindestens 8 Stärken, 6 Lücken und 5 Empfehlungen liefern. Erfinde keine Fakten, aber sei konkret und spezifisch.
-
-Gib genau dieses JSON zurück:
+Gib genau dieses JSON zurück (kein "score"-Feld — der Score wird extern berechnet):
 {{
-  "score": <Ganzzahl 0-100>,
-  "summary": "<2-3 Sätze Gesamtbewertung auf Deutsch>",
-  "strengths": ["<Stärke 1>", "<Stärke 2>", "<Stärke 3>", "<Stärke 4>", "<Stärke 5>", "<Stärke 6>", "<Stärke 7>", "<Stärke 8>", "<Stärke 9>", "<Stärke 10>"],
-  "gaps": ["<Lücke 1>", "<Lücke 2>", "<Lücke 3>", "<Lücke 4>", "<Lücke 5>", "<Lücke 6>", "<Lücke 7>", "<Lücke 8>", "<Lücke 9>"],
-  "recommendations": ["<Empfehlung 1>", "<Empfehlung 2>", "<Empfehlung 3>", "<Empfehlung 4>", "<Empfehlung 5>", "<Empfehlung 6>", "<Empfehlung 7>"]
+  "requirements": [
+    {{"req": "<Anforderung 1 aus der Stellenbeschreibung>", "score": <0|1|2>, "note": "<1 Satz Begründung>"}},
+    {{"req": "<Anforderung 2>", "score": <0|1|2>, "note": "<Begründung>"}},
+    {{"req": "<Anforderung 3>", "score": <0|1|2>, "note": "<Begründung>"}},
+    {{"req": "<Anforderung 4>", "score": <0|1|2>, "note": "<Begründung>"}},
+    {{"req": "<Anforderung 5>", "score": <0|1|2>, "note": "<Begründung>"}},
+    {{"req": "<Anforderung 6>", "score": <0|1|2>, "note": "<Begründung>"}}
+  ],
+  "bonus": <ganze Zahl 0–20>,
+  "penalty": <ganze Zahl 0–20>,
+  "summary": "<2–3 Sätze Gesamtbewertung auf Deutsch>",
+  "strengths": ["<Stärke 1>", "<Stärke 2>", "<Stärke 3>", "<Stärke 4>", "<Stärke 5>", "<Stärke 6>", "<Stärke 7>", "<Stärke 8>"],
+  "gaps": ["<Lücke 1>", "<Lücke 2>", "<Lücke 3>", "<Lücke 4>", "<Lücke 5>", "<Lücke 6>"],
+  "recommendations": ["<Empfehlung 1>", "<Empfehlung 2>", "<Empfehlung 3>", "<Empfehlung 4>", "<Empfehlung 5>"]
 }}
 
 Lebenslauf:
@@ -177,13 +181,30 @@ Stellenbeschreibung:
 """
     result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0.7))
     try:
-        match = json.loads(result)
+        raw = json.loads(result)
     except json.JSONDecodeError:
         return {"score": None, "summary": result, "strengths": [], "gaps": [], "recommendations": []}
 
-    # Always translate to ensure consistent German output
-    match = _translate_match_to_german(match)
+    # Compute score in Python — bypasses LLM anchoring entirely
+    reqs = raw.get("requirements", [])
+    req_total = sum(
+        min(2, max(0, int(r.get("score", 0))))
+        for r in reqs if isinstance(r, dict)
+    )
+    bonus   = min(20, max(0, int(raw.get("bonus",   0))))
+    penalty = min(20, max(0, int(raw.get("penalty", 0))))
+    base    = round(req_total / 12 * 100)
+    computed_score = max(42, min(95, base + bonus - penalty))
 
+    match = {
+        "score":           computed_score,
+        "summary":         raw.get("summary", ""),
+        "strengths":       raw.get("strengths", []),
+        "gaps":            raw.get("gaps", []),
+        "recommendations": raw.get("recommendations", []),
+    }
+
+    match = _translate_match_to_german(match)
     return match
 
 
