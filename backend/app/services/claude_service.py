@@ -137,7 +137,12 @@ def match_resume_to_job(resume_text: str, job_description: str) -> dict:
     prompt = f"""Analysiere die Übereinstimmung zwischen Lebenslauf und Stellenbeschreibung.
 WICHTIG: Alle Texte im JSON müssen auf Deutsch sein.
 
-SCORING-RICHTLINIE: Gib motivierende, realistische Scores. Ein qualifizierter Kandidat, der die Kernanforderungen erfüllt, sollte typischerweise 65–85% erhalten. Vermeide übermäßig konservative Scores unter 60% für passende Kandidaten — das demotiviert unnötig. Sei fair und ermutigend, aber nicht übertrieben.
+SCORING-RICHTLINIE: Gib motivierende, realistische Scores die den tatsächlichen Fit widerspiegeln.
+- Starker Fit (Kandidat erfüllt die meisten Kernanforderungen): 78–92%
+- Guter Fit (solide Übereinstimmung, kleinere Lücken): 68–80%
+- Mittlerer Fit (Potenzial vorhanden, aber wesentliche Lücken): 55–70%
+- Schwacher Fit: unter 55%
+Beachte: Die Score soll vom echten Matching abhängen — unterschiedliche Stellen sollen unterschiedliche Scores erhalten. Niemals denselben Score für verschiedene Stellen ausgeben. Berücksichtige konkret den Lebenslauf und die Stellenbeschreibung.
 
 Du MUSST mindestens 8 Stärken, 6 Lücken und 5 Empfehlungen liefern — auch wenn der Match-Score niedrig ist. Erfinde keine Fakten, aber sei konkret und spezifisch.
 
@@ -160,7 +165,7 @@ Stellenbeschreibung:
 {job_description}
 \"\"\"
 """
-    result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0))
+    result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0.4))
     try:
         match = json.loads(result)
     except json.JSONDecodeError:
