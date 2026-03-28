@@ -72,13 +72,13 @@ function MiniActivityChart({ values }) {
               <div
                 className={`relative w-full rounded-full transition-all duration-500 ${
                   hoveredIdx === index
-                    ? "bg-gradient-to-t from-indigo-600 to-violet-500"
-                    : "bg-gradient-to-t from-indigo-500 to-violet-400"
+                    ? "bg-gradient-to-t from-blue-600 to-violet-600"
+                    : "bg-gradient-to-t from-blue-500 to-violet-500"
                 }`}
                 style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : 0 }}
               />
             </div>
-            <span className="text-[11px] font-medium text-gray-400">{DAY_LABELS[index]}</span>
+            <span className="text-[11px] font-medium text-gray-600">{DAY_LABELS[index]}</span>
           </div>
         ))}
       </div>
@@ -236,8 +236,8 @@ export default function DashboardPage() {
                         to={`/jobs?jobId=${job.id}`}
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-white/70 transition-colors"
                       >
-                        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${meta.bg}`}>
-                          <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
+                        <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${meta.bg}`}>
+                          <Icon className={`h-5 w-5 ${meta.color}`} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-semibold text-slate-800">{job.role || "Stelle"}</span>
@@ -420,7 +420,7 @@ export default function DashboardPage() {
             {recentJobs.map((job) => {
               const initials = (job.company || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
               const score = job.match_score;
-              const ringColor = score == null ? "#94a3b8" : score >= 70 ? "#16a34a" : score >= 50 ? "#ca8a04" : "#dc2626";
+              const ringColor = score == null ? "#94a3b8" : score >= 60 ? "#16a34a" : score >= 40 ? "#ca8a04" : "#dc2626";
               const circ = 2 * Math.PI * 14;
               return (
                 <Link

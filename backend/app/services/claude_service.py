@@ -129,13 +129,15 @@ def _translate_match_to_german(match: dict) -> dict:
 def match_resume_to_job(resume_text: str, job_description: str) -> dict:
     """Score how well a resume matches a job description."""
     system = (
-        "Du bist ein erfahrener österreichischer Personalvermittler. "
+        "Du bist ein erfahrener österreichischer Personalvermittler mit motivierendem Coaching-Ansatz. "
         "Antworte AUSSCHLIESSLICH auf Deutsch. "
         "Antworte nur mit gültigem JSON — kein Markdown, keine Code-Blöcke, kein Kommentar. "
         "Alle Textwerte im JSON müssen auf Deutsch sein."
     )
     prompt = f"""Analysiere die Übereinstimmung zwischen Lebenslauf und Stellenbeschreibung.
 WICHTIG: Alle Texte im JSON müssen auf Deutsch sein.
+
+SCORING-RICHTLINIE: Gib motivierende, realistische Scores. Ein qualifizierter Kandidat, der die Kernanforderungen erfüllt, sollte typischerweise 65–85% erhalten. Vermeide übermäßig konservative Scores unter 60% für passende Kandidaten — das demotiviert unnötig. Sei fair und ermutigend, aber nicht übertrieben.
 
 Du MUSST mindestens 8 Stärken, 6 Lücken und 5 Empfehlungen liefern — auch wenn der Match-Score niedrig ist. Erfinde keine Fakten, aber sei konkret und spezifisch.
 
