@@ -422,7 +422,6 @@ function DetailPanel({
   selectedResumeId,
   onResumeChange,
   processing,
-  draftLoading,
   notesSaving,
   notesInput,
   jobUiState,
@@ -507,9 +506,9 @@ function DetailPanel({
           </div>
           {/* Header action cluster */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {job.url && (
+            {(urlInput.trim() || job.url) && (
               <a
-                href={job.url} target="_blank" rel="noopener noreferrer"
+                href={urlInput.trim() || job.url} target="_blank" rel="noopener noreferrer"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
                 title="Stellenanzeige öffnen"
               >
@@ -874,19 +873,6 @@ function DetailPanel({
             <span className="truncate">{isMatchProc ? "Berechne…" : "Match"}</span>
           </button>
 
-          {/* Anschreiben */}
-          <button
-            onClick={() => onDraftEmail(job)}
-            disabled={draftLoading === job.id}
-            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {draftLoading === job.id
-              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              : <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-            }
-            <span className="truncate">{draftLoading === job.id ? "Erstelle…" : "Anschreiben"}</span>
-          </button>
-
           {/* Gesprächsvorbereitung */}
           <button
             onClick={() => {
@@ -1196,7 +1182,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     selectedResumeId,
     onResumeChange: setSelectedResumeId,
     processing,
-    draftLoading,
     notesSaving,
     notesInput,
     jobUiState,
