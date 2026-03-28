@@ -475,7 +475,11 @@ export default function BillingPage() {
 
           <div className="p-5 sm:p-6">
           {/* Donut gauges — 2 cols on mobile, 3 on sm, up to 6 on lg */}
-          <div className="grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-6 bg-slate-100 rounded-2xl overflow-hidden">
+          <div className={`grid grid-cols-2 gap-px sm:grid-cols-3 bg-slate-100 rounded-2xl overflow-hidden ${
+            usage.length >= 6 ? "lg:grid-cols-6" :
+            usage.length === 5 ? "lg:grid-cols-5" :
+            usage.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
+          }`}>
             {usage.map((item) => {
               const { pct, unlimited } = getUsageBarState(item.feature, item.used, item.limit);
               const isAt = !unlimited && pct >= 100;
