@@ -37,12 +37,12 @@ function loadStoredResumes() {
 // ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText,      label: "Lebenslauf verbessern",    sub: "Stärken und Schwächen erkennen",   prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
-  { icon: Briefcase,     label: "Bewerbungstipps",          sub: "Erfolgreich bewerben in AT",        prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
-  { icon: GraduationCap, label: "Praktikum finden",         sub: "Als Student durchstarten",          prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
-  { icon: Euro,          label: "Gehaltsauskunft",          sub: "Marktübliche Gehälter kennen",      prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
-  { icon: Lightbulb,     label: "Vorstellungsgespräch",     sub: "Selbstsicher auftreten",             prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
-  { icon: Sparkles,      label: "Motivationsschreiben",     sub: "Überzeugend formulieren",            prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
+  { icon: FileText,      iconCls: "text-indigo-600 bg-indigo-50",  label: "Lebenslauf verbessern",  sub: "Stärken und Schwächen erkennen",  prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
+  { icon: Briefcase,     iconCls: "text-indigo-600 bg-indigo-50",  label: "Bewerbungstipps",        sub: "Erfolgreich bewerben in AT",       prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
+  { icon: GraduationCap, iconCls: "text-indigo-600 bg-indigo-50",  label: "Praktikum finden",       sub: "Als Student durchstarten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
+  { icon: Euro,          iconCls: "text-emerald-600 bg-emerald-50",label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",     prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
+  { icon: Lightbulb,     iconCls: "text-amber-600 bg-amber-50",    label: "Vorstellungsgespräch",   sub: "Selbstsicher auftreten",           prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
+  { icon: Sparkles,      iconCls: "text-violet-600 bg-violet-50",  label: "Motivationsschreiben",   sub: "Überzeugend formulieren",          prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -220,48 +220,36 @@ export default function AIAssistantPage() {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+            className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors flex-shrink-0"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
-          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent truncate">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
             KI-Bewerbungsassistent
           </h1>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Resume context selector */}
           <select
             value={selectedResumeId || ""}
             onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-            className="hidden sm:block px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+            className="hidden sm:block px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-white text-slate-700"
           >
             <option value="">Kein Lebenslauf</option>
             {uploadedResumes.map((r) => (
               <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
             ))}
           </select>
-
-          {/* Lebenslauf hochladen CTA */}
           <Link
             to="/resume"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
           >
             <Upload className="w-3.5 h-3.5" />
             Lebenslauf hochladen
           </Link>
-
-          <button
-            onClick={startSimulation}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 text-xs font-semibold hover:bg-violet-200 transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Simulation starten
-          </button>
-
           <button
             onClick={handleNewChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Neues Gespräch</span>
@@ -270,114 +258,107 @@ export default function AIAssistantPage() {
       </div>
 
       {/* ── Main layout: sidebar + chat ───────────────────────────────────── */}
-      <div className="flex-1 flex gap-3 min-h-0 relative">
+      <div className="flex-1 flex gap-4 min-h-0 relative">
 
-        {/* ── Chat-Historie Sidebar ────────────────────────────────────────── */}
+        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
-          absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
-          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-sm md:z-auto
+          absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-100 rounded-2xl shadow-xl overflow-hidden transition-transform duration-200
+          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:rounded-none md:border-0 md:border-r md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
         `}>
           {/* Sidebar header */}
-          <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-2.5">
+          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-800 tracking-wide">Chat-Historie</span>
               <button
                 onClick={handleNewChat}
-                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
               >
                 <Plus className="w-3 h-3" /> Neu
               </button>
             </div>
-            {/* Search input */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-              <Search className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+              <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
               <input
                 type="text"
                 value={historySearch}
                 onChange={(e) => setHistorySearch(e.target.value)}
-                placeholder="Stelle eine Frage…"
-                className="flex-1 bg-transparent text-[11px] text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
+                placeholder="Suche…"
+                className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
               />
             </div>
           </div>
 
           {/* Conversation list */}
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
             {filteredConversations.length === 0 ? (
-              <p className="px-2 py-6 text-center text-[11px] text-slate-400">
+              <p className="px-2 py-8 text-center text-xs text-slate-400">
                 {historySearch ? "Keine Treffer" : "Noch kein Verlauf"}
               </p>
             ) : (
-              filteredConversations.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => handleSelectConversation(conv)}
-                  className={`group w-full text-left px-3 py-2.5 rounded-xl border transition-all
-                    ${conv.id === activeId
-                      ? "border-blue-200 bg-blue-50"
-                      : "border-transparent hover:border-slate-200 hover:bg-slate-50"
-                    }`}
-                >
-                  <div className="flex items-start justify-between gap-1.5 mb-1">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getConvCategory(conv).cls}`}>
-                      {getConvCategory(conv).label}
-                    </span>
-                    <button
-                      onClick={(e) => handleDeleteConversation(e, conv.id)}
-                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-red-500 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <p className="truncate text-xs font-semibold text-slate-800 leading-snug">{conv.title}</p>
-                  <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-400">
-                    <Clock className="w-2.5 h-2.5 flex-shrink-0" />
-                    <span>{relativeTime(conv.updatedAt)}</span>
-                    <span className="opacity-50">· {conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
-                  </div>
-                </button>
-              ))
+              filteredConversations.map((conv) => {
+                const cat = getConvCategory(conv);
+                return (
+                  <button
+                    key={conv.id}
+                    onClick={() => handleSelectConversation(conv)}
+                    className={`group w-full text-left px-3 py-3 rounded-xl transition-all
+                      ${conv.id === activeId
+                        ? "bg-indigo-50 border border-indigo-100"
+                        : "border border-transparent hover:bg-slate-50 hover:border-slate-100"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cat.cls}`}>
+                        {cat.label}
+                      </span>
+                      <button
+                        onClick={(e) => handleDeleteConversation(e, conv.id)}
+                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-300 hover:text-red-400 transition-all"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <p className="truncate text-xs font-semibold text-slate-800 leading-snug">{conv.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-slate-400">
+                      <Clock className="w-2.5 h-2.5 flex-shrink-0" />
+                      <span>{relativeTime(conv.updatedAt)}</span>
+                      <span className="opacity-40">·</span>
+                      <span className="opacity-60">{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </aside>
 
-        {/* Backdrop for mobile sidebar */}
+        {/* Mobile backdrop */}
         {sidebarOpen && (
-          <div
-            className="md:hidden fixed inset-0 z-20 bg-black/20"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="md:hidden fixed inset-0 z-20 bg-black/20" onClick={() => setSidebarOpen(false)} />
         )}
 
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
 
           {/* Simulation mode banner */}
           {simulationMode && (
-            <div className="border-b border-violet-100 bg-violet-50/70 px-4 py-3">
+            <div className="flex-shrink-0 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">Interview-Simulator</p>
-                  <p className="mt-1 text-sm text-slate-700">
-                    Die KI stellt dir gezielte Fragen und reagiert auf deine Antworten wie in einem Probeinterview.
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-violet-500">Interview-Simulator</p>
+                  <p className="mt-0.5 text-sm text-slate-600">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {simulatorActions.map((action) => (
-                    <button
-                      key={action.label}
-                      onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
-                    >
+                    <button key={action.label} onClick={() => handleSend(action.prompt)}
+                      className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 transition-colors shadow-sm">
                       {action.label}
                     </button>
                   ))}
-                  <button
-                    onClick={() => setSimulationMode(false)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                  >
-                    Simulation beenden
+                  <button onClick={() => setSimulationMode(false)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
+                    Beenden
                   </button>
                 </div>
               </div>
@@ -386,29 +367,22 @@ export default function AIAssistantPage() {
 
           {/* Assessment mode banner */}
           {assessmentMode && (
-            <div className="border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+            <div className="flex-shrink-0 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-500">Assessment Center</p>
-                  <p className="mt-1 text-sm text-slate-700">
-                    Strukturierte Analyse deines Bewerberprofils — Stärken, Fähigkeiten und Potenziale.
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">Assessment Center</p>
+                  <p className="mt-0.5 text-sm text-slate-600">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {assessmentActions.map((action) => (
-                    <button
-                      key={action.label}
-                      onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
-                    >
+                    <button key={action.label} onClick={() => handleSend(action.prompt)}
+                      className="rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors shadow-sm">
                       {action.label}
                     </button>
                   ))}
-                  <button
-                    onClick={() => setAssessmentMode(false)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                  >
-                    Assessment beenden
+                  <button onClick={() => setAssessmentMode(false)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
+                    Beenden
                   </button>
                 </div>
               </div>
@@ -416,246 +390,138 @@ export default function AIAssistantPage() {
           )}
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 min-h-0 bg-slate-50/40">
+          <div className="flex-1 overflow-y-auto p-5 min-h-0">
             {messages.length === 0 ? (
-              /* ── Empty state / hub ── */
-              <div className="flex flex-col h-full">
-                <div className="w-full flex flex-col gap-4 py-2 px-1">
 
-                  {/* Purple hero banner */}
-                  <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-5 text-white shadow-lg">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <Bot className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-lg leading-tight">Hallo. Woran arbeitest du gerade?</h3>
-                        <p className="mt-1 text-sm text-violet-200 max-w-md">
-                          Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Vorbereitung und gezielter Karriereberatung.
-                        </p>
-                        {resumeContextLabel && (
-                          <span className="mt-3 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
-                            Aktiver Lebenslauf: {resumeContextLabel}
-                          </span>
-                        )}
-                      </div>
+              /* ── Empty-state hub ────────────────────────────────────────── */
+              <div className="flex flex-col gap-5 py-1">
+
+                {/* Hero banner – soft indigo/violet gradient */}
+                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5">
+                  {/* Glow orbs */}
+                  <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-400/10 blur-2xl" />
+                  <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl" />
+                  <div className="relative flex items-start gap-4">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                      <Sparkles className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-slate-900">Hallo. Woran arbeitest du gerade?</h3>
+                      <p className="mt-1 text-sm text-slate-500 max-w-lg">
+                        Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Vorbereitung und gezielter Karriereberatung.
+                      </p>
+                      {resumeContextLabel && (
+                        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                          <FileText className="h-3 w-3" />
+                          {resumeContextLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Two feature cards */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Interview Simulation */}
-                    <button
-                      onClick={startSimulation}
-                      className="group text-left rounded-xl border border-slate-100 bg-white p-6 hover:border-blue-200 hover:shadow-lg transition-all overflow-hidden relative shadow-md"
-                    >
-                      {/* Undraw-style interview scene */}
-                      <div className="mb-4 h-40 flex items-center justify-center">
-                        <svg viewBox="0 0 200 128" fill="none" className="h-full w-auto" aria-hidden="true">
-                          {/* Floor shadow */}
-                          <ellipse cx="100" cy="122" rx="88" ry="6" fill="#F1F5F9"/>
-                          {/* Table */}
-                          <rect x="22" y="76" width="156" height="8" rx="4" fill="#E2E8F0"/>
-                          <rect x="42" y="84" width="8" height="26" rx="3" fill="#CBD5E1"/>
-                          <rect x="150" y="84" width="8" height="26" rx="3" fill="#CBD5E1"/>
-                          {/* Interviewer – #2D5BFF suit */}
-                          <rect x="26" y="52" width="38" height="26" rx="9" fill="#2D5BFF"/>
-                          <polygon points="45,52 40,52 43,66" fill="white" opacity="0.9"/>
-                          <polygon points="45,52 50,52 47,66" fill="white" opacity="0.8"/>
-                          <rect x="8"  y="60" width="20" height="8" rx="4" fill="#2D5BFF"/>
-                          <rect x="64" y="60" width="20" height="8" rx="4" fill="#2D5BFF"/>
-                          <ellipse cx="8"  cy="64" rx="6" ry="5" fill="#FFBE9B"/>
-                          <ellipse cx="84" cy="64" rx="6" ry="5" fill="#FFBE9B"/>
-                          <circle cx="45" cy="34" r="14" fill="#FFBE9B"/>
-                          <path d="M31 28 Q45 17 59 28 Q57 20 45 17 Q33 20 31 28Z" fill="#1E293B"/>
-                          <ellipse cx="40" cy="33" rx="2.2" ry="2.5" fill="#1E293B"/>
-                          <ellipse cx="50" cy="33" rx="2.2" ry="2.5" fill="#1E293B"/>
-                          <circle cx="41" cy="32" r="0.8" fill="white"/>
-                          <circle cx="51" cy="32" r="0.8" fill="white"/>
-                          <path d="M40 42 Q45 46 50 42" stroke="#D97706" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                          {/* Candidate – slate suit */}
-                          <rect x="136" y="52" width="38" height="26" rx="9" fill="#475569"/>
-                          <polygon points="155,52 150,52 153,66" fill="white" opacity="0.9"/>
-                          <polygon points="155,52 160,52 157,66" fill="white" opacity="0.8"/>
-                          <rect x="114" y="60" width="22" height="8" rx="4" fill="#475569"/>
-                          <rect x="174" y="60" width="20" height="8" rx="4" fill="#475569"/>
-                          <ellipse cx="114" cy="64" rx="6" ry="5" fill="#FFBE9B"/>
-                          <ellipse cx="194" cy="64" rx="6" ry="5" fill="#FFBE9B"/>
-                          <circle cx="155" cy="34" r="14" fill="#FFBE9B"/>
-                          <path d="M141 28 Q155 17 169 28 Q167 20 155 17 Q143 20 141 28Z" fill="#92400E"/>
-                          <ellipse cx="150" cy="33" rx="2.2" ry="2.5" fill="#1E293B"/>
-                          <ellipse cx="160" cy="33" rx="2.2" ry="2.5" fill="#1E293B"/>
-                          <circle cx="151" cy="32" r="0.8" fill="white"/>
-                          <circle cx="161" cy="32" r="0.8" fill="white"/>
-                          <path d="M150 42 Q155 46 160 42" stroke="#D97706" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                          {/* Laptop on table */}
-                          <rect x="82" y="52" width="36" height="26" rx="4" fill="#1E293B"/>
-                          <rect x="84" y="54" width="32" height="22" rx="2" fill="#2D3748"/>
-                          <rect x="87" y="58" width="22" height="2.5" rx="1.25" fill="#2D5BFF" opacity="0.9"/>
-                          <rect x="87" y="63" width="16" height="2" rx="1" fill="#94A3B8" opacity="0.6"/>
-                          <rect x="87" y="67" width="20" height="2" rx="1" fill="#94A3B8" opacity="0.4"/>
-                          <rect x="78" y="77" width="44" height="4" rx="2" fill="#1E293B"/>
-                          {/* Document beside candidate */}
-                          <rect x="162" y="64" width="20" height="26" rx="3" fill="white" stroke="#E2E8F0" strokeWidth="1.5"/>
-                          <rect x="165" y="68" width="14" height="2"   rx="1" fill="#CBD5E1"/>
-                          <rect x="165" y="72" width="10" height="2"   rx="1" fill="#CBD5E1"/>
-                          <rect x="165" y="76" width="12" height="2"   rx="1" fill="#2D5BFF" opacity="0.4"/>
-                          <rect x="165" y="80" width="9"  height="2"   rx="1" fill="#CBD5E1"/>
-                          <rect x="165" y="84" width="11" height="2"   rx="1" fill="#CBD5E1"/>
-                          {/* Speech bubble */}
-                          <rect x="58" y="2" width="64" height="24" rx="7" fill="white" stroke="#E2E8F0" strokeWidth="1.5"/>
-                          <polygon points="70,25 64,36 80,25" fill="white"/>
-                          <line x1="64" y1="36" x2="70" y2="25" stroke="#E2E8F0" strokeWidth="1.5"/>
-                          <line x1="64" y1="36" x2="80" y2="25" stroke="#E2E8F0" strokeWidth="1.5"/>
-                          <rect x="70" y="22" width="10" height="5" fill="white"/>
-                          <rect x="64" y="7"  width="44" height="2.5" rx="1.25" fill="#CBD5E1"/>
-                          <rect x="64" y="12" width="34" height="2.5" rx="1.25" fill="#CBD5E1"/>
-                          <rect x="64" y="17" width="38" height="2.5" rx="1.25" fill="#2D5BFF" opacity="0.5"/>
-                        </svg>
+                {/* Feature cards — no illustrations, typography + glow accent */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                  {/* Interview Simulation */}
+                  <button
+                    onClick={startSimulation}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
+                    <div className="relative">
+                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+                        <MessageSquare className="h-6 w-6 text-white" />
                       </div>
-                      <p className="font-bold text-sm text-slate-900">Interview Simulation</p>
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                      <h4 className="text-base font-bold text-slate-900">Interview Simulation</h4>
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
-                      <span className="mt-3 inline-block text-xs font-semibold text-[#2D5BFF] group-hover:opacity-70">
-                        Jetzt starten →
-                      </span>
-                    </button>
-
-                    {/* Assessment Center */}
-                    <button
-                      onClick={startAssessment}
-                      className="group text-left rounded-xl border border-slate-100 bg-white p-6 hover:border-blue-200 hover:shadow-lg transition-all overflow-hidden relative shadow-md"
-                    >
-                      {/* Undraw-style assessment scene */}
-                      <div className="mb-4 h-40 flex items-center justify-center">
-                        <svg viewBox="0 0 200 128" fill="none" className="h-full w-auto" aria-hidden="true">
-                          {/* Floor shadow */}
-                          <ellipse cx="100" cy="122" rx="88" ry="6" fill="#F1F5F9"/>
-                          {/* Whiteboard */}
-                          <rect x="112" y="6" width="82" height="72" rx="6" fill="white" stroke="#E2E8F0" strokeWidth="2"/>
-                          <line x1="130" y1="78" x2="125" y2="104" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round"/>
-                          <line x1="176" y1="78" x2="181" y2="104" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round"/>
-                          <line x1="118" y1="104" x2="188" y2="104" stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round"/>
-                          {/* Bar chart on whiteboard */}
-                          <line x1="118" y1="70" x2="190" y2="70" stroke="#E2E8F0" strokeWidth="1.5"/>
-                          <rect x="122" y="52" width="13" height="18" rx="2" fill="#2D5BFF" opacity="0.55"/>
-                          <rect x="139" y="38" width="13" height="32" rx="2" fill="#2D5BFF"/>
-                          <rect x="156" y="46" width="13" height="24" rx="2" fill="#2D5BFF" opacity="0.7"/>
-                          <rect x="173" y="28" width="13" height="42" rx="2" fill="#2D5BFF" opacity="0.85"/>
-                          <rect x="118" y="12" width="52" height="3" rx="1.5" fill="#94A3B8" opacity="0.4"/>
-                          <rect x="118" y="18" width="36" height="2.5" rx="1.25" fill="#2D5BFF" opacity="0.35"/>
-                          {/* Presenter – standing left, #2D5BFF */}
-                          <rect x="26" y="56" width="8"  height="32" rx="4" fill="#1E293B"/>
-                          <rect x="38" y="56" width="8"  height="32" rx="4" fill="#1E293B"/>
-                          <ellipse cx="30" cy="88" rx="7" ry="4" fill="#0F172A"/>
-                          <ellipse cx="42" cy="88" rx="7" ry="4" fill="#0F172A"/>
-                          <rect x="18" y="28" width="36" height="30" rx="9" fill="#2D5BFF"/>
-                          <polygon points="36,28 31,28 34,42" fill="white" opacity="0.9"/>
-                          <polygon points="36,28 41,28 38,42" fill="white" opacity="0.8"/>
-                          {/* Pointing arm */}
-                          <path d="M54 42 Q82 38 110 34" stroke="#2D5BFF" strokeWidth="8" strokeLinecap="round" fill="none"/>
-                          <circle cx="110" cy="34" r="7" fill="#FFBE9B"/>
-                          {/* Other arm */}
-                          <path d="M18 40 Q10 50 8 60" stroke="#2D5BFF" strokeWidth="8" strokeLinecap="round" fill="none"/>
-                          <circle cx="7" cy="62" r="6" fill="#FFBE9B"/>
-                          {/* Head */}
-                          <circle cx="36" cy="14" r="13" fill="#FFBE9B"/>
-                          <path d="M23 8 Q36 -2 49 8 Q47 0 36 -3 Q25 0 23 8Z" fill="#1E293B"/>
-                          <ellipse cx="31" cy="13" rx="2" ry="2.2" fill="#1E293B"/>
-                          <ellipse cx="41" cy="13" rx="2" ry="2.2" fill="#1E293B"/>
-                          <circle cx="32" cy="12" r="0.8" fill="white"/>
-                          <circle cx="42" cy="12" r="0.8" fill="white"/>
-                          <path d="M31 20 Q36 24 41 20" stroke="#D97706" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                          {/* Observer 1 – standing, center */}
-                          <rect x="68" y="60" width="7"  height="28" rx="3.5" fill="#334155"/>
-                          <rect x="79" y="60" width="7"  height="28" rx="3.5" fill="#334155"/>
-                          <ellipse cx="71.5" cy="88" rx="6" ry="3.5" fill="#1E293B"/>
-                          <ellipse cx="82.5" cy="88" rx="6" ry="3.5" fill="#1E293B"/>
-                          <rect x="62" y="36" width="30" height="26" rx="8" fill="#E2E8F0"/>
-                          <circle cx="77" cy="22" r="12" fill="#FFBE9B"/>
-                          <path d="M65 16 Q77 7 89 16 Q87 8 77 5 Q67 8 65 16Z" fill="#7C3AED" opacity="0.45"/>
-                          <ellipse cx="73" cy="21" rx="1.8" ry="2" fill="#1E293B"/>
-                          <ellipse cx="81" cy="21" rx="1.8" ry="2" fill="#1E293B"/>
-                          {/* Observer 2 – seated with laptop, right of center */}
-                          <rect x="90" y="76" width="24" height="14" rx="5" fill="#6B7280"/>
-                          <rect x="86" y="90" width="32" height="5"  rx="2.5" fill="#4B5563"/>
-                          <rect x="86" y="95" width="32" height="16" rx="3" fill="#1E293B"/>
-                          <rect x="88" y="97" width="28" height="12" rx="2" fill="#334155"/>
-                          <rect x="90" y="100" width="18" height="2" rx="1" fill="#2D5BFF" opacity="0.7"/>
-                          <rect x="90" y="104" width="14" height="2" rx="1" fill="#94A3B8" opacity="0.5"/>
-                          <circle cx="102" cy="62" r="11" fill="#FFBE9B"/>
-                          <path d="M91 56 Q102 47 113 56 Q111 48 102 45 Q93 48 91 56Z" fill="#92400E"/>
-                          <ellipse cx="98"  cy="61" rx="1.8" ry="2" fill="#1E293B"/>
-                          <ellipse cx="106" cy="61" rx="1.8" ry="2" fill="#1E293B"/>
-                        </svg>
+                      <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-indigo-700">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Jetzt starten
                       </div>
-                      <p className="font-bold text-sm text-slate-900">Assessment Center</p>
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                    </div>
+                  </button>
+
+                  {/* Assessment Center */}
+                  <button
+                    onClick={startAssessment}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
+                    <div className="relative">
+                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
+                        <ClipboardList className="h-6 w-6 text-white" />
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900">Assessment Center</h4>
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
-                      <span className="mt-3 inline-block text-xs font-semibold text-[#2D5BFF] group-hover:opacity-70">
-                        Assessment starten →
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Schnell-Aktionen 3×2 grid */}
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide">Schnell-Aktionen</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {SUGGESTIONS.map((s) => {
-                        const locked = s.requiresResume && uploadedResumes.length === 0;
-                        return (
-                          <button
-                            key={s.label}
-                            onClick={() => {
-                              if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                              handleSend(s.prompt);
-                            }}
-                            className={`text-left flex flex-col gap-1 p-4 rounded-xl border transition-all
-                              ${locked
-                                ? "border-gray-100 bg-gray-50 cursor-not-allowed"
-                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
-                              }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {locked
-                                ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                                : <s.icon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                              }
-                              <span className={`text-xs font-semibold truncate ${locked ? "text-gray-300" : "text-gray-800"}`}>
-                                {s.label}
-                              </span>
-                            </div>
-                            {s.sub && (
-                              <span className={`text-[11px] leading-tight pl-5 ${locked ? "text-gray-200" : "text-slate-500"}`}>
-                                {s.sub}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                      <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-violet-700">
+                        <ClipboardList className="h-3.5 w-3.5" />
+                        Assessment starten
+                      </div>
                     </div>
-                  </div>
+                  </button>
+                </div>
 
+                {/* Schnell-Aktionen grid */}
+                <div>
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {SUGGESTIONS.map((s) => {
+                      const locked = s.requiresResume && uploadedResumes.length === 0;
+                      return (
+                        <button
+                          key={s.label}
+                          onClick={() => {
+                            if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
+                            handleSend(s.prompt);
+                          }}
+                          className={`group flex flex-col gap-2 rounded-2xl border p-4 text-left transition-all duration-200
+                            ${locked
+                              ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
+                              : "border-slate-100 bg-white shadow-sm hover:-translate-y-1 hover:border-slate-200 hover:shadow-md"
+                            }`}
+                        >
+                          <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${locked ? "bg-slate-100" : s.iconCls}`}>
+                            {locked
+                              ? <Lock className="h-3.5 w-3.5 text-slate-300" />
+                              : <s.icon className="h-4 w-4" />
+                            }
+                          </span>
+                          <span className={`text-xs font-semibold leading-snug ${locked ? "text-slate-300" : "text-slate-800"}`}>
+                            {s.label}
+                          </span>
+                          {s.sub && (
+                            <span className={`text-[11px] leading-tight ${locked ? "text-slate-200" : "text-slate-400"}`}>
+                              {s.sub}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+
             ) : (
-              /* ── Message bubbles ── */
+
+              /* ── Message bubbles ──────────────────────────────────────── */
               <div className="space-y-4">
                 {messages.map((msg, i) => (
-                  <div key={i} className={`flex items-end gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div key={i} className={`flex items-end gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     {msg.role === "assistant" && (
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-0.5">
-                        <Bot className="w-4 h-4 text-white" />
+                      <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
+                        <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                    <div className={`max-w-[75%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                       <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
                         ${msg.role === "user"
-                          ? "bg-blue-600 text-white rounded-2xl rounded-br-sm shadow-sm"
-                          : "bg-slate-100 text-gray-800 rounded-2xl rounded-bl-sm"
+                          ? "bg-indigo-600 text-white rounded-2xl rounded-br-sm shadow-sm"
+                          : "bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm"
                         }`}
                       >
                         {msg.content}
@@ -665,37 +531,32 @@ export default function AIAssistantPage() {
                 ))}
 
                 {chatMutation.isPending && (
-                  <div className="flex items-end gap-2 justify-start">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-white" />
+                  <div className="flex items-end gap-2.5 justify-start">
+                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+                      <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="bg-slate-100 rounded-2xl rounded-bl-sm px-4 py-3">
                       <div className="flex items-center gap-1">
                         {[0, 150, 300].map((delay) => (
-                          <div
-                            key={delay}
-                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
-                            style={{ animationDelay: `${delay}ms` }}
-                          />
+                          <div key={delay} className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
                         ))}
                       </div>
                     </div>
                   </div>
                 )}
-
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
 
-          {/* ── Floating Input Bar ────────────────────────────────────── */}
-          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white/80 backdrop-blur-sm">
+          {/* ── Input Bar ─────────────────────────────────────────────────── */}
+          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white/90 backdrop-blur-sm border-t border-slate-100">
             {uploadedResumes.length > 0 && (
               <div className="sm:hidden mb-2">
                 <select
                   value={selectedResumeId || ""}
                   onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none bg-slate-50"
+                  className="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none bg-slate-50"
                 >
                   <option value="">Kein Lebenslauf</option>
                   {uploadedResumes.map((r) => (
@@ -704,7 +565,14 @@ export default function AIAssistantPage() {
                 </select>
               </div>
             )}
-            <div className="flex items-end gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-lg focus-within:border-[#2D5BFF] focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+              <button
+                className="flex-shrink-0 mb-0.5 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
+                onClick={() => {}}
+                title="Anhang"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
               <textarea
                 ref={inputRef}
                 value={input}
@@ -712,16 +580,15 @@ export default function AIAssistantPage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Intelligente Eingabe… (Enter zum Senden)"
                 rows={1}
-                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-sm leading-relaxed max-h-32 text-gray-800 placeholder:text-slate-400"
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1"
                 style={{ minHeight: "32px" }}
               />
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || chatMutation.isPending}
-                className="flex-shrink-0 p-2 rounded-xl text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                style={{ backgroundColor: "#2D5BFF" }}
+                className="flex-shrink-0 mb-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4" />
+                <Send className="h-4 w-4" />
               </button>
             </div>
           </div>
