@@ -788,17 +788,17 @@ function DetailPanel({
         {/* ── Expanded: Interview Q&A ──────────────────────────────────────── */}
         {job.interview_qa && Array.isArray(interviewQa) && (
           <div className="rounded-xl border border-purple-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center px-4 py-3 gap-x-2 gap-y-1.5">
+            <div className="flex flex-wrap items-center px-3 py-2.5 gap-x-2 gap-y-1.5">
               <button
                 onClick={() => setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`))}
-                className="flex flex-1 min-w-0 items-center gap-2 text-sm font-semibold text-purple-700 text-left"
+                className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-purple-700 text-left"
               >
                 <Brain className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">Gesprächsvorbereitung</span>
                 <ChevronDown className={`ml-auto flex-shrink-0 w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
               </button>
               {/* Download buttons — only visible when there's Q&A data */}
-              <div className="flex items-center gap-1 flex-shrink-0 border-l border-purple-100 pl-2">
+              <div className="flex items-center gap-1 flex-shrink-0 border-l border-purple-100 pl-2 ml-auto">
                 <button
                   onClick={() => downloadQaTxt(job, interviewQa)}
                   title="Als TXT herunterladen"
@@ -1249,9 +1249,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           <button
             key={key}
             onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
-            className={`min-w-[110px] flex-shrink-0 rounded-xl border p-5 text-left transition-all duration-150 md:min-w-0
+            className={`min-w-[100px] flex-shrink-0 rounded-xl border p-3 md:p-5 text-left transition-all duration-150 md:min-w-0
               ${cardCls}
-              ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-md" : "hover:shadow-sm"}
+              ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-lg shadow-blue-100" : "hover:shadow-sm"}
             `}
           >
             <div className="flex items-center gap-1.5 mb-3">

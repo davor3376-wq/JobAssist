@@ -167,6 +167,10 @@ export default function AIAssistantPage() {
     setActiveId(conv.id);
     setMessages(conv.messages);
     setSidebarOpen(false);
+    // Restore simulation/assessment mode based on this conversation's origin
+    const firstUser = conv.messages.find((m) => m.role === "user")?.content || "";
+    setSimulationMode(firstUser.includes("Interview-Simulator"));
+    setAssessmentMode(firstUser.includes("Karriere-Assessment"));
   };
 
   const handleDeleteConversation = (e, id) => {
@@ -370,7 +374,7 @@ export default function AIAssistantPage() {
             <div className="flex-shrink-0 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">Assessment Center</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">Stärkenanalyse</p>
                   <p className="mt-0.5 text-sm text-slate-600">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -394,10 +398,10 @@ export default function AIAssistantPage() {
             {messages.length === 0 ? (
 
               /* ── Empty-state hub ────────────────────────────────────────── */
-              <div className="flex flex-col gap-3 md:gap-4 py-1">
+              <div className="flex flex-col gap-2 py-0.5">
 
                 {/* Hero banner – soft indigo/violet gradient */}
-                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-4">
+                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-3">
                   {/* Glow orbs */}
                   <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl" />
@@ -420,13 +424,13 @@ export default function AIAssistantPage() {
                   </div>
                 </div>
 
-                {/* Feature cards — no illustrations, typography + glow accent */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Feature cards */}
+                <div className="grid grid-cols-2 gap-2">
 
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
@@ -462,10 +466,10 @@ export default function AIAssistantPage() {
                     </div>
                   </button>
 
-                  {/* Assessment Center */}
+                  {/* Stärkenanalyse */}
                   <button
                     onClick={startAssessment}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
                     {/* Undraw-style assessment illustration */}
@@ -491,7 +495,7 @@ export default function AIAssistantPage() {
                       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
                         <ClipboardList className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900">Assessment Center</h4>
+                      <h4 className="text-sm font-bold text-slate-900">Stärkenanalyse</h4>
                       <p className="mt-1 text-xs leading-[1.5] text-slate-500">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
@@ -505,8 +509,8 @@ export default function AIAssistantPage() {
 
                 {/* Schnell-Aktionen grid */}
                 <div>
-                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
-                  <div className="grid grid-cols-2 gap-3 md:gap-4 sm:grid-cols-3">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
+                  <div className="grid grid-cols-3 gap-2">
                     {SUGGESTIONS.map((s) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
@@ -516,7 +520,7 @@ export default function AIAssistantPage() {
                             if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                             handleSend(s.prompt);
                           }}
-                          className={`group flex flex-col gap-1.5 rounded-2xl border p-3 text-left transition-all duration-200
+                          className={`group flex flex-col gap-1 rounded-xl border p-2.5 text-left transition-all duration-200
                             ${locked
                               ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
                               : "border-slate-100 bg-white shadow-sm hover:-translate-y-1 hover:border-slate-200 hover:shadow-md"

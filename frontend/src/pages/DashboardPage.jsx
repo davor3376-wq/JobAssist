@@ -74,18 +74,31 @@ function MiniActivityChart({ values }) {
         <span>Analysierte Jobs diese Woche</span>
         <span className="font-semibold text-slate-600">{total} gesamt</span>
       </div>
-      {/* Peak day insight */}
-      {total > 0 && (() => {
-        const peakIdx = values.indexOf(Math.max(...values));
-        return (
-          <div className="mt-1 flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5">
-            <TrendingUp className="h-3 w-3 flex-shrink-0 text-indigo-500" />
-            <span className="text-[10px] font-semibold text-indigo-700">
-              Aktivster Tag: {DAY_LABELS[peakIdx]} · {values[peakIdx]} Job{values[peakIdx] !== 1 ? "s" : ""}
-            </span>
-          </div>
-        );
-      })()}
+      {/* Motivational insight row */}
+      <div className="mt-1 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100/60 px-3 py-2.5 flex items-center gap-2.5">
+        {total === 0 ? (
+          <>
+            <span className="text-base leading-none">🚀</span>
+            <span className="text-[11px] font-semibold text-indigo-800">Starte heute — jede Bewerbung bringt dich näher ans Ziel!</span>
+          </>
+        ) : total >= 10 ? (
+          <>
+            <span className="text-base leading-none">🔥</span>
+            <div>
+              <span className="text-[11px] font-bold text-indigo-800">{total} Jobs analysiert — du bist auf Erfolgskurs!</span>
+              <span className="block text-[10px] text-indigo-600">Aktivster Tag: {DAY_LABELS[values.indexOf(Math.max(...values))]} · {Math.max(...values)} Jobs</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="text-base leading-none">⭐</span>
+            <div>
+              <span className="text-[11px] font-bold text-indigo-800">Guter Start — bleib dran!</span>
+              <span className="block text-[10px] text-indigo-600">Aktivster Tag: {DAY_LABELS[values.indexOf(Math.max(...values))]} · {Math.max(...values)} Jobs</span>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -110,19 +123,18 @@ const INITIALS_GRADIENTS = [
 ];
 
 function CompanyLogo({ company, initials, url }) {
-  const [failed, setFailed] = useState(false);
+  const [imgStatus, setImgStatus] = useState("idle"); // idle | ok | fallback
 
-  // Only use Google Favicon if URL belongs to the company's own site (not a job board)
+  // Only use favicon if URL is the company's own site (not a job board)
   const domain = (() => {
     if (!url) return null;
     try {
       const u = new URL(url.startsWith("http") ? url : `https://${url}`);
       const host = u.hostname.replace(/^www\./, "");
-      // Strip to root domain (e.g. "careers.company.com" → "company.com")
       const parts = host.split(".");
       const root = parts.length > 2 ? parts.slice(-2).join(".") : host;
-      if (JOB_BOARDS.has(root)) return null; // job board → no logo
-      return host; // company's own domain
+      if (JOB_BOARDS.has(root)) return null;
+      return host;
     } catch {
       return null;
     }
@@ -131,19 +143,31 @@ function CompanyLogo({ company, initials, url }) {
   const gradientIdx = (company || "?").charCodeAt(0) % INITIALS_GRADIENTS.length;
   const gradient = INITIALS_GRADIENTS[gradientIdx];
 
-  if (!failed && domain) {
-    return (
-      <img
-        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-        alt={company || ""}
-        onError={() => setFailed(true)}
-        className="h-9 w-9 flex-shrink-0 rounded-xl object-contain bg-white border border-slate-100 p-1"
-      />
-    );
-  }
+  const showInitials = !domain || imgStatus === "fallback";
+
   return (
-    <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-[11px] font-bold text-white`}>
-      {initials}
+    <div className="relative h-9 w-9 flex-shrink-0">
+      {/* Initials — always rendered, hidden when img is showing */}
+      <div className={`absolute inset-0 flex items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-[11px] font-bold text-white transition-opacity ${showInitials ? "opacity-100" : "opacity-0"}`}>
+        {initials}
+      </div>
+      {/* Favicon image — only mount when domain available */}
+      {domain && imgStatus !== "fallback" && (
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+          alt={company || ""}
+          onLoad={(e) => {
+            // Google returns 16×16 for unknown domains even at sz=64 request
+            if (e.target.naturalWidth < 24) {
+              setImgStatus("fallback");
+            } else {
+              setImgStatus("ok");
+            }
+          }}
+          onError={() => setImgStatus("fallback")}
+          className={`absolute inset-0 h-full w-full rounded-xl object-contain bg-white border border-slate-100 p-1 transition-opacity ${imgStatus === "ok" ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
     </div>
   );
 }
