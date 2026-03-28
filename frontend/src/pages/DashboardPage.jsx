@@ -90,7 +90,16 @@ function MiniActivityChart({ values }) {
   );
 }
 
-// ── Company logo via Google Favicon (uses actual job URL domain) ──────────────
+// ── Company logo via Google Favicon ──────────────────────────────────────────
+// Job boards that host listings but are NOT the company's own site
+const JOB_BOARDS = new Set([
+  "linkedin.com", "indeed.com", "karriere.at", "stepstone.at", "stepstone.de",
+  "xing.com", "glassdoor.com", "willhaben.at", "monster.at", "ams.at",
+  "hokify.at", "jobswipe.at", "jobboerse.at", "stellenanzeigen.at",
+  "jobs.at", "ict.at", "yourfirm.at", "kimeta.de", "arbeitsmarkt.at",
+  "kununu.com", "herojobs.at", "recruiting.net", "jobrapido.com",
+]);
+
 const INITIALS_GRADIENTS = [
   "from-indigo-400 to-violet-500",
   "from-emerald-400 to-teal-500",
@@ -103,12 +112,17 @@ const INITIALS_GRADIENTS = [
 function CompanyLogo({ company, initials, url }) {
   const [failed, setFailed] = useState(false);
 
-  // Extract domain from the job's actual URL (most reliable source)
+  // Only use Google Favicon if URL belongs to the company's own site (not a job board)
   const domain = (() => {
     if (!url) return null;
     try {
       const u = new URL(url.startsWith("http") ? url : `https://${url}`);
-      return u.hostname.replace(/^www\./, "");
+      const host = u.hostname.replace(/^www\./, "");
+      // Strip to root domain (e.g. "careers.company.com" → "company.com")
+      const parts = host.split(".");
+      const root = parts.length > 2 ? parts.slice(-2).join(".") : host;
+      if (JOB_BOARDS.has(root)) return null; // job board → no logo
+      return host; // company's own domain
     } catch {
       return null;
     }

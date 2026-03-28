@@ -602,28 +602,21 @@ export default function AIAssistantPage() {
                 </select>
               </div>
             )}
-            <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-              <button
-                className="flex-shrink-0 flex h-11 w-11 md:h-8 md:w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
-                onClick={() => {}}
-                title="Anhang"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+            <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Intelligente Eingabe… (Enter zum Senden)"
+                placeholder="Nachricht eingeben…"
                 rows={1}
-                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1"
-                style={{ minHeight: "32px" }}
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1.5"
+                style={{ minHeight: "36px" }}
               />
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || chatMutation.isPending}
-                className="flex-shrink-0 flex h-11 w-11 md:h-8 md:w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
               >
                 <Send className="h-4 w-4" />
               </button>

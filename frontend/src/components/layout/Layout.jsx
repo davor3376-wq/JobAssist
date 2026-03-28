@@ -15,7 +15,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 
@@ -192,6 +192,7 @@ export default function Layout() {
   const storedUser = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const { t } = useI18n();
+  const queryClient = useQueryClient();
 
   const { data: initData } = useQuery({
     queryKey: ["init"],
@@ -217,6 +218,7 @@ export default function Layout() {
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch {}
+    queryClient.clear();
     logout();
     navigate("/login");
   };

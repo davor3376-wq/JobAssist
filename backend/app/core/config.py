@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_TLS: bool = True
 
+    # Admin
+    ADMIN_SECRET: str = ""  # Set in Railway env to protect admin endpoints
+
     # CORS — comma-separated string, e.g. "https://app.vercel.app,http://localhost:5173"
     ALLOWED_ORIGINS: str = "http://localhost:5173,https://jobassist.tech,https://www.jobassist.tech"
     # Optional regex for dynamic origins like Vercel previews, e.g. "https://job-assist-.*\.vercel\.app"

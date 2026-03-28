@@ -192,6 +192,19 @@ async def health_check(request: Request):
     }
 
 
+@app.post("/api/admin/reset-usage")
+async def admin_reset_usage(request: Request, db: AsyncSession = Depends(get_db)):
+    """Reset all usage_tracking counts to zero. Requires X-Admin-Secret header."""
+    secret = request.headers.get("x-admin-secret", "")
+    if not settings.ADMIN_SECRET or secret != settings.ADMIN_SECRET:
+        from fastapi import HTTPException as _HTTPException
+        raise _HTTPException(status_code=403, detail="Forbidden")
+    await db.execute(text("DELETE FROM usage_tracking"))
+    await db.commit()
+    logger.info("Admin: usage_tracking table cleared")
+    return {"status": "ok", "message": "All usage records deleted"}
+
+
 @app.get("/health/dependencies")
 async def health_dependencies(request: Request):
     database = {"ok": False}
