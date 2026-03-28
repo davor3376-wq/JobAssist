@@ -59,9 +59,16 @@ function makeTitle(messages) {
 function relativeTime(ts) {
   const diff = Date.now() - ts;
   if (diff < 60_000)  return "Gerade eben";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
+  if (diff < 3_600_000) return `Vor ${Math.floor(diff / 60_000)} Min.`;
+  if (diff < 86_400_000) return `Vor ${Math.floor(diff / 3_600_000)} Std.`;
   return new Date(ts).toLocaleDateString("de-AT", { day: "numeric", month: "short" });
+}
+
+function getConvCategory(conv) {
+  const first = conv.messages.find((m) => m.role === "user")?.content || "";
+  if (first.includes("Interview-Simulator")) return { label: "Simulation", cls: "bg-violet-100 text-violet-700" };
+  if (first.includes("Assessment")) return { label: "Assessment", cls: "bg-blue-100 text-blue-700" };
+  return { label: "Chat", cls: "bg-slate-100 text-slate-500" };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -268,7 +275,7 @@ export default function AIAssistantPage() {
         {/* ── Chat-Historie Sidebar ────────────────────────────────────────── */}
         <aside className={`
           absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden transition-transform duration-200
-          md:relative md:w-64 md:translate-x-0 md:shadow-sm md:z-auto
+          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-sm md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
         `}>
           {/* Sidebar header */}
@@ -306,27 +313,29 @@ export default function AIAssistantPage() {
                 <button
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv)}
-                  className={`group w-full text-left px-2.5 py-2 rounded-lg transition-colors flex items-start gap-2
+                  className={`group w-full text-left px-3 py-2.5 rounded-xl border transition-all
                     ${conv.id === activeId
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "border-blue-200 bg-blue-50"
+                      : "border-transparent hover:border-slate-200 hover:bg-slate-50"
                     }`}
                 >
-                  <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 opacity-50" />
-                  <span className="flex-1 min-w-0">
-                    <span className="block truncate text-xs font-semibold leading-tight">{conv.title}</span>
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
-                      <Clock className="w-2.5 h-2.5" />
-                      {relativeTime(conv.updatedAt)}
-                      <span className="opacity-50">· {conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                  <div className="flex items-start justify-between gap-1.5 mb-1">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getConvCategory(conv).cls}`}>
+                      {getConvCategory(conv).label}
                     </span>
-                  </span>
-                  <button
-                    onClick={(e) => handleDeleteConversation(e, conv.id)}
-                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-red-500 transition-opacity"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                    <button
+                      onClick={(e) => handleDeleteConversation(e, conv.id)}
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-red-500 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <p className="truncate text-xs font-semibold text-slate-800 leading-snug">{conv.title}</p>
+                  <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-400">
+                    <Clock className="w-2.5 h-2.5 flex-shrink-0" />
+                    <span>{relativeTime(conv.updatedAt)}</span>
+                    <span className="opacity-50">· {conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                  </div>
                 </button>
               ))
             )}
@@ -411,7 +420,7 @@ export default function AIAssistantPage() {
             {messages.length === 0 ? (
               /* ── Empty state / hub ── */
               <div className="flex flex-col h-full">
-                <div className="w-full max-w-2xl mx-auto flex flex-col gap-4 py-2">
+                <div className="w-full flex flex-col gap-4 py-2 px-1">
 
                   {/* Purple hero banner */}
                   <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-5 text-white shadow-lg">
@@ -438,10 +447,24 @@ export default function AIAssistantPage() {
                     {/* Interview Simulation */}
                     <button
                       onClick={startSimulation}
-                      className="group text-left rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-4 hover:border-violet-400 hover:shadow-md transition-all"
+                      className="group text-left rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-4 hover:border-violet-400 hover:shadow-md transition-all overflow-hidden relative"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <Sparkles className="w-5 h-5 text-white" />
+                      {/* Flat-vector interview illustration */}
+                      <div className="mb-3 h-20 flex items-center justify-center">
+                        <svg viewBox="0 0 120 72" fill="none" className="h-full w-auto" aria-hidden="true">
+                          <rect x="18" y="46" width="84" height="5" rx="2.5" fill="#DDD6FE"/>
+                          <rect x="24" y="51" width="5" height="14" rx="2.5" fill="#C4B5FD"/>
+                          <rect x="91" y="51" width="5" height="14" rx="2.5" fill="#C4B5FD"/>
+                          <circle cx="32" cy="24" r="10" fill="#8B5CF6"/>
+                          <rect x="20" y="34" width="24" height="14" rx="5" fill="#7C3AED"/>
+                          <circle cx="88" cy="24" r="10" fill="#A78BFA"/>
+                          <rect x="76" y="34" width="24" height="14" rx="5" fill="#8B5CF6"/>
+                          <rect x="43" y="8" width="34" height="18" rx="5" fill="white" stroke="#DDD6FE" strokeWidth="2"/>
+                          <polygon points="53,26 60,34 67,26" fill="white" stroke="#DDD6FE" strokeWidth="2"/>
+                          <circle cx="52" cy="17" r="2.5" fill="#8B5CF6"/>
+                          <circle cx="60" cy="17" r="2.5" fill="#8B5CF6"/>
+                          <circle cx="68" cy="17" r="2.5" fill="#8B5CF6"/>
+                        </svg>
                       </div>
                       <p className="font-bold text-sm text-slate-900">Interview Simulation</p>
                       <p className="mt-1 text-xs text-slate-500 leading-relaxed">
@@ -455,10 +478,20 @@ export default function AIAssistantPage() {
                     {/* Assessment Center */}
                     <button
                       onClick={startAssessment}
-                      className="group text-left rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-blue-400 hover:shadow-md transition-all"
+                      className="group text-left rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-blue-400 hover:shadow-md transition-all overflow-hidden relative"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                        <ClipboardList className="w-5 h-5 text-white" />
+                      {/* Flat-vector collaborative group illustration */}
+                      <div className="mb-3 h-20 flex items-center justify-center">
+                        <svg viewBox="0 0 120 72" fill="none" className="h-full w-auto" aria-hidden="true">
+                          <circle cx="60" cy="20" r="11" fill="#3B82F6"/>
+                          <rect x="46" y="32" width="28" height="18" rx="6" fill="#2563EB"/>
+                          <circle cx="28" cy="26" r="9" fill="#93C5FD"/>
+                          <rect x="16" y="36" width="22" height="16" rx="5" fill="#60A5FA"/>
+                          <circle cx="92" cy="26" r="9" fill="#93C5FD"/>
+                          <rect x="82" y="36" width="22" height="16" rx="5" fill="#60A5FA"/>
+                          <circle cx="60" cy="60" r="8" fill="#DBEAFE"/>
+                          <path d="M56 60l3 3.5 5.5-7" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
                       <p className="font-bold text-sm text-slate-900">Assessment Center</p>
                       <p className="mt-1 text-xs text-slate-500 leading-relaxed">
@@ -483,7 +516,7 @@ export default function AIAssistantPage() {
                               if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                               handleSend(s.prompt);
                             }}
-                            className={`text-left flex flex-col gap-1 px-3 py-2.5 rounded-xl border transition-all
+                            className={`text-left flex flex-col gap-1 p-4 rounded-xl border transition-all
                               ${locked
                                 ? "border-gray-100 bg-gray-50 cursor-not-allowed"
                                 : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
@@ -558,8 +591,8 @@ export default function AIAssistantPage() {
             )}
           </div>
 
-          {/* ── Input bar ─────────────────────────────────────────────────── */}
-          <div className="flex-shrink-0 border-t border-slate-200 p-3 bg-white">
+          {/* ── Floating Input Bar ────────────────────────────────────── */}
+          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white/80 backdrop-blur-sm">
             {uploadedResumes.length > 0 && (
               <div className="sm:hidden mb-2">
                 <select
@@ -574,13 +607,13 @@ export default function AIAssistantPage() {
                 </select>
               </div>
             )}
-            <div className="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+            <div className="flex items-end gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-lg focus-within:border-[#2D5BFF] focus-within:ring-2 focus-within:ring-blue-100 transition-all">
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Stelle eine Frage… (Enter zum Senden)"
+                placeholder="Intelligente Eingabe… (Enter zum Senden)"
                 rows={1}
                 className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-sm leading-relaxed max-h-32 text-gray-800 placeholder:text-slate-400"
                 style={{ minHeight: "32px" }}
@@ -588,7 +621,8 @@ export default function AIAssistantPage() {
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || chatMutation.isPending}
-                className="flex-shrink-0 p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-shrink-0 p-2 rounded-xl text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                style={{ backgroundColor: "#2D5BFF" }}
               >
                 <Send className="w-4 h-4" />
               </button>
