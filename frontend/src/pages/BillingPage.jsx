@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowRight, CreditCard, ExternalLink, Zap, AlertCircle,
-  CheckCircle2, Rocket, Crown, Sparkles, Shield, Building2, Star,
+  ArrowRight, CreditCard, ExternalLink, Zap,
+  CheckCircle2, Rocket, Crown, Building2, Star,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -109,105 +109,141 @@ const PLANS = [
   },
 ];
 
-// ─── SVG donut gauge ──────────────────────────────────────────────────────────
-function DonutGauge({ feature, used, limit }) {
-  const { label, unlimited, pct, displayLimit } = getUsageBarState(feature, used, limit);
-  const isAtLimit = !unlimited && pct >= 100;
-  const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
-  const r = 34;
-  const circ = 2 * Math.PI * r;
-  const fill = unlimited ? 1 : Math.min(1, pct / 100);
+// ─── Short labels for x-axis ─────────────────────────────────────────────────
+const FEATURE_SHORT = {
+  cv_analysis:  "Analysen",
+  cover_letter: "Anschreiben",
+  job_alerts:   "Alerts",
+  ai_chat:      "KI-Chat",
+  job_search:   "Jobsuche",
+};
 
-  const gradId      = `gauge-grad-${feature}`;
-  const gradStart   = isAtLimit ? "#fca5a5" : isWarn ? "#fcd34d" : "#a5b4fc";
-  const gradEnd     = isAtLimit ? "#dc2626" : isWarn ? "#d97706" : "#4f46e5";
-  const trackClr    = isAtLimit ? "#fee2e2" : isWarn ? "#fef3c7" : "#ede9fe";
-  const centerColor = isAtLimit ? "text-red-500" : isWarn ? "text-amber-500" : "text-indigo-600";
-  const badgeCls    = isAtLimit ? "bg-red-50 text-red-500" : isWarn ? "bg-amber-50 text-amber-500" : unlimited ? "bg-indigo-50 text-indigo-400" : null;
+// ─── SVG bar chart hero ───────────────────────────────────────────────────────
+function UsageHeroChart({ usage }) {
+  const items = usage.filter((u) => u.limit > 0 && u.limit !== -1);
+  if (!items.length) return null;
+
+  const vw = 560, vh = 180;
+  const padL = 30, padR = 12, padT = 20, padB = 44;
+  const chartW = vw - padL - padR;
+  const chartH = vh - padT - padB;
+  const n = items.length;
+  const step = chartW / n;
+  const barW = Math.min(44, step * 0.48);
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 sm:p-4">
-      <div className="relative">
-        <svg width="88" height="88" viewBox="0 0 88 88" className="-rotate-90" aria-hidden="true">
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={gradStart} />
-              <stop offset="100%" stopColor={gradEnd} />
-            </linearGradient>
-          </defs>
-          <circle cx="44" cy="44" r={r} fill="none" stroke={trackClr} strokeWidth="7" />
-          <circle
-            cx="44" cy="44" r={r}
-            fill="none"
-            stroke={`url(#${gradId})`}
-            strokeWidth="7"
-            strokeDasharray={circ}
-            strokeDashoffset={unlimited ? 0 : circ * (1 - fill)}
-            strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 0.8s ease", opacity: unlimited ? 0.35 : 1 }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {isAtLimit
-            ? <AlertCircle className="h-5 w-5 text-red-500" />
-            : <span className={`text-sm font-bold leading-none ${centerColor}`}>
-                {unlimited ? "∞" : `${Math.round(Math.min(100, pct))}%`}
-              </span>
-          }
-          {!unlimited && !isAtLimit && (
-            <span className="mt-0.5 text-[9px] text-slate-400">{used}/{displayLimit}</span>
-          )}
-        </div>
-      </div>
-      <div className="text-center">
-        <p className="text-[11px] sm:text-xs font-semibold text-slate-700 leading-tight">{label}</p>
-        {badgeCls && (
-          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${badgeCls}`}>
-            {isAtLimit ? "LIMIT" : isWarn ? "FAST VOLL" : "∞"}
-          </span>
-        )}
-      </div>
+    <div className="rounded-xl bg-slate-50/70 px-2 pt-2 pb-1">
+      <svg viewBox={`0 0 ${vw} ${vh}`} className="w-full" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        {/* Dashed grid lines */}
+        {[25, 50, 75, 100].map((pct) => {
+          const y = padT + chartH * (1 - pct / 100);
+          return (
+            <g key={pct}>
+              <line x1={padL} x2={vw - padR} y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 4" />
+              <text x={padL - 5} y={y + 3} textAnchor="end" fontSize="8" fill="#cbd5e1">{pct}%</text>
+            </g>
+          );
+        })}
+        {/* Baseline */}
+        <line x1={padL} x2={vw - padR} y1={padT + chartH} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="1" />
+
+        {/* Bars */}
+        {items.map((item, i) => {
+          const { pct, unlimited } = getUsageBarState(item.feature, item.used, item.limit);
+          const isAtLimit = !unlimited && pct >= 100;
+          const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
+          const fillPct   = Math.min(100, pct);
+          const barH      = (fillPct / 100) * chartH;
+          const cx        = padL + step * i + step / 2;
+          const x         = cx - barW / 2;
+          const barY      = padT + chartH - barH;
+          const gradId    = `hg-${item.feature}`;
+
+          const c1 = isAtLimit ? "#fda4af" : isWarn ? "#fde68a" : "#c7d2fe";
+          const c2 = isAtLimit ? "#f43f5e" : isWarn ? "#f59e0b" : "#6366f1";
+          const valColor = isAtLimit ? "#f43f5e" : isWarn ? "#d97706" : "#6366f1";
+          const shortLabel = FEATURE_SHORT[item.feature] || item.feature;
+          const labelY = padT + chartH + 14;
+
+          return (
+            <g key={item.feature}>
+              <defs>
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c1} />
+                  <stop offset="100%" stopColor={c2} />
+                </linearGradient>
+              </defs>
+              {/* Track */}
+              <rect x={x} y={padT} width={barW} height={chartH} rx="6" fill="#f1f5f9" />
+              {/* Fill */}
+              {!unlimited && barH > 1 && (
+                <rect x={x} y={barY} width={barW} height={barH} rx="6" fill={`url(#${gradId})`} />
+              )}
+              {unlimited && (
+                <rect x={x} y={padT} width={barW} height={chartH} rx="6" fill={`url(#${gradId})`} opacity="0.22" />
+              )}
+              {/* Value above bar */}
+              <text
+                x={cx} y={Math.max(padT + 13, barY - 5)}
+                textAnchor="middle" fontSize="10" fontWeight="700" fill={valColor}
+              >
+                {unlimited ? "∞" : item.used}
+              </text>
+              {/* Feature label */}
+              <text x={cx} y={labelY} textAnchor="middle" fontSize="9" fill="#64748b">{shortLabel}</text>
+              {/* Limit */}
+              <text x={cx} y={labelY + 13} textAnchor="middle" fontSize="8" fill="#cbd5e1">
+                {"/ " + item.limit}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
 
-// ─── Horizontal usage bar with percentage label ───────────────────────────────
+// ─── Slim usage detail row ────────────────────────────────────────────────────
 function UsageRow({ feature, used, limit }) {
   const { label, unlimited, pct, displayLimit } = getUsageBarState(feature, used, limit);
   const isAtLimit = !unlimited && pct >= 100;
   const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
-  const pctLabel  = unlimited ? "∞" : `${Math.round(Math.min(100, pct))}%`;
 
   const barGradient = isAtLimit
-    ? "linear-gradient(90deg,#fca5a5,#dc2626)"
+    ? "linear-gradient(90deg,#fda4af,#f43f5e)"
     : isWarn
-    ? "linear-gradient(90deg,#fcd34d,#d97706)"
-    : "linear-gradient(90deg,#a5b4fc,#4f46e5)";
-  const badgeCls = isAtLimit
-    ? "bg-red-50 text-red-600"
+    ? "linear-gradient(90deg,#fde68a,#f59e0b)"
+    : "linear-gradient(90deg,#c7d2fe,#6366f1)";
+
+  // Soft, neutral badges — no aggressive red labels
+  const badgeText = unlimited ? "Unbegrenzt" : isAtLimit ? "Voll" : isWarn ? "Fast voll" : `${Math.round(pct)}%`;
+  const badgeCls  = isAtLimit
+    ? "bg-rose-50 text-rose-400 border border-rose-100"
     : isWarn
-    ? "bg-amber-50 text-amber-600"
-    : "bg-indigo-50 text-indigo-600";
+    ? "bg-amber-50 text-amber-500 border border-amber-100"
+    : "bg-slate-100 text-slate-400";
+
+  const shortName = label.split(" (")[0];
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs sm:text-sm font-medium text-slate-700 truncate">{label}</span>
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <span className="text-[11px] text-slate-400">{unlimited ? "Unbegrenzt" : `${used} / ${displayLimit}`}</span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeCls}`}>{pctLabel}</span>
-        </div>
-      </div>
-      <div className="h-3 overflow-hidden rounded-full bg-slate-100 shadow-inner">
+    <div className="flex items-center gap-3">
+      <span className="w-36 sm:w-44 flex-shrink-0 truncate text-xs text-slate-600">{shortName}</span>
+      <div className="relative flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-700"
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
           style={{
             width: unlimited ? "100%" : `${Math.min(100, pct)}%`,
-            background: barGradient,
-            opacity: unlimited ? 0.3 : 1,
+            background: unlimited ? "linear-gradient(90deg,#c7d2fe,#818cf8)" : barGradient,
+            opacity: unlimited ? 0.35 : 1,
           }}
         />
       </div>
+      <span className="w-14 flex-shrink-0 text-right text-[10px] text-slate-400">
+        {unlimited ? "∞" : `${used} / ${displayLimit}`}
+      </span>
+      <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
+        {badgeText}
+      </span>
     </div>
   );
 }
@@ -474,27 +510,11 @@ export default function BillingPage() {
           </div>
 
           <div className="p-5 sm:p-6">
-          {/* Donut gauges — 2 cols on mobile, 3 on sm, up to 6 on lg */}
-          <div className={`grid grid-cols-2 gap-px sm:grid-cols-3 bg-slate-100 rounded-2xl overflow-hidden ${
-            usage.length >= 6 ? "lg:grid-cols-6" :
-            usage.length === 5 ? "lg:grid-cols-5" :
-            usage.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
-          }`}>
-            {usage.map((item) => {
-              const { pct, unlimited } = getUsageBarState(item.feature, item.used, item.limit);
-              const isAt = !unlimited && pct >= 100;
-              const isW  = !unlimited && pct >= 80 && !isAt;
-              const cellBg = isAt ? "bg-red-50/60" : isW ? "bg-amber-50/60" : "bg-white";
-              return (
-                <div key={item.feature} className={cellBg}>
-                  <DonutGauge {...item} />
-                </div>
-              );
-            })}
-          </div>
+          {/* Hero bar chart */}
+          <UsageHeroChart usage={usage} />
 
-          {/* Horizontal bar chart below gauges */}
-          <div className="mt-6 space-y-3.5">
+          {/* Slim detail rows */}
+          <div className="mt-5 space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Detail-Übersicht</p>
             {usage.map((item) => (
               <UsageRow key={item.feature} {...item} />
