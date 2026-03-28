@@ -196,16 +196,13 @@ Stellenbeschreibung:
     base    = round(req_total / 12 * 100)
     computed_score = max(42, min(95, base + bonus - penalty))
 
-    match = {
+    return {
         "score":           computed_score,
         "summary":         raw.get("summary", ""),
         "strengths":       raw.get("strengths", []),
         "gaps":            raw.get("gaps", []),
         "recommendations": raw.get("recommendations", []),
     }
-
-    match = _translate_match_to_german(match)
-    return match
 
 
 def generate_cover_letter(
