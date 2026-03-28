@@ -46,6 +46,7 @@ const PLANS = [
     badge: "Beliebt",
     iconCls: "from-blue-500 to-indigo-600",
     borderCls: "border-blue-400",
+    glowCls: "shadow-[0_0_28px_rgba(59,130,246,0.35)] hover:shadow-[0_0_40px_rgba(59,130,246,0.55)]",
     badgeCls: "bg-blue-600 text-white",
     btnCls: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200",
     Icon: Zap,
@@ -68,6 +69,7 @@ const PLANS = [
     badge: "Bestes Angebot",
     iconCls: "from-violet-500 to-purple-600",
     borderCls: "border-violet-400",
+    glowCls: "shadow-[0_0_28px_rgba(139,92,246,0.35)] hover:shadow-[0_0_40px_rgba(139,92,246,0.55)]",
     badgeCls: "bg-violet-600 text-white",
     btnCls: "bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-200",
     Icon: Crown,
@@ -112,47 +114,57 @@ function DonutGauge({ feature, used, limit }) {
   const { label, unlimited, pct, displayLimit } = getUsageBarState(feature, used, limit);
   const isAtLimit = !unlimited && pct >= 100;
   const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
-  const stroke    = isAtLimit ? "#ef4444" : isWarn ? "#f59e0b" : "#6366f1";
-  const trackClr  = isAtLimit ? "#fee2e2" : isWarn ? "#fef3c7" : "#e0e7ff";
-  const r = 30;
+  const r = 34;
   const circ = 2 * Math.PI * r;
-  const fill = unlimited ? 0 : Math.min(1, pct / 100);
+  const fill = unlimited ? 1 : Math.min(1, pct / 100);
+
+  const gradId      = `gauge-grad-${feature}`;
+  const gradStart   = isAtLimit ? "#fca5a5" : isWarn ? "#fcd34d" : "#a5b4fc";
+  const gradEnd     = isAtLimit ? "#dc2626" : isWarn ? "#d97706" : "#4f46e5";
+  const trackClr    = isAtLimit ? "#fee2e2" : isWarn ? "#fef3c7" : "#ede9fe";
+  const centerColor = isAtLimit ? "text-red-500" : isWarn ? "text-amber-500" : "text-indigo-600";
+  const badgeCls    = isAtLimit ? "bg-red-50 text-red-500" : isWarn ? "bg-amber-50 text-amber-500" : unlimited ? "bg-indigo-50 text-indigo-400" : null;
 
   return (
-    <div className="flex flex-col items-center gap-2 p-3 sm:p-4">
+    <div className="flex flex-col items-center gap-1.5 p-3 sm:p-4">
       <div className="relative">
-        <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90" aria-hidden="true">
-          <circle cx="40" cy="40" r={r} fill="none" stroke={trackClr} strokeWidth="7" />
-          {!unlimited && (
-            <circle
-              cx="40" cy="40" r={r}
-              fill="none" stroke={stroke} strokeWidth="7"
-              strokeDasharray={circ}
-              strokeDashoffset={circ * (1 - fill)}
-              strokeLinecap="round"
-              style={{ transition: "stroke-dashoffset 0.8s ease" }}
-            />
-          )}
+        <svg width="88" height="88" viewBox="0 0 88 88" className="-rotate-90" aria-hidden="true">
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={gradStart} />
+              <stop offset="100%" stopColor={gradEnd} />
+            </linearGradient>
+          </defs>
+          <circle cx="44" cy="44" r={r} fill="none" stroke={trackClr} strokeWidth="7" />
+          <circle
+            cx="44" cy="44" r={r}
+            fill="none"
+            stroke={`url(#${gradId})`}
+            strokeWidth="7"
+            strokeDasharray={circ}
+            strokeDashoffset={unlimited ? 0 : circ * (1 - fill)}
+            strokeLinecap="round"
+            style={{ transition: "stroke-dashoffset 0.8s ease", opacity: unlimited ? 0.35 : 1 }}
+          />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {isAtLimit && <AlertCircle className="h-4 w-4 text-red-500" />}
-          {!isAtLimit && (
-            <span className="text-sm font-bold text-slate-900">
-              {unlimited ? "∞" : `${Math.round(Math.min(100, pct))}%`}
-            </span>
+          {isAtLimit
+            ? <AlertCircle className="h-5 w-5 text-red-500" />
+            : <span className={`text-sm font-bold leading-none ${centerColor}`}>
+                {unlimited ? "∞" : `${Math.round(Math.min(100, pct))}%`}
+              </span>
+          }
+          {!unlimited && !isAtLimit && (
+            <span className="mt-0.5 text-[9px] text-slate-400">{used}/{displayLimit}</span>
           )}
         </div>
       </div>
       <div className="text-center">
         <p className="text-[11px] sm:text-xs font-semibold text-slate-700 leading-tight">{label}</p>
-        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
-          {unlimited ? "Unbegrenzt" : `${used} / ${displayLimit}`}
-        </p>
-        {isAtLimit && (
-          <span className="mt-1 inline-block rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-500">LIMIT</span>
-        )}
-        {isWarn && !isAtLimit && (
-          <span className="mt-1 inline-block rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-500">FAST VOLL</span>
+        {badgeCls && (
+          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${badgeCls}`}>
+            {isAtLimit ? "LIMIT" : isWarn ? "FAST VOLL" : "∞"}
+          </span>
         )}
       </div>
     </div>
@@ -164,24 +176,36 @@ function UsageRow({ feature, used, limit }) {
   const { label, unlimited, pct, displayLimit } = getUsageBarState(feature, used, limit);
   const isAtLimit = !unlimited && pct >= 100;
   const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
-  const barColor  = isAtLimit ? "bg-red-500" : isWarn ? "bg-amber-400" : "bg-indigo-500";
   const pctLabel  = unlimited ? "∞" : `${Math.round(Math.min(100, pct))}%`;
 
+  const barGradient = isAtLimit
+    ? "linear-gradient(90deg,#fca5a5,#dc2626)"
+    : isWarn
+    ? "linear-gradient(90deg,#fcd34d,#d97706)"
+    : "linear-gradient(90deg,#a5b4fc,#4f46e5)";
+  const badgeCls = isAtLimit
+    ? "bg-red-50 text-red-600"
+    : isWarn
+    ? "bg-amber-50 text-amber-600"
+    : "bg-indigo-50 text-indigo-600";
+
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs sm:text-sm font-medium text-slate-700 truncate">{label}</span>
         <div className="flex flex-shrink-0 items-center gap-2">
-          <span className="text-[11px] text-slate-400">{unlimited ? "∞" : `${used} / ${displayLimit}`}</span>
-          <span className={`min-w-[36px] text-right text-xs font-bold ${isAtLimit ? "text-red-600" : isWarn ? "text-amber-600" : "text-indigo-600"}`}>
-            {pctLabel}
-          </span>
+          <span className="text-[11px] text-slate-400">{unlimited ? "Unbegrenzt" : `${used} / ${displayLimit}`}</span>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeCls}`}>{pctLabel}</span>
         </div>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-3 overflow-hidden rounded-full bg-slate-100 shadow-inner">
         <div
-          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
-          style={{ width: unlimited ? "4px" : `${Math.min(100, pct)}%` }}
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: unlimited ? "100%" : `${Math.min(100, pct)}%`,
+            background: barGradient,
+            opacity: unlimited ? 0.3 : 1,
+          }}
         />
       </div>
     </div>
@@ -192,8 +216,12 @@ function UsageRow({ feature, used, limit }) {
 function PlanCard({ plan, isCurrent, onUpgrade }) {
   const { Icon } = plan;
   return (
-    <div className={`relative flex flex-col rounded-2xl border-2 bg-white p-5 transition-shadow hover:shadow-lg ${
-      isCurrent ? plan.borderCls + " shadow-md" : "border-slate-100"
+    <div className={`relative flex flex-col rounded-2xl border-2 bg-white p-5 transition-all ${
+      plan.glowCls
+        ? `${plan.borderCls} ${plan.glowCls}`
+        : isCurrent
+        ? `${plan.borderCls} shadow-md`
+        : "border-slate-100 hover:shadow-lg"
     }`}>
       {/* Badge (Beliebt / Bestes Angebot) */}
       {plan.badge && (
@@ -410,30 +438,59 @@ export default function BillingPage() {
 
       {/* ── Usage: donut gauges ───────────────────────────────────────────────── */}
       {usage.length > 0 && (
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="mb-5 flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">Deine Nutzung</h3>
-              <p className="mt-0.5 text-xs sm:text-sm text-slate-500">Aktueller Verbrauch in diesem Abrechnungszeitraum</p>
+        <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          {/* Section header with health bar */}
+          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-slate-50">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">Deine Nutzung</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Verbrauch im aktuellen Abrechnungszeitraum</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
+                  avgUsagePct >= 80 ? "bg-red-50 text-red-600" :
+                  avgUsagePct >= 60 ? "bg-amber-50 text-amber-600" :
+                  "bg-emerald-50 text-emerald-600"
+                }`}>
+                  {healthLabel}
+                </span>
+                <span className="text-[10px] text-slate-400">Ø {avgUsagePct}% belegt</span>
+              </div>
             </div>
-            <span className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-              avgUsagePct >= 80 ? "bg-red-50 text-red-600" :
-              avgUsagePct >= 60 ? "bg-amber-50 text-amber-600" :
-              "bg-emerald-50 text-emerald-600"
-            }`}>
-              Ø {avgUsagePct}%
-            </span>
+            {/* Overall health bar */}
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${avgUsagePct}%`,
+                  background: avgUsagePct >= 80
+                    ? "linear-gradient(90deg,#fca5a5,#dc2626)"
+                    : avgUsagePct >= 60
+                    ? "linear-gradient(90deg,#fcd34d,#d97706)"
+                    : "linear-gradient(90deg,#6ee7b7,#10b981)",
+                }}
+              />
+            </div>
           </div>
 
+          <div className="p-5 sm:p-6">
           {/* Donut gauges — 2 cols on mobile, 3 on sm, up to 6 on lg */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y divide-slate-50 border border-slate-50 rounded-2xl overflow-hidden">
-            {usage.map((item) => (
-              <DonutGauge key={item.feature} {...item} />
-            ))}
+          <div className="grid grid-cols-2 gap-px sm:grid-cols-3 lg:grid-cols-6 bg-slate-100 rounded-2xl overflow-hidden">
+            {usage.map((item) => {
+              const { pct, unlimited } = getUsageBarState(item.feature, item.used, item.limit);
+              const isAt = !unlimited && pct >= 100;
+              const isW  = !unlimited && pct >= 80 && !isAt;
+              const cellBg = isAt ? "bg-red-50/60" : isW ? "bg-amber-50/60" : "bg-white";
+              return (
+                <div key={item.feature} className={cellBg}>
+                  <DonutGauge {...item} />
+                </div>
+              );
+            })}
           </div>
 
           {/* Horizontal bar chart below gauges */}
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3.5">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Detail-Übersicht</p>
             {usage.map((item) => (
               <UsageRow key={item.feature} {...item} />
@@ -456,6 +513,7 @@ export default function BillingPage() {
               </button>
             </div>
           )}
+          </div>
         </div>
       )}
 
