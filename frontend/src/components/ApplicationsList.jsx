@@ -1249,7 +1249,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           <button
             key={key}
             onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
-            className={`min-w-[140px] flex-shrink-0 rounded-xl border p-5 text-left transition-all duration-150 md:min-w-0
+            className={`min-w-[110px] flex-shrink-0 rounded-xl border p-5 text-left transition-all duration-150 md:min-w-0
               ${cardCls}
               ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-md" : "hover:shadow-sm"}
             `}
@@ -1270,7 +1270,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           h-[calc(100svh-320px)]  →  fixed height so both columns scroll
                                       independently without the page scrolling
       ══════════════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col md:flex-row rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden md:h-[calc(100svh-320px)]">
+      <div className="flex flex-col md:flex-row rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden md:h-[calc(100vh-280px)] md:min-h-[380px]">
         {/* ── Left Column: Job List ─────────────────────────────────────────────
             w-full (full width on mobile), md:w-72 lg:w-80 (fixed width on desktop)
             flex-shrink-0 (never compress the list column)

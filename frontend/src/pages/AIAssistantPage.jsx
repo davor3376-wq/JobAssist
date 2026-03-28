@@ -617,7 +617,7 @@ export default function AIAssistantPage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Intelligente Eingabe… (Enter zum Senden)"
                 rows={1}
-                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1"
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1"
                 style={{ minHeight: "32px" }}
               />
               <button

@@ -510,8 +510,12 @@ export default function BillingPage() {
           </div>
 
           <div className="p-5 sm:p-6">
-          {/* Hero bar chart */}
-          <UsageHeroChart usage={usage} />
+          {/* Hero bar chart — scrollable on mobile so tiny SVG fonts stay legible */}
+          <div className="overflow-x-auto -mx-1 px-1">
+            <div className="min-w-[360px]">
+              <UsageHeroChart usage={usage} />
+            </div>
+          </div>
 
           {/* Slim detail rows */}
           <div className="mt-5 space-y-3">

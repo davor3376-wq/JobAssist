@@ -74,32 +74,61 @@ function MiniActivityChart({ values }) {
         <span>Analysierte Jobs diese Woche</span>
         <span className="font-semibold text-slate-600">{total} gesamt</span>
       </div>
+      {/* Peak day insight */}
+      {total > 0 && (() => {
+        const peakIdx = values.indexOf(Math.max(...values));
+        return (
+          <div className="mt-1 flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5">
+            <TrendingUp className="h-3 w-3 flex-shrink-0 text-indigo-500" />
+            <span className="text-[10px] font-semibold text-indigo-700">
+              Aktivster Tag: {DAY_LABELS[peakIdx]} · {values[peakIdx]} Job{values[peakIdx] !== 1 ? "s" : ""}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
-// ── Company logo with clearbit fallback ───────────────────────────────────────
-function CompanyLogo({ company, initials }) {
+// ── Company logo via Google Favicon (uses actual job URL domain) ──────────────
+const INITIALS_GRADIENTS = [
+  "from-indigo-400 to-violet-500",
+  "from-emerald-400 to-teal-500",
+  "from-amber-400 to-orange-500",
+  "from-pink-400 to-rose-500",
+  "from-cyan-400 to-blue-500",
+  "from-purple-400 to-fuchsia-500",
+];
+
+function CompanyLogo({ company, initials, url }) {
   const [failed, setFailed] = useState(false);
-  const slug = (company || "")
-    .toLowerCase()
-    .replace(/\s+(gmbh|ag|kg|oeg|keg|se|inc|ltd|co\.?|gruppe|group|solutions?|technologies?|tech|digital|services?|consulting)\.?\s*/gi, " ")
-    .trim()
-    .replace(/[^a-z0-9]/g, "");
-  const domain = slug ? `${slug}.com` : null;
+
+  // Extract domain from the job's actual URL (most reliable source)
+  const domain = (() => {
+    if (!url) return null;
+    try {
+      const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+      return u.hostname.replace(/^www\./, "");
+    } catch {
+      return null;
+    }
+  })();
+
+  const gradientIdx = (company || "?").charCodeAt(0) % INITIALS_GRADIENTS.length;
+  const gradient = INITIALS_GRADIENTS[gradientIdx];
 
   if (!failed && domain) {
     return (
       <img
-        src={`https://logo.clearbit.com/${domain}`}
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
         alt={company || ""}
         onError={() => setFailed(true)}
-        className="h-9 w-9 flex-shrink-0 rounded-xl object-contain bg-white border border-slate-100 p-0.5"
+        className="h-9 w-9 flex-shrink-0 rounded-xl object-contain bg-white border border-slate-100 p-1"
       />
     );
   }
   return (
-    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-[11px] font-bold text-slate-600">
+    <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-[11px] font-bold text-white`}>
       {initials}
     </div>
   );
@@ -524,7 +553,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-all hover:border-slate-100 hover:bg-slate-50 hover:shadow-sm"
                 >
                   {/* Company logo with initials fallback */}
-                  <CompanyLogo company={job.company} initials={initials} />
+                  <CompanyLogo company={job.company} initials={initials} url={job.url} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">{job.role || "Ohne Titel"}</p>
                     <p className="truncate text-xs text-slate-500">{job.company || "Unbekanntes Unternehmen"}</p>
