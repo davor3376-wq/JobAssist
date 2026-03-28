@@ -385,10 +385,10 @@ export default function JobsPage() {
       {/* Header Section */}
       <div className="flex items-center justify-between mb-4 sm:mb-8 animate-slide-up">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
             Bewerbungen
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Verwalte deine Bewerbungen und finde neue Stellenangebote</p>
+          <p className="text-xs sm:text-base text-gray-500 mt-0.5 truncate">Bewerbungen verwalten &amp; Stellen finden</p>
         </div>
       </div>
 

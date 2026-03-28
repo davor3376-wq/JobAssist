@@ -217,7 +217,11 @@ function CircularGauge({ score, size = 48 }) {
       {/* absolute inset-0 (overlay div fills the same space as the SVG) */}
       {/* flex items-center justify-center (centres the score text) */}
       <span
-        className="absolute inset-0 flex items-center justify-center text-[10px] font-bold leading-none"
+        className={`absolute inset-0 flex items-center justify-center font-bold leading-none tabular-nums ${
+          size <= 32
+            ? (pct != null && Math.round(pct) === 100 ? "text-[7.5px]" : "text-[9px]")
+            : "text-[11px]"
+        }`}
         style={{ color }}
       >
         {pct != null ? `${Math.round(pct)}%` : "–"}
@@ -784,35 +788,35 @@ function DetailPanel({
         {/* ── Expanded: Interview Q&A ──────────────────────────────────────── */}
         {job.interview_qa && Array.isArray(interviewQa) && (
           <div className="rounded-xl border border-purple-200 bg-white shadow-sm">
-            <div className="flex items-center px-4 py-3 gap-2">
+            <div className="flex flex-wrap items-center px-4 py-3 gap-x-2 gap-y-1.5">
               <button
                 onClick={() => setExpandedPanel((v) => (v === `interview-${job.id}` ? null : `interview-${job.id}`))}
-                className="flex flex-1 items-center gap-2 text-sm font-semibold text-purple-700 text-left"
+                className="flex flex-1 min-w-0 items-center gap-2 text-sm font-semibold text-purple-700 text-left"
               >
                 <Brain className="w-4 h-4 flex-shrink-0" />
-                Gesprächsvorbereitung
-                <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
+                <span className="truncate">Gesprächsvorbereitung</span>
+                <ChevronDown className={`ml-auto flex-shrink-0 w-4 h-4 transition-transform ${expandedPanel === `interview-${job.id}` ? "rotate-180" : ""}`} />
               </button>
               {/* Download buttons — only visible when there's Q&A data */}
               <div className="flex items-center gap-1 flex-shrink-0 border-l border-purple-100 pl-2">
                 <button
                   onClick={() => downloadQaTxt(job, interviewQa)}
                   title="Als TXT herunterladen"
-                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors min-h-[32px]"
                 >
                   <Download className="w-3 h-3" /> TXT
                 </button>
                 <button
                   onClick={() => downloadQaPdf(job, interviewQa)}
                   title="Als PDF drucken / speichern"
-                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors min-h-[32px]"
                 >
                   <Download className="w-3 h-3" /> PDF
                 </button>
                 <button
                   onClick={() => downloadQaDocx(job, interviewQa)}
                   title="Als Word-Dokument herunterladen"
-                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
+                  className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold text-purple-600 hover:bg-purple-50 transition-colors min-h-[32px]"
                 >
                   <Download className="w-3 h-3" /> DOCX
                 </button>

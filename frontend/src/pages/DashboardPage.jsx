@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
@@ -74,6 +74,33 @@ function MiniActivityChart({ values }) {
         <span>Analysierte Jobs diese Woche</span>
         <span className="font-semibold text-slate-600">{total} gesamt</span>
       </div>
+    </div>
+  );
+}
+
+// ── Company logo with clearbit fallback ───────────────────────────────────────
+function CompanyLogo({ company, initials }) {
+  const [failed, setFailed] = useState(false);
+  const slug = (company || "")
+    .toLowerCase()
+    .replace(/\s+(gmbh|ag|kg|oeg|keg|se|inc|ltd|co\.?|gruppe|group|solutions?|technologies?|tech|digital|services?|consulting)\.?\s*/gi, " ")
+    .trim()
+    .replace(/[^a-z0-9]/g, "");
+  const domain = slug ? `${slug}.com` : null;
+
+  if (!failed && domain) {
+    return (
+      <img
+        src={`https://logo.clearbit.com/${domain}`}
+        alt={company || ""}
+        onError={() => setFailed(true)}
+        className="h-9 w-9 flex-shrink-0 rounded-xl object-contain bg-white border border-slate-100 p-0.5"
+      />
+    );
+  }
+  return (
+    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-[11px] font-bold text-slate-600">
+      {initials}
     </div>
   );
 }
@@ -225,12 +252,43 @@ export default function DashboardPage() {
         {/* Right: Activity widget */}
         <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
           <div className="mb-5 flex items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Aktivität</p>
               <p className="mt-1 text-sm text-slate-600">
                 {scoredJobs.length} Stellen bewertet.{" "}
-                {nextDeadline ? "Nächste Frist ist eingetragen." : "Keine offene Frist."}
+                {nextDeadline ? "Nächste Frist eingetragen." : "Keine offene Frist."}
               </p>
+              {/* Insight pills */}
+              {(jobs?.length ?? 0) > 0 && (() => {
+                const applied = (jobs || []).filter(j => ["applied","interviewing","offered"].includes(j.status)).length;
+                const offered = (jobs || []).filter(j => j.status === "offered").length;
+                const todayCount = activitySeries[activitySeries.length - 1] ?? 0;
+                const responseRate = jobs?.length ? Math.round((applied / jobs.length) * 100) : 0;
+                return (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {applied > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        <CheckCircle className="h-2.5 w-2.5" />{applied} beworben
+                      </span>
+                    )}
+                    {responseRate > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                        <TrendingUp className="h-2.5 w-2.5" />{responseRate}% Quote
+                      </span>
+                    )}
+                    {todayCount > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+                        <Activity className="h-2.5 w-2.5" />+{todayCount} heute
+                      </span>
+                    )}
+                    {offered > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                        <Award className="h-2.5 w-2.5" />{offered} Angebot{offered > 1 ? "e" : ""}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600">
               <CalendarClock className="h-5 w-5 text-white" />
@@ -381,7 +439,7 @@ export default function DashboardPage() {
         <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md h-full">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Ø Match-Score</p>
+              <p className="text-sm font-medium text-slate-500">Match-Score</p>
               <p className="mt-1 text-4xl font-bold text-slate-900">{avgScore != null ? `${avgScore}%` : "—"}</p>
             </div>
             {/* Radial ring gauge */}
@@ -465,10 +523,8 @@ export default function DashboardPage() {
                   to={`/jobs?jobId=${job.id}`}
                   className="flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-all hover:border-slate-100 hover:bg-slate-50 hover:shadow-sm"
                 >
-                  {/* Avatar with company initials */}
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-[11px] font-bold text-slate-600">
-                    {initials}
-                  </div>
+                  {/* Company logo with initials fallback */}
+                  <CompanyLogo company={job.company} initials={initials} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">{job.role || "Ohne Titel"}</p>
                     <p className="truncate text-xs text-slate-500">{job.company || "Unbekanntes Unternehmen"}</p>

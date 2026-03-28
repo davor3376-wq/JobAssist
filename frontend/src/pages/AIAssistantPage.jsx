@@ -394,21 +394,21 @@ export default function AIAssistantPage() {
             {messages.length === 0 ? (
 
               /* ── Empty-state hub ────────────────────────────────────────── */
-              <div className="flex flex-col gap-4 md:gap-6 py-1">
+              <div className="flex flex-col gap-3 md:gap-4 py-1">
 
                 {/* Hero banner – soft indigo/violet gradient */}
-                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5">
+                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-4">
                   {/* Glow orbs */}
                   <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl" />
-                  <div className="relative flex items-start gap-4">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
-                      <Sparkles className="h-6 w-6 text-white" />
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+                      <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-slate-900">Hallo. Woran arbeitest du gerade?</h3>
-                      <p className="mt-1 text-sm text-slate-500 max-w-lg leading-[1.5]">
-                        Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Vorbereitung und gezielter Karriereberatung.
+                      <h3 className="text-base font-bold text-slate-900">Hallo. Woran arbeitest du gerade?</h3>
+                      <p className="mt-0.5 text-xs text-slate-500 max-w-lg leading-[1.5]">
+                        Lebenslauf, Anschreiben, Interview-Vorbereitung und Karriereberatung.
                       </p>
                       {resumeContextLabel && (
                         <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
@@ -426,7 +426,7 @@ export default function AIAssistantPage() {
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
@@ -448,14 +448,14 @@ export default function AIAssistantPage() {
                       </svg>
                     </div>
                     <div className="relative">
-                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
-                        <MessageSquare className="h-6 w-6 text-white" />
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+                        <MessageSquare className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-base font-bold text-slate-900">Interview Simulation</h4>
-                      <p className="mt-1.5 text-xs leading-[1.5] text-slate-500">
+                      <h4 className="text-sm font-bold text-slate-900">Interview Simulation</h4>
+                      <p className="mt-1 text-xs leading-[1.5] text-slate-500">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
-                      <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-indigo-700">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-indigo-700 min-h-[44px] md:min-h-0">
                         <Sparkles className="h-3.5 w-3.5" />
                         Jetzt starten
                       </div>
@@ -465,7 +465,7 @@ export default function AIAssistantPage() {
                   {/* Assessment Center */}
                   <button
                     onClick={startAssessment}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
                     {/* Undraw-style assessment illustration */}
@@ -488,14 +488,14 @@ export default function AIAssistantPage() {
                       </svg>
                     </div>
                     <div className="relative">
-                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
-                        <ClipboardList className="h-6 w-6 text-white" />
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
+                        <ClipboardList className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-base font-bold text-slate-900">Assessment Center</h4>
-                      <p className="mt-1.5 text-xs leading-[1.5] text-slate-500">
+                      <h4 className="text-sm font-bold text-slate-900">Assessment Center</h4>
+                      <p className="mt-1 text-xs leading-[1.5] text-slate-500">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
-                      <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-violet-700">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-violet-700 min-h-[44px] md:min-h-0">
                         <ClipboardList className="h-3.5 w-3.5" />
                         Assessment starten
                       </div>
@@ -516,7 +516,7 @@ export default function AIAssistantPage() {
                             if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                             handleSend(s.prompt);
                           }}
-                          className={`group flex flex-col gap-2 rounded-2xl border p-4 text-left transition-all duration-200
+                          className={`group flex flex-col gap-1.5 rounded-2xl border p-3 text-left transition-all duration-200
                             ${locked
                               ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
                               : "border-slate-100 bg-white shadow-sm hover:-translate-y-1 hover:border-slate-200 hover:shadow-md"

@@ -490,7 +490,7 @@ export default function BillingPage() {
                 }`}>
                   {healthLabel}
                 </span>
-                <span className="text-[10px] text-slate-400">Ø {avgUsagePct}% belegt</span>
+                <span className="text-[10px] text-slate-400">{avgUsagePct}% belegt</span>
               </div>
             </div>
             {/* Overall health bar */}
