@@ -137,14 +137,24 @@ def match_resume_to_job(resume_text: str, job_description: str) -> dict:
     prompt = f"""Analysiere die Übereinstimmung zwischen Lebenslauf und Stellenbeschreibung.
 WICHTIG: Alle Texte im JSON müssen auf Deutsch sein.
 
-SCORING-RICHTLINIE: Gib motivierende, realistische Scores die den tatsächlichen Fit widerspiegeln.
-- Starker Fit (Kandidat erfüllt die meisten Kernanforderungen): 78–92%
-- Guter Fit (solide Übereinstimmung, kleinere Lücken): 68–80%
-- Mittlerer Fit (Potenzial vorhanden, aber wesentliche Lücken): 55–70%
-- Schwacher Fit: unter 55%
-Beachte: Die Score soll vom echten Matching abhängen — unterschiedliche Stellen sollen unterschiedliche Scores erhalten. Niemals denselben Score für verschiedene Stellen ausgeben. Berücksichtige konkret den Lebenslauf und die Stellenbeschreibung.
+SCORING-METHODE (Schritt für Schritt — führe diese Berechnung intern durch):
+1. Identifiziere die 6 wichtigsten Anforderungen aus der Stellenbeschreibung
+2. Prüfe jede Anforderung gegen den Lebenslauf:
+   - Vollständig erfüllt → 2 Punkte
+   - Teilweise erfüllt / Potenzial vorhanden → 1 Punkt
+   - Nicht erfüllt → 0 Punkte
+3. Basis-Score = (Summe / 12) × 100
+4. Addiere Bonus-Punkte (je +3–8):
+   - Passende Ausbildung im Fachbereich
+   - Relevante Berufserfahrung in der Branche
+   - Soft Skills und Sprachen passen
+5. Ziehe Punkte ab (-5 bis -15) für fehlende Kernanforderungen
+6. Endergebnis: Basis-Score + Boni - Abzüge. Minimum 52, Maximum 94.
 
-Du MUSST mindestens 8 Stärken, 6 Lücken und 5 Empfehlungen liefern — auch wenn der Match-Score niedrig ist. Erfinde keine Fakten, aber sei konkret und spezifisch.
+WICHTIG: Da jede Stelle andere Anforderungen hat, MUSS der Score von Stelle zu Stelle variieren.
+Beispiele: Eine Pflegestelle für einen IT-Kandidaten ohne Pflegeerfahrung → ~54%. Eine Marketingstelle für einen Wirtschaftskandidaten → ~81%.
+
+Du MUSST mindestens 8 Stärken, 6 Lücken und 5 Empfehlungen liefern. Erfinde keine Fakten, aber sei konkret und spezifisch.
 
 Gib genau dieses JSON zurück:
 {{
@@ -165,7 +175,7 @@ Stellenbeschreibung:
 {job_description}
 \"\"\"
 """
-    result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0.4))
+    result = _strip_code_fences(_call_groq(prompt, system=system, max_tokens=2048, temperature=0.7))
     try:
         match = json.loads(result)
     except json.JSONDecodeError:
