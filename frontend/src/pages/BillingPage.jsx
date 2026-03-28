@@ -238,7 +238,7 @@ function UsageRow({ feature, used, limit }) {
           }}
         />
       </div>
-      <span className="w-14 flex-shrink-0 text-right text-[10px] text-slate-400">
+      <span className="w-14 flex-shrink-0 text-right text-[10px] tabular-nums text-slate-400">
         {unlimited ? "∞" : `${used} / ${displayLimit}`}
       </span>
       <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
@@ -309,7 +309,7 @@ function PlanCard({ plan, isCurrent, onUpgrade }) {
       ) : (
         <button
           onClick={onUpgrade}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${plan.btnCls}`}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 min-h-[44px] text-sm font-semibold transition-all ${plan.btnCls}`}
           disabled={!onUpgrade}
         >
           {plan.btnLabel || "Jetzt upgraden"}
@@ -406,7 +406,7 @@ export default function BillingPage() {
   const healthLabel  = avgUsagePct >= 80 ? "Kritisch" : avgUsagePct >= 60 ? "Mittel" : "Gut";
 
   return (
-    <div className="max-w-5xl space-y-8 animate-slide-up">
+    <div className={`max-w-5xl space-y-8 animate-slide-up ${!isMax ? "pb-20 sm:pb-0" : ""}`}>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div>
@@ -546,7 +546,7 @@ export default function BillingPage() {
         <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">Planvergleich</h3>
 
         {/* Cards: 1-col mobile → 2-col sm → 4-col xl */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.key}
@@ -713,6 +713,20 @@ export default function BillingPage() {
           )}
         </div>
       </div>
+
+      {/* Sticky upgrade footer — mobile only */}
+      {!isMax && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-sm border-t border-slate-100 px-4 py-3 shadow-lg">
+          <button
+            onClick={() => navigate("/pricing")}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-colors hover:bg-indigo-700 min-h-[44px]"
+          >
+            <Zap className="h-4 w-4" />
+            Upgrade auf Pro
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

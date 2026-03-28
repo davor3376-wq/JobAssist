@@ -329,15 +329,15 @@ function ApplicationPhaseStepper({ status }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-0">
         {steps.map((step, index) => {
           const completed = index < currentStep;
           const active    = index === currentStep;
           const isFinal   = index === steps.length - 1;
           return (
-            <div key={step} className="flex flex-1 items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
+            <div key={step} className="flex sm:flex-1 sm:flex-col sm:items-center flex-row items-center">
+              <div className="flex sm:flex-col items-center gap-2 sm:gap-1.5">
+                <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
                   completed || active
                     ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
                     : "border-2 border-slate-200 bg-white text-slate-400"
@@ -351,8 +351,8 @@ function ApplicationPhaseStepper({ status }) {
                 <span className={`text-[10px] font-semibold whitespace-nowrap ${completed || active ? "text-gray-800" : "text-gray-400"}`}>{step}</span>
               </div>
               {!isFinal && (
-                <div className="mx-1 mb-3 h-[2px] flex-1 rounded-full bg-slate-200">
-                  <div className={`h-full rounded-full transition-all duration-500 ${completed ? "w-full bg-blue-500" : "w-0"}`} />
+                <div className="sm:mx-1 sm:mb-3 sm:h-[2px] sm:flex-1 sm:w-auto mx-3 mt-0 h-4 w-0.5 self-stretch sm:self-auto rounded-full bg-slate-200">
+                  <div className={`rounded-full transition-all duration-500 sm:h-full sm:w-auto h-full w-full ${completed ? "sm:w-full bg-blue-500" : "sm:w-0"}`} />
                 </div>
               )}
             </div>
@@ -612,9 +612,20 @@ function DetailPanel({
 
             {!matchCollapsed && (
               <>
-                {/* Summary text */}
+                {/* Summary text — rendered as bullet sentences */}
                 {job.match_score != null && matchFeedback?.summary && (
-                  <p className="text-xs leading-relaxed text-gray-600">{matchFeedback.summary}</p>
+                  typeof matchFeedback.summary === "string" ? (
+                    <ul className="space-y-1.5 text-sm text-slate-600">
+                      {matchFeedback.summary.split(/[.!?]+/).filter((s) => s.trim().length > 10).map((sentence, i) => (
+                        <li key={i} className="flex items-start gap-2 leading-[1.5]">
+                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+                          <span>{sentence.trim()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs leading-relaxed text-gray-600">{matchFeedback.summary}</p>
+                  )
                 )}
 
                 {/* Progress bars */}
@@ -640,7 +651,7 @@ function DetailPanel({
                 key={status}
                 onClick={() => updateStatusMutation.mutate({ jobId: job.id, status })}
                 disabled={isStatusUp}
-                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 min-h-[44px] sm:min-h-0 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {STATUS_LABELS[status]}
               </button>

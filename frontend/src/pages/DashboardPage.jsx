@@ -54,11 +54,13 @@ function MiniActivityChart({ values }) {
                 {/* Bar */}
                 <div
                   className={`relative w-full rounded-full transition-all duration-500 ${
-                    isToday || isHovered
+                    value === 0
+                      ? "bg-slate-100"
+                      : isToday || isHovered
                       ? "bg-gradient-to-t from-indigo-500 to-violet-500"
                       : "bg-slate-200"
                   }`}
-                  style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "6px" }}
+                  style={{ height: value > 0 ? `${Math.max(14, (value / max) * 100)}%` : "18%" }}
                 />
               </div>
               <span className={`text-[11px] font-semibold ${isToday ? "text-indigo-600" : "text-slate-400"}`}>
@@ -235,11 +237,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <MiniActivityChart values={activitySeries} />
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:flex-1 min-w-0">
+              <MiniActivityChart values={activitySeries} />
+            </div>
 
-          {/* Recent actions feed */}
-          {recentActions.length > 0 && (
-            <div className="mt-5">
+            {/* Recent actions feed */}
+            {recentActions.length > 0 && (
+            <div className="lg:flex-1 min-w-0">
               <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Letzte Aktionen
               </p>
@@ -271,6 +276,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+          </div>
 
           {/* Deadline alert */}
           {nextDeadline ? (() => {
@@ -320,10 +326,11 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Row 2: CVs / Jobs / Match score ───────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
 
         {/* CVs */}
-        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
+        <div className="flex-none w-[82vw] snap-start sm:flex-auto sm:w-auto">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md h-full">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Lebensläufe</p>
@@ -343,9 +350,11 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+        </div>
 
         {/* Jobs tracked */}
-        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
+        <div className="flex-none w-[82vw] snap-start sm:flex-auto sm:w-auto">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md h-full">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Stellen verfolgt</p>
@@ -365,9 +374,11 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+        </div>
 
         {/* Match score with ring */}
-        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md">
+        <div className="flex-none w-[82vw] snap-start sm:flex-auto sm:w-auto">
+        <div className="group rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md transition-shadow hover:shadow-md h-full">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Ø Match-Score</p>
@@ -396,6 +407,7 @@ export default function DashboardPage() {
             <Activity className="h-3.5 w-3.5 text-emerald-500" />
             Qualität deiner Übereinstimmungen
           </div>
+        </div>
         </div>
       </div>
 

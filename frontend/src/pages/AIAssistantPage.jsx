@@ -394,7 +394,7 @@ export default function AIAssistantPage() {
             {messages.length === 0 ? (
 
               /* ── Empty-state hub ────────────────────────────────────────── */
-              <div className="flex flex-col gap-5 py-1">
+              <div className="flex flex-col gap-4 md:gap-6 py-1">
 
                 {/* Hero banner – soft indigo/violet gradient */}
                 <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5">
@@ -407,7 +407,7 @@ export default function AIAssistantPage() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-lg font-bold text-slate-900">Hallo. Woran arbeitest du gerade?</h3>
-                      <p className="mt-1 text-sm text-slate-500 max-w-lg">
+                      <p className="mt-1 text-sm text-slate-500 max-w-lg leading-[1.5]">
                         Ich helfe dir bei Lebenslauf, Anschreiben, Interview-Vorbereitung und gezielter Karriereberatung.
                       </p>
                       {resumeContextLabel && (
@@ -429,12 +429,30 @@ export default function AIAssistantPage() {
                     className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
+                    {/* Undraw-style interview illustration */}
+                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-20 pointer-events-none">
+                      <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="15" y="60" width="110" height="6" rx="3" fill="#4f46e5"/>
+                        <rect x="40" y="20" width="60" height="40" rx="4" fill="#4f46e5"/>
+                        <rect x="43" y="23" width="54" height="34" rx="2" fill="#6366f1"/>
+                        <circle cx="70" cy="40" r="9" fill="#a5b4fc"/>
+                        <rect x="61" y="50" width="18" height="2.5" rx="1.25" fill="#a5b4fc"/>
+                        <circle cx="105" cy="68" r="12" fill="#e0e7ff"/>
+                        <rect x="99" y="54" width="12" height="18" rx="6" fill="#818cf8"/>
+                        <circle cx="105" cy="48" r="8" fill="#fde68a"/>
+                        <rect x="18" y="12" width="42" height="22" rx="6" fill="white" stroke="#c7d2fe" strokeWidth="1.5"/>
+                        <rect x="24" y="19" width="10" height="1.5" rx="0.75" fill="#c7d2fe"/>
+                        <rect x="24" y="23" width="30" height="1.5" rx="0.75" fill="#c7d2fe"/>
+                        <rect x="24" y="27" width="22" height="1.5" rx="0.75" fill="#c7d2fe"/>
+                        <polygon points="44,34 50,38 38,38" fill="white"/>
+                      </svg>
+                    </div>
                     <div className="relative">
                       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
                         <MessageSquare className="h-6 w-6 text-white" />
                       </div>
                       <h4 className="text-base font-bold text-slate-900">Interview Simulation</h4>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                      <p className="mt-1.5 text-xs leading-[1.5] text-slate-500">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
                       <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-indigo-700">
@@ -450,12 +468,31 @@ export default function AIAssistantPage() {
                     className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
+                    {/* Undraw-style assessment illustration */}
+                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-20 pointer-events-none">
+                      <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="35" y="10" width="70" height="82" rx="6" fill="white" stroke="#ddd6fe" strokeWidth="1.5"/>
+                        <rect x="52" y="6" width="36" height="10" rx="5" fill="#7c3aed"/>
+                        <circle cx="52" cy="33" r="6" fill="#ddd6fe"/>
+                        <polyline points="48.5,33 51,35.5 55.5,29.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                        <rect x="62" y="30" width="34" height="2.5" rx="1.25" fill="#ddd6fe"/>
+                        <circle cx="52" cy="50" r="6" fill="#ddd6fe"/>
+                        <polyline points="48.5,50 51,52.5 55.5,46.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                        <rect x="62" y="47" width="28" height="2.5" rx="1.25" fill="#ddd6fe"/>
+                        <circle cx="52" cy="67" r="6" fill="#ede9fe"/>
+                        <rect x="62" y="64" width="22" height="2.5" rx="1.25" fill="#ede9fe"/>
+                        <circle cx="115" cy="78" r="14" fill="#e0e7ff"/>
+                        <circle cx="115" cy="66" r="10" fill="#fde68a"/>
+                        <circle cx="111" cy="65" r="1.5" fill="#1e293b"/>
+                        <circle cx="119" cy="65" r="1.5" fill="#1e293b"/>
+                      </svg>
+                    </div>
                     <div className="relative">
                       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
                         <ClipboardList className="h-6 w-6 text-white" />
                       </div>
                       <h4 className="text-base font-bold text-slate-900">Assessment Center</h4>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                      <p className="mt-1.5 text-xs leading-[1.5] text-slate-500">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
                       <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-violet-700">
@@ -469,7 +506,7 @@ export default function AIAssistantPage() {
                 {/* Schnell-Aktionen grid */}
                 <div>
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 md:gap-4 sm:grid-cols-3">
                     {SUGGESTIONS.map((s) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
@@ -495,7 +532,7 @@ export default function AIAssistantPage() {
                             {s.label}
                           </span>
                           {s.sub && (
-                            <span className={`text-[11px] leading-tight ${locked ? "text-slate-200" : "text-slate-400"}`}>
+                            <span className={`text-[11px] leading-[1.5] ${locked ? "text-slate-200" : "text-slate-400"}`}>
                               {s.sub}
                             </span>
                           )}
@@ -567,7 +604,7 @@ export default function AIAssistantPage() {
             )}
             <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
               <button
-                className="flex-shrink-0 mb-0.5 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
+                className="flex-shrink-0 flex h-11 w-11 md:h-8 md:w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors"
                 onClick={() => {}}
                 title="Anhang"
               >
@@ -586,7 +623,7 @@ export default function AIAssistantPage() {
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || chatMutation.isPending}
-                className="flex-shrink-0 mb-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-shrink-0 flex h-11 w-11 md:h-8 md:w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
               </button>
