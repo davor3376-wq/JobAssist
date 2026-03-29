@@ -525,7 +525,7 @@ export default function JobAlertsPage() {
       </div>
 
       {/* ── Split layout ── */}
-      <div className="grid min-h-[600px] grid-cols-1 md:grid-cols-12">
+      <div className="grid md:min-h-[600px] grid-cols-1 md:grid-cols-12">
         {/* List sidebar */}
         <aside className="border-b border-slate-100 p-4 md:col-span-4 md:h-full md:overflow-y-auto md:border-b-0 md:border-r">
           <div className="space-y-2">

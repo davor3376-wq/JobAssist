@@ -175,17 +175,28 @@ function CompanyLogo({ company, initials, url }) {
 // ── Slim stat card ────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, iconCls, Icon }) {
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm backdrop-blur-md">
-      <div className="flex items-center gap-4">
-        <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ${iconCls}`}>
-          <Icon className="h-5 w-5 text-white" />
+    <div className="rounded-2xl sm:rounded-3xl border border-slate-100 bg-white/80 shadow-sm backdrop-blur-md overflow-hidden">
+      {/* Mobile: compact centered vertical */}
+      <div className="flex flex-col items-center gap-1.5 px-2 py-3 sm:hidden">
+        <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${iconCls}`}>
+          <Icon className="h-4 w-4 text-white" />
         </div>
-        <div className="min-w-0 text-left">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-          <p className="mt-1 text-3xl font-bold leading-none text-slate-900">{value}</p>
-        </div>
+        <p className="text-2xl font-bold leading-none text-slate-900">{value}</p>
+        <p className="text-center text-[8px] font-bold uppercase tracking-wide text-slate-400 leading-tight">{label}</p>
       </div>
-      <p className="mt-4 text-xs text-slate-500">{sub}</p>
+      {/* sm+: full horizontal card */}
+      <div className="hidden sm:block p-6">
+        <div className="flex items-center gap-4">
+          <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ${iconCls}`}>
+            <Icon className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
+            <p className="mt-1 text-3xl font-bold leading-none text-slate-900">{value}</p>
+          </div>
+        </div>
+        <p className="mt-4 text-xs text-slate-500">{sub}</p>
+      </div>
     </div>
   );
 }
@@ -291,8 +302,8 @@ export default function DashboardPage() {
       {/* ── Row 1: slim stats (left) + Activity widget (right) ─────────────── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
 
-        {/* Left: 3 slim stat cards stacked vertically — full-width in 280px column */}
-        <div className="flex flex-col gap-4">
+        {/* Left: 3-col compact grid on mobile, stacked in 280px sidebar on lg+ */}
+        <div className="grid grid-cols-3 gap-2.5 sm:flex sm:flex-col sm:gap-4">
           <StatCard
             label="Gespeicherte Stellen"
             value={jobs?.length ?? 0}

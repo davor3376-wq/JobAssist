@@ -138,14 +138,14 @@ export default function ResumePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div className="animate-slide-up">
-        <h1 className="mb-2 text-3xl font-bold text-gray-900">Meine Lebensläufe</h1>
+        <h1 className="mb-2 text-2xl sm:text-3xl font-bold text-gray-900">Meine Lebensläufe</h1>
         <p className="text-gray-600">Lade deinen Lebenslauf hoch und überprüfe ihn gegen deine getrackten Stellen</p>
       </div>
 
       <div {...getRootProps()} className={`group relative animate-slide-up ${uploading ? "cursor-not-allowed opacity-50" : ""}`}>
         <input {...getInputProps()} />
         <div
-          className={`relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ${
+          className={`relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed p-6 sm:p-12 text-center transition-all duration-300 ${
             isDragActive
               ? "scale-105 border-brand-400 bg-gradient-to-br from-brand-50 to-brand-100 shadow-lg"
               : "border-gray-300 bg-gradient-to-br from-gray-50 to-white hover:border-brand-400 hover:shadow-md"
@@ -194,7 +194,7 @@ export default function ResumePage() {
         </div>
       ) : resumes.length === 0 ? (
         <div className="animate-slide-up">
-          <div className="card border-2 border-dashed border-gray-200 p-12 text-center">
+          <div className="card border-2 border-dashed border-gray-200 p-8 sm:p-12 text-center">
             <div className="mb-4 flex justify-center">
               <div className="rounded-full bg-gray-100 p-4">
                 <FileText className="h-12 w-12 text-gray-400" />

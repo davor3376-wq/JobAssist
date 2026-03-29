@@ -267,7 +267,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl animate-slide-up">
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-gray-900">{t("settings.title")}</h1>
+        <h1 className="mb-2 text-2xl sm:text-3xl font-bold text-gray-900">{t("settings.title")}</h1>
         <p className="text-gray-500">{t("settings.description")}</p>
       </div>
 
