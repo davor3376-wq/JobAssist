@@ -236,8 +236,10 @@ export const jobApi = {
   saveResearch: (jobId, researchData) => api.patch(`/jobs/${jobId}/research`, { research_data: JSON.stringify(researchData) }),
   getPipelineStats: () => api.get("/jobs/pipeline/stats"),
   searchRecommended: (page = 1) => api.get(`/jobs/search/recommended?page=${page}`),
-  searchCustom: (keywords, location = "", jobType = "", page = 1) =>
-    api.get(`/jobs/search/custom?keywords=${keywords}&location=${location}&job_type=${jobType}&page=${page}`),
+  searchCustom: (keywords, location = "", jobType = "", page = 1) => {
+    const params = new URLSearchParams({ keywords, location, job_type: jobType, page });
+    return api.get(`/jobs/search/custom?${params.toString()}`);
+  },
 };
 
 // --- Cover Letter ---

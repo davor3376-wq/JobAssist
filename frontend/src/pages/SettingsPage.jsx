@@ -192,6 +192,26 @@ export default function SettingsPage() {
         settingsApi.updateProfile(profilePayload, { signal: controller.signal }),
       ]);
 
+      // Immediately update caches so sidebar avatar changes without waiting for refetch
+      const newAvatar = avatar ?? null;
+      queryClient.setQueryData(["profile"], (old) =>
+        old ? { ...old, avatar: newAvatar } : old
+      );
+      queryClient.setQueryData(["init"], (old) =>
+        old ? { ...old, profile: { ...(old.profile || {}), avatar: newAvatar } } : old
+      );
+      try {
+        const raw = localStorage.getItem("profile");
+        if (raw) localStorage.setItem("profile", JSON.stringify({ ...JSON.parse(raw), avatar: newAvatar }));
+      } catch {}
+      try {
+        const raw = localStorage.getItem("init");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          localStorage.setItem("init", JSON.stringify({ ...parsed, profile: { ...(parsed.profile || {}), avatar: newAvatar } }));
+        }
+      } catch {}
+
       await Promise.allSettled([
         queryClient.invalidateQueries({ queryKey: ["profile"] }),
         queryClient.invalidateQueries({ queryKey: ["preferences"] }),

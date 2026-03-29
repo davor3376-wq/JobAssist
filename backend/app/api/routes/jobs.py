@@ -12,7 +12,6 @@ from app.models.user import User
 from app.models.user_profile import UserProfile
 from app.models.job import Job
 from app.models.resume import Resume
-from app.models.resume import Resume
 from app.schemas.job import JobCreate, JobOut, MatchRequest, JobStatusUpdate, JobNotesUpdate, JobDeadlineUpdate, JobUrlUpdate, JobResearchUpdate, PipelineStats
 from app.services.claude_service import match_resume_to_job
 from app.services.job_search import search_jobs, search_jobs_by_preferences

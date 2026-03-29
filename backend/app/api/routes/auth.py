@@ -3,7 +3,7 @@ import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from jose import JWTError, jwt
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import delete as sa_delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -186,6 +186,19 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Passwort muss mindestens 8 Zeichen lang sein")
+        if not any(c.isupper() for c in v):
+            raise ValueError("Passwort muss mindestens einen Großbuchstaben enthalten")
+        if not any(c.islower() for c in v):
+            raise ValueError("Passwort muss mindestens einen Kleinbuchstaben enthalten")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Passwort muss mindestens eine Zahl enthalten")
+        return v
 
 
 @router.post("/verify-email", status_code=200)

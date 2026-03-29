@@ -387,7 +387,7 @@ export default function BillingPage() {
                 className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-colors hover:bg-indigo-700 whitespace-nowrap"
               >
                 <Zap className="h-4 w-4" />
-                Upgrade auf Pro
+                {planKey === "pro" ? "Upgrade auf Max" : "Upgrade auf Pro"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}

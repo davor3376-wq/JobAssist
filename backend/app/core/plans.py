@@ -34,7 +34,7 @@ PLAN_LIMITS = {
 PLAN_PRICES = {
     "basic": 0,
     "pro": 4.99,
-    "max": 14.99,
+    "max": 7.99,
     "enterprise": None,  # contact us
 }
 

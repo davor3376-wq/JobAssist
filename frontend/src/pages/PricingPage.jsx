@@ -51,7 +51,7 @@ const plans = [
     key: "max",
     name: "Max",
     subtitle: "Unbegrenzte Power",
-    price: "14,99",
+    price: "7,99",
     period: "/ Monat",
     icon: Crown,
     color: "purple",

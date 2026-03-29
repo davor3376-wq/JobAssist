@@ -14,7 +14,7 @@ const useAuthStore = create((set) => ({
   login: (accessToken, refreshToken) => {
     if (!accessToken) return;
     // Clear ALL previous user's cached data before storing new credentials
-    for (const k of ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history"]) {
+    for (const k of ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research"]) {
       localStorage.removeItem(k);
     }
     localStorage.setItem("access_token", accessToken);
@@ -28,7 +28,7 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    for (const k of ["access_token", "refresh_token", "auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history"]) {
+    for (const k of ["access_token", "refresh_token", "auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research"]) {
       localStorage.removeItem(k);
     }
     set({ token: null, user: null, isHydrated: true });

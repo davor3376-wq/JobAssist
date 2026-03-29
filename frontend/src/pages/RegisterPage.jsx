@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 import AuthLayout from "../components/ui/AuthLayout";
 import useAuthStore from "../hooks/useAuthStore";
@@ -12,8 +14,11 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const login = useAuthStore((s) => s.login);
   const setUser = useAuthStore((s) => s.setUser);
   const navigate = useNavigate();
@@ -71,17 +76,61 @@ export default function RegisterPage() {
 
         <div>
           <label className="label">Passwort</label>
-          <input
-            className="input"
-            type="password"
-            placeholder="Mindestens 8 Zeichen"
-            {...register("password", {
-              required: "Passwort ist erforderlich",
-              minLength: { value: 8, message: "Mindestens 8 Zeichen" },
-            })}
-          />
+          <div className="relative">
+            <input
+              className="input pr-10"
+              type={showPassword ? "text" : "password"}
+              placeholder="Mindestens 8 Zeichen"
+              {...register("password", {
+                required: "Passwort ist erforderlich",
+                minLength: { value: 8, message: "Mindestens 8 Zeichen" },
+                validate: (v) => {
+                  if (!/[A-Z]/.test(v)) return "Mindestens ein Großbuchstabe";
+                  if (!/[a-z]/.test(v)) return "Mindestens ein Kleinbuchstabe";
+                  if (!/[0-9]/.test(v)) return "Mindestens eine Zahl";
+                  return true;
+                },
+              })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
+              tabIndex={-1}
+              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="label">Passwort bestätigen</label>
+          <div className="relative">
+            <input
+              className="input pr-10"
+              type={showConfirm ? "text" : "password"}
+              placeholder="Passwort wiederholen"
+              {...register("confirmPassword", {
+                required: "Bitte bestätige dein Passwort",
+                validate: (v) => v === watch("password") || "Passwörter stimmen nicht überein",
+              })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
+              tabIndex={-1}
+              aria-label={showConfirm ? "Passwort verbergen" : "Passwort anzeigen"}
+            >
+              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-xs mt-1.5">{errors.confirmPassword.message}</p>
           )}
         </div>
 

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 import { authApi, initApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import AuthLayout from "../components/ui/AuthLayout";
@@ -13,6 +15,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((s) => s.login);
   const setUser = useAuthStore((s) => s.setUser);
   const navigate = useNavigate();
@@ -63,16 +66,27 @@ export default function LoginPage() {
 
         <div>
           <label className="label">Passwort</label>
-          <input
-            className="input"
-            type="password"
-            placeholder="Dein Passwort eingeben"
-            {...register("password", { required: "Passwort ist erforderlich" })}
-          />
+          <div className="relative">
+            <input
+              className="input pr-10"
+              type={showPassword ? "text" : "password"}
+              placeholder="Dein Passwort eingeben"
+              {...register("password", { required: "Passwort ist erforderlich" })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
+              tabIndex={-1}
+              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
           )}
-          <div className="text-right">
+          <div className="text-right mt-1">
             <Link
               to="/forgot-password"
               className="text-xs text-brand-600 hover:text-brand-700 transition-colors"

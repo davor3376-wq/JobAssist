@@ -28,12 +28,6 @@ export default function UpgradeModal() {
     return () => window.removeEventListener("rate-limited", handler);
   }, []);
 
-  useEffect(() => {
-    if (!data) return undefined;
-    const timer = window.setTimeout(() => setData(null), 8000);
-    return () => window.clearTimeout(timer);
-  }, [data]);
-
   if (!data) return null;
 
   const featureLabel = FEATURE_LABELS[data.feature] || data.feature;
