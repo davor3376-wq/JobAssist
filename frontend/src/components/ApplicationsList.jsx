@@ -310,37 +310,28 @@ function SkillGrid({ title, items = [], dotCls, chipCls }) {
 }
 
 function ApplicationPhaseStepper({ status }) {
-  const currentStep = status === "bookmarked"
-    ? 0
-    : status === "applied"
-      ? 1
-      : status === "interviewing"
-        ? 2
-        : 3;
-
+  const currentStep = status === "bookmarked" ? 0 : status === "applied" ? 1 : status === "interviewing" ? 2 : 3;
   const finalLabel = status === "rejected" ? "Absage" : "Zusage";
   const steps = ["Entwurf", "Beworben", "Interview", finalLabel];
 
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-500">Bewerbungs-Phase</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900">Fortschritt bis zur Entscheidung</p>
-        </div>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_COLORS[status]}`}>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-500">Bewerbungs-Phase</p>
+        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[status]}`}>
           {status === "bookmarked" ? "Entwurf" : STATUS_LABELS[status]}
         </span>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-0">
+      {/* Always-horizontal stepper — no vertical connecting lines */}
+      <div className="flex items-start">
         {steps.map((step, index) => {
           const completed = index < currentStep;
           const active    = index === currentStep;
           const isFinal   = index === steps.length - 1;
           return (
-            <div key={step} className="flex sm:flex-1 sm:flex-col sm:items-center flex-row items-center">
-              <div className="flex sm:flex-col items-center gap-2 sm:gap-1.5">
+            <div key={step} className={`flex items-start ${isFinal ? "" : "flex-1"}`}>
+              <div className="flex flex-col items-center">
                 <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
                   completed || active
                     ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
@@ -352,11 +343,13 @@ function ApplicationPhaseStepper({ status }) {
                     </svg>
                   ) : index + 1}
                 </div>
-                <span className={`text-[10px] font-semibold whitespace-nowrap ${completed || active ? "text-gray-800" : "text-gray-400"}`}>{step}</span>
+                <span className={`mt-1 text-[9px] font-semibold text-center leading-tight max-w-[40px] ${completed || active ? "text-gray-800" : "text-gray-400"}`}>
+                  {step}
+                </span>
               </div>
               {!isFinal && (
-                <div className="sm:mx-1 sm:mb-3 sm:h-[2px] sm:flex-1 sm:w-auto mx-3 mt-0 h-4 w-0.5 self-stretch sm:self-auto rounded-full bg-slate-200">
-                  <div className={`rounded-full transition-all duration-500 sm:h-full sm:w-auto h-full w-full ${completed ? "sm:w-full bg-blue-500" : "sm:w-0"}`} />
+                <div className="flex-1 mt-3.5 mx-1 h-[2px] rounded-full bg-slate-200 overflow-hidden">
+                  <div className={`h-full rounded-full bg-blue-500 transition-all duration-500 ${completed ? "w-full" : "w-0"}`} />
                 </div>
               )}
             </div>
@@ -548,22 +541,9 @@ function DetailPanel({
           </div>
         </div>
 
-        {/* Meta row: location, salary, status badge, match score */}
-        {/* flex-wrap (wrap to next line on narrow panels) */}
-        <div className="flex flex-wrap items-center gap-2">
-          {job.location && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <MapPin className="w-3 h-3 flex-shrink-0" />
-              {job.location}
-            </span>
-          )}
-          {job.salary && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <DollarSign className="w-3 h-3 flex-shrink-0" />
-              {job.salary}
-            </span>
-          )}
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[job.status]}`}>
+        {/* Status + match badges — dedicated row */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${STATUS_COLORS[job.status]}`}>
             {STATUS_LABELS[job.status]}
           </span>
           {job.match_score != null && (
@@ -572,6 +552,23 @@ function DetailPanel({
             </span>
           )}
         </div>
+        {/* Meta: location, salary */}
+        {(job.location || job.salary) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {job.location && (
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <MapPin className="w-3 h-3 flex-shrink-0" />
+                {job.location}
+              </span>
+            )}
+            {job.salary && (
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <DollarSign className="w-3 h-3 flex-shrink-0" />
+                {job.salary}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Scrollable Body ─────────────────────────────────────────────────── */}

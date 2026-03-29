@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Bell, BellOff, Briefcase, Mail, MapPin, Pencil, Play, Plus,
+  Bell, BellOff, Briefcase, ChevronLeft, Mail, MapPin, Pencil, Play, Plus,
   RefreshCw, Trash2, X, Clock3, CheckCircle2,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -88,7 +88,7 @@ function AlertListCard({ alert, isSelected, onSelect }) {
 
 // ─── Alert detail panel (light mode) ─────────────────────────────────────────
 
-function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
+function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning, onBack }) {
   const typeLabel = JOB_TYPES.find((t) => t.value === alert.job_type)?.label || "Alle Stellenarten";
   const freqLabel = FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency;
 
@@ -101,6 +101,17 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
 
   return (
     <div className="space-y-4">
+      {/* Mobile back button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="md:hidden flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Zurück zu Alerts
+        </button>
+      )}
+
       {/* Alert header card */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -330,6 +341,7 @@ export default function JobAlertsPage() {
   const [editingAlert, setEditingAlert] = useState(null);
   const [runningId, setRunningId] = useState(null);
   const [selectedAlertId, setSelectedAlertId] = useState(null);
+  const [mobileView, setMobileView] = useState("list"); // "list" | "detail"
 
   const { data: initData } = useQuery({
     queryKey: ["init"],
@@ -500,53 +512,57 @@ export default function JobAlertsPage() {
   return (
     <div className="animate-slide-up rounded-2xl border border-slate-200 bg-white shadow-sm">
       {/* ── Header stats ── */}
-      <div className="grid gap-4 border-b border-slate-100 p-5 sm:grid-cols-3">
-        <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Alerts gesamt</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{alerts.length}</p>
-        </div>
-        <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Aktiv</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-600">{activeCount}</p>
-        </div>
-        <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 sm:p-5">
+        <div className="flex items-center gap-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Aktion</p>
-            <p className="mt-1 text-sm text-slate-600">Neuen Alert hinzufügen</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Alerts</p>
+            <p className="mt-0.5 text-2xl font-bold text-slate-900">{alerts.length}</p>
           </div>
-          <button
-            onClick={() => guardedRun(() => setShowCreate(true))}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Neuer Alert
-          </button>
+          <div className="h-8 w-px bg-slate-200" />
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Aktiv</p>
+            <p className="mt-0.5 text-2xl font-bold text-emerald-600">{activeCount}</p>
+          </div>
         </div>
+        <button
+          onClick={() => guardedRun(() => setShowCreate(true))}
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-100"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Neuer Alert</span>
+          <span className="sm:hidden">Neu</span>
+        </button>
       </div>
 
       {/* ── Split layout ── */}
       <div className="grid md:min-h-[600px] grid-cols-1 md:grid-cols-12">
-        {/* List sidebar */}
-        <aside className="border-b border-slate-100 p-4 md:col-span-4 md:h-full md:overflow-y-auto md:border-b-0 md:border-r">
+        {/* List sidebar — hidden on mobile when detail is open */}
+        <aside className={`border-b border-slate-100 p-4 md:col-span-4 md:h-full md:overflow-y-auto md:border-b-0 md:border-r ${mobileView === "detail" ? "hidden md:block" : ""}`}>
           <div className="space-y-2">
             {alerts.map((alert) => (
               <AlertListCard
                 key={alert.id}
                 alert={alert}
                 isSelected={alert.id === selectedAlertId}
-                onSelect={() => setSelectedAlertId(alert.id)}
+                onSelect={() => {
+                  setSelectedAlertId(alert.id);
+                  setMobileView("detail");
+                }}
               />
             ))}
           </div>
         </aside>
 
-        {/* Detail panel */}
-        <main className="p-4 md:col-span-8 md:h-full md:overflow-y-auto md:p-6">
+        {/* Detail panel — hidden on mobile when list is shown */}
+        <main className={`p-4 md:col-span-8 md:h-full md:overflow-y-auto md:p-6 ${mobileView === "list" ? "hidden md:block" : ""}`}>
           {selectedAlert && (
             <AlertDetailPanel
               alert={selectedAlert}
               onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
-              onDelete={(id) => deleteMutation.mutate(id)}
+              onDelete={(id) => {
+                deleteMutation.mutate(id);
+                setMobileView("list");
+              }}
               onRunNow={handleRunNow}
               onEdit={(current) => {
                 const { canRewrite, remainingMin } = getRewriteState(current);
@@ -557,6 +573,7 @@ export default function JobAlertsPage() {
                 setEditingAlert(current);
               }}
               isRunning={runningId === selectedAlert.id}
+              onBack={() => setMobileView("list")}
             />
           )}
         </main>

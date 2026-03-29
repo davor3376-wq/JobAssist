@@ -87,6 +87,7 @@ export default function AIAssistantPage() {
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
   const { guardedRun } = useUsageGuard("ai_chat");
+  const [streamingMsg, setStreamingMsg] = useState(null); // { full, shown }
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -101,6 +102,25 @@ export default function AIAssistantPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Typewriter streaming effect
+  useEffect(() => {
+    if (!streamingMsg) return;
+    if (streamingMsg.shown.length >= streamingMsg.full.length) {
+      setMessages((prev) => [...prev, { role: "assistant", content: streamingMsg.full }]);
+      setStreamingMsg(null);
+      return;
+    }
+    const charsPerTick = Math.max(1, Math.ceil(streamingMsg.full.length / 100));
+    const timer = setTimeout(() => {
+      setStreamingMsg((prev) => {
+        if (!prev) return null;
+        return { ...prev, shown: prev.full.slice(0, prev.shown.length + charsPerTick) };
+      });
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, 14);
+    return () => clearTimeout(timer);
+  }, [streamingMsg]);
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -124,7 +144,7 @@ export default function AIAssistantPage() {
   const chatMutation = useMutation({
     mutationFn: (data) => aiAssistantApi.chat(data),
     onSuccess: (res) => {
-      setMessages((prev) => [...prev, { role: "assistant", content: res.data.reply }]);
+      setStreamingMsg({ full: res.data.reply, shown: "" });
     },
     onError: (err) => {
       toast.error(getApiErrorMessage(err, "Fehler bei der KI-Antwort"));
@@ -579,7 +599,8 @@ export default function AIAssistantPage() {
                   </div>
                 ))}
 
-                {chatMutation.isPending && (
+                {/* Typing dots — only while API is loading, before streaming starts */}
+                {chatMutation.isPending && !streamingMsg && (
                   <div className="flex items-end gap-2.5 justify-start">
                     <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
                       <Bot className="h-4 w-4 text-white" />
@@ -593,6 +614,22 @@ export default function AIAssistantPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Streaming message — typewriter reveal */}
+                {streamingMsg && (
+                  <div className="flex items-end gap-2.5 justify-start">
+                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="max-w-[75%] flex flex-col gap-1 items-start">
+                      <div className="bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+                        {streamingMsg.shown}
+                        <span className="inline-block w-0.5 h-3.5 bg-slate-400 animate-pulse ml-0.5 align-middle" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
             )}

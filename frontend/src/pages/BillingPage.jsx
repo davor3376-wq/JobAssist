@@ -64,7 +64,7 @@ const PLANS = [
     key: "max",
     name: "Max",
     sub: "Unbegrenzte Power",
-    price: "€14,99",
+    price: "€7,99",
     period: "/ Monat",
     badge: "Bestes Angebot",
     iconCls: "from-violet-500 to-purple-600",
@@ -246,78 +246,6 @@ function UsageRow({ feature, used, limit }) {
       <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
         {badgeText}
       </span>
-    </div>
-  );
-}
-
-// ─── Plan comparison card ─────────────────────────────────────────────────────
-function PlanCard({ plan, isCurrent, onUpgrade }) {
-  const { Icon } = plan;
-  return (
-    <div className={`relative flex flex-col rounded-2xl border-2 bg-white p-5 transition-all ${
-      plan.glowCls
-        ? `${plan.borderCls} ${plan.glowCls}`
-        : isCurrent
-        ? `${plan.borderCls} shadow-md`
-        : "border-slate-100 hover:shadow-lg"
-    }`}>
-      {/* Badge (Beliebt / Bestes Angebot) */}
-      {plan.badge && (
-        <span className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-bold shadow-sm whitespace-nowrap ${plan.badgeCls}`}>
-          {plan.badge}
-        </span>
-      )}
-      {/* Current plan indicator */}
-      {isCurrent && (
-        <span className="absolute -top-3.5 right-4 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
-          Aktuell
-        </span>
-      )}
-
-      {/* Icon + name */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${plan.iconCls}`}>
-          <Icon className="h-4 w-4 text-white" />
-        </div>
-        <div>
-          <h3 className="text-base font-bold text-slate-900 leading-tight">{plan.name}</h3>
-          <p className="text-[11px] text-slate-400">{plan.sub}</p>
-        </div>
-      </div>
-
-      {/* Price */}
-      <div className="mb-4 flex items-baseline gap-1">
-        <span className="text-3xl font-bold text-slate-900">{plan.price}</span>
-        {plan.period && <span className="text-sm text-slate-400">{plan.period}</span>}
-      </div>
-
-      {/* Features */}
-      <ul className="flex-1 space-y-2 mb-5">
-        {plan.features.map((f) => (
-          <li key={f.label} className="flex items-start gap-2">
-            <CheckCircle2 className={`mt-0.5 h-4 w-4 flex-shrink-0 ${f.soon ? "text-slate-300" : "text-emerald-500"}`} />
-            <span className={`text-xs leading-snug ${f.soon ? "text-slate-400" : "text-slate-700"}`}>
-              {f.label}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/* CTA button */}
-      {isCurrent ? (
-        <div className="w-full rounded-xl bg-slate-100 py-2.5 text-center text-sm font-semibold text-slate-500">
-          Aktueller Plan
-        </div>
-      ) : (
-        <button
-          onClick={onUpgrade}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 min-h-[44px] text-sm font-semibold transition-all ${plan.btnCls}`}
-          disabled={!onUpgrade}
-        >
-          {plan.btnLabel || "Jetzt upgraden"}
-          {!plan.btnLabel && <ArrowRight className="h-4 w-4" />}
-        </button>
-      )}
     </div>
   );
 }
@@ -550,18 +478,6 @@ export default function BillingPage() {
       {/* ── Plan comparison ───────────────────────────────────────────────────── */}
       <div>
         <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">Planvergleich</h3>
-
-        {/* Cards: 1-col mobile → 2-col sm → 4-col xl */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {PLANS.map((plan) => (
-            <PlanCard
-              key={plan.key}
-              plan={plan}
-              isCurrent={plan.key === planKey}
-              onUpgrade={() => navigate("/pricing")}
-            />
-          ))}
-        </div>
 
         {/* Feature comparison table — scrollable on all screen sizes */}
         <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
