@@ -88,7 +88,7 @@ function AlertListCard({ alert, isSelected, onSelect }) {
 
 // ─── Alert detail panel (light mode) ─────────────────────────────────────────
 
-function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning, onBack }) {
+function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
   const typeLabel = JOB_TYPES.find((t) => t.value === alert.job_type)?.label || "Alle Stellenarten";
   const freqLabel = FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency;
 
@@ -101,17 +101,6 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
 
   return (
     <div className="space-y-4">
-      {/* Mobile back button */}
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="md:hidden flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Zurück zu Alerts
-        </button>
-      )}
-
       {/* Alert header card */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -554,28 +543,43 @@ export default function JobAlertsPage() {
         </aside>
 
         {/* Detail panel — hidden on mobile when list is shown */}
-        <main className={`p-4 md:col-span-8 md:h-full md:overflow-y-auto md:p-6 ${mobileView === "list" ? "hidden md:block" : ""}`}>
-          {selectedAlert && (
-            <AlertDetailPanel
-              alert={selectedAlert}
-              onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
-              onDelete={(id) => {
-                deleteMutation.mutate(id);
-                setMobileView("list");
-              }}
-              onRunNow={handleRunNow}
-              onEdit={(current) => {
-                const { canRewrite, remainingMin } = getRewriteState(current);
-                if (!canRewrite) {
-                  toast.error(`Du kannst diesen Alert in ${remainingMin} Minuten erneut bearbeiten.`);
-                  return;
-                }
-                setEditingAlert(current);
-              }}
-              isRunning={runningId === selectedAlert.id}
-              onBack={() => setMobileView("list")}
-            />
-          )}
+        <main className={`md:col-span-8 md:h-full md:overflow-y-auto ${mobileView === "list" ? "hidden md:block" : ""}`}>
+          {/* Mobile back nav — sits flush at top, no extra content padding */}
+          <div className="md:hidden flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+            <button
+              onClick={() => setMobileView("list")}
+              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Zurück
+            </button>
+            {selectedAlert && (
+              <span className="truncate text-sm text-slate-500">{selectedAlert.keywords}</span>
+            )}
+          </div>
+
+          <div className="p-4 md:p-6">
+            {selectedAlert && (
+              <AlertDetailPanel
+                alert={selectedAlert}
+                onToggle={(id, is_active) => updateMutation.mutate({ id, data: { is_active } })}
+                onDelete={(id) => {
+                  deleteMutation.mutate(id);
+                  setMobileView("list");
+                }}
+                onRunNow={handleRunNow}
+                onEdit={(current) => {
+                  const { canRewrite, remainingMin } = getRewriteState(current);
+                  if (!canRewrite) {
+                    toast.error(`Du kannst diesen Alert in ${remainingMin} Minuten erneut bearbeiten.`);
+                    return;
+                  }
+                  setEditingAlert(current);
+                }}
+                isRunning={runningId === selectedAlert.id}
+              />
+            )}
+          </div>
         </main>
       </div>
 

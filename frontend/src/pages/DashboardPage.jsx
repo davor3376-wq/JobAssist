@@ -125,7 +125,7 @@ const INITIALS_GRADIENTS = [
 function CompanyLogo({ company, initials, url, researchData }) {
   const [imgStatus, setImgStatus] = useState("idle"); // idle | ok | fallback
 
-  // Extract company website from research data (highest priority)
+  // 1. Extract domain from research data (highest priority)
   const researchDomain = (() => {
     if (!researchData) return null;
     try {
@@ -137,47 +137,46 @@ function CompanyLogo({ company, initials, url, researchData }) {
     } catch { return null; }
   })();
 
-  // Only use favicon if URL is the company's own site (not a job board)
+  // 2. Use job URL if it's a company's own site (not a job board)
   const urlDomain = (() => {
     if (!url) return null;
     try {
       const u = new URL(url.startsWith("http") ? url : `https://${url}`);
       const host = u.hostname.replace(/^www\./, "");
-      const parts = host.split(".");
-      const root = parts.length > 2 ? parts.slice(-2).join(".") : host;
+      const root = host.split(".").slice(-2).join(".");
       if (JOB_BOARDS.has(root)) return null;
       return host;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   })();
 
-  const domain = researchDomain || urlDomain;
+  // 3. Guess domain from company name (e.g. "SPAR GmbH" → "spar.at")
+  const nameDomain = (() => {
+    if (!company) return null;
+    const clean = company
+      .replace(/\s+(gmbh|ag|kg|og|oeg|se|inc|ltd|s\.a\.?|ges\.mbh?)\.?\s*$/i, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    return clean.length >= 2 ? `${clean}.at` : null;
+  })();
+
+  const domain = researchDomain || urlDomain || nameDomain;
 
   const gradientIdx = (company || "?").charCodeAt(0) % INITIALS_GRADIENTS.length;
   const gradient = INITIALS_GRADIENTS[gradientIdx];
-
   const showInitials = !domain || imgStatus === "fallback";
 
   return (
     <div className="relative h-9 w-9 flex-shrink-0">
-      {/* Initials — always rendered, hidden when img is showing */}
+      {/* Initials — always present, hidden when logo loads */}
       <div className={`absolute inset-0 flex items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-[11px] font-bold text-white transition-opacity ${showInitials ? "opacity-100" : "opacity-0"}`}>
         {initials}
       </div>
-      {/* Favicon image — only mount when domain available */}
+      {/* Clearbit Logo API — much better coverage than Google Favicon */}
       {domain && imgStatus !== "fallback" && (
         <img
-          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+          src={`https://logo.clearbit.com/${domain}`}
           alt={company || ""}
-          onLoad={(e) => {
-            // Google returns 16×16 for unknown domains even at sz=64 request
-            if (e.target.naturalWidth < 24) {
-              setImgStatus("fallback");
-            } else {
-              setImgStatus("ok");
-            }
-          }}
+          onLoad={() => setImgStatus("ok")}
           onError={() => setImgStatus("fallback")}
           className={`absolute inset-0 h-full w-full rounded-xl object-contain bg-white border border-slate-100 p-1 transition-opacity ${imgStatus === "ok" ? "opacity-100" : "opacity-0"}`}
         />

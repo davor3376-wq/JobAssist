@@ -970,6 +970,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
   const [searchQuery,      setSearchQuery]      = useState("");
   const [filterStatus,     setFilterStatus]     = useState("all");
   const [sortBy,           setSortBy]           = useState("recent");
+  const [visibleCount,     setVisibleCount]     = useState(5);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
   const [processing,       setProcessing]       = useState({ jobId: null, feature: null });
   const [draftLoading,     setDraftLoading]     = useState(null);
@@ -1000,6 +1001,9 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     setSelectedJobId(Number(focusedJobId));
     setMobileDetailOpen(true);
   }, [focusedJobId]);
+
+  // Reset visible count when filters / search change
+  useEffect(() => { setVisibleCount(5); }, [searchQuery, filterStatus, sortBy]);
 
   // Clear notes timers on unmount
   useEffect(() => {
@@ -1361,14 +1365,24 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
             {filteredJobs.length === 0 ? (
               <p className="py-8 text-center text-xs text-slate-400">Keine Stellen gefunden</p>
             ) : (
-              filteredJobs.map((job) => (
-                <JobListCard
-                  key={job.id}
-                  job={job}
-                  isSelected={job.id === selectedJobId}
-                  onClick={() => handleSelectJob(job.id)}
-                />
-              ))
+              <>
+                {filteredJobs.slice(0, visibleCount).map((job) => (
+                  <JobListCard
+                    key={job.id}
+                    job={job}
+                    isSelected={job.id === selectedJobId}
+                    onClick={() => handleSelectJob(job.id)}
+                  />
+                ))}
+                {filteredJobs.length > visibleCount && (
+                  <button
+                    onClick={() => setVisibleCount((v) => v + 5)}
+                    className="w-full rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+                  >
+                    {filteredJobs.length - visibleCount} weitere anzeigen
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
