@@ -538,6 +538,16 @@ function DetailPanel({
             >
               <Trash2 className="w-4 h-4" />
             </button>
+            {/* Minimize — mobile overlay only */}
+            {isMobileOverlay && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                title="Minimieren"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
