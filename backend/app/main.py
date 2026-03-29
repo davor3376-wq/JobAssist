@@ -60,6 +60,78 @@ async def stale_user_cleanup_loop():
             traceback.print_exc()
         await asyncio.sleep(60 * 60)
 
+
+# ── Job alert scheduler ───────────────────────────────────────────────────────
+async def run_due_job_alerts():
+    """Find alerts due for sending and dispatch them."""
+    from app.models.job_alert import JobAlert
+    from app.services.job_search import search_jobs
+    from app.services.email_service import send_job_alert_email
+    from sqlalchemy import select as _select
+
+    now = datetime.utcnow()
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            _select(JobAlert).where(JobAlert.is_active.is_(True))
+        )
+        alerts = result.scalars().all()
+
+    for alert in alerts:
+        try:
+            # Determine if this alert is due
+            last = alert.last_sent_at
+            if last and last.tzinfo is not None:
+                last = last.replace(tzinfo=None)
+
+            if alert.frequency == "daily":
+                due = last is None or (now - last).total_seconds() >= 86_400
+            elif alert.frequency == "weekly":
+                due = last is None or (now - last).total_seconds() >= 604_800
+            else:
+                due = False
+
+            if not due:
+                continue
+
+            results = await search_jobs(
+                keywords=alert.keywords,
+                location=alert.location or "",
+                job_type=alert.job_type or "",
+                page=1,
+            )
+            jobs = results.get("jobs", [])
+            if jobs:
+                await asyncio.to_thread(
+                    send_job_alert_email,
+                    to_email=alert.email,
+                    keywords=alert.keywords,
+                    location=alert.location or "",
+                    jobs=jobs,
+                )
+                # Update last_sent_at
+                async with AsyncSessionLocal() as session:
+                    res = await session.execute(
+                        _select(JobAlert).where(JobAlert.id == alert.id)
+                    )
+                    a = res.scalar_one_or_none()
+                    if a:
+                        a.last_sent_at = now
+                        await session.commit()
+                logger.info("Job alert sent: id=%s keywords=%s jobs=%s", alert.id, alert.keywords, len(jobs))
+        except Exception:
+            traceback.print_exc()
+
+
+async def job_alert_scheduler_loop():
+    """Check for due alerts every hour."""
+    while True:
+        try:
+            await run_due_job_alerts()
+        except Exception:
+            traceback.print_exc()
+        await asyncio.sleep(60 * 60)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create DB tables
@@ -77,14 +149,16 @@ async def lifespan(app: FastAPI):
             text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_window_start TIMESTAMP")
         )
     cleanup_task = asyncio.create_task(stale_user_cleanup_loop())
+    alert_task = asyncio.create_task(job_alert_scheduler_loop())
     try:
         yield
     finally:
-        cleanup_task.cancel()
-        try:
-            await cleanup_task
-        except asyncio.CancelledError:
-            pass
+        for task in (cleanup_task, alert_task):
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         await engine.dispose() # (This command safely closes the active database connection pool)
 
 app = FastAPI(

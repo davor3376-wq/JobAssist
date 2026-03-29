@@ -240,12 +240,14 @@ async def run_alert_now(
 
 @router.post("/test-email", response_model=dict)
 async def test_email(current_user: User = Depends(get_current_user)):
-    """Send a test email to verify SMTP configuration."""
-    smtp_ok = bool(settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD)
-    if not smtp_ok:
+    """Send a test email to verify email configuration (Brevo or SMTP)."""
+    from app.services.email_service import get_email_provider_status
+    status = get_email_provider_status()
+    if not status["active_provider"]:
         return {
             "ok": False,
             "error": "E-Mail-Versand ist nicht konfiguriert. Bitte kontaktiere den Support.",
+            "provider_status": status,
         }
 
     fake_jobs = [
@@ -253,8 +255,8 @@ async def test_email(current_user: User = Depends(get_current_user)):
             "title": "Test: Software Engineer",
             "company": "JobAssist GmbH",
             "location": "Wien",
-            "full_url": "https://jobassist.app",
-            "salary_range": "€ 50,000 - 70,000",
+            "full_url": "https://jobassist.tech",
+            "salary_range": "€ 50.000 - 70.000",
         }
     ]
     ok = await asyncio.to_thread(
@@ -267,6 +269,7 @@ async def test_email(current_user: User = Depends(get_current_user)):
     return {
         "ok": ok,
         "to": current_user.email,
+        "provider": status["active_provider"],
     }
 
 

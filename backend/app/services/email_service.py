@@ -126,10 +126,12 @@ def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
     message.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
+        # For Brevo SMTP relay, login user must be the account email, not a display name
+        smtp_login = settings.EMAILS_FROM_EMAIL or settings.SMTP_USER
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
             if settings.SMTP_TLS:
                 server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.login(smtp_login, settings.SMTP_PASSWORD)
             server.sendmail(from_email, [to_email], message.as_string())
         logger.info("Email sent via SMTP to %s: %s", to_email, subject)
         return True
