@@ -538,16 +538,6 @@ function DetailPanel({
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            {/* Minimize — mobile overlay only */}
-            {isMobileOverlay && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
-                title="Minimieren"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -885,6 +875,16 @@ function DetailPanel({
       <div className={`flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3
         ${isMobileOverlay ? "sticky bottom-0 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" : ""}
       `}>
+        {/* Minimize strip — mobile only, matches "see more" button style */}
+        {isMobileOverlay && (
+          <button
+            onClick={onClose}
+            className="w-full mb-2.5 rounded-xl border border-slate-200 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            Minimieren
+          </button>
+        )}
         {!hasResume && (
           <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5">
             Wähle einen Lebenslauf für Match, Anschreiben &amp; Gespräch.
