@@ -36,47 +36,219 @@ def _safe_url(url: str) -> str:
     return "#"
 
 
-def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any]]) -> str:
-    rows = ""
-    for job in jobs[:20]:
-        title = html_lib.escape(job.get("title", "Ohne Titel"))
-        company = html_lib.escape(job.get("company", "Unbekannt"))
-        loc = html_lib.escape(job.get("location", location or ""))
-        url = _safe_url(job.get("full_url", "#"))
-        salary = html_lib.escape(job.get("salary_range") or job.get("salary", ""))
-        salary_html = f'<span style="color:#6b7280;font-size:13px;">{salary}</span>' if salary else ""
-        rows += f"""
-        <tr>
-          <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
-            <a href="{url}" style="font-size:15px;font-weight:600;color:#2563eb;text-decoration:none;">{title}</a><br>
-            <span style="color:#374151;font-size:13px;">{company}</span>
-            {f' &bull; <span style="color:#6b7280;font-size:13px;">{loc}</span>' if loc else ''}
-            {f'<br>{salary_html}' if salary_html else ''}
-          </td>
-        </tr>"""
+def _rank_jobs(jobs: List[Dict[str, Any]], keywords: str, location: str) -> List[Dict[str, Any]]:
+    """Score and sort jobs by relevance to the alert's keywords and location."""
+    kw_terms = {t for t in keywords.lower().split() if len(t) > 2}
+    loc_lower = (location or "").lower()
+    scored = []
+    for job in jobs:
+        score = 0
+        title = (job.get("title") or "").lower()
+        company = job.get("company") or ""
+        job_loc = (job.get("location") or "").lower()
+        salary = job.get("salary_range") or job.get("salary") or ""
+        # Keyword hit in title
+        for term in kw_terms:
+            if term in title:
+                score += 3
+        # Salary listed = employer transparency
+        if salary:
+            score += 2
+        # Known company name
+        if company and company.lower() not in ("", "unbekannt", "unknown"):
+            score += 1
+        # Location match
+        if loc_lower and loc_lower in job_loc:
+            score += 2
+        scored.append((score, job))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [j for _, j in scored]
 
+
+def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any]]) -> str:
+    from datetime import date
+
+    ranked = _rank_jobs(jobs[:20], keywords, location or "")
+    kw_esc = html_lib.escape(keywords)
+    loc_esc = html_lib.escape(location) if location else ""
+    loc_line = f" in <strong style='color:#fff;'>{loc_esc}</strong>" if location else ""
     count = len(jobs)
+    date_str = date.today().strftime("%d.%m.%Y")
+    app_url = getattr(settings, "FRONTEND_URL", "https://jobassist.tech")
+
+    # ── Build job cards ───────────────────────────────────────────────────────
+    cards = ""
+    for i, job in enumerate(ranked):
+        title   = html_lib.escape(job.get("title") or "Ohne Titel")
+        company = html_lib.escape(job.get("company") or "Unbekanntes Unternehmen")
+        loc     = html_lib.escape(job.get("location") or location or "")
+        url     = _safe_url(job.get("full_url") or "#")
+        salary  = html_lib.escape(job.get("salary_range") or job.get("salary") or "")
+        jtype   = html_lib.escape(job.get("contract_type") or job.get("job_type") or "")
+
+        # Rank badge
+        if i == 0:
+            rank_badge = '<span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:0.3px;">#1 &nbsp;Top Match</span>'
+            card_border = "#f59e0b"
+            card_bg     = "#fffbeb"
+        elif i == 1:
+            rank_badge = '<span style="display:inline-block;background:#f1f5f9;color:#475569;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;">#2</span>'
+            card_border = "#e2e8f0"
+            card_bg     = "#ffffff"
+        elif i == 2:
+            rank_badge = '<span style="display:inline-block;background:#fff7ed;color:#c2410c;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;">#3</span>'
+            card_border = "#e2e8f0"
+            card_bg     = "#ffffff"
+        else:
+            rank_badge = f'<span style="display:inline-block;background:#f8fafc;color:#64748b;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;">#{i+1}</span>'
+            card_border = "#e2e8f0"
+            card_bg     = "#ffffff"
+
+        loc_chip    = f'<span style="display:inline-block;background:#f1f5f9;color:#64748b;font-size:11px;padding:3px 8px;border-radius:6px;margin:6px 4px 0 0;">&#128205; {loc}</span>' if loc else ""
+        salary_chip = f'<span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;margin:6px 4px 0 0;">&#128182; {salary}</span>' if salary else ""
+        type_chip   = f'<span style="display:inline-block;background:#eff6ff;color:#2563eb;font-size:11px;padding:3px 8px;border-radius:6px;margin:6px 4px 0 0;">{jtype}</span>' if jtype else ""
+
+        cards += f"""
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;border:2px solid {card_border};border-radius:12px;overflow:hidden;background:{card_bg};">
+          <tr>
+            <td style="padding:16px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top" style="padding-right:14px;">
+                    <div style="margin-bottom:7px;">{rank_badge}</div>
+                    <a href="{url}" style="font-size:15px;font-weight:700;color:#0f172a;text-decoration:none;line-height:1.35;display:block;">{title}</a>
+                    <span style="font-size:13px;color:#64748b;display:block;margin-top:3px;">{company}</span>
+                    <div>{loc_chip}{salary_chip}{type_chip}</div>
+                  </td>
+                  <td align="right" valign="middle" style="white-space:nowrap;">
+                    <a href="{url}" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:12px;font-weight:700;padding:9px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;">Bewerben &#8594;</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>"""
+
     return f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
-  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
-    <div style="background:linear-gradient(135deg,#3b82f6,#7c3aed);padding:28px 32px;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">JobAssist - Neue Stellenangebote</h1>
-      <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:14px;">
-        {count} neue Stellen fuer <strong>{html_lib.escape(keywords)}</strong>{f' in {html_lib.escape(location)}' if location else ''}
-      </p>
-    </div>
-    <div style="padding:24px 32px;">
-      <table style="width:100%;border-collapse:collapse;">
-        {rows}
-      </table>
-      <p style="margin-top:24px;font-size:12px;color:#9ca3af;text-align:center;">
-        Diese E-Mail wurde von JobAssist gesendet.<br>
-        Du hast einen Job-Alert eingerichtet. Du kannst ihn jederzeit in deinen Einstellungen deaktivieren.
-      </p>
-    </div>
-  </div>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Neue Stellen &#8211; {kw_esc}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#f1f5f9;">{count} neue Stellen f&#252;r {kw_esc} &#8212; Jetzt auf JobAssist ansehen &#128338;</div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:28px 16px;">
+    <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+      <!-- HEADER -->
+      <tr>
+        <td style="background:linear-gradient(135deg,#1d4ed8 0%,#7c3aed 100%);border-radius:16px 16px 0 0;padding:30px 36px 24px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="middle">
+                <div style="display:inline-block;background:rgba(255,255,255,0.18);border-radius:8px;padding:4px 12px;margin-bottom:14px;">
+                  <span style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1.2px;">&#9889; JOBASSIST</span>
+                </div>
+                <h1 style="color:#fff;margin:0 0 8px;font-size:24px;font-weight:800;line-height:1.25;letter-spacing:-0.3px;">{count} neue Stellen f&#252;r dich</h1>
+                <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px;line-height:1.6;">
+                  Suchbegriff: <strong style="color:#fff;">{kw_esc}</strong>{loc_line}
+                </p>
+              </td>
+              <td align="right" valign="middle" style="padding-left:16px;">
+                <div style="background:rgba(255,255,255,0.15);border-radius:50%;width:54px;height:54px;text-align:center;line-height:54px;font-size:24px;">&#128276;</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- META BAR -->
+      <tr>
+        <td style="background:#1e3a8a;padding:9px 36px;">
+          <span style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;">
+            {count} Stellen &nbsp;&#183;&nbsp; Sortiert nach Relevanz &nbsp;&#183;&nbsp; {date_str}
+          </span>
+        </td>
+      </tr>
+
+      <!-- BODY -->
+      <tr>
+        <td style="background:#ffffff;padding:28px 36px;">
+
+          <!-- TIPS BOX -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faff;border-radius:12px;border-left:4px solid #3b82f6;margin-bottom:26px;">
+            <tr>
+              <td style="padding:16px 20px;">
+                <p style="margin:0 0 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;">&#128161; Profi-Tipps f&#252;r deine Bewerbung</p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td style="padding:4px 0;font-size:13px;color:#374151;line-height:1.55;">
+                    <strong>&#9200; Schnell bewerben:</strong> Wer sich in den ersten 48 Stunden bewirbt, erh&#228;lt deutlich h&#228;ufiger eine Einladung zum Gespr&#228;ch.
+                  </td></tr>
+                  <tr><td style="padding:4px 0;font-size:13px;color:#374151;line-height:1.55;">
+                    <strong>&#9997; Individuelles Anschreiben:</strong> Passe jedes Anschreiben gezielt an &#8212; JobAssist AI erstellt es f&#252;r dich in Sekunden.
+                  </td></tr>
+                  <tr><td style="padding:4px 0;font-size:13px;color:#374151;line-height:1.55;">
+                    <strong>&#128269; Unternehmensrecherche:</strong> Informierte Bewerber wirken motivierter und hinterlassen einen bleibenden Eindruck.
+                  </td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- JOBS HEADER -->
+          <p style="margin:0 0 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;">Top Stellenangebote &#8212; nach Relevanz gerankt</p>
+
+          <!-- JOB CARDS -->
+          {cards}
+
+          <!-- APP CTA -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#eff6ff,#f5f3ff);border-radius:12px;margin-top:6px;">
+            <tr>
+              <td style="padding:18px 22px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td valign="middle">
+                      <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#1e293b;">Bewerbung vorbereiten mit JobAssist AI</p>
+                      <p style="margin:0;font-size:12px;color:#64748b;line-height:1.5;">Anschreiben, Match-Analyse &amp; Gespr&#228;chsvorbereitung auf Knopfdruck.</p>
+                    </td>
+                    <td align="right" valign="middle" style="padding-left:14px;">
+                      <a href="{app_url}" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:12px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;">Jetzt starten &#8594;</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background:#f8fafc;border-radius:0 0 16px 16px;padding:20px 36px;border-top:1px solid #e2e8f0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td align="center">
+                <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#475569;">&#9889; JobAssist &middot; jobassist.tech</p>
+                <p style="margin:0 0 10px;font-size:11px;color:#94a3b8;line-height:1.7;">
+                  Du erh&#228;ltst diese E-Mail, weil du einen Job-Alert f&#252;r <strong style="color:#64748b;">{kw_esc}</strong> eingerichtet hast.<br>
+                  <a href="{app_url}/job-alerts" style="color:#3b82f6;text-decoration:none;">Alert verwalten</a> &nbsp;&middot;&nbsp; <a href="{app_url}/job-alerts" style="color:#3b82f6;text-decoration:none;">Deaktivieren</a>
+                </p>
+                <p style="margin:0;font-size:10px;color:#cbd5e1;">&#169; 2025 JobAssist. Alle Rechte vorbehalten.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+    </table>
+    </td></tr>
+  </table>
+
 </body>
 </html>"""
 
@@ -194,5 +366,5 @@ def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List
         return False
 
     html_body = _build_job_alert_html(keywords, location or "", jobs)
-    subject = f"JobAssist: {len(jobs)} neue Stellen für '{keywords.strip()}'"
+    subject = f"⚡ {len(jobs)} neue Stellen für '{keywords.strip()}' – Jetzt bewerben"
     return _send_transactional_email(to_email, subject, html_body)
