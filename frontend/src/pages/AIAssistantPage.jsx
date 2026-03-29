@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
-  ClipboardList, Upload, Search,
+  ClipboardList, Upload, Search, ChevronLeft,
 } from "lucide-react";
 import { resumeApi, aiAssistantApi } from "../services/api";
 import useUsageGuard from "../hooks/useUsageGuard";
@@ -266,14 +266,22 @@ export default function AIAssistantPage() {
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
-          absolute inset-y-0 left-0 z-30 w-64 flex flex-col bg-white border border-slate-100 rounded-2xl shadow-xl overflow-hidden transition-transform duration-200
-          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:rounded-none md:border-0 md:border-r md:z-auto
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%] md:translate-x-0"}
+          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-white shadow-xl overflow-hidden transition-transform duration-200 rounded-none
+          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:z-auto
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}>
           {/* Sidebar header */}
           <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-slate-100">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-800 tracking-wide">Chat-Historie</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="md:hidden p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-bold text-slate-800 tracking-wide">Chat-Historie</span>
+              </div>
               <button
                 onClick={handleNewChat}
                 className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
@@ -430,11 +438,11 @@ export default function AIAssistantPage() {
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-indigo-100/60 bg-white p-3 text-left shadow-md shadow-indigo-100/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-200/50"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
-                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-20 pointer-events-none">
+                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-[0.28] pointer-events-none">
                       <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="15" y="60" width="110" height="6" rx="3" fill="#4f46e5"/>
                         <rect x="40" y="20" width="60" height="40" rx="4" fill="#4f46e5"/>
@@ -469,11 +477,11 @@ export default function AIAssistantPage() {
                   {/* Stärkenanalyse */}
                   <button
                     onClick={startAssessment}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-2xl border border-violet-100/60 bg-white p-3 text-left shadow-md shadow-violet-100/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-200/50"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
                     {/* Undraw-style assessment illustration */}
-                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-20 pointer-events-none">
+                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-[0.28] pointer-events-none">
                       <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="35" y="10" width="70" height="82" rx="6" fill="white" stroke="#ddd6fe" strokeWidth="1.5"/>
                         <rect x="52" y="6" width="36" height="10" rx="5" fill="#7c3aed"/>

@@ -182,19 +182,21 @@ function UsageHeroChart({ usage }) {
               {unlimited && (
                 <rect x={x} y={padT} width={barW} height={chartH} rx="6" fill={`url(#${gradId})`} opacity="0.22" />
               )}
-              {/* Value above bar */}
+              {/* Value + limit on same baseline */}
               <text
-                x={cx} y={Math.max(padT + 13, barY - 5)}
-                textAnchor="middle" fontSize="10" fontWeight="700" fill={valColor}
+                x={cx} y={Math.max(padT + 13, barY - 4)}
+                textAnchor="middle" fontSize="9" fontWeight="700" fill={valColor}
               >
-                {unlimited ? "∞" : item.used}
+                {unlimited ? "∞" : `${item.used} / ${item.limit}`}
               </text>
               {/* Feature label */}
               <text x={cx} y={labelY} textAnchor="middle" fontSize="9" fill="#64748b">{shortLabel}</text>
-              {/* Limit */}
-              <text x={cx} y={labelY + 13} textAnchor="middle" fontSize="8" fill="#cbd5e1">
-                {"/ " + item.limit}
-              </text>
+              {/* Limit reached indicator — only shown at 100% */}
+              {isAtLimit && (
+                <text x={cx} y={labelY + 13} textAnchor="middle" fontSize="8" fontWeight="700" fill="#f43f5e">
+                  Limit!
+                </text>
+              )}
             </g>
           );
         })}

@@ -55,7 +55,7 @@ function MiniActivityChart({ values }) {
                 <div
                   className={`relative w-full rounded-full transition-all duration-500 ${
                     value === 0
-                      ? "bg-slate-100"
+                      ? "bg-slate-200"
                       : isToday || isHovered
                       ? "bg-gradient-to-t from-indigo-500 to-violet-500"
                       : "bg-slate-200"
@@ -289,7 +289,7 @@ export default function DashboardPage() {
     .slice(0, 4);
 
   return (
-    <div className="max-w-6xl space-y-6 animate-slide-up">
+    <div className="max-w-6xl space-y-4 sm:space-y-6 animate-slide-up">
 
       {/* ── Greeting ──────────────────────────────────────────────────────── */}
       <div>

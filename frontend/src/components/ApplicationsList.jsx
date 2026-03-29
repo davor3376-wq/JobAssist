@@ -636,7 +636,7 @@ function DetailPanel({
                 {matchFeedback && (
                   <div className="space-y-4">
                     <SkillGrid title="Stärken" items={matchFeedback.strengths} dotCls="bg-emerald-500" chipCls="bg-emerald-50" />
-                    <SkillGrid title="Verbesserungen" items={matchFeedback.gaps} dotCls="bg-red-400" chipCls="bg-red-50" />
+                    <SkillGrid title="Schwächen" items={matchFeedback.gaps} dotCls="bg-red-400" chipCls="bg-red-50" />
                     <SkillGrid title="Empfehlungen" items={matchFeedback.recommendations} dotCls="bg-blue-400" chipCls="bg-blue-50" />
                   </div>
                 )}
