@@ -27,7 +27,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
-from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research, billing
+from app.api.routes import auth, resume, jobs, cover_letter, interview, settings as settings_routes, motivationsschreiben, ai_assistant, job_alerts, research, billing, contact
 
 configure_logging(settings.LOG_LEVEL)
 configure_sentry(settings.SENTRY_DSN, settings.SENTRY_TRACES_SAMPLE_RATE)
@@ -101,12 +101,17 @@ async def run_due_job_alerts():
             )
             jobs = results.get("jobs", [])
             if jobs:
+                from app.api.routes.job_alerts import _make_unsubscribe_token
+                token = _make_unsubscribe_token(alert.id)
+                app_url = getattr(settings, "FRONTEND_URL", "https://jobassist.tech")
+                unsubscribe_url = f"{app_url}/unsubscribe?token={token}"
                 await asyncio.to_thread(
                     send_job_alert_email,
                     to_email=alert.email,
                     keywords=alert.keywords,
                     location=alert.location or "",
                     jobs=jobs,
+                    unsubscribe_url=unsubscribe_url,
                 )
                 # Update last_sent_at
                 async with AsyncSessionLocal() as session:
@@ -256,6 +261,7 @@ app.include_router(ai_assistant.router,       prefix="/api/ai-assistant",       
 app.include_router(job_alerts.router,         prefix="/api/job-alerts",           tags=["Job Alerts"])
 app.include_router(research.router,           prefix="/api/research",              tags=["Research"])
 app.include_router(billing.router,           prefix="/api/billing",               tags=["Billing"])
+app.include_router(contact.router,           prefix="/api/contact",               tags=["Contact"])
 
 @app.get("/health")
 async def health_check(request: Request):

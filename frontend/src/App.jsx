@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import OnboardingTutorial from "./components/OnboardingTutorial";
 
 import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/layout/Layout";
@@ -11,6 +12,7 @@ const loadRegisterPage = () => import("./pages/RegisterPage");
 const loadDashboardPage = () => import("./pages/DashboardPage");
 const loadResumePage = () => import("./pages/ResumePage");
 const loadJobsPage = () => import("./pages/JobsPage");
+const loadJobDetailPage = () => import("./pages/JobDetailPage");
 const loadSettingsPage = () => import("./pages/SettingsPage");
 const loadAIAssistantPage = () => import("./pages/AIAssistantPage");
 const loadJobAlertsPage = () => import("./pages/JobAlertsPage");
@@ -23,12 +25,15 @@ const loadContactPage = () => import("./pages/ContactPage");
 const loadForgotPasswordPage = () => import("./pages/ForgotPasswordPage");
 const loadResetPasswordPage = () => import("./pages/ResetPasswordPage");
 const loadVerifyEmailPage = () => import("./pages/VerifyEmailPage");
+const loadMotivationsschreibenPage = () => import("./pages/MotivationsschreibenPage");
+const loadUnsubscribePage = () => import("./pages/UnsubscribePage");
 
 const LoginPage = lazy(loadLoginPage);
 const RegisterPage = lazy(loadRegisterPage);
 const DashboardPage = lazy(loadDashboardPage);
 const ResumePage = lazy(loadResumePage);
 const JobsPage = lazy(loadJobsPage);
+const JobDetailPage = lazy(loadJobDetailPage);
 const SettingsPage = lazy(loadSettingsPage);
 const AIAssistantPage = lazy(loadAIAssistantPage);
 const JobAlertsPage = lazy(loadJobAlertsPage);
@@ -41,6 +46,8 @@ const ContactPage = lazy(loadContactPage);
 const ForgotPasswordPage = lazy(loadForgotPasswordPage);
 const ResetPasswordPage = lazy(loadResetPasswordPage);
 const VerifyEmailPage = lazy(loadVerifyEmailPage);
+const MotivationsschreibenPage = lazy(loadMotivationsschreibenPage);
+const UnsubscribePage = lazy(loadUnsubscribePage);
 
 const preloaders = [
   loadDashboardPage,
@@ -50,6 +57,7 @@ const preloaders = [
   loadSettingsPage,
   loadBillingPage,
   loadAIAssistantPage,
+  loadMotivationsschreibenPage,
 ];
 
 function PrivateRoute({ children }) {
@@ -72,6 +80,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<Suspense fallback={null}><ForgotPasswordPage /></Suspense>} />
         <Route path="/reset-password" element={<Suspense fallback={null}><ResetPasswordPage /></Suspense>} />
         <Route path="/verify-email" element={<Suspense fallback={null}><VerifyEmailPage /></Suspense>} />
+        <Route path="/unsubscribe" element={<Suspense fallback={null}><UnsubscribePage /></Suspense>} />
 
         <Route
           path="/"
@@ -85,7 +94,8 @@ function AppRoutes() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="resume" element={<ResumePage />} />
           <Route path="jobs" element={<JobsPage />} />
-          <Route path="jobs/:jobId" element={<Navigate to="/jobs" replace />} />
+          <Route path="jobs/:jobId" element={<Suspense fallback={null}><JobDetailPage /></Suspense>} />
+          <Route path="motivationsschreiben" element={<Suspense fallback={null}><MotivationsschreibenPage /></Suspense>} />
           <Route path="ai-assistant" element={<AIAssistantPage />} />
           <Route path="job-alerts" element={<JobAlertsPage />} />
           <Route path="settings" element={<SettingsPage />} />
@@ -112,6 +122,7 @@ export default function App() {
   return (
     <>
       <UpgradeModal />
+      <OnboardingTutorial />
       <AppRoutes />
     </>
   );

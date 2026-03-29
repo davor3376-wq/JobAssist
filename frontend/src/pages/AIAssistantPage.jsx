@@ -71,6 +71,93 @@ function getConvCategory(conv) {
   return { label: "Chat", cls: "bg-slate-100 text-slate-500" };
 }
 
+// ─── Markdown renderer ───────────────────────────────────────────────────────
+
+function renderInline(text) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**"))
+      return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+    if (part.startsWith("*") && part.endsWith("*") && part.length > 2)
+      return <em key={i} className="italic">{part.slice(1, -1)}</em>;
+    if (part.startsWith("`") && part.endsWith("`"))
+      return <code key={i} className="px-1 py-0.5 rounded bg-slate-200 text-xs font-mono text-indigo-700">{part.slice(1, -1)}</code>;
+    return part;
+  });
+}
+
+function MarkdownMessage({ text }) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements = [];
+  let listItems = [];
+  let listType = null;
+  let olStart = 1;
+
+  const flushList = (key) => {
+    if (!listItems.length) return;
+    if (listType === "ul") {
+      elements.push(
+        <ul key={key} className="my-2 space-y-1.5 pl-1">
+          {listItems.map((item, j) => (
+            <li key={j} className="flex items-start gap-2.5 text-sm leading-relaxed">
+              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
+              <span>{renderInline(item)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    } else {
+      elements.push(
+        <ol key={key} className="my-2 space-y-1.5 pl-1">
+          {listItems.map((item, j) => (
+            <li key={j} className="flex items-start gap-2.5 text-sm leading-relaxed">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center mt-0.5">{olStart + j}</span>
+              <span>{renderInline(item)}</span>
+            </li>
+          ))}
+        </ol>
+      );
+    }
+    listItems = [];
+    listType = null;
+  };
+
+  lines.forEach((line, i) => {
+    if (/^###\s/.test(line)) {
+      flushList(`fl${i}`);
+      elements.push(<h3 key={i} className="text-sm font-extrabold text-slate-900 mt-3 mb-0.5 tracking-tight">{renderInline(line.slice(4))}</h3>);
+    } else if (/^##\s/.test(line)) {
+      flushList(`fl${i}`);
+      elements.push(<h2 key={i} className="text-base font-extrabold text-slate-900 mt-4 mb-1 tracking-tight">{renderInline(line.slice(3))}</h2>);
+    } else if (/^#\s/.test(line)) {
+      flushList(`fl${i}`);
+      elements.push(<h1 key={i} className="text-lg font-extrabold text-slate-900 mt-4 mb-1 tracking-tight">{renderInline(line.slice(2))}</h1>);
+    } else if (/^---+$/.test(line.trim())) {
+      flushList(`fl${i}`);
+      elements.push(<hr key={i} className="my-3 border-slate-200" />);
+    } else if (/^[-*]\s/.test(line)) {
+      if (listType !== "ul") { flushList(`fl${i}`); listType = "ul"; }
+      listItems.push(line.slice(2));
+    } else if (/^\d+\.\s/.test(line)) {
+      if (listType !== "ol") {
+        flushList(`fl${i}`);
+        listType = "ol";
+        olStart = parseInt(line.match(/^(\d+)/)[1], 10);
+      }
+      listItems.push(line.replace(/^\d+\.\s/, ""));
+    } else if (line.trim() === "") {
+      flushList(`fl${i}`);
+      elements.push(<div key={i} className="h-2" />);
+    } else {
+      flushList(`fl${i}`);
+      elements.push(<p key={i} className="text-sm leading-relaxed font-medium text-slate-800">{renderInline(line)}</p>);
+    }
+  });
+  flushList("end");
+  return <div className="space-y-0.5">{elements}</div>;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AIAssistantPage() {
@@ -103,7 +190,7 @@ export default function AIAssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Typewriter streaming effect
+  // Typewriter streaming effect — 2 chars/tick at 22ms gives a calm, readable pace
   useEffect(() => {
     if (!streamingMsg) return;
     if (streamingMsg.shown.length >= streamingMsg.full.length) {
@@ -111,14 +198,13 @@ export default function AIAssistantPage() {
       setStreamingMsg(null);
       return;
     }
-    const charsPerTick = Math.max(1, Math.ceil(streamingMsg.full.length / 100));
     const timer = setTimeout(() => {
       setStreamingMsg((prev) => {
         if (!prev) return null;
-        return { ...prev, shown: prev.full.slice(0, prev.shown.length + charsPerTick) };
+        return { ...prev, shown: prev.full.slice(0, prev.shown.length + 2) };
       });
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-    }, 14);
+    }, 22);
     return () => clearTimeout(timer);
   }, [streamingMsg]);
 
@@ -586,14 +672,17 @@ export default function AIAssistantPage() {
                         <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-[75%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
+                    <div className={`max-w-[80%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                      <div className={`px-4 py-3
                         ${msg.role === "user"
-                          ? "bg-indigo-600 text-white rounded-2xl rounded-br-sm shadow-sm"
-                          : "bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm"
+                          ? "bg-indigo-600 text-white rounded-2xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
+                          : "bg-white border border-slate-100 shadow-sm text-slate-800 rounded-2xl rounded-bl-sm"
                         }`}
                       >
-                        {msg.content}
+                        {msg.role === "user"
+                          ? msg.content
+                          : <MarkdownMessage text={msg.content} />
+                        }
                       </div>
                     </div>
                   </div>
@@ -621,10 +710,10 @@ export default function AIAssistantPage() {
                     <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="max-w-[75%] flex flex-col gap-1 items-start">
-                      <div className="bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
-                        {streamingMsg.shown}
-                        <span className="inline-block w-0.5 h-3.5 bg-slate-400 animate-pulse ml-0.5 align-middle" />
+                    <div className="max-w-[80%] flex flex-col gap-1 items-start">
+                      <div className="bg-white border border-slate-100 shadow-sm text-slate-800 rounded-2xl rounded-bl-sm px-4 py-3">
+                        <MarkdownMessage text={streamingMsg.shown} />
+                        <span className="inline-block w-0.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
                       </div>
                     </div>
                   </div>
@@ -634,6 +723,26 @@ export default function AIAssistantPage() {
               </div>
             )}
           </div>
+
+          {/* ── Guidelines bar ────────────────────────────────────────────── */}
+          {messages.length === 0 && (
+            <div className="flex-shrink-0 mx-4 mb-2 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5">
+              <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest mb-1.5">Tipps für bessere Ergebnisse</p>
+              <ul className="flex flex-wrap gap-x-5 gap-y-1">
+                {[
+                  "Lade deinen Lebenslauf hoch für personalisierte Antworten",
+                  "Sei so spezifisch wie möglich",
+                  "Nenne die Branche & Position",
+                  "Stelle Folgefragen für mehr Details",
+                ].map((tip) => (
+                  <li key={tip} className="flex items-center gap-1.5 text-[11px] text-indigo-700">
+                    <span className="w-1 h-1 rounded-full bg-indigo-400 flex-shrink-0" />
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* ── Input Bar ─────────────────────────────────────────────────── */}
           <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white/90 backdrop-blur-sm border-t border-slate-100">

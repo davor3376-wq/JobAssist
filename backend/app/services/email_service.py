@@ -65,7 +65,7 @@ def _rank_jobs(jobs: List[Dict[str, Any]], keywords: str, location: str) -> List
     return [j for _, j in scored]
 
 
-def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any]]) -> str:
+def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any]], unsubscribe_url: str | None = None) -> str:
     from datetime import date
 
     ranked = _rank_jobs(jobs[:20], keywords, location or "")
@@ -236,7 +236,7 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
                 <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#475569;">&#9889; JobAssist &middot; jobassist.tech</p>
                 <p style="margin:0 0 10px;font-size:11px;color:#94a3b8;line-height:1.7;">
                   Du erh&#228;ltst diese E-Mail, weil du einen Job-Alert f&#252;r <strong style="color:#64748b;">{kw_esc}</strong> eingerichtet hast.<br>
-                  <a href="{app_url}/job-alerts" style="color:#3b82f6;text-decoration:none;">Alert verwalten</a> &nbsp;&middot;&nbsp; <a href="{app_url}/job-alerts" style="color:#3b82f6;text-decoration:none;">Deaktivieren</a>
+                  <a href="{app_url}/job-alerts" style="color:#3b82f6;text-decoration:none;">Alert verwalten</a> &nbsp;&middot;&nbsp; <a href="{html_lib.escape(unsubscribe_url) if unsubscribe_url else f'{app_url}/job-alerts'}" style="color:#3b82f6;text-decoration:none;">Abmelden</a>
                 </p>
                 <p style="margin:0;font-size:10px;color:#cbd5e1;">&#169; 2025 JobAssist. Alle Rechte vorbehalten.</p>
               </td>
@@ -253,7 +253,7 @@ def _build_job_alert_html(keywords: str, location: str, jobs: List[Dict[str, Any
 </html>"""
 
 
-def _send_via_brevo(to_email: str, subject: str, html_body: str) -> bool:
+def _send_via_brevo(to_email: str, subject: str, html_body: str, reply_to: str | None = None) -> bool:
     if not settings.BREVO_API_KEY:
         return False
 
@@ -265,6 +265,8 @@ def _send_via_brevo(to_email: str, subject: str, html_body: str) -> bool:
         "subject": subject,
         "htmlContent": html_body,
     }
+    if reply_to:
+        payload["replyTo"] = {"email": reply_to}
 
     try:
         api_key = settings.BREVO_API_KEY.strip()
@@ -284,7 +286,7 @@ def _send_via_brevo(to_email: str, subject: str, html_body: str) -> bool:
         return False
 
 
-def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
+def _send_via_smtp(to_email: str, subject: str, html_body: str, reply_to: str | None = None) -> bool:
     if not (settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD):
         return False
 
@@ -295,6 +297,8 @@ def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
     message["Subject"] = subject
     message["From"] = f"{from_name} <{from_email}>"
     message["To"] = to_email
+    if reply_to:
+        message["Reply-To"] = reply_to
     message.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
@@ -312,10 +316,11 @@ def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
         return False
 
 
-def _send_transactional_email(to_email: str, subject: str, html_body: str) -> bool:
-    if _send_via_brevo(to_email, subject, html_body):
+def _send_transactional_email(to_email: str, subject: str, html_content: str | None = None, html_body: str | None = None, reply_to: str | None = None) -> bool:
+    body = html_content or html_body or ""
+    if _send_via_brevo(to_email, subject, body, reply_to=reply_to):
         return True
-    if _send_via_smtp(to_email, subject, html_body):
+    if _send_via_smtp(to_email, subject, body, reply_to=reply_to):
         return True
 
     logger.warning("No email provider configured or all providers failed - skipping email send")
@@ -360,11 +365,11 @@ def send_password_reset_email(to_email: str, token: str) -> bool:
     return _send_transactional_email(to_email, "JobAssist - Passwort zurücksetzen", html)
 
 
-def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]]) -> bool:
+def send_job_alert_email(to_email: str, keywords: str, location: str, jobs: List[Dict[str, Any]], unsubscribe_url: str | None = None) -> bool:
     if not jobs:
         logger.info("No jobs found for alert '%s' - skipping email", keywords)
         return False
 
-    html_body = _build_job_alert_html(keywords, location or "", jobs)
+    html_body = _build_job_alert_html(keywords, location or "", jobs, unsubscribe_url=unsubscribe_url)
     subject = f"⚡ {len(jobs)} neue Stellen für '{keywords.strip()}' – Jetzt bewerben"
-    return _send_transactional_email(to_email, subject, html_body)
+    return _send_transactional_email(to_email, subject, html_body=html_body)

@@ -14,6 +14,7 @@ import {
   CreditCard,
   Menu,
   X,
+  PenLine,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -29,6 +30,7 @@ const NAV_KEYS = [
   { to: "/resume", tKey: "navigation.myResumes", icon: FileText },
   { to: "/jobs", tKey: "navigation.jobs", icon: Briefcase },
   { to: "/ai-assistant", tKey: "navigation.aiAssistant", icon: Bot },
+  { to: "/motivationsschreiben", tKey: "navigation.motivationsschreiben", icon: PenLine },
   { to: "/job-alerts", tKey: "navigation.jobAlerts", icon: Bell },
   { to: "/settings", tKey: "navigation.preferences", icon: Settings },
   { to: "/billing", tKey: "navigation.billing", icon: CreditCard },

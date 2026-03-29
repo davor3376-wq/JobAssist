@@ -277,6 +277,7 @@ export const jobAlertsApi = {
   update: (id, data) => api.patch(`/job-alerts/${id}`, data),
   delete: (id) => api.delete(`/job-alerts/${id}`),
   runNow: (id) => api.post(`/job-alerts/${id}/run`),
+  unsubscribe: (token) => api.post("/job-alerts/unsubscribe", { token }),
 };
 
 // --- Research ---
@@ -296,6 +297,11 @@ export const billingApi = {
   plans: () => api.get("/billing/plans"),
   createCheckout: (plan) => api.post("/billing/create-checkout-session", { plan }),
   createPortal: () => api.post("/billing/create-portal-session"),
+};
+
+// --- Contact ---
+export const contactApi = {
+  send: (data) => api.post("/contact/send", data),
 };
 
 // --- Settings ---

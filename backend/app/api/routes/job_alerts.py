@@ -3,11 +3,13 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy import func as sa_func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import get_db, AsyncSessionLocal
 from app.core.plans import get_limit
 from app.core.security import get_current_user
 from app.core.usage import get_user_plan
@@ -17,6 +19,21 @@ from app.models.user import User
 from app.schemas.job_alert import JobAlertCreate, JobAlertOut, JobAlertUpdate
 from app.services.email_service import send_job_alert_email
 from app.services.job_search import search_jobs
+
+
+def _make_unsubscribe_token(alert_id: int) -> str:
+    payload = {"alert_id": alert_id, "purpose": "unsubscribe"}
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def _decode_unsubscribe_token(token: str) -> int:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("purpose") != "unsubscribe":
+            raise ValueError("wrong purpose")
+        return int(payload["alert_id"])
+    except (JWTError, KeyError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Ungültiger oder abgelaufener Abmelde-Token") from exc
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -273,6 +290,24 @@ async def test_email(current_user: User = Depends(get_current_user)):
     }
 
 
+class UnsubscribeRequest(BaseModel):
+    token: str
+
+
+@router.post("/unsubscribe", status_code=200)
+@limiter.limit("10/minute")
+async def unsubscribe(request: Request, payload: UnsubscribeRequest, db: AsyncSession = Depends(get_db)):
+    """One-click unsubscribe from a job alert via signed token (no auth required)."""
+    alert_id = _decode_unsubscribe_token(payload.token)
+    result = await db.execute(select(JobAlert).where(JobAlert.id == alert_id))
+    alert = result.scalar_one_or_none()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert nicht gefunden")
+    alert.is_active = False
+    await db.commit()
+    return {"message": "Du wurdest erfolgreich abgemeldet"}
+
+
 async def _run_and_send(alert_id: int, keywords: str, location: str, job_type: str, email: str):
     try:
         results = await search_jobs(
@@ -282,12 +317,16 @@ async def _run_and_send(alert_id: int, keywords: str, location: str, job_type: s
             page=1,
         )
         jobs = results.get("jobs", [])
+        token = _make_unsubscribe_token(alert_id)
+        app_url = getattr(settings, "FRONTEND_URL", "https://jobassist.tech")
+        unsubscribe_url = f"{app_url}/unsubscribe?token={token}"
         await asyncio.to_thread(
             send_job_alert_email,
             to_email=email,
             keywords=keywords,
             location=location or "",
             jobs=jobs,
+            unsubscribe_url=unsubscribe_url,
         )
     except Exception as e:
         logger.error(f"Alert run failed for alert {alert_id}: {e}", exc_info=True)
