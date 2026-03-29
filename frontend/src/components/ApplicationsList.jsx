@@ -218,13 +218,13 @@ function CircularGauge({ score, size = 48 }) {
       {/* flex items-center justify-center (centres the score text) */}
       <span
         className={`absolute inset-0 flex items-center justify-center font-bold leading-none tabular-nums ${
-          size <= 32
-            ? (pct != null && Math.round(pct) === 100 ? "text-[7.5px]" : "text-[9px]")
-            : "text-[11px]"
+          size <= 32 ? "text-[8px]" : "text-[11px]"
         }`}
         style={{ color }}
       >
-        {pct != null ? `${Math.round(pct)}%` : "–"}
+        {pct != null
+          ? (size <= 32 && Math.round(pct) >= 100 ? "100" : `${Math.round(pct)}%`)
+          : "–"}
       </span>
     </div>
   );
@@ -455,6 +455,7 @@ function DetailPanel({
   deleteMutation,
   matchMutation,
   interviewMutation,
+  coverLetterMutation,
   notesMutation,
   deadlineMutation,
   urlMutation,
@@ -921,6 +922,25 @@ function DetailPanel({
             <span className="truncate">Gespräch</span>
           </button>
 
+          {/* Anschreiben */}
+          <button
+            onClick={() => {
+              if (job.cover_letter) {
+                setExpandedPanel((v) => (v === `cover-${job.id}` ? null : `cover-${job.id}`));
+              } else {
+                coverLetterMutation.mutate({ jobId: job.id, resumeId: selectedResumeId || undefined });
+              }
+            }}
+            disabled={!hasResume || coverLetterMutation.isPending}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-lg border border-green-600 bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {coverLetterMutation.isPending
+              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              : <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+            }
+            <span className="truncate">{coverLetterMutation.isPending ? "Erstellt…" : "Anschreiben"}</span>
+          </button>
+
           {/* Recherche */}
           <button
             onClick={() => onResearch(job)}
@@ -1096,7 +1116,27 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
       setExpandedPanel(`interview-${vars.jobId}`);
       toast.success("Gesprächsvorbereitung fertig!");
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden")),
+    onError: (err) => {
+      // On any error, refresh jobs — the Q&A may already exist from another device
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      if (err?.response?.status === 429 ||
+          (err?.response?.status === 403 && err?.response?.data?.detail?.error === "usage_limit")) return;
+      toast.error(getApiErrorMessage(err, "Gesprächsvorbereitung konnte nicht erstellt werden. Daten werden aktualisiert…"));
+    },
+  });
+
+  const coverLetterMutation = useMutation({
+    mutationFn: ({ jobId, resumeId }) => jobApi.generateCoverLetter(jobId, resumeId),
+    onSuccess: (res, vars) => {
+      applyJobUpdate(res.data);
+      setExpandedPanel(`cover-${vars.jobId}`);
+      toast.success("Anschreiben fertig!");
+    },
+    onError: (err) => {
+      if (err?.response?.status === 429 ||
+          (err?.response?.status === 403 && err?.response?.data?.detail?.error === "usage_limit")) return;
+      toast.error(getApiErrorMessage(err, "Anschreiben konnte nicht erstellt werden"));
+    },
   });
 
   const notesMutation = useMutation({
@@ -1226,6 +1266,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
     deleteMutation,
     matchMutation,
     interviewMutation,
+    coverLetterMutation,
     notesMutation,
     deadlineMutation,
     urlMutation,
@@ -1244,14 +1285,14 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           Mobile:  flex-nowrap overflow-x-auto → horizontally scrollable row
           Desktop: grid grid-cols-5            → full-width 5-column grid
       ══════════════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:overflow-visible md:pb-0">
+      <div className="flex flex-nowrap gap-3 overflow-x-auto py-1 px-0.5 -my-1 md:grid md:grid-cols-5 md:overflow-visible md:py-0 md:px-0 md:my-0">
         {PIPELINE_CONFIG.map(({ key, label, icon: Icon, cardCls, iconCls }) => (
           <button
             key={key}
             onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
             className={`min-w-[100px] flex-shrink-0 rounded-xl border p-3 md:p-5 text-left transition-all duration-150 md:min-w-0
               ${cardCls}
-              ${filterStatus === key ? "ring-2 ring-offset-1 ring-blue-400 shadow-lg shadow-blue-100" : "hover:shadow-sm"}
+              ${filterStatus === key ? "ring-2 ring-blue-400 shadow-md shadow-blue-100" : "hover:shadow-sm"}
             `}
           >
             <div className="flex items-center gap-1.5 mb-3">
@@ -1270,7 +1311,7 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
           h-[calc(100svh-320px)]  →  fixed height so both columns scroll
                                       independently without the page scrolling
       ══════════════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col md:flex-row rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden md:h-[calc(100vh-280px)] md:min-h-[380px]">
+      <div className="flex flex-col md:flex-row rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden md:h-[calc(100svh-300px)] md:min-h-[380px]">
         {/* ── Left Column: Job List ─────────────────────────────────────────────
             w-full (full width on mobile), md:w-72 lg:w-80 (fixed width on desktop)
             flex-shrink-0 (never compress the list column)

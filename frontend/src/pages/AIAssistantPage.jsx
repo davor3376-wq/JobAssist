@@ -518,7 +518,7 @@ export default function AIAssistantPage() {
                 {/* Schnell-Aktionen grid */}
                 <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {SUGGESTIONS.map((s) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
@@ -540,7 +540,7 @@ export default function AIAssistantPage() {
                               : <s.icon className="h-4 w-4" />
                             }
                           </span>
-                          <span className={`text-xs font-semibold leading-snug ${locked ? "text-slate-300" : "text-slate-800"}`}>
+                          <span className={`text-xs font-semibold leading-snug line-clamp-2 ${locked ? "text-slate-300" : "text-slate-800"}`}>
                             {s.label}
                           </span>
                           {s.sub && (

@@ -122,11 +122,23 @@ const INITIALS_GRADIENTS = [
   "from-purple-400 to-fuchsia-500",
 ];
 
-function CompanyLogo({ company, initials, url }) {
+function CompanyLogo({ company, initials, url, researchData }) {
   const [imgStatus, setImgStatus] = useState("idle"); // idle | ok | fallback
 
+  // Extract company website from research data (highest priority)
+  const researchDomain = (() => {
+    if (!researchData) return null;
+    try {
+      const d = typeof researchData === "string" ? JSON.parse(researchData) : researchData;
+      const website = d?.contact_info?.website || d?.website;
+      if (!website) return null;
+      const u = new URL(website.startsWith("http") ? website : `https://${website}`);
+      return u.hostname.replace(/^www\./, "");
+    } catch { return null; }
+  })();
+
   // Only use favicon if URL is the company's own site (not a job board)
-  const domain = (() => {
+  const urlDomain = (() => {
     if (!url) return null;
     try {
       const u = new URL(url.startsWith("http") ? url : `https://${url}`);
@@ -139,6 +151,8 @@ function CompanyLogo({ company, initials, url }) {
       return null;
     }
   })();
+
+  const domain = researchDomain || urlDomain;
 
   const gradientIdx = (company || "?").charCodeAt(0) % INITIALS_GRADIENTS.length;
   const gradient = INITIALS_GRADIENTS[gradientIdx];
@@ -168,6 +182,56 @@ function CompanyLogo({ company, initials, url }) {
           className={`absolute inset-0 h-full w-full rounded-xl object-contain bg-white border border-slate-100 p-1 transition-opacity ${imgStatus === "ok" ? "opacity-100" : "opacity-0"}`}
         />
       )}
+    </div>
+  );
+}
+
+// ── Active applications card ──────────────────────────────────────────────────
+function ActiveApplicationsCard({ jobs }) {
+  const active = useMemo(
+    () => (jobs || []).filter((j) => ["applied", "interviewing", "offered"].includes(j.status)).length,
+    [jobs]
+  );
+  const total = jobs?.length ?? 0;
+  const pct = total > 0 ? Math.round((active / total) * 100) : 0;
+
+  return (
+    <div className="rounded-2xl sm:rounded-3xl border border-slate-100 bg-white/80 shadow-sm backdrop-blur-md overflow-hidden">
+      {/* Mobile: compact horizontal full-width strip */}
+      <div className="flex items-center gap-3 px-3 py-2.5 sm:hidden">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-sm">
+          <TrendingUp className="h-4 w-4 text-white" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[8px] font-bold uppercase tracking-wide text-slate-400 leading-tight">Aktive Bewerbungen</p>
+          <p className="text-base font-bold leading-none text-slate-900 mt-0.5">{active} <span className="text-[10px] font-medium text-slate-400">von {total}</span></p>
+        </div>
+        <span className="text-[10px] font-bold text-sky-600 flex-shrink-0">{pct}%</span>
+      </div>
+      {/* Desktop: full card */}
+      <div className="hidden sm:block p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-sm">
+            <TrendingUp className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Aktive Bewerbungen</p>
+            <p className="mt-1 text-3xl font-bold leading-none text-slate-900">{active}</p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+            <span>{pct}% Konversionsrate</span>
+            <span>{active} / {total}</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-700"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -303,6 +367,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
 
         {/* Left: 3-col compact grid on mobile, stacked in 280px sidebar on lg+ */}
+        {/* Mobile: 3 mini cards in row 1, 4th card full-width in row 2 */}
         <div className="grid grid-cols-3 gap-2.5 sm:flex sm:flex-col sm:gap-4">
           <StatCard
             label="Gespeicherte Stellen"
@@ -325,6 +390,10 @@ export default function DashboardPage() {
             iconCls="bg-gradient-to-br from-emerald-400 to-teal-500"
             Icon={MessageSquare}
           />
+          {/* 4th card: full-width on mobile (col-span-3), normal in desktop flex */}
+          <div className="col-span-3 sm:col-auto">
+            <ActiveApplicationsCard jobs={jobs} />
+          </div>
         </div>
 
         {/* Right: Activity widget */}
@@ -602,7 +671,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-all hover:border-slate-100 hover:bg-slate-50 hover:shadow-sm"
                 >
                   {/* Company logo with initials fallback */}
-                  <CompanyLogo company={job.company} initials={initials} url={job.url} />
+                  <CompanyLogo company={job.company} initials={initials} url={job.url} researchData={job.research_data} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-900">{job.role || "Ohne Titel"}</p>
                     <p className="truncate text-xs text-slate-500">{job.company || "Unbekanntes Unternehmen"}</p>
