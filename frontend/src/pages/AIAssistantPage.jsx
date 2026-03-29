@@ -664,7 +664,7 @@ export default function AIAssistantPage() {
               />
               <button
                 onClick={() => handleSend()}
-                disabled={!input.trim() || chatMutation.isPending}
+                disabled={!input.trim() || chatMutation.isPending || !!streamingMsg}
                 className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
               >
                 <Send className="h-4 w-4" />
