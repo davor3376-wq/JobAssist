@@ -51,7 +51,10 @@
       "Bash(grep -r \"terms\\\\|privacy\\\\|impressum\\\\|legal\" /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/frontend/src --include=*.jsx --include=*.js)",
       "Bash(find /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/backend/app -maxdepth 3 -name *.py -type f)",
       "Bash(grep -r \"terms\\\\|privacy\\\\|impressum\\\\|legal\" /c/Users/davor/Downloads/Projects/Scripts/SaaS_Project/backend --include=*.py)",
-      "Bash(grep -E \"\\\\.\\(jsx|tsx\\)$\")"
+      "Bash(grep -E \"\\\\.\\(jsx|tsx\\)$\")",
+      "Bash(find C:UsersTEMPDownloadsSaaS_Project/frontend/src -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx -o -name *.js -o -name *.css -o -name *.scss \\\\\\))",
+      "Bash(grep:*)",
+      "Bash(sed 's/@router\\\\.//')"
     ],
     "ask": []
   }

@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply bg-[#08101a] text-slate-100 antialiased font-sans;
+    @apply bg-black text-slate-100 antialiased font-sans;
   }
 }
 
@@ -22,14 +22,14 @@
            active:scale-[0.98];
   }
   .btn-primary {
-    @apply btn bg-indigo-600 text-white
-           hover:bg-indigo-500 hover:shadow-lg
-           focus:ring-indigo-500;
+    @apply btn bg-blue-500 text-white
+           hover:bg-blue-400 hover:shadow-lg
+           focus:ring-blue-500;
   }
   .btn-secondary {
-    @apply btn bg-[#131c2c] text-slate-200 border border-[#243047]
-           hover:bg-[#182235] hover:border-[#30405d] hover:shadow-sm
-           focus:ring-indigo-500;
+    @apply btn bg-[#08090c] text-slate-200 border border-[#171a21]
+           hover:bg-[#0d1015] hover:border-[#242935] hover:shadow-sm
+           focus:ring-blue-500;
   }
   .btn-ghost {
     @apply btn bg-transparent text-slate-400
@@ -39,25 +39,25 @@
 
   /* Cards */
   .card {
-    @apply bg-[#131c2c] rounded-2xl shadow-sm border border-[#1c2333] p-4 sm:p-6
+    @apply bg-[#08090c] rounded-xl shadow-sm border border-[#171a21] p-4 sm:p-6
            transition-all duration-200 ease-out;
   }
   .card-hover {
     @apply card hover:shadow-md hover:border-[#2a3550] hover:-translate-y-0.5;
   }
   .card-glass {
-    @apply rounded-2xl p-6 border border-white/10
-           bg-[#101827]/80 backdrop-blur-xl shadow-lg;
+    @apply rounded-xl p-6 border border-white/10
+           bg-[#08090c]/88 backdrop-blur-xl shadow-lg;
   }
 
   /* Forms */
   .input {
-    @apply block w-full rounded-xl border border-[#243047] px-4 py-2.5 text-sm
-           bg-[#0f1726] shadow-sm text-slate-100
+    @apply block w-full rounded-xl border border-[#171a21] px-4 py-2.5 text-sm
+           bg-[#050608] shadow-sm text-slate-100
            placeholder-slate-500
            transition-all duration-200 ease-out
-           focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
-           focus:bg-[#131c2c] focus:shadow-md;
+           focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20
+           focus:bg-[#08090c] focus:shadow-md;
   }
   .label {
     @apply block text-sm font-medium text-slate-300 mb-1.5;
@@ -65,13 +65,13 @@
 
   /* Score badges */
   .score-high {
-    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+    @apply bg-emerald-500/10 text-emerald-300 border border-emerald-500/20;
   }
   .score-mid {
-    @apply bg-amber-50 text-amber-700 border border-amber-200;
+    @apply bg-amber-500/10 text-amber-300 border border-amber-500/20;
   }
   .score-low {
-    @apply bg-red-50 text-red-700 border border-red-200;
+    @apply bg-slate-500/10 text-slate-300 border border-slate-500/20;
   }
 }
 

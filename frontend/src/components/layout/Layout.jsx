@@ -39,7 +39,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
     <div className="flex flex-col h-full">
       <div className="px-6 py-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -60,7 +60,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
               clsx(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-violet-500/15 text-violet-300 border border-violet-500/20"
+                  ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
                   : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
               )
             }
@@ -70,7 +70,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
                 <div
                   className={clsx(
                     "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-                    isActive ? "bg-violet-500/25 text-violet-400" : "bg-white/5 text-slate-500"
+                    isActive ? "bg-blue-500/25 text-blue-400" : "bg-white/5 text-slate-500"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -91,10 +91,10 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
                   <img
                     src={profile.avatar}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-violet-500/30"
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-blue-500/30"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
                     <User className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -148,16 +148,16 @@ function VerificationBanner({ me }) {
     setSending(true);
     try {
       await authApi.resendVerification();
-      toast.success("Bestätigungs-E-Mail gesendet");
+      toast.success("Die Bestätigungs-E-Mail wurde sicher versendet");
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Fehler beim Senden der Bestätigungs-E-Mail"));
+      toast.error(getApiErrorMessage(err, "Die Bestätigungs-E-Mail konnte nicht sicher versendet werden"));
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 md:px-5">
+    <div className="mb-5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 md:px-5">
       <div className="flex items-start gap-3">
         <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
         <div className="min-w-0 flex-1">
@@ -169,7 +169,7 @@ function VerificationBanner({ me }) {
             type="button"
             onClick={handleResend}
             disabled={sending}
-            className="mt-3 text-sm font-semibold text-amber-700 transition-colors hover:text-amber-900 disabled:opacity-50"
+            className="mt-3 text-sm font-semibold text-amber-300 transition-colors hover:text-amber-100 disabled:opacity-50"
           >
             {sending ? "E-Mail wird gesendet..." : "Bestätigungs-E-Mail erneut senden"}
           </button>
@@ -224,8 +224,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0D1117] overflow-hidden">
-      <aside className="hidden md:flex w-[260px] bg-[#0D1117] border-r border-[#1C2333] flex-col flex-shrink-0">
+    <div className="flex h-screen bg-black overflow-hidden">
+      <aside className="hidden md:flex w-[260px] bg-black border-r border-[#171a21] flex-col flex-shrink-0">
         <SidebarContent me={me} profile={profile} t={t} handleLogout={handleLogout} onNavClick={undefined} />
       </aside>
 
@@ -235,7 +235,7 @@ export default function Layout() {
 
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-[280px] bg-[#0D1117] shadow-2xl shadow-black/50 flex flex-col transition-transform duration-300 md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-[280px] bg-black shadow-2xl shadow-black/50 flex flex-col transition-transform duration-300 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -255,8 +255,8 @@ export default function Layout() {
         />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(45,68,106,0.22),_transparent_34%),linear-gradient(180deg,_#09111b_0%,_#0d1117_48%,_#0a1018_100%)]">
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#0D1117] border-b border-[#1C2333] flex-shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_28%),linear-gradient(180deg,_#000000_0%,_#020304_52%,_#000000_100%)]">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-black border-b border-[#171a21] flex-shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
             className="p-2 rounded-xl text-slate-400 hover:bg-white/10 transition-colors"
@@ -264,7 +264,7 @@ export default function Layout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="text-base font-bold text-white">JobAssist</span>
@@ -279,7 +279,7 @@ export default function Layout() {
             </Suspense>
           </div>
           <footer className="max-w-7xl mx-auto px-4 pb-6 md:px-8">
-            <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 border-t border-[#1C2333] pt-4">
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 border-t border-[#171a21] pt-4">
               <Link to="/terms" className="hover:text-slate-300 transition-colors">AGB</Link>
               <Link to="/privacy" className="hover:text-slate-300 transition-colors">Datenschutz</Link>
               <Link to="/impressum" className="hover:text-slate-300 transition-colors">Impressum</Link>

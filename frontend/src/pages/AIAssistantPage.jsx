@@ -45,12 +45,12 @@ function loadStoredJobs() {
 // ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText,      iconCls: "text-indigo-600 bg-indigo-50",  label: "Lebenslauf verbessern",  sub: "Stärken und Schwächen erkennen",  prompt: "Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?", requiresResume: true },
-  { icon: Briefcase,     iconCls: "text-indigo-600 bg-indigo-50",  label: "Bewerbungstipps",        sub: "Erfolgreich bewerben in AT",       prompt: "Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?" },
-  { icon: GraduationCap, iconCls: "text-indigo-600 bg-indigo-50",  label: "Praktikum finden",       sub: "Als Student durchstarten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
-  { icon: Euro,          iconCls: "text-emerald-600 bg-emerald-50",label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",     prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
-  { icon: Lightbulb,     iconCls: "text-amber-600 bg-amber-50",    label: "Vorstellungsgespräch",   sub: "Selbstsicher auftreten",           prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
-  { icon: Sparkles,      iconCls: "text-violet-600 bg-violet-50",  label: "Motivationsschreiben",   sub: "Überzeugend formulieren",          prompt: "Kannst du mir Tipps für ein überzeugendes Motivationsschreiben geben?" },
+  { icon: FileText,      iconCls: "text-blue-400 bg-blue-500/12",  label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true },
+  { icon: Briefcase,     iconCls: "text-blue-400 bg-blue-500/12",  label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich." },
+  { icon: GraduationCap, iconCls: "text-blue-400 bg-blue-500/12",  label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
+  { icon: Euro,          iconCls: "text-emerald-400 bg-emerald-500/12",label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",     prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
+  { icon: Lightbulb,     iconCls: "text-amber-400 bg-amber-500/12",    label: "Gesprächsvorbereitung",   sub: "Souverän auftreten",           prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
+  { icon: Sparkles,      iconCls: "text-blue-400 bg-blue-500/12",  label: "Anschreiben",   sub: "Überzeugend formulieren",          prompt: "Hilf mir bei einem überzeugenden Anschreiben. generate_document (Erstellt dein Dokument)." },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -74,9 +74,9 @@ function relativeTime(ts) {
 
 function getConvCategory(conv) {
   const first = conv.messages.find((m) => m.role === "user")?.content || "";
-  if (first.includes("Interview-Simulator")) return { label: "Simulation", cls: "bg-violet-100 text-violet-700" };
-  if (first.includes("Assessment")) return { label: "Assessment", cls: "bg-blue-100 text-blue-700" };
-  return { label: "Chat", cls: "bg-slate-100 text-slate-500" };
+  if (first.includes("Interview-Simulator")) return { label: "Simulation", cls: "bg-blue-500/10 text-blue-300" };
+  if (first.includes("Assessment")) return { label: "Analyse", cls: "bg-blue-500/10 text-blue-300" };
+  return { label: "Chat", cls: "bg-[#111827] text-slate-300" };
 }
 
 // ─── Markdown renderer ───────────────────────────────────────────────────────
@@ -85,11 +85,11 @@ function renderInline(text) {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**"))
-      return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2)
       return <em key={i} className="italic">{part.slice(1, -1)}</em>;
     if (part.startsWith("`") && part.endsWith("`"))
-      return <code key={i} className="px-1 py-0.5 rounded bg-slate-200 text-xs font-mono text-indigo-700">{part.slice(1, -1)}</code>;
+      return <code key={i} className="px-1 py-0.5 rounded bg-blue-500/12 text-xs font-mono text-blue-300 border border-blue-500/20">{part.slice(1, -1)}</code>;
     return part;
   });
 }
@@ -301,7 +301,7 @@ export default function AIAssistantPage() {
     // Restore simulation/assessment mode based on this conversation's origin
     const firstUser = conv.messages.find((m) => m.role === "user")?.content || "";
     setSimulationMode(firstUser.includes("Interview-Simulator"));
-    setAssessmentMode(firstUser.includes("Karriere-Assessment"));
+    setAssessmentMode(firstUser.includes("Karriere-Analyse"));
   };
 
   const handleDeleteConversation = (e, id) => {
@@ -328,7 +328,7 @@ export default function AIAssistantPage() {
     setSimulationMode(false);
     setAssessmentDisclaimerOpen(false);
     handleSend(
-      "Starte bitte ein strukturiertes, interaktives Karriere-Assessment für mich als 1-on-1-Dialog. " +
+      "Starte bitte eine strukturierte, interaktive Karriere-Analyse für mich als 1-on-1-Dialog. " +
       "Stelle jeweils EINE Frage und warte auf meine Antwort, bevor du die nächste stellst.\n\n" +
       "Verbindliche Regeln für deine Fragen:\n" +
       "- KEINE Klischee-Fragen wie 'Was sind deine größten Schwächen?' — diese liefern keine verwertbaren Daten\n" +
@@ -336,7 +336,7 @@ export default function AIAssistantPage() {
       "- Fokussiere auf belegbare Erfahrungen: 'In welchen Arbeitssituationen leistest du nachweislich dein Bestes?'\n" +
       "- Erkunde berufliche Umfelder: 'In welchen Teamstrukturen oder Arbeitsweisen fühlst du dich am produktivsten?'\n" +
       "- Keine Persönlichkeits- oder Charaktereinschätzungen — nur textbasierte Evidenz aus meinen Antworten\n\n" +
-      "Am Ende: Erstelle eine Skill-Gap-Analyse mit konkreten, umsetzbaren Empfehlungen.\n\n" +
+      "Am Ende: Erstelle eine Analyse strategischer Entwicklungschancen mit konkreten, umsetzbaren Empfehlungen.\n\n" +
       "Beginne jetzt mit der ersten Frage."
     );
   }, [handleSend]);
@@ -348,7 +348,7 @@ export default function AIAssistantPage() {
   ];
 
   const assessmentActions = [
-    { label: "Weiter",           prompt: "Fahre mit der nächsten Assessment-Frage fort." },
+    { label: "Weiter",           prompt: "Fahre mit der nächsten Analyse-Frage fort." },
     { label: "Auswertung jetzt", prompt: "Gib mir jetzt schon eine Zwischenauswertung meines Bewerberprofils basierend auf dem bisherigen Gespräch." },
     { label: "Abschließen",      prompt: "Schließe das Assessment ab und gib mir eine vollständige Profilauswertung mit konkreten Empfehlungen." },
   ];
@@ -384,7 +384,7 @@ export default function AIAssistantPage() {
           >
             <MessageSquare className="w-5 h-5" />
           </button>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+          <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
             KI-Bewerbungsassistent
           </h1>
         </div>
@@ -393,7 +393,7 @@ export default function AIAssistantPage() {
           <select
             value={selectedResumeId || ""}
             onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-            className="hidden sm:block px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-white text-slate-700"
+            className="hidden sm:block px-3 py-1.5 border border-[#1C2333] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-[#1C2333] text-slate-300"
           >
             <option value="">Kein Lebenslauf</option>
             {uploadedResumes.map((r) => (
@@ -402,7 +402,7 @@ export default function AIAssistantPage() {
           </select>
           <Link
             to="/resume"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] text-slate-300 text-xs font-semibold hover:bg-white/5 transition-colors"
           >
             <Upload className="w-3.5 h-3.5" />
             Lebenslauf hochladen
@@ -422,12 +422,12 @@ export default function AIAssistantPage() {
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
-          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-white shadow-xl overflow-hidden transition-transform duration-200 rounded-none
-          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:z-auto
+          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#0D1117] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
+          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#1C2333] md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}>
           {/* Sidebar header */}
-          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-slate-100">
+          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-[#1C2333]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <button
@@ -438,7 +438,7 @@ export default function AIAssistantPage() {
                 </button>
                 <div className="flex items-center gap-1.5">
                   <Target className="w-3.5 h-3.5 text-violet-500" />
-                  <span className="text-xs font-bold text-slate-800 tracking-wide">
+                  <span className="text-xs font-bold text-slate-200 tracking-wide">
                     {conversations.length === 0 ? "Starter Missionen" : "Aktive Missionen"}
                   </span>
                 </div>
@@ -456,10 +456,10 @@ export default function AIAssistantPage() {
           {conversations.length === 0 && (
             <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-slate-100">
               {[
-                { icon: MessageSquare, label: "Interview Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
-                { icon: ClipboardList, label: "Stärkenanalyse starten", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },
-                { icon: FileText, label: "Lebenslauf analysieren", color: "text-indigo-600 bg-indigo-50 border-indigo-100", onClick: () => handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?") },
-                { icon: Briefcase, label: "Bewerbungstipps holen", color: "text-emerald-600 bg-emerald-50 border-emerald-100", onClick: () => handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?") },
+                { icon: MessageSquare, label: "interview_simulation_starten (Ein realistisches Probeinterview beginnen)", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
+                { icon: ClipboardList, label: "stärkenanalyse_starten (Deine fachlichen Stärken strukturiert auswerten)", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },
+                { icon: FileText, label: "lebenslauf_analysieren (Deinen Lebenslauf gezielt bewerten)", color: "text-indigo-600 bg-indigo-50 border-indigo-100", onClick: () => handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?") },
+                { icon: Briefcase, label: "bewerbungsstrategie_öffnen (Konkrete Empfehlungen für deine Bewerbung erhalten)", color: "text-emerald-600 bg-emerald-50 border-emerald-100", onClick: () => handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?") },
               ].map((m) => (
                 <button
                   key={m.label}
@@ -477,14 +477,14 @@ export default function AIAssistantPage() {
           {/* Conversation list */}
           <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
             {conversations.length > 0 && (
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mx-1 mb-2">
+              <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
                 <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                 <input
                   type="text"
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
                   placeholder="Gespräche suchen…"
-                  className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
+                  className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-500 focus:outline-none min-w-0"
                 />
               </div>
             )}
@@ -499,8 +499,8 @@ export default function AIAssistantPage() {
                     onClick={() => handleSelectConversation(conv)}
                     className={`group w-full text-left px-3 py-3 rounded-xl transition-all
                       ${conv.id === activeId
-                        ? "bg-indigo-50 border border-indigo-100"
-                        : "border border-transparent hover:bg-slate-50 hover:border-slate-100"
+                        ? "bg-indigo-900/30 border border-indigo-800"
+                        : "border border-transparent hover:bg-white/5 hover:border-[#1C2333]"
                       }`}
                   >
                     <div className="flex items-center justify-between gap-1.5 mb-1.5">
@@ -514,7 +514,7 @@ export default function AIAssistantPage() {
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <p className="truncate text-xs font-semibold text-slate-800 leading-snug">{conv.title}</p>
+                    <p className="truncate text-xs font-semibold text-slate-200 leading-snug">{conv.title}</p>
                     <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-slate-400">
                       <Clock className="w-2.5 h-2.5 flex-shrink-0" />
                       <span>{relativeTime(conv.updatedAt)}</span>
@@ -534,25 +534,25 @@ export default function AIAssistantPage() {
         )}
 
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-[#171a21] bg-black shadow-sm overflow-hidden">
 
           {/* Simulation mode banner */}
           {simulationMode && (
-            <div className="flex-shrink-0 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-3">
+            <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-violet-500">Interview-Simulator</p>
-                  <p className="mt-0.5 text-sm text-slate-600">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Interview-Simulator</p>
+                  <p className="mt-0.5 text-sm text-slate-300">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {simulatorActions.map((action) => (
                     <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 transition-colors shadow-sm">
+                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors shadow-sm">
                       {action.label}
                     </button>
                   ))}
                   <button onClick={() => setSimulationMode(false)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
+                    className="rounded-full border border-[#273244] bg-[#111827] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
                     Beenden
                   </button>
                 </div>
@@ -562,21 +562,21 @@ export default function AIAssistantPage() {
 
           {/* Assessment mode banner */}
           {assessmentMode && (
-            <div className="flex-shrink-0 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3">
+            <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">Stärkenanalyse</p>
-                  <p className="mt-0.5 text-sm text-slate-600">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Stärkenanalyse</p>
+                  <p className="mt-0.5 text-sm text-slate-300">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {assessmentActions.map((action) => (
                     <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors shadow-sm">
+                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors shadow-sm">
                       {action.label}
                     </button>
                   ))}
                   <button onClick={() => setAssessmentMode(false)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
+                    className="rounded-full border border-[#273244] bg-[#111827] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
                     Beenden
                   </button>
                 </div>
@@ -592,23 +592,23 @@ export default function AIAssistantPage() {
               <div className="flex flex-col gap-3 py-0.5">
 
                 {/* Hero — action-oriented */}
-                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-4 py-4">
+                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
                   <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
-                  <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-violet-400/10 blur-2xl" />
+                  <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
                   <div className="relative flex items-start gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-base font-bold text-slate-900">Womit soll ich dir helfen?</h3>
-                      <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">
+                      <h3 className="text-base font-bold text-white">Womit soll ich dir helfen?</h3>
+                      <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
                         Wähle eine Mission oder schreib direkt — ich kenne deinen Bewerbungsstand.
                       </p>
                       <div className="mt-2.5 flex flex-wrap gap-2">
                         {contextJob && (
                           <button
                             onClick={() => handleSend(`Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.`)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-400 transition-colors shadow-sm shadow-blue-500/20"
                           >
                             <Zap className="h-3 w-3" />
                             Interview: {contextJob.role}
@@ -617,14 +617,14 @@ export default function AIAssistantPage() {
                         {contextJob && (
                           <button
                             onClick={() => handleSend(`Schreib ein Anschreiben für die Stelle "${contextJob.role}" bei ${contextJob.company}.`)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#111827] border border-blue-500/20 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-[#172033] transition-colors"
                           >
                             <FileText className="h-3 w-3" />
                             Anschreiben: {contextJob.company}
                           </button>
                         )}
                         {resumeContextLabel && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300 border border-blue-500/20">
                             <FileText className="h-3 w-3" />
                             {resumeContextLabel}
                           </span>
@@ -640,7 +640,7 @@ export default function AIAssistantPage() {
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-2xl border border-indigo-100/60 bg-white p-3 text-left shadow-md shadow-indigo-100/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-200/50"
+                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
@@ -662,14 +662,14 @@ export default function AIAssistantPage() {
                       </svg>
                     </div>
                     <div className="relative">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
                         <MessageSquare className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900">Interview-Simulation</h4>
-                      <p className="mt-1 text-xs leading-[1.5] text-slate-500">
+                      <h4 className="text-sm font-bold text-white">Interview-Simulation</h4>
+                      <p className="mt-1 text-xs leading-[1.5] text-slate-400">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-indigo-700 min-h-[44px] md:min-h-0">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-blue-400 min-h-[44px] md:min-h-0">
                         <Sparkles className="h-3.5 w-3.5" />
                         Jetzt starten
                       </div>
@@ -679,9 +679,9 @@ export default function AIAssistantPage() {
                   {/* Stärkenanalyse */}
                   <button
                     onClick={() => setAssessmentDisclaimerOpen(true)}
-                    className="group relative overflow-hidden rounded-2xl border border-violet-100/60 bg-white p-3 text-left shadow-md shadow-violet-100/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-200/50"
+                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
                   >
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl transition-all group-hover:bg-blue-400/20" />
                     {/* Undraw-style assessment illustration */}
                     <div className="absolute bottom-0 right-0 w-28 h-20 opacity-[0.28] pointer-events-none">
                       <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -702,16 +702,16 @@ export default function AIAssistantPage() {
                       </svg>
                     </div>
                     <div className="relative">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-200">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
                         <ClipboardList className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900">Stärkenanalyse</h4>
-                      <p className="mt-1 text-xs leading-[1.5] text-slate-500">
+                      <h4 className="text-sm font-bold text-white">Stärkenanalyse</h4>
+                      <p className="mt-1 text-xs leading-[1.5] text-slate-400">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-violet-700 min-h-[44px] md:min-h-0">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-3 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-blue-400 min-h-[44px] md:min-h-0">
                         <ClipboardList className="h-3.5 w-3.5" />
-                        Assessment starten
+                        stärkenanalyse_starten (Die Analyse jetzt beginnen)
                       </div>
                     </div>
                   </button>
@@ -732,8 +732,8 @@ export default function AIAssistantPage() {
                           }}
                           className={`group flex flex-col gap-1 rounded-xl border p-2.5 text-left transition-all duration-200
                             ${locked
-                              ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
-                              : "border-slate-100 bg-white shadow-sm hover:-translate-y-1 hover:border-slate-200 hover:shadow-md"
+                              ? "cursor-not-allowed border-[#1C2333] bg-white/3 opacity-50"
+                              : "border-[#1C2333] bg-[#131C2C] shadow-sm hover:-translate-y-1 hover:border-[#2D3748] hover:shadow-md"
                             }`}
                         >
                           <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${locked ? "bg-slate-100" : s.iconCls}`}>
@@ -742,7 +742,7 @@ export default function AIAssistantPage() {
                               : <s.icon className="h-4 w-4" />
                             }
                           </span>
-                          <span className={`text-xs font-semibold leading-snug line-clamp-2 ${locked ? "text-slate-300" : "text-slate-800"}`}>
+                          <span className={`text-xs font-semibold leading-snug line-clamp-2 ${locked ? "text-slate-500" : "text-slate-200"}`}>
                             {s.label}
                           </span>
                           {s.sub && (
@@ -771,8 +771,8 @@ export default function AIAssistantPage() {
                     <div className={`max-w-[80%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                       <div className={`px-4 py-3
                         ${msg.role === "user"
-                          ? "bg-indigo-600 text-white rounded-2xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
-                          : "bg-white border border-slate-100 shadow-sm text-slate-800 rounded-2xl rounded-bl-sm"
+                          ? "bg-blue-500 text-white rounded-xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
+                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm"
                         }`}
                       >
                         {msg.role === "user"
@@ -790,10 +790,10 @@ export default function AIAssistantPage() {
                     <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="bg-slate-100 rounded-2xl rounded-bl-sm px-4 py-3">
+                    <div className="bg-[#111827] rounded-xl rounded-bl-sm px-4 py-3 border border-[#273244]">
                       <div className="flex items-center gap-1">
                         {[0, 150, 300].map((delay) => (
-                          <div key={delay} className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
+                          <div key={delay} className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
                         ))}
                       </div>
                     </div>
@@ -807,9 +807,9 @@ export default function AIAssistantPage() {
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="max-w-[80%] flex flex-col gap-1 items-start">
-                      <div className="bg-white border border-slate-100 shadow-sm text-slate-800 rounded-2xl rounded-bl-sm px-4 py-3">
+                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm px-4 py-3">
                         <MarkdownMessage text={streamingMsg.shown} />
-                        <span className="inline-block w-0.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
+                        <span className="inline-block w-0.5 h-3.5 bg-blue-400 animate-pulse ml-0.5 align-middle" />
                       </div>
                     </div>
                   </div>
@@ -822,10 +822,10 @@ export default function AIAssistantPage() {
 
           {/* ── EU AI Act micro-disclaimer ────────────────────────────────── */}
           {!disclaimerDismissed && (
-            <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5">
+            <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-1.5">
               <Shield className="w-3 h-3 text-slate-400 flex-shrink-0" />
               <p className="flex-1 text-[11px] text-slate-400 leading-relaxed">
-                <strong className="text-slate-500">KI-System</strong> — Kein Mensch. Kann Fehler machen. Art. 50 EU AI Act.
+                <strong className="text-slate-300">KI-Transparenz</strong> Dieses System arbeitet KI-gestützt und kann im Einzelfall ungenaue Einschätzungen liefern. Hinweis gemäß Art. 50 EU AI Act.
               </p>
               <button onClick={() => setDisclaimerDismissed(true)} className="flex-shrink-0 text-slate-300 hover:text-slate-500 transition-colors">
                 <X className="w-3 h-3" />
@@ -834,13 +834,13 @@ export default function AIAssistantPage() {
           )}
 
           {/* ── Input Bar ─────────────────────────────────────────────────── */}
-          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white/90 backdrop-blur-sm border-t border-slate-100">
+          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-black/90 backdrop-blur-sm border-t border-[#171a21]">
             {uploadedResumes.length > 0 && (
               <div className="sm:hidden mb-2">
                 <select
                   value={selectedResumeId || ""}
                   onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none bg-slate-50"
+                  className="w-full px-3 py-1.5 border border-[#1C2333] rounded-xl text-xs focus:outline-none bg-[#131C2C] text-slate-300"
                 >
                   <option value="">Kein Lebenslauf</option>
                   {uploadedResumes.map((r) => (
@@ -857,7 +857,7 @@ export default function AIAssistantPage() {
                   <button
                     key={s}
                     onClick={() => { setInput(s); setWandOpen(false); inputRef.current?.focus(); }}
-                    className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors text-left leading-snug"
+                    className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors text-left leading-snug"
                   >
                     {s.length > 60 ? s.slice(0, 60) + "…" : s}
                   </button>
@@ -865,12 +865,12 @@ export default function AIAssistantPage() {
               </div>
             )}
 
-            <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+            <div className="flex items-end gap-2 rounded-2xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] focus-within:border-indigo-700 focus-within:ring-2 focus-within:ring-indigo-900 transition-all">
               {/* Wand button */}
               <button
                 onClick={() => setWandOpen((v) => !v)}
-                title="Vorschläge anzeigen"
-                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-violet-100 text-violet-600" : "text-slate-400 hover:bg-slate-100 hover:text-violet-500"}`}
+                title="impulse_anzeigen (Passende Eingabevorschläge einblenden)"
+                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-blue-500/15 text-blue-300" : "text-slate-400 hover:bg-white/5 hover:text-blue-300"}`}
               >
                 <Wand2 className="h-4 w-4" />
               </button>
@@ -879,15 +879,16 @@ export default function AIAssistantPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Nachricht eingeben…"
+                placeholder="Deine Anfrage an JobAssist formulieren…"
                 rows={1}
-                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-800 placeholder:text-slate-400 py-1.5"
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-200 placeholder:text-slate-500 py-1.5"
                 style={{ minHeight: "36px" }}
               />
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isStreaming || !!streamingMsg}
-                className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
+                title="anfrage_senden (Deine Nachricht sicher an die Analyse übergeben)"
+                className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -899,21 +900,21 @@ export default function AIAssistantPage() {
         <aside className="hidden lg:flex w-[260px] flex-shrink-0 flex-col gap-3">
 
           {/* Kontext-Fenster header */}
-          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+          <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1C2333]">
               <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <Target className="w-3.5 h-3.5 text-indigo-500" />
               </div>
-              <span className="text-xs font-bold text-slate-800">Kontext-Fenster</span>
+              <span className="text-xs font-bold text-slate-200">Kontext-Fenster</span>
             </div>
 
             {contextJob ? (
               <div className="p-4 space-y-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Aktive Stelle</p>
-                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
-                    <p className="text-xs font-bold text-slate-900 leading-snug">{contextJob.role || "Ohne Titel"}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{contextJob.company || "Unbekannt"}</p>
+                  <div className="rounded-xl border border-indigo-900/40 bg-indigo-900/20 p-3">
+                    <p className="text-xs font-bold text-white leading-snug">{contextJob.role || "Ohne Titel"}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{contextJob.company || "Unbekannt"}</p>
                     {contextJob.status && (
                       <span className={`mt-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         contextJob.status === "interviewing" ? "bg-violet-100 text-violet-700" :
@@ -935,7 +936,7 @@ export default function AIAssistantPage() {
                     <button
                       key={a.label}
                       onClick={() => handleSend(a.prompt)}
-                      className="w-full flex items-center gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors"
+                      className="w-full flex items-center gap-2 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2 text-left text-xs font-semibold text-slate-300 hover:bg-indigo-900/30 hover:border-indigo-800 hover:text-indigo-300 transition-colors"
                     >
                       <ArrowRight className="w-3 h-3 flex-shrink-0 text-indigo-400" />
                       {a.label}
@@ -954,7 +955,7 @@ export default function AIAssistantPage() {
 
           {/* Resume context */}
           {contextResume && (
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-4">
+            <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Lebenslauf</p>
               <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <FileText className="w-4 h-4 text-indigo-400 flex-shrink-0" />
@@ -975,21 +976,21 @@ export default function AIAssistantPage() {
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         onClick={(e) => { if (e.target === e.currentTarget) setAssessmentDisclaimerOpen(false); }}
       >
-        <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+        <div className="w-full max-w-md rounded-2xl border border-[#1C2333] bg-[#0D1117] shadow-2xl shadow-black/40">
           {/* Header */}
-          <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
+          <div className="flex items-start justify-between gap-3 border-b border-[#1C2333] px-5 py-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-100">
-                <Shield className="h-5 w-5 text-violet-600" />
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
+                <Shield className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900">KI-Transparenzhinweis</h2>
-                <p className="text-[11px] text-slate-500">Gemäß EU AI Act Art. 50 — vor der Analyse</p>
+                <h2 className="text-sm font-bold text-white">KI-Transparenzhinweis</h2>
+                <p className="text-[11px] text-slate-400">Hinweis gemäß Art. 50 EU AI Act vor der Analyse</p>
               </div>
             </div>
             <button
               onClick={() => setAssessmentDisclaimerOpen(false)}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -997,40 +998,40 @@ export default function AIAssistantPage() {
 
           {/* Body */}
           <div className="px-5 py-4 space-y-3">
-            <p className="text-sm font-semibold text-slate-800">
-              Diese Analyse verwendet KI (Llama 3.3, bereitgestellt von Groq), um deine Eingaben zu verarbeiten.
+            <p className="text-sm font-semibold text-slate-100">
+              Diese Analyse nutzt ein KI-System, um deine Eingaben strukturiert auszuwerten und berufliche Empfehlungen abzuleiten.
             </p>
             <ul className="space-y-2">
               {[
-                "Deine Daten werden ausschließlich für Karriere-Empfehlungen verwendet.",
-                "Es erfolgt keine automatisierte Endentscheidung über deine Eignung.",
-                "Die Auswertung ist ein Orientierungswert — kein rechtlich bindendes Urteil.",
-                "Keine Persönlichkeitsmerkmale werden inferiert; nur textbasierte Evidenz aus deinen Antworten.",
+                "Deine Angaben werden ausschließlich für diese Karriere-Auswertung und zugehörige Empfehlungen verarbeitet.",
+                "Es erfolgt keine automatisierte Endentscheidung über deine Eignung oder eine konkrete Einstellung.",
+                "Die Auswertung dient als fachliche Orientierung und ersetzt keine verbindliche Karriere- oder Rechtsberatung.",
+                "Bewertet werden ausschließlich textbasierte Angaben; verdeckte Persönlichkeitsprofile werden nicht abgeleitet.",
               ].map((point) => (
-                <li key={point} className="flex items-start gap-2 text-sm text-slate-600">
-                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-violet-400" />
+                <li key={point} className="flex items-start gap-2 text-sm text-slate-300">
+                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-400" />
                   {point}
                 </li>
               ))}
             </ul>
-            <div className="rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-[11px] text-violet-700">
-              <strong>Du interagierst mit einem KI-System.</strong> Die KI kann Fehler machen. Für verbindliche Karriereentscheidungen wende dich an einen Berufsberater.
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-[11px] text-blue-100">
+              <strong>Du interagierst mit einem KI-System.</strong> Prüfe wichtige Empfehlungen sorgfältig und ziehe bei verbindlichen Entscheidungen qualifizierte Beratung hinzu.
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-2 border-t px-5 py-4">
+          <div className="flex justify-end gap-2 border-t border-[#1C2333] px-5 py-4">
             <button
               onClick={() => setAssessmentDisclaimerOpen(false)}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="rounded-xl border border-[#273244] px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-white/5 transition-colors"
             >
               Abbrechen
             </button>
             <button
               onClick={startAssessment}
-              className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition-colors shadow-sm shadow-violet-200"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 transition-colors shadow-sm shadow-blue-500/20"
             >
-              Verstanden &amp; Starten
+              stärkenanalyse_starten (Die Analyse nach Bestätigung beginnen)
             </button>
           </div>
         </div>

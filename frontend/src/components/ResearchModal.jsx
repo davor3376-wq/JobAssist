@@ -43,9 +43,9 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
       queryClient.setQueryData(["jobs", String(jobId)], res.data);
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       setSaved(true);
-      toast.success("Recherche gespeichert!");
+      toast.success("Die Recherche wurde sicher hinterlegt");
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Speichern fehlgeschlagen"));
+      toast.error(getApiErrorMessage(err, "Die Recherche konnte nicht sicher hinterlegt werden"));
     } finally {
       setSaving(false);
     }
@@ -211,7 +211,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Aktualisieren
+                recherche_aktualisieren (Die Unternehmensdaten neu abrufen)
               </button>
             )}
             {jobId && data && !loading && (
@@ -227,7 +227,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saved ? "Gespeichert" : "Speichern"}
+                {saved ? "Sicher hinterlegt" : "recherche_sichern (Die Erkenntnisse in deiner Stelle hinterlegen)"}
               </button>
             )}
           </div>

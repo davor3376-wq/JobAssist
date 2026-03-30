@@ -179,26 +179,26 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
   return (
     <button
       onClick={() => onSelect(resume.id)}
-      className={`w-full text-left rounded-2xl p-3.5 transition-all duration-200 border group relative overflow-hidden ${
+      className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border group relative overflow-hidden ${
         selected
-          ? "bg-white/90 border-violet-200 shadow-[0_4px_24px_rgba(124,58,237,0.14)] backdrop-blur-sm"
-          : "bg-white/60 border-white/70 hover:bg-white/80 hover:border-white/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)]"
+          ? "bg-[#08090c] border-blue-500/30 shadow-[0_4px_24px_rgba(59,130,246,0.14)]"
+          : "bg-[#08090c]/60 border-[#171a21] hover:bg-[#08090c] hover:border-blue-500/30 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
       }`}
     >
       {/* Violet accent bar for selected */}
-      {selected && <div className="absolute left-0 inset-y-0 w-0.5 bg-gradient-to-b from-violet-500 to-violet-700 rounded-l-full" />}
+      {selected && <div className="absolute left-0 inset-y-0 w-0.5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-l-full" />}
 
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-          selected ? "bg-violet-100" : "bg-slate-100 group-hover:bg-violet-50"
+          selected ? "bg-blue-500/12" : "bg-white/5 group-hover:bg-blue-500/10"
         }`}>
-          <FileText className={`w-4 h-4 ${selected ? "text-violet-600" : "text-slate-400"}`} />
+          <FileText className={`w-4 h-4 ${selected ? "text-blue-400" : "text-slate-400"}`} />
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className={`text-xs font-bold truncate leading-snug ${selected ? "text-violet-900" : "text-slate-800"}`}>
+          <p className={`text-xs font-bold truncate leading-snug ${selected ? "text-blue-300" : "text-slate-300"}`}>
             {resume.filename}
           </p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -213,10 +213,10 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border"
                 style={{ backgroundColor: `${scoreColor}18`, borderColor: `${scoreColor}40`, color: scoreColor }}>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: scoreColor }} />
-                {score != null ? `Match ${score}%` : "Analysiert"}
+                {score != null ? `Matching-Quote ${score}%` : "Analysiert"}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-400">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-[#1C2333] px-2 py-0.5 text-[9px] font-bold text-slate-400">
                 Bereit
               </span>
             )}
@@ -227,7 +227,7 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(resume.id); }}
           disabled={deleteLoading}
-          className="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40 opacity-0 group-hover:opacity-100"
+          className="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-900/30 transition-colors disabled:opacity-40 opacity-0 group-hover:opacity-100"
         >
           <X className="w-3 h-3" />
         </button>
@@ -240,24 +240,24 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
 
 function UploadZone({ getRootProps, getInputProps, isDragActive, uploading }) {
   return (
-    <div {...getRootProps()} className={`rounded-2xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
+    <div {...getRootProps()} className={`rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
       isDragActive
-        ? "border-violet-400 bg-violet-50/80 scale-[1.02]"
-        : "border-slate-200 bg-white/40 hover:border-violet-300 hover:bg-white/60"
+        ? "border-blue-400 bg-blue-500/10 scale-[1.02]"
+        : "border-[#171a21] bg-[#08090c]/40 hover:border-blue-500/30 hover:bg-[#08090c]/60"
     } ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}>
       <input {...getInputProps()} />
       {uploading ? (
         <div className="flex flex-col items-center gap-2 py-2">
-          <div className="w-6 h-6 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-[11px] font-semibold text-violet-600">Analysiere…</p>
+          <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-[11px] font-semibold text-blue-400">Analysiere…</p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-2 py-1">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${isDragActive ? "bg-violet-200" : "bg-violet-100"}`}>
-            <Upload className={`w-4 h-4 ${isDragActive ? "text-violet-700" : "text-violet-500"}`} />
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${isDragActive ? "bg-blue-500/15" : "bg-blue-500/10"}`}>
+            <Upload className={`w-4 h-4 ${isDragActive ? "text-blue-300" : "text-blue-400"}`} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-700">{isDragActive ? "Hier ablegen!" : "Lebenslauf hochladen"}</p>
+            <p className="text-xs font-semibold text-slate-300">{isDragActive ? "Hier ablegen!" : "Lebenslauf hochladen"}</p>
             <p className="text-[9px] text-slate-400 mt-0.5">PDF oder TXT · Max. 5 MB</p>
           </div>
         </div>
@@ -272,11 +272,11 @@ function DocumentIntelligence({ resume, skills }) {
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center">
-          <Brain className="w-8 h-8 text-violet-400" />
+        <div className="w-16 h-16 rounded-xl bg-blue-500/12 flex items-center justify-center">
+          <Brain className="w-8 h-8 text-blue-400" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-700">Kein Dokument ausgewählt</h3>
+          <h3 className="text-sm font-bold text-white">Kein Dokument ausgewählt</h3>
           <p className="text-xs text-slate-400 mt-1">Lade einen Lebenslauf hoch oder wähle ihn links aus</p>
         </div>
       </div>
@@ -288,24 +288,24 @@ function DocumentIntelligence({ resume, skills }) {
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Panel header */}
-      <div className="rounded-2xl bg-gradient-to-br from-[#0D1117] to-[#1a1630] p-5 text-white relative overflow-hidden flex-shrink-0">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #7c3aed 0%, transparent 60%)" }} />
+      <div className="rounded-xl bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#08090c_0%,#000000_100%)] p-5 text-white relative overflow-hidden flex-shrink-0 border border-[#171a21]">
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 60%)" }} />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-lg bg-violet-500/30 flex items-center justify-center">
-              <Brain className="w-3.5 h-3.5 text-violet-300" />
+            <div className="w-6 h-6 rounded-lg bg-blue-500/12 flex items-center justify-center">
+              <Brain className="w-3.5 h-3.5 text-blue-300" />
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-violet-300">Document Intelligence</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-blue-300">Dokumenten-Analyse</span>
           </div>
           <h2 className="text-sm font-bold text-white truncate mt-1">{resume.filename}</h2>
           <p className="text-[10px] text-slate-400 mt-0.5">
-            KI-Analyse · Top-Kompetenz: <span className="text-violet-300 font-semibold">{topSkill?.label}</span> ({topSkill?.value}%)
+            KI-Analyse · Top-Kompetenz: <span className="text-blue-300 font-semibold">{topSkill?.label}</span> ({topSkill?.value}%)
           </p>
         </div>
       </div>
 
       {/* Radar + skills */}
-      <div className="flex-1 rounded-2xl bg-white border border-slate-100 shadow-card p-5 flex flex-col gap-4 min-h-0 overflow-y-auto">
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-5 flex flex-col gap-4 min-h-0 overflow-y-auto">
         {/* Radar chart */}
         <div className="flex items-center justify-center">
           <RadarChart skills={skills} size={220} />
@@ -322,7 +322,7 @@ function DocumentIntelligence({ resume, skills }) {
                 </div>
                 <span className="text-[10px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${s.value}%`, backgroundColor: s.color }}
@@ -334,13 +334,13 @@ function DocumentIntelligence({ resume, skills }) {
       </div>
 
       {/* Tailor CTA */}
-      <div className="rounded-2xl overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #6d28d9 100%)" }}>
+      <div className="rounded-xl overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}>
         <div className="p-4 relative overflow-hidden">
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.2) 0%, transparent 50%)" }} />
           <div className="relative z-10 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-extrabold text-white leading-none">Lebenslauf anpassen</p>
-              <p className="text-[10px] text-violet-200 mt-1 leading-snug">KI optimiert deinen Lebenslauf für eine konkrete Stelle</p>
+              <p className="text-[10px] text-blue-100 mt-1 leading-snug">KI optimiert deinen Lebenslauf für eine konkrete Stelle</p>
             </div>
             <Link
               to="/ai-assistant"
@@ -393,25 +393,25 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
           <Eye className="w-3.5 h-3.5 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-900 leading-none">Live Preview</h3>
+          <h3 className="text-sm font-bold text-white leading-none">Live-Vorschau</h3>
           <p className="text-[9px] text-slate-400 mt-0.5">KI-Scan · Fokusanalyse</p>
         </div>
       </div>
 
       {/* A4 document mock */}
-      <div className="flex-1 rounded-2xl bg-white border border-slate-100 shadow-card overflow-hidden">
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card overflow-hidden">
         <div className="relative" style={{ paddingBottom: "141.4%" /* A4 ratio */ }}>
           <div className="absolute inset-0 p-3">
 
             {/* Document wireframe — structured sections */}
             <div className="absolute inset-3 pointer-events-none">
-              <div className="h-2 w-1/2 rounded bg-slate-200 mb-1" />
-              <div className="h-1.5 w-1/3 rounded bg-slate-100 mb-1" />
-              <div className="h-px bg-slate-200 mb-2" />
+              <div className="h-2 w-1/2 rounded bg-slate-700 mb-1" />
+              <div className="h-1.5 w-1/3 rounded bg-slate-800 mb-1" />
+              <div className="h-px bg-slate-700 mb-2" />
               {[["w-full","w-4/5"],["w-3/4","w-full"],["w-full","w-2/3"],["w-1/2",""],["w-full","w-5/6"],["w-3/4","w-full"],["w-full","w-2/3"],["w-1/2",""],["w-full","w-4/5"],["w-3/5",""]].map(([a, b], i) => (
                 <div key={i} className="mb-1.5">
-                  <div className={`h-1 rounded bg-slate-100 ${a}`} />
-                  {b && <div className={`h-1 rounded bg-slate-100 mt-0.5 ${b}`} />}
+                  <div className={`h-1 rounded bg-slate-800 ${a}`} />
+                  {b && <div className={`h-1 rounded bg-slate-800 mt-0.5 ${b}`} />}
                 </div>
               ))}
             </div>
@@ -447,7 +447,7 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
       </div>
 
       {/* Legend */}
-      <div className="rounded-2xl bg-white border border-slate-100 shadow-card p-3 flex-shrink-0">
+      <div className="rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-3 flex-shrink-0">
         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">ATS-Fokus</p>
         <div className="space-y-1.5">
           {[
@@ -459,14 +459,14 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
             return (
               <div key={heat} className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
-                <span className="text-[10px] font-semibold text-slate-700 flex-shrink-0">{label}</span>
+                <span className="text-[10px] font-semibold text-slate-300 flex-shrink-0">{label}</span>
                 <span className="text-[9px] text-slate-400 truncate">— {note}</span>
               </div>
             );
           })}
         </div>
-        <p className="text-[9px] text-slate-400 mt-2.5 pt-2 border-t border-slate-50 leading-relaxed">
-          Zeigt welche Abschnitte von ATS-Systemen priorisiert werden. Hover für Details.
+        <p className="text-[9px] text-slate-400 mt-2.5 pt-2 border-t border-[#1C2333] leading-relaxed">
+          Zeigt, welche Abschnitte von ATS-Systemen priorisiert werden. Mit dem Mauszeiger erhältst du Details.
         </p>
       </div>
     </div>
@@ -509,7 +509,7 @@ export default function ResumePage() {
       queryClient.setQueryData(["resumes"], (old = []) => old.filter(r => r.id !== deletedId));
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       if (selectedId === deletedId) setSelectedId(null);
-      toast.success("Lebenslauf gelöscht");
+      toast.success("Dein Dokument wurde sicher entfernt");
     },
     onError: (err) => toast.error(getApiErrorMessage(err, "Lebenslauf konnte nicht gelöscht werden")),
   });
@@ -524,9 +524,9 @@ export default function ResumePage() {
         fd.append("file", file);
         await resumeApi.upload(fd);
         queryClient.invalidateQueries({ queryKey: ["resumes"] });
-        toast.success("Lebenslauf hochgeladen und analysiert!");
+        toast.success("Dein Dokument wurde sicher hinterlegt und für die Analyse vorbereitet");
       } catch (err) {
-        toast.error(getApiErrorMessage(err, "Upload fehlgeschlagen"));
+        toast.error(getApiErrorMessage(err, "Das Dokument konnte nicht hochgeladen werden"));
       } finally { setUploading(false); }
     });
   }, [guardedRun, queryClient]);
@@ -554,17 +554,17 @@ export default function ResumePage() {
       {/* ── Page header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight leading-none">Meine Lebensläufe</h1>
-          <p className="text-xs text-slate-500 mt-1">KI-gestützte Dokumentenanalyse & ATS-Optimierung</p>
+          <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">Meine Lebensläufe</h1>
+          <p className="text-xs text-slate-400 mt-1">KI-gestützte Dokumentenanalyse & ATS-Optimierung</p>
         </div>
         {resumes.length > 0 && (
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 bg-white border border-slate-100 rounded-xl px-3 py-1.5 shadow-card">
+            <span className="text-[10px] font-bold text-slate-400 bg-[#08090c] border border-[#171a21] rounded-xl px-3 py-1.5 shadow-card">
               {resumes.length} Dokument{resumes.length > 1 ? "e" : ""}
             </span>
             {avgMatchScore != null && (
-              <span className="text-[10px] font-bold text-white rounded-xl px-3 py-1.5" style={{ backgroundColor: "#7c3aed", boxShadow: "0 0 12px rgba(124,58,237,0.3)" }}>
-                Match Ø {avgMatchScore}%
+              <span className="text-[10px] font-bold text-white rounded-xl px-3 py-1.5" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 12px rgba(59,130,246,0.3)" }}>
+                Matching-Quote Ø {avgMatchScore}%
               </span>
             )}
           </div>
@@ -582,9 +582,9 @@ export default function ResumePage() {
             <UploadZone getRootProps={getRootProps} getInputProps={getInputProps} isDragActive={isDragActive} uploading={uploading} />
 
             {resumes.length === 0 ? (
-              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white/40 p-6 text-center">
+              <div className="rounded-xl border-2 border-dashed border-[#171a21] bg-[#08090c]/40 p-6 text-center">
                 <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-500">Noch keine Lebensläufe</p>
+                <p className="text-xs font-semibold text-slate-400">Noch keine Lebensläufe</p>
                 <p className="text-[10px] text-slate-400 mt-1">Lade oben dein erstes Dokument hoch</p>
               </div>
             ) : (
@@ -608,10 +608,10 @@ export default function ResumePage() {
 
             {/* Tips card */}
             {resumes.length > 0 && (
-              <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 p-3.5 mt-auto">
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 mt-auto">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-3.5 h-3.5 text-violet-600 flex-shrink-0" />
-                  <p className="text-[10px] font-bold text-violet-900">Optimierungstipps</p>
+                  <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                  <p className="text-[10px] font-bold text-blue-300">Optimierungstipps</p>
                 </div>
                 <ul className="space-y-1.5">
                   {[
@@ -619,8 +619,8 @@ export default function ResumePage() {
                     "Halte den Lebenslauf auf 1-2 Seiten",
                     "Messbare Erfolge steigern den Match-Score",
                   ].map(tip => (
-                    <li key={tip} className="flex items-start gap-1.5 text-[9px] text-violet-700">
-                      <CheckCircle className="w-2.5 h-2.5 flex-shrink-0 mt-0.5 text-violet-400" />
+                    <li key={tip} className="flex items-start gap-1.5 text-[9px] text-blue-300">
+                      <CheckCircle className="w-2.5 h-2.5 flex-shrink-0 mt-0.5 text-blue-400" />
                       {tip}
                     </li>
                   ))}
