@@ -481,7 +481,7 @@ export default function JobDetailPage() {
   const hasAiContent = job.match_score != null || job.cover_letter || job.interview_qa;
   const groupedStrengths = (matchFeedback?.strengths || []).reduce(
     (acc, item) => {
-      if (/(kommunikation|team|fÃ¼hr|kunden|organisation|selbststÃ¤ndig|zuverlÃ¤ssig|empath|prÃ¤sent|zusammenarbeit|verantwort)/i.test(item || "")) acc.personal.push(item);
+      if (/(kommunikation|team|führ|kunden|organisation|selbstständig|zuverlässig|empath|präsent|zusammenarbeit|verantwort)/i.test(item || "")) acc.personal.push(item);
       else acc.technical.push(item);
       return acc;
     },
@@ -572,7 +572,6 @@ export default function JobDetailPage() {
                 <Link to="/resume" className="text-sm font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1 min-h-[44px]">
                   <FileText className="w-4 h-4" /> Lebenslauf hochladen →
                 </Link>
-              </div>
               </div>
             )}
 
