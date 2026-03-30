@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight, CreditCard, ExternalLink, Zap,
-  CheckCircle2, Rocket, Crown, Building2, Star,
+  CheckCircle2, Rocket, Crown, Building2, Star, Clock3,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -28,9 +28,9 @@ const PLANS = [
     Icon: Star,
     features: [
       { label: "5 Lebenslauf-Analysen / Monat" },
-      { label: "5 Anschreiben / Monat" },
+      { label: "5 Motivationsschreiben / Monat" },
       { label: "2 Aktive Job-Alerts" },
-      { label: "15 KI-Nachrichten / Monat" },
+      { label: "15 KI-Bewerbungsassistent-Nachrichten / Monat" },
       { label: "5 Jobsuche / Tag" },
       { label: "Lebenslauf hochladen",    soon: true },
       { label: "Job-Suche",               soon: true },
@@ -52,9 +52,9 @@ const PLANS = [
     Icon: Zap,
     features: [
       { label: "15 Lebenslauf-Analysen / Monat" },
-      { label: "25 Anschreiben / Monat" },
+      { label: "25 Motivationsschreiben / Monat" },
       { label: "10 Aktive Job-Alerts" },
-      { label: "200 KI-Nachrichten / Monat" },
+      { label: "200 KI-Bewerbungsassistent-Nachrichten / Monat" },
       { label: "20 Jobsuche / Tag" },
       { label: "Prioritäts-Support",      soon: true },
       { label: "Alles aus Basic",         soon: true },
@@ -67,17 +67,17 @@ const PLANS = [
     price: "€7,99",
     period: "/ Monat",
     badge: "Bestes Angebot",
-    iconCls: "from-violet-500 to-purple-600",
-    borderCls: "border-violet-400",
-    glowCls: "shadow-[0_0_28px_rgba(139,92,246,0.35)] hover:shadow-[0_0_40px_rgba(139,92,246,0.55)]",
-    badgeCls: "bg-violet-600 text-white",
-    btnCls: "bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-200",
+    iconCls: "from-blue-500 to-sky-500",
+    borderCls: "border-blue-400",
+    glowCls: "shadow-[0_0_28px_rgba(59,130,246,0.35)] hover:shadow-[0_0_40px_rgba(59,130,246,0.55)]",
+    badgeCls: "bg-blue-600 text-white",
+    btnCls: "bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-500/20",
     Icon: Crown,
     features: [
       { label: "Unbegrenzt Lebenslauf-Analysen / Monat" },
-      { label: "Unbegrenzt Anschreiben / Monat" },
+      { label: "Unbegrenzt Motivationsschreiben / Monat" },
       { label: "Unbegrenzt Aktive Job-Alerts" },
-      { label: "Unbegrenzt KI-Nachrichten / Monat" },
+      { label: "Unbegrenzt KI-Bewerbungsassistent-Nachrichten / Monat" },
       { label: "Unbegrenzt Jobsuche / Tag" },
       { label: "24h Support",             soon: true },
       { label: "Alles aus Pro",           soon: true },
@@ -98,9 +98,9 @@ const PLANS = [
     Icon: Building2,
     features: [
       { label: "Unbegrenzt Lebenslauf-Analysen / Monat" },
-      { label: "Unbegrenzt Anschreiben / Monat" },
+      { label: "Unbegrenzt Motivationsschreiben / Monat" },
       { label: "Unbegrenzt Aktive Job-Alerts" },
-      { label: "Unbegrenzt KI-Nachrichten / Monat" },
+      { label: "Unbegrenzt KI-Bewerbungsassistent-Nachrichten / Monat" },
       { label: "Unbegrenzt Jobsuche / Tag" },
       { label: "Dedizierter Manager",     soon: true },
       { label: "Custom Integrationen",    soon: true },
@@ -112,9 +112,9 @@ const PLANS = [
 // ─── Short labels for x-axis ─────────────────────────────────────────────────
 const FEATURE_SHORT = {
   cv_analysis:  "Analysen",
-  cover_letter: "Anschreiben",
+  cover_letter: "Motivationsschreiben",
   job_alerts:   "Alerts",
-  ai_chat:      "KI-Chat",
+  ai_chat:      "KI-Bewerbungsassistent",
   job_search:   "Jobsuche",
 };
 
@@ -132,20 +132,20 @@ function UsageHeroChart({ usage }) {
   const barW = Math.min(44, step * 0.48);
 
   return (
-    <div className="rounded-xl bg-slate-50/70 px-2 pt-2 pb-1">
+    <div className="rounded-xl border border-[#1C2333] bg-[#0D1117] px-2 pt-2 pb-1">
       <svg viewBox={`0 0 ${vw} ${vh}`} className="w-full" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         {/* Dashed grid lines */}
         {[25, 50, 75, 100].map((pct) => {
           const y = padT + chartH * (1 - pct / 100);
           return (
             <g key={pct}>
-              <line x1={padL} x2={vw - padR} y1={y} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 4" />
-              <text x={padL - 5} y={y + 3} textAnchor="end" fontSize="8" fill="#cbd5e1">{pct}%</text>
+              <line x1={padL} x2={vw - padR} y1={y} y2={y} stroke="#1f2937" strokeWidth="1" strokeDasharray="3 4" />
+              <text x={padL - 5} y={y + 3} textAnchor="end" fontSize="8" fill="#64748b">{pct}%</text>
             </g>
           );
         })}
         {/* Baseline */}
-        <line x1={padL} x2={vw - padR} y1={padT + chartH} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="1" />
+        <line x1={padL} x2={vw - padR} y1={padT + chartH} y2={padT + chartH} stroke="#1f2937" strokeWidth="1" />
 
         {/* Bars */}
         {items.map((item, i) => {
@@ -159,9 +159,9 @@ function UsageHeroChart({ usage }) {
           const barY      = padT + chartH - barH;
           const gradId    = `hg-${item.feature}`;
 
-          const c1 = isAtLimit ? "#fda4af" : isWarn ? "#fde68a" : "#c7d2fe";
-          const c2 = isAtLimit ? "#f43f5e" : isWarn ? "#f59e0b" : "#6366f1";
-          const valColor = isAtLimit ? "#f43f5e" : isWarn ? "#d97706" : "#6366f1";
+          const c1 = isAtLimit ? "#fcd34d" : isWarn ? "#93c5fd" : "#93c5fd";
+          const c2 = isAtLimit ? "#f59e0b" : isWarn ? "#3b82f6" : "#3b82f6";
+          const valColor = isAtLimit ? "#fbbf24" : isWarn ? "#60a5fa" : "#60a5fa";
           const shortLabel = FEATURE_SHORT[item.feature] || item.feature;
           const labelY = padT + chartH + 14;
 
@@ -174,7 +174,7 @@ function UsageHeroChart({ usage }) {
                 </linearGradient>
               </defs>
               {/* Track */}
-              <rect x={x} y={padT} width={barW} height={chartH} rx="6" fill="#f1f5f9" />
+              <rect x={x} y={padT} width={barW} height={chartH} rx="6" fill="#111827" />
               {/* Fill */}
               {!unlimited && barH > 1 && (
                 <rect x={x} y={barY} width={barW} height={barH} rx="6" fill={`url(#${gradId})`} />
@@ -190,11 +190,11 @@ function UsageHeroChart({ usage }) {
                 {unlimited ? "∞" : `${item.used} / ${item.limit}`}
               </text>
               {/* Feature label */}
-              <text x={cx} y={labelY} textAnchor="middle" fontSize="9" fill="#64748b">{shortLabel}</text>
+              <text x={cx} y={labelY} textAnchor="middle" fontSize="9" fill="#94a3b8">{shortLabel}</text>
               {/* Limit reached indicator — only shown at 100% */}
               {isAtLimit && (
-                <text x={cx} y={labelY + 13} textAnchor="middle" fontSize="8" fontWeight="700" fill="#f43f5e">
-                  Limit!
+                <text x={cx} y={labelY + 13} textAnchor="middle" fontSize="8" fontWeight="700" fill="#fbbf24">
+                  Aktion nötig
                 </text>
               )}
             </g>
@@ -212,31 +212,32 @@ function UsageRow({ feature, used, limit }) {
   const isWarn    = !unlimited && pct >= 80 && !isAtLimit;
 
   const barGradient = isAtLimit
-    ? "linear-gradient(90deg,#fda4af,#f43f5e)"
+    ? "linear-gradient(90deg,#fcd34d,#f59e0b)"
     : isWarn
-    ? "linear-gradient(90deg,#fde68a,#f59e0b)"
-    : "linear-gradient(90deg,#c7d2fe,#6366f1)";
+    ? "linear-gradient(90deg,#93c5fd,#3b82f6)"
+    : "linear-gradient(90deg,#60a5fa,#3b82f6)";
 
   // Soft, neutral badges — no aggressive red labels
   const badgeText = unlimited ? "Unbegrenzt" : isAtLimit ? "Voll" : isWarn ? "Fast voll" : `${Math.round(pct)}%`;
   const badgeCls  = isAtLimit
-    ? "bg-rose-50 text-rose-400 border border-rose-100"
+    ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
     : isWarn
-    ? "bg-amber-50 text-amber-500 border border-amber-100"
-    : "bg-slate-100 text-slate-400";
+    ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
+    : "bg-[#111827] text-slate-300 border border-[#1C2333]";
 
   const shortName = label.split(" (")[0];
 
   return (
     <div className="flex items-center gap-3">
-      <span className="w-36 sm:w-44 flex-shrink-0 truncate text-xs text-slate-600">{shortName}</span>
-      <div className="relative flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+      <span className="w-36 sm:w-44 flex-shrink-0 truncate text-xs text-slate-300">{shortName}</span>
+      <div className="relative flex-1 h-2.5 rounded-full bg-[#111827] overflow-hidden border border-[#1C2333]">
         <div
           className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
           style={{
             width: unlimited ? "100%" : `${Math.min(100, pct)}%`,
             background: unlimited ? "linear-gradient(90deg,#c7d2fe,#818cf8)" : barGradient,
             opacity: unlimited ? 0.35 : 1,
+            boxShadow: unlimited ? "none" : "0 0 12px rgba(59,130,246,0.28)",
           }}
         />
       </div>
@@ -332,20 +333,27 @@ export default function BillingPage() {
   const avgUsagePct  = limitedItems.length
     ? Math.round(limitedItems.reduce((s, u) => s + Math.min(100, (u.used / u.limit) * 100), 0) / limitedItems.length)
     : 0;
-  const healthColor  = avgUsagePct >= 80 ? "text-red-600" : avgUsagePct >= 60 ? "text-amber-600" : "text-emerald-600";
-  const healthLabel  = avgUsagePct >= 80 ? "Kritisch" : avgUsagePct >= 60 ? "Mittel" : "Gut";
+  const healthColor  = avgUsagePct >= 80 ? "text-amber-300" : avgUsagePct >= 60 ? "text-blue-300" : "text-emerald-300";
+  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "Im grünen Bereich";
+  const comparisonRows = [
+    { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
+    { row: "Motivationsschreiben / Monat", vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
+    { row: "Aktive Job-Alerts", vals: ["2", "10", "Unbegrenzt", "Unbegrenzt"] },
+    { row: "KI-Bewerbungsassistent / Monat", vals: ["15", "200", "Unbegrenzt", "Unbegrenzt"] },
+    { row: "Jobsuche / Tag", vals: ["5", "20", "Unbegrenzt", "Unbegrenzt"] },
+  ];
 
   return (
     <div className={`max-w-5xl space-y-8 animate-slide-up ${!isMax ? "pb-20 sm:pb-0" : ""}`}>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Abrechnung</h1>
-        <p className="mt-1 text-sm text-slate-500">Verwalte deinen Plan, deine Nutzung und Zahlungsmethoden.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Abrechnung</h1>
+        <p className="mt-1 text-sm text-slate-400">Verwalte deinen Plan, deine Nutzung und den Ausbau deiner KI-Leistung.</p>
       </div>
 
       {/* ── Plan hero card ───────────────────────────────────────────────────── */}
-      <div className={`relative overflow-hidden rounded-2xl border-2 bg-white p-5 sm:p-6 shadow-sm ${currentPlan.borderCls}`}>
+      <div className={`relative overflow-hidden rounded-2xl border bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] ${currentPlan.borderCls}`}>
         {/* Gradient glow */}
         <div className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${currentPlan.iconCls} opacity-10 blur-3xl`} />
 
@@ -356,15 +364,15 @@ export default function BillingPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Aktiver Plan</p>
-              <h2 className="mt-0.5 text-2xl sm:text-3xl font-bold text-slate-900">{planName}</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="mt-0.5 text-2xl sm:text-3xl font-bold text-white">{planName}</h2>
+              <p className="mt-1 text-sm text-slate-400">
                 {isPaid && periodEnd
                   ? `Verlängert automatisch am ${periodEnd}`
-                  : "Kostenloses Konto — auf Basis-Limits beschränkt"}
+                  : "Kostenloses Konto mit sicherem Einstieg. Keine Karte erforderlich."}
               </p>
               {usage.length > 0 && (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-xs text-slate-500">Gesamtnutzung:</span>
+                  <span className="text-xs text-slate-400">Gesamtnutzung:</span>
                   <span className={`text-sm font-bold ${healthColor}`}>{avgUsagePct}% — {healthLabel}</span>
                 </div>
               )}
@@ -375,7 +383,7 @@ export default function BillingPage() {
             {isPaid && (
               <button
                 onClick={handleManage}
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 whitespace-nowrap"
+                className="flex items-center justify-center gap-2 rounded-xl border border-[#1C2333] bg-[#111827] px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-[#0f172a] whitespace-nowrap"
               >
                 <ExternalLink className="h-4 w-4" />
                 Abo verwalten
@@ -384,10 +392,10 @@ export default function BillingPage() {
             {!isMax && (
               <button
                 onClick={() => navigate("/pricing")}
-                className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-colors hover:bg-indigo-700 whitespace-nowrap"
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-500/20 transition-colors hover:bg-blue-500 whitespace-nowrap"
               >
                 <Zap className="h-4 w-4" />
-                {planKey === "pro" ? "Upgrade auf Max" : "Upgrade auf Pro"}
+                {planKey === "pro" ? "Upgrade auf Max (Volle KI-Leistung freischalten)" : "Upgrade auf Pro (Volle KI-Leistung freischalten)"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -395,7 +403,7 @@ export default function BillingPage() {
               <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                 <CreditCard className="h-4 w-4 text-slate-400 flex-shrink-0" />
                 <span className="text-sm text-slate-600">•••• {sub.last4}</span>
-                <button onClick={handleManage} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 ml-1">Ändern</button>
+                <button onClick={handleManage} className="text-xs font-semibold text-blue-400 hover:text-blue-300 ml-1">Ändern</button>
               </div>
             )}
           </div>
@@ -404,19 +412,19 @@ export default function BillingPage() {
 
       {/* ── Usage: donut gauges ───────────────────────────────────────────────── */}
       {usage.length > 0 && (
-        <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-[#1C2333] bg-[#0D1117] shadow-[0_20px_60px_rgba(0,0,0,0.28)] overflow-hidden">
           {/* Section header with health bar */}
-          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-slate-50">
+          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-[#1C2333]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900">Deine Nutzung</h3>
-                <p className="mt-0.5 text-xs text-slate-500">Verbrauch im aktuellen Abrechnungszeitraum</p>
+                <h3 className="text-sm sm:text-base font-bold text-white">Deine Nutzung</h3>
+                <p className="mt-0.5 text-xs text-slate-400">Verbrauch im aktuellen Abrechnungszeitraum</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <span className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                  avgUsagePct >= 80 ? "bg-red-50 text-red-600" :
-                  avgUsagePct >= 60 ? "bg-amber-50 text-amber-600" :
-                  "bg-emerald-50 text-emerald-600"
+                  avgUsagePct >= 80 ? "bg-amber-500/10 text-amber-300 border border-amber-500/20" :
+                  avgUsagePct >= 60 ? "bg-blue-500/10 text-blue-300 border border-blue-500/20" :
+                  "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
                 }`}>
                   {healthLabel}
                 </span>
@@ -424,16 +432,17 @@ export default function BillingPage() {
               </div>
             </div>
             {/* Overall health bar */}
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#111827] border border-[#1C2333]">
               <div
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
                   width: `${avgUsagePct}%`,
                   background: avgUsagePct >= 80
-                    ? "linear-gradient(90deg,#fca5a5,#dc2626)"
+                    ? "linear-gradient(90deg,#fcd34d,#f59e0b)"
                     : avgUsagePct >= 60
-                    ? "linear-gradient(90deg,#fcd34d,#d97706)"
+                    ? "linear-gradient(90deg,#93c5fd,#3b82f6)"
                     : "linear-gradient(90deg,#6ee7b7,#10b981)",
+                  boxShadow: avgUsagePct >= 60 ? "0 0 16px rgba(59,130,246,0.24)" : "0 0 16px rgba(16,185,129,0.18)",
                 }}
               />
             </div>
@@ -456,18 +465,18 @@ export default function BillingPage() {
           </div>
 
           {!isMax && (
-            <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+            <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <Rocket className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-indigo-700 font-medium">
+                <Rocket className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <p className="text-xs sm:text-sm text-blue-100 font-medium">
                   Upgrade für mehr Kapazität und unbegrenzte KI-Nutzung.
                 </p>
               </div>
               <button
                 onClick={() => navigate("/pricing")}
-                className="flex-shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
+                className="flex-shrink-0 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 transition-colors"
               >
-                Mehr erfahren
+                Mehr erfahren (Alle Vorteile vergleichen)
               </button>
             </div>
           )}
@@ -477,10 +486,72 @@ export default function BillingPage() {
 
       {/* ── Plan comparison ───────────────────────────────────────────────────── */}
       <div>
-        <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">Planvergleich</h3>
+        <h3 className="mb-4 text-sm sm:text-base font-bold text-white">Planvergleich</h3>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {PLANS.filter((p) => p.key !== "enterprise").map((p) => {
+            const isCurrent = p.key === planKey;
+            const isRecommended = p.key === "pro";
+            const planIndex = PLANS.findIndex((entry) => entry.key === p.key);
+            return (
+              <div
+                key={`bento-${p.key}`}
+                className={`rounded-2xl border p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] ${
+                  isRecommended
+                    ? "border-blue-500/40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_36%),linear-gradient(180deg,#111827_0%,#000000_100%)]"
+                    : "border-[#1C2333] bg-[linear-gradient(180deg,#111827_0%,#000000_100%)]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{p.sub}</p>
+                    <h4 className="mt-1 text-xl font-bold text-white">{p.name}</h4>
+                  </div>
+                  {isRecommended && <span className="rounded-full bg-blue-500 px-2.5 py-1 text-[10px] font-bold text-white">Empfohlen</span>}
+                  {isCurrent && !isRecommended && <span className="rounded-full bg-[#111827] px-2.5 py-1 text-[10px] font-bold text-slate-300 border border-[#1C2333]">Aktuell</span>}
+                </div>
+
+                <div className="mt-4 flex items-end gap-1">
+                  <span className="text-3xl font-extrabold text-white">{p.price}</span>
+                  {p.period && <span className="pb-1 text-xs text-slate-400">{p.period}</span>}
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {comparisonRows.map(({ row, vals }) => (
+                    <div key={`${p.key}-${row}`} className="flex items-center justify-between gap-3 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2.5">
+                      <span className="text-xs text-slate-400">{row}</span>
+                      <span className="text-xs font-semibold text-white">{vals[planIndex]}</span>
+                    </div>
+                  ))}
+
+                  {p.features.filter((feature) => feature.soon).slice(0, 2).map((feature) => (
+                    <div key={`${p.key}-${feature.label}`} className="flex items-center gap-2 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2.5">
+                      <Clock3 className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                      <span className="text-xs text-slate-500">{feature.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5">
+                  {isCurrent ? (
+                    <div className="rounded-xl border border-[#1C2333] bg-[#111827] py-2 text-center text-xs font-semibold text-slate-300">
+                      Aktueller Plan
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => navigate("/pricing")}
+                      className={`w-full rounded-xl py-2.5 text-xs font-semibold transition-all ${p.btnCls}`}
+                    >
+                      Plan wählen (Jetzt durchstarten)
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* Feature comparison table — scrollable on all screen sizes */}
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="hidden mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
           <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
@@ -561,7 +632,50 @@ export default function BillingPage() {
       </div>
 
       {/* ── Bottom: payment + no-open-invoices ───────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className={`grid grid-cols-1 gap-4 ${isPaid ? "sm:grid-cols-2" : ""}`}>
+        {isPaid && (
+          <div className="rounded-2xl border border-[#1C2333] bg-[#0D1117] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+            <div className="mb-3 flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-slate-400" />
+              <p className="text-sm font-bold text-white">Zahlungsmethode</p>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-[#1C2333] bg-[#111827] px-3 py-3">
+              <div className="flex items-center gap-2.5">
+                <span className="rounded-lg border border-[#273244] bg-black px-2 py-1 text-[10px] font-bold text-slate-300 tracking-wider">VISA</span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-100">•••• •••• •••• {sub.last4}</p>
+                  <p className="text-[11px] text-slate-400">Standardzahlungsmethode</p>
+                </div>
+              </div>
+              <button onClick={handleManage} className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+                Bearbeiten
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-blue-500/20 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_32%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+          <div className="mb-3 flex items-center gap-2">
+            <Rocket className="h-4 w-4 text-blue-400" />
+            <p className="text-sm font-bold text-white">Vertrauen in JobAssist</p>
+          </div>
+          <p className="text-2xl font-extrabold text-white">500+ Nutzer</p>
+          <p className="mt-2 text-sm text-slate-300">
+            setzen JobAssist bereits ein, um Bewerbungen präziser zu steuern, ihre Unterlagen zu schärfen und schneller ins Gespräch zu kommen.
+          </p>
+          {!isMax && (
+            <button
+              onClick={() => navigate("/pricing")}
+              className="mt-4 flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+            >
+              <Zap className="h-4 w-4" />
+              Upgrade auf Pro (Volle KI-Leistung freischalten)
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="hidden grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         {/* Payment method */}
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -638,13 +752,13 @@ export default function BillingPage() {
 
       {/* Sticky upgrade footer — mobile only */}
       {!isMax && (
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-sm border-t border-slate-100 px-4 py-3 shadow-lg">
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-sm border-t border-[#1C2333] px-4 py-3 shadow-lg">
           <button
             onClick={() => navigate("/pricing")}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-colors hover:bg-indigo-700 min-h-[44px]"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-colors hover:bg-blue-500 min-h-[44px]"
           >
             <Zap className="h-4 w-4" />
-            Upgrade auf Pro
+            Upgrade auf Pro (Volle KI-Leistung freischalten)
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
