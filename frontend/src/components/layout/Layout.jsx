@@ -43,14 +43,14 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900 leading-none">JobAssist</h1>
-            <p className="text-[10px] font-medium text-brand-500 tracking-wider uppercase mt-0.5">KI-gestützt</p>
+            <h1 className="text-base font-bold text-white leading-none">JobAssist</h1>
+            <p className="text-[10px] font-medium text-violet-400 tracking-wider uppercase mt-0.5">KI-gestützt</p>
           </div>
         </div>
       </div>
 
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Menü</p>
+        <p className="px-3 text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-3">Menü</p>
         {NAV_KEYS.map(({ to, tKey, icon: Icon }) => (
           <NavLink
             key={to}
@@ -60,8 +60,8 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
               clsx(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-brand-50 text-brand-700 shadow-sm shadow-brand-100"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-violet-500/15 text-violet-300 border border-violet-500/20"
+                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
               )
             }
           >
@@ -70,7 +70,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
                 <div
                   className={clsx(
                     "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-                    isActive ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
+                    isActive ? "bg-violet-500/25 text-violet-400" : "bg-white/5 text-slate-500"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -83,7 +83,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
       </nav>
 
       <div className="px-3 pb-4">
-        <div className="border-t border-gray-100 pt-4 space-y-1">
+        <div className="border-t border-white/10 pt-4 space-y-1">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
             {me ? (
               <>
@@ -91,26 +91,26 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
                   <img
                     src={profile.avatar}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-brand-100"
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-violet-500/30"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                     <User className="w-4 h-4 text-white" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate leading-tight">
+                  <p className="text-sm font-semibold text-white truncate leading-tight">
                     {me.full_name || me.email?.split("@")[0]}
                   </p>
-                  <p className="text-[10px] text-gray-400 truncate">{me.email}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{me.email}</p>
                 </div>
               </>
             ) : (
               <>
-                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="h-3.5 w-24 bg-gray-200 rounded animate-pulse mb-1.5" />
-                  <div className="h-2.5 w-32 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-3.5 w-24 bg-white/10 rounded animate-pulse mb-1.5" />
+                  <div className="h-2.5 w-32 bg-white/5 rounded animate-pulse" />
                 </div>
               </>
             )}
@@ -118,9 +118,9 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
           >
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
               <LogOut className="w-4 h-4" />
             </div>
             {t("common.logout")}
@@ -224,8 +224,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <aside className="hidden md:flex w-[260px] bg-white border-r border-gray-100 flex-col shadow-sm flex-shrink-0">
+    <div className="flex h-screen bg-[#F7F5F2] overflow-hidden">
+      <aside className="hidden md:flex w-[260px] bg-[#0D1117] border-r border-[#1C2333] flex-col flex-shrink-0">
         <SidebarContent me={me} profile={profile} t={t} handleLogout={handleLogout} onNavClick={undefined} />
       </aside>
 
@@ -235,13 +235,13 @@ export default function Layout() {
 
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-xl flex flex-col transition-transform duration-300 md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-[280px] bg-[#0D1117] shadow-2xl shadow-black/50 flex flex-col transition-transform duration-300 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:bg-white/10"
         >
           <X className="w-5 h-5" />
         </button>
@@ -256,10 +256,10 @@ export default function Layout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#0D1117] border-b border-[#1C2333] flex-shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:bg-white/10 transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -267,18 +267,18 @@ export default function Layout() {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-base font-bold text-gray-900">JobAssist</span>
+            <span className="text-base font-bold text-white">JobAssist</span>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className={`max-w-5xl mx-auto px-4 py-5 md:px-8 md:py-8 ${animClass}`}>
+          <div className={`max-w-7xl mx-auto px-4 py-5 md:px-8 md:py-8 ${animClass}`}>
             <VerificationBanner me={me} />
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
           </div>
-          <footer className="max-w-5xl mx-auto px-4 pb-6 md:px-8">
+          <footer className="max-w-7xl mx-auto px-4 pb-6 md:px-8">
             <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
               <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
               <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
