@@ -889,6 +889,7 @@ export default function JobDetailPage() {
                     <p className="text-xs text-gray-500">Starte links die Eignungs-Analyse, um die KI-gestützte Einschätzung zu laden.</p>
                   </div>
                 )}
+                </div>
               </div>
             )}
 
