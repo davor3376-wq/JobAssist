@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
-  ClipboardList, Upload, Search, ChevronLeft,
+  ClipboardList, Upload, Search, ChevronLeft, Shield, X,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -176,6 +176,7 @@ export default function AIAssistantPage() {
   const inputRef       = useRef(null);
   const { guardedRun } = useUsageGuard("ai_chat");
   const [streamingMsg, setStreamingMsg] = useState(null); // { full, shown }
+  const [assessmentDisclaimerOpen, setAssessmentDisclaimerOpen] = useState(false);
   const streamingTextRef = useRef("");
   const { send: streamChat, isStreaming } = useStreamingChat();
 
@@ -316,7 +317,19 @@ export default function AIAssistantPage() {
   const startAssessment = useCallback(() => {
     setAssessmentMode(true);
     setSimulationMode(false);
-    handleSend("Starte bitte ein strukturiertes Karriere-Assessment für mich. Analysiere meine Stärken, Interessen und Fähigkeiten durch gezielte Fragen, und gib mir am Ende eine fundierte Einschätzung meines Bewerberprofils.");
+    setAssessmentDisclaimerOpen(false);
+    handleSend(
+      "Starte bitte ein strukturiertes, interaktives Karriere-Assessment für mich als 1-on-1-Dialog. " +
+      "Stelle jeweils EINE Frage und warte auf meine Antwort, bevor du die nächste stellst.\n\n" +
+      "Verbindliche Regeln für deine Fragen:\n" +
+      "- KEINE Klischee-Fragen wie 'Was sind deine größten Schwächen?' — diese liefern keine verwertbaren Daten\n" +
+      "- Frage stattdessen wachstumsorientiert: z. B. 'Welche fachlichen oder persönlichen Fähigkeiten möchtest du in deiner nächsten Rolle weiterentwickeln?'\n" +
+      "- Fokussiere auf belegbare Erfahrungen: 'In welchen Arbeitssituationen leistest du nachweislich dein Bestes?'\n" +
+      "- Erkunde berufliche Umfelder: 'In welchen Teamstrukturen oder Arbeitsweisen fühlst du dich am produktivsten?'\n" +
+      "- Keine Persönlichkeits- oder Charaktereinschätzungen — nur textbasierte Evidenz aus meinen Antworten\n\n" +
+      "Am Ende: Erstelle eine Skill-Gap-Analyse mit konkreten, umsetzbaren Empfehlungen.\n\n" +
+      "Beginne jetzt mit der ersten Frage."
+    );
   }, [handleSend]);
 
   const simulatorActions = [
@@ -599,7 +612,7 @@ export default function AIAssistantPage() {
 
                   {/* Stärkenanalyse */}
                   <button
-                    onClick={startAssessment}
+                    onClick={() => setAssessmentDisclaimerOpen(true)}
                     className="group relative overflow-hidden rounded-2xl border border-violet-100/60 bg-white p-3 text-left shadow-md shadow-violet-100/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-200/50"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl transition-all group-hover:bg-violet-400/20" />
@@ -800,5 +813,73 @@ export default function AIAssistantPage() {
         </div>
       </div>
     </div>
+
+    {/* ── EU AI Act Transparency Disclaimer Modal ───────────────────────── */}
+    {assessmentDisclaimerOpen && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        onClick={(e) => { if (e.target === e.currentTarget) setAssessmentDisclaimerOpen(false); }}
+      >
+        <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-100">
+                <Shield className="h-5 w-5 text-violet-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">KI-Transparenzhinweis</h2>
+                <p className="text-[11px] text-slate-500">Gemäß EU AI Act Art. 50 — vor der Analyse</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAssessmentDisclaimerOpen(false)}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="px-5 py-4 space-y-3">
+            <p className="text-sm font-semibold text-slate-800">
+              Diese Analyse verwendet KI (Llama 3.3, bereitgestellt von Groq), um deine Eingaben zu verarbeiten.
+            </p>
+            <ul className="space-y-2">
+              {[
+                "Deine Daten werden ausschließlich für Karriere-Empfehlungen verwendet.",
+                "Es erfolgt keine automatisierte Endentscheidung über deine Eignung.",
+                "Die Auswertung ist ein Orientierungswert — kein rechtlich bindendes Urteil.",
+                "Keine Persönlichkeitsmerkmale werden inferiert; nur textbasierte Evidenz aus deinen Antworten.",
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-2 text-sm text-slate-600">
+                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-violet-400" />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <div className="rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-[11px] text-violet-700">
+              <strong>Du interagierst mit einem KI-System.</strong> Die KI kann Fehler machen. Für verbindliche Karriereentscheidungen wende dich an einen Berufsberater.
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-2 border-t px-5 py-4">
+            <button
+              onClick={() => setAssessmentDisclaimerOpen(false)}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              Abbrechen
+            </button>
+            <button
+              onClick={startAssessment}
+              className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition-colors shadow-sm shadow-violet-200"
+            >
+              Verstanden &amp; Starten
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
