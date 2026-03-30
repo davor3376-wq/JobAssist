@@ -14,10 +14,10 @@ import { jobApi } from "../services/api";
 const DAY_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 const NEON = {
-  green:  { stroke: "#10b981", glow: "drop-shadow(0 0 8px rgba(16,185,129,0.8))",  track: "#d1fae5", text: "#059669" },
-  yellow: { stroke: "#f59e0b", glow: "drop-shadow(0 0 8px rgba(245,158,11,0.8))",  track: "#fef3c7", text: "#d97706" },
-  orange: { stroke: "#ef4444", glow: "drop-shadow(0 0 8px rgba(239,68,68,0.8))",   track: "#fee2e2", text: "#dc2626" },
-  gray:   { stroke: "#cbd5e1", glow: "none",                                         track: "#f1f5f9", text: "#94a3b8" },
+  green:  { stroke: "#34d399", glow: "drop-shadow(0 0 6px rgba(52,211,153,0.28))", track: "rgba(20,83,45,0.42)", text: "#6ee7b7" },
+  yellow: { stroke: "#fbbf24", glow: "drop-shadow(0 0 6px rgba(251,191,36,0.24))", track: "rgba(120,53,15,0.4)", text: "#fcd34d" },
+  orange: { stroke: "#fb7185", glow: "drop-shadow(0 0 6px rgba(251,113,133,0.24))", track: "rgba(127,29,29,0.4)", text: "#fda4af" },
+  gray:   { stroke: "#94a3b8", glow: "none",                                        track: "rgba(51,65,85,0.65)", text: "#cbd5e1" },
 };
 
 function getNeon(score) {
@@ -101,8 +101,11 @@ function NeonRing({ score, size = 44 }) {
   const n = getNeon(score);
   const cx = size / 2;
   return (
-    <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
+    <div
+      className="relative flex-shrink-0 flex items-center justify-center rounded-full border border-white/8 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.08),transparent_38%),linear-gradient(180deg,rgba(18,27,41,0.96),rgba(11,17,27,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_10px_24px_rgba(0,0,0,0.22)]"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size} height={size} className="-rotate-90 overflow-visible">
         <circle cx={cx} cy={cx} r={r} fill="none" stroke={n.track} strokeWidth="3.5" />
         {score != null && (
           <circle cx={cx} cy={cx} r={r} fill="none"
@@ -140,7 +143,7 @@ function ActivityBars({ values }) {
         return (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
             <div className="w-full relative flex items-end" style={{ height: 48 }}>
-              <div className="absolute inset-x-0 bottom-0 h-full rounded-md bg-slate-100/80" />
+              <div className="absolute inset-x-0 bottom-0 h-full rounded-md bg-white/5" />
               <div
                 className="relative w-full rounded-md transition-all duration-700"
                 style={{
@@ -155,7 +158,7 @@ function ActivityBars({ values }) {
                 }}
               />
             </div>
-            <span className={`text-[8px] font-bold ${isToday ? "text-emerald-600" : "text-slate-300"}`}>
+            <span className={`text-[8px] font-bold ${isToday ? "text-emerald-400" : "text-slate-500"}`}>
               {DAY_LABELS[i]}
             </span>
           </div>
@@ -167,7 +170,7 @@ function ActivityBars({ values }) {
 
 // ─── Markt-Kompatibilität (bento card) ───────────────────────────────────────
 
-function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
+function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   const total     = jobs?.length ?? 0;
   const applied   = (jobs || []).filter(j => ["applied","interviewing","offered"].includes(j.status)).length;
   const interviews = (jobs || []).filter(j => j.status === "interviewing").length;
@@ -181,15 +184,18 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
   const ringCirc = 2 * Math.PI * ringR;
 
   return (
-    <div className="rounded-2xl overflow-hidden bg-white border border-slate-100/80 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+    <div
+      className="rounded-2xl overflow-hidden border border-[#1C2333] shadow-[0_20px_60px_rgba(0,0,0,0.28)] bg-[radial-gradient(circle_at_top_right,rgba(76,29,149,0.16),transparent_34%),linear-gradient(180deg,rgba(19,28,44,0.98),rgba(11,17,28,0.98))]"
+      style={{ minHeight: compact ? 332 : 396 }}
+    >
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+      <div className="px-5 py-3.5 border-b border-[#1C2333] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-sm shadow-violet-200">
             <BarChart2 className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 leading-none">Markt-Kompatibilität</h2>
+            <h2 className="text-sm font-bold text-white leading-none">Markt-Kompatibilität</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">KI-gestützte Übersicht deiner Bewerbungsstärke</p>
           </div>
         </div>
@@ -202,21 +208,20 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
       </div>
 
       {/* Bento grid — desktop */}
-      <div className="hidden sm:grid gap-px bg-slate-100/50" style={{ gridTemplateColumns: "156px 1fr 1fr 168px", gridTemplateRows: "auto auto" }}>
+      <div className="hidden sm:grid gap-px bg-[#1C2333]/60" style={{ gridTemplateColumns: "156px 1fr 1fr 168px", gridTemplateRows: compact ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1.08fr) minmax(0,0.92fr)" }}>
 
         {/* Score ring — frosted glass, row-span 2 */}
-        <div className="bg-white/80 flex flex-col items-center justify-center gap-3 px-4 py-6 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
-          {/* Frosted glass ring card */}
+        <div className="bg-[#131C2C] flex flex-col items-center justify-center gap-3 px-4 py-6 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
+          {/* Dark glass ring card */}
           <div className="relative flex items-center justify-center rounded-2xl"
             style={{
               width: ringSize, height: ringSize,
-              background: "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(238,242,255,0.8) 100%)",
+              background: "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.08), transparent 36%), linear-gradient(145deg, rgba(19,28,44,0.96) 0%, rgba(12,18,30,0.98) 100%)",
               boxShadow: avgScore != null
-                ? `0 0 0 1px rgba(255,255,255,0.8), 0 4px 20px ${n.stroke}28, inset 0 1px 0 rgba(255,255,255,0.9)`
-                : "0 0 0 1px rgba(255,255,255,0.8), 0 4px 16px rgba(0,0,0,0.06)",
-              backdropFilter: "blur(8px)",
+                ? `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.05), 0 16px 32px rgba(0,0,0,0.26), 0 0 28px ${n.stroke}18`
+                : "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.05), 0 16px 32px rgba(0,0,0,0.26)",
             }}>
-            <svg width={ringSize} height={ringSize} className="-rotate-90">
+            <svg width={ringSize} height={ringSize} className="-rotate-90 overflow-visible">
               <circle cx={ringSize/2} cy={ringSize/2} r={ringR} fill="none" stroke={n.track} strokeWidth="8" />
               {avgScore != null && (
                 <circle
@@ -232,7 +237,6 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
               <span className="text-[22px] font-extrabold tabular-nums leading-none" style={{ color: avgScore != null ? n.text : "#94a3b8" }}>
                 {avgScore != null ? `${avgScore}%` : "—"}
               </span>
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Matching-Quote</span>
             </div>
           </div>
           <p className="text-[9px] text-slate-400 text-center leading-snug">
@@ -241,31 +245,30 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
         </div>
 
         {/* Beworben */}
-        <div className="bg-white px-5 py-4 flex flex-col justify-center">
+        <div className="bg-[#131C2C] px-5 py-4 flex flex-col justify-center">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Beworben</p>
-          <p className="text-3xl font-extrabold text-slate-900 leading-none tabular-nums">{applied}</p>
+          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">{applied}</p>
           <p className="text-[10px] text-slate-400 mt-1.5">von {total} Stellen</p>
         </div>
 
         {/* Matching-Quote bar */}
-        <div className="bg-white px-5 py-4 flex flex-col justify-center">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Matching-Quote</p>
+        <div className="bg-[#131C2C] px-5 py-4 flex flex-col justify-center">
           <p className="text-3xl font-extrabold tabular-nums leading-none" style={{ color: avgScore != null ? n.text : "#94a3b8" }}>
             {avgScore != null ? `${avgScore}%` : "—"}
           </p>
           {avgScore != null && (
-            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: n.track }}>
+            <div className="mt-3 h-2 rounded-full overflow-hidden border border-white/5" style={{ backgroundColor: n.track }}>
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${avgScore}%`, background: `linear-gradient(to right, #7c3aed, ${n.stroke})` }} />
             </div>
           )}
         </div>
 
         {/* Activity chart — row-span 2 */}
-        <div className="bg-white px-4 py-4 flex flex-col" style={{ gridRow: "1 / 3" }}>
+        <div className="bg-[#131C2C] px-4 py-4 flex flex-col" style={{ gridRow: "1 / 3" }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Aktivitätsverlauf</p>
             {todayCount > 0 && (
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/12 text-emerald-300 border border-emerald-500/20">
                 +{todayCount} heute
               </span>
             )}
@@ -273,7 +276,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
           <div className="flex-1 flex items-end">
             <ActivityBars values={activitySeries} />
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+          <div className="mt-2 pt-2 border-t border-[#1C2333] flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
             <p className="text-[9px] text-slate-400">
               {activitySeries.reduce((s, v) => s + v, 0)} Analysen diese Woche
@@ -282,31 +285,31 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
         </div>
 
         {/* Interviews */}
-        <div className="bg-white px-5 py-4 flex flex-col justify-center">
+        <div className="bg-[#131C2C] px-5 py-4 flex flex-col justify-center">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Interviews</p>
-          <p className="text-3xl font-extrabold text-slate-900 leading-none tabular-nums">{interviews}</p>
+          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">{interviews}</p>
           <p className="text-[10px] text-slate-400 mt-1.5">aktive Gespräche</p>
         </div>
 
         {/* Rücklaufquote */}
-        <div className="bg-white px-5 py-4 flex flex-col justify-center">
+        <div className="bg-[#131C2C] px-5 py-4 flex flex-col justify-center">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Rücklaufquote</p>
-          <p className="text-3xl font-extrabold text-slate-900 leading-none tabular-nums">{rückläufer}%</p>
+          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">{rückläufer}%</p>
           <p className="text-[10px] text-slate-400 mt-1.5">Bewerbungen aktiv</p>
         </div>
       </div>
 
       {/* Mobile fallback */}
-      <div className="sm:hidden grid grid-cols-2 gap-px bg-slate-100/50">
+      <div className="sm:hidden grid grid-cols-2 gap-px bg-[#1C2333]/50">
         {[
           { label: "Beworben", value: applied },
           { label: "Matching-Quote", value: avgScore != null ? `${avgScore}%` : "—" },
           { label: "Interviews", value: interviews },
           { label: "Rücklaufquote", value: `${rückläufer}%` },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-white px-4 py-3">
+          <div key={label} className="bg-[#131C2C] px-4 py-3">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-            <p className="text-2xl font-extrabold text-slate-900 tabular-nums">{value}</p>
+            <p className="text-2xl font-extrabold text-white tabular-nums">{value}</p>
           </div>
         ))}
       </div>
@@ -317,11 +320,11 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs }) {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const STATUS_CFG = {
-  bookmarked:   { label: "Gespeichert",  cls: "bg-slate-100 text-slate-600 border-slate-200" },
-  applied:      { label: "Beworben",     cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  interviewing: { label: "Gespräch",     cls: "bg-violet-50 text-violet-700 border-violet-200" },
-  offered:      { label: "Angebot",      cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  rejected:     { label: "Abgelehnt",    cls: "bg-red-50 text-red-600 border-red-200" },
+  bookmarked:   { label: "Gespeichert",  cls: "bg-slate-800 text-slate-300 border-slate-700" },
+  applied:      { label: "Beworben",     cls: "bg-emerald-900/40 text-emerald-400 border-emerald-800" },
+  interviewing: { label: "Gespräch",     cls: "bg-violet-900/40 text-violet-400 border-violet-800" },
+  offered:      { label: "Angebot",      cls: "bg-amber-900/40 text-amber-400 border-amber-800" },
+  rejected:     { label: "Abgelehnt",    cls: "bg-red-900/40 text-red-400 border-red-800" },
 };
 
 function StatusBadge({ status }) {
@@ -338,14 +341,14 @@ function StatusBadge({ status }) {
 function RecentJobsTable({ jobs }) {
   if (!jobs?.length) return null;
   return (
-    <div className="rounded-2xl bg-white border border-slate-100/80 shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+    <div className="rounded-2xl bg-[#131C2C] border border-[#1C2333] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-[#1C2333] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
             <Bookmark className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 leading-none">Deine Aktivitäten</h2>
+            <h2 className="text-sm font-bold text-white leading-none">Deine Aktivitäten</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">Zuletzt gespeicherte Stellen</p>
           </div>
         </div>
@@ -355,24 +358,24 @@ function RecentJobsTable({ jobs }) {
       </div>
 
       {/* Column headers */}
-      <div className="hidden sm:grid px-5 py-2 border-b border-slate-50" style={{ gridTemplateColumns: "1fr auto auto auto" }}>
+      <div className="hidden sm:grid px-5 py-2 border-b border-[#1C2333]" style={{ gridTemplateColumns: "1fr auto auto auto" }}>
         {["Stelle", "Status", "Matching-Quote", ""].map(h => (
           <span key={h} className="text-[9px] font-bold uppercase tracking-widest text-slate-300">{h}</span>
         ))}
       </div>
 
-      <div className="divide-y divide-slate-50">
+      <div className="divide-y divide-[#1C2333]">
         {jobs.map(job => (
           <Link
             key={job.id}
             to={`/jobs/${job.id}`}
-            className="grid items-center px-5 py-3 hover:bg-slate-50/60 transition-colors group"
+            className="grid items-center px-5 py-3 hover:bg-white/5 transition-colors group"
             style={{ gridTemplateColumns: "1fr auto auto auto" }}
           >
             <div className="flex items-center gap-3 min-w-0">
               <CompanyLogo company={job.company} url={job.url} researchData={job.research_data} size={34} />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate leading-snug group-hover:text-violet-700 transition-colors">
+                <p className="text-sm font-semibold text-white truncate leading-snug group-hover:text-violet-400 transition-colors">
                   {job.role || "Ohne Titel"}
                 </p>
                 <p className="text-[11px] text-slate-400 truncate">{job.company || "Unbekannt"}</p>
@@ -407,10 +410,10 @@ function RecentJobsTable({ jobs }) {
 // ─── KI Co-Pilot sidebar ──────────────────────────────────────────────────────
 
 const SUGGESTION_STYLES = {
-  action:  { bg: "bg-violet-50",  border: "border-violet-100", iconBg: "bg-violet-100",  iconColor: "text-violet-600",  cta: "bg-violet-600 hover:bg-violet-700 text-white" },
-  insight: { bg: "bg-blue-50",    border: "border-blue-100",   iconBg: "bg-blue-100",    iconColor: "text-blue-600",    cta: "bg-blue-600 hover:bg-blue-700 text-white" },
-  alert:   { bg: "bg-red-50",     border: "border-red-100",    iconBg: "bg-red-100",     iconColor: "text-red-600",     cta: "bg-red-600 hover:bg-red-700 text-white" },
-  tip:     { bg: "bg-emerald-50", border: "border-emerald-100",iconBg: "bg-emerald-100", iconColor: "text-emerald-600", cta: "bg-emerald-600 hover:bg-emerald-700 text-white" },
+  action:  { bg: "bg-violet-900/30",  border: "border-violet-800/50", iconBg: "bg-violet-900/50",  iconColor: "text-violet-400",  cta: "bg-violet-600 hover:bg-violet-700 text-white" },
+  insight: { bg: "bg-blue-900/30",    border: "border-blue-800/50",   iconBg: "bg-blue-900/50",    iconColor: "text-blue-400",    cta: "bg-blue-600 hover:bg-blue-700 text-white" },
+  alert:   { bg: "bg-red-900/30",     border: "border-red-800/50",    iconBg: "bg-red-900/50",     iconColor: "text-red-400",     cta: "bg-red-600 hover:bg-red-700 text-white" },
+  tip:     { bg: "bg-emerald-900/30", border: "border-emerald-800/50",iconBg: "bg-emerald-900/50", iconColor: "text-emerald-400", cta: "bg-emerald-600 hover:bg-emerald-700 text-white" },
 };
 
 const SUGGESTION_ICONS = {
@@ -430,8 +433,8 @@ function SuggestionBubble({ s, index }) {
           <Icon className={`w-4 h-4 ${style.iconColor}`} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-slate-900 leading-snug">{s.title}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{s.text}</p>
+          <p className="text-xs font-bold text-white leading-snug">{s.title}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{s.text}</p>
           {s.to && s.cta && (
             <Link to={s.to} className={`inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${style.cta}`}>
               {s.cta} <ChevronRight className="w-3 h-3" />
@@ -471,15 +474,15 @@ function AICopilotSidebar({ suggestions, userName, featuredTip }) {
 
       {/* Featured "Co-Pilot" message — highest match job */}
       {featuredTip && (
-        <div className="rounded-2xl border border-emerald-500/25 p-3.5"
-          style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.05) 100%)" }}>
+        <div className="rounded-2xl border border-emerald-500/30 p-3.5"
+          style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.08) 100%)" }}>
           <div className="flex items-start gap-2.5">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0 mt-1.5" />
             <div className="min-w-0">
-              <p className="text-[11px] text-slate-700 leading-relaxed">
+              <p className="text-[11px] text-slate-300 leading-relaxed">
                 Dein Lebenslauf passt zu{" "}
-                <span className="font-extrabold text-emerald-700" style={{ color: "#059669" }}>{featuredTip.score}%</span>{" "}
-                auf die Stelle <span className="font-bold text-slate-900">„{featuredTip.role}"</span>
+                <span className="font-extrabold" style={{ color: "#059669" }}>{featuredTip.score}%</span>{" "}
+                auf die Stelle <span className="font-bold text-white">„{featuredTip.role}"</span>
                 {featuredTip.company ? ` bei ${featuredTip.company}` : ""}.{" "}
                 {!featuredTip.hasCoverLetter && "Soll ich das Anschreiben optimieren?"}
               </p>
@@ -498,7 +501,7 @@ function AICopilotSidebar({ suggestions, userName, featuredTip }) {
       </div>
 
       {/* Direkt-Aktionen */}
-      <div className="rounded-2xl bg-white border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-3.5">
+      <div className="rounded-2xl bg-[#131C2C] border border-[#1C2333] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-3.5">
         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">Direkt-Aktionen</p>
         <div className="space-y-1.5">
           {[
@@ -507,14 +510,14 @@ function AICopilotSidebar({ suggestions, userName, featuredTip }) {
             { to: "/ai-assistant", icon: Wand2, label: "KI-Assistent öffnen", color: "emerald" },
           ].map(({ to, icon: Icon, label, color }) => {
             const colors = {
-              violet:  { hover: "hover:bg-violet-50 hover:text-violet-700",  iconBg: "bg-violet-100",  iconColor: "text-violet-600" },
-              slate:   { hover: "hover:bg-slate-50",                          iconBg: "bg-slate-100",   iconColor: "text-slate-500" },
-              emerald: { hover: "hover:bg-emerald-50 hover:text-emerald-700", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+              violet:  { hover: "hover:bg-violet-900/30 hover:text-violet-300",  iconBg: "bg-violet-900/50",  iconColor: "text-violet-400" },
+              slate:   { hover: "hover:bg-white/5",                               iconBg: "bg-white/10",       iconColor: "text-slate-400" },
+              emerald: { hover: "hover:bg-emerald-900/30 hover:text-emerald-300", iconBg: "bg-emerald-900/50", iconColor: "text-emerald-400" },
             };
             const c = colors[color];
             return (
               <Link key={to} to={to}
-                className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition-colors group ${c.hover}`}>
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 transition-colors group ${c.hover}`}>
                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${c.iconBg}`}>
                   <Icon className={`w-3 h-3 ${c.iconColor}`} />
                 </div>
@@ -535,13 +538,13 @@ function DeadlineBanner({ job }) {
   const daysLeft = Math.ceil((new Date(job.deadline).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
   const urgent = daysLeft <= 7;
   return (
-    <div className={`rounded-2xl border px-4 py-3 flex items-center gap-3 shadow-sm ${urgent ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
-      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${urgent ? "bg-red-100" : "bg-amber-100"}`}>
+    <div className={`rounded-2xl border px-4 py-3 flex items-center gap-3 shadow-sm ${urgent ? "bg-red-950/50 border-red-800" : "bg-amber-950/50 border-amber-800"}`}>
+      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${urgent ? "bg-red-900/50" : "bg-amber-900/50"}`}>
         <AlertTriangle className={`w-4 h-4 ${urgent ? "text-red-600" : "text-amber-600"}`} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold text-slate-900 truncate">{job.role} · {job.company}</p>
-        <p className={`text-[11px] ${urgent ? "text-red-600" : "text-amber-700"}`}>
+        <p className="text-xs font-bold text-white truncate">{job.role} · {job.company}</p>
+        <p className={`text-[11px] ${urgent ? "text-red-400" : "text-amber-400"}`}>
           Frist: {new Date(job.deadline).toLocaleDateString("de-AT")} · <strong>noch {daysLeft > 0 ? `${daysLeft} Tag${daysLeft !== 1 ? "e" : ""}` : "heute"}</strong>
         </p>
       </div>
@@ -598,6 +601,7 @@ export default function DashboardPage() {
   const nextDeadline = useMemo(() =>
     [...(jobs || [])].filter(j => j.deadline).sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0] || null
   , [jobs]);
+  const hasUrgentDeadline = !!nextDeadline && Math.ceil((new Date(nextDeadline.deadline).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000) <= 7;
 
   // Featured Co-Pilot tip: highest match score job
   const featuredTip = useMemo(() => {
@@ -644,16 +648,16 @@ export default function DashboardPage() {
       {/* ── Kopfzeile ─────────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none">
             {greeting}{userName ? `, ${userName.split(" ")[0]}` : ""}
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm text-slate-400">
             {new Date().toLocaleDateString("de-AT", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2">
           {(jobs?.length ?? 0) > 0 && (
-            <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-100 rounded-xl px-3 py-1.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
+            <span className="text-xs font-semibold text-slate-400 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-1.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
               {jobs.length} Stellen verfolgt
             </span>
           )}
@@ -670,25 +674,25 @@ export default function DashboardPage() {
       {nextDeadline && <DeadlineBanner job={nextDeadline} />}
 
       {/* ── Zweispaltiges Layout ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_288px] gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_288px] gap-5 items-start">
 
         {/* ── Hauptspalte ──────────────────────────────────────────────────────── */}
         <div className="space-y-5 min-w-0">
 
           {/* Markt-Kompatibilität bento */}
-          <MarketCard jobs={jobs} avgScore={avgScore} activitySeries={activitySeries} scoredJobs={scoredJobs} />
+          <MarketCard jobs={jobs} avgScore={avgScore} activitySeries={activitySeries} scoredJobs={scoredJobs} compact={hasUrgentDeadline} />
 
           {/* Deine Aktivitäten table */}
           <RecentJobsTable jobs={recentJobs} />
 
           {/* Leerzustand */}
           {(!jobs || jobs.length === 0) && (
-            <div className="rounded-2xl bg-white border-2 border-dashed border-slate-200 shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-10 text-center">
+            <div className="rounded-2xl bg-[#131C2C] border-2 border-dashed border-[#1C2333] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-10 text-center">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
                 <Target className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-2">Noch keine Stellen gespeichert</h3>
-              <p className="text-sm text-slate-500 mb-5 max-w-xs mx-auto">Füge deine erste Stelle hinzu und nutze die KI-gestützte Analyse.</p>
+              <h3 className="text-base font-bold text-white mb-2">Noch keine Stellen gespeichert</h3>
+              <p className="text-sm text-slate-400 mb-5 max-w-xs mx-auto">Füge deine erste Stelle hinzu und nutze die KI-gestützte Analyse.</p>
               <Link to="/jobs"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}>

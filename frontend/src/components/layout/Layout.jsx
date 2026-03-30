@@ -224,7 +224,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F7F5F2] overflow-hidden">
+    <div className="flex h-screen bg-[#0D1117] overflow-hidden">
       <aside className="hidden md:flex w-[260px] bg-[#0D1117] border-r border-[#1C2333] flex-col flex-shrink-0">
         <SidebarContent me={me} profile={profile} t={t} handleLogout={handleLogout} onNavClick={undefined} />
       </aside>
@@ -255,7 +255,7 @@ export default function Layout() {
         />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(45,68,106,0.22),_transparent_34%),linear-gradient(180deg,_#09111b_0%,_#0d1117_48%,_#0a1018_100%)]">
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-[#0D1117] border-b border-[#1C2333] flex-shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
@@ -272,18 +272,18 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className={`max-w-7xl mx-auto px-4 py-5 md:px-8 md:py-8 ${animClass}`}>
+          <div className={`max-w-7xl mx-auto px-4 py-5 text-slate-100 md:px-8 md:py-8 ${animClass}`}>
             <VerificationBanner me={me} />
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
           </div>
           <footer className="max-w-7xl mx-auto px-4 pb-6 md:px-8">
-            <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
-              <Link to="/terms" className="hover:text-gray-600 transition-colors">AGB</Link>
-              <Link to="/privacy" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
-              <Link to="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
-              <Link to="/contact" className="hover:text-gray-600 transition-colors">Kontakt</Link>
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-slate-500 border-t border-[#1C2333] pt-4">
+              <Link to="/terms" className="hover:text-slate-300 transition-colors">AGB</Link>
+              <Link to="/privacy" className="hover:text-slate-300 transition-colors">Datenschutz</Link>
+              <Link to="/impressum" className="hover:text-slate-300 transition-colors">Impressum</Link>
+              <Link to="/contact" className="hover:text-slate-300 transition-colors">Kontakt</Link>
             </div>
           </footer>
         </main>
