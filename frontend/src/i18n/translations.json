@@ -19,10 +19,10 @@
       "success": "Erfolg"
     },
     "navigation": {
-      "dashboard": "Dashboard",
-      "myResumes": "Meine Lebensläufe",
+      "dashboard": "Übersicht",
+      "myResumes": "Lebensläufe",
       "createResume": "Lebenslauf erstellen",
-      "jobs": "Stellen",
+      "jobs": "Stellenmarkt",
       "preferences": "Einstellungen",
       "aiAssistant": "KI-Assistent",
       "motivationsschreiben": "Motivationsschreiben",
