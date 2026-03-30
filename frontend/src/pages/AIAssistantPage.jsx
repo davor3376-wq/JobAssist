@@ -6,7 +6,7 @@ import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
   ClipboardList, Upload, Search, ChevronLeft, Shield, X,
-  Wand2, Target, Zap, ArrowRight, ChevronDown,
+  Wand2, Target, Zap, ArrowRight, ChevronDown, Paperclip,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -502,6 +502,7 @@ export default function AIAssistantPage() {
                 return (
                   <button
                     key={conv.id}
+                    title={conv.title}
                     onClick={() => handleSelectConversation(conv)}
                     className={`group w-full text-left px-3 py-3 rounded-xl transition-all
                       ${conv.id === activeId
@@ -646,7 +647,7 @@ export default function AIAssistantPage() {
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
+                    className="group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-3 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.12)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
@@ -717,7 +718,7 @@ export default function AIAssistantPage() {
                       </p>
                       <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18 min-h-[44px] md:min-h-0">
                         <ClipboardList className="h-3.5 w-3.5" />
-                        Stärkenanalyse starten (Erstellt dein Kompetenzprofil)
+                        Stärkenanalyse starten (Kompetenzprofil erstellen)
                       </div>
                     </div>
                   </button>
@@ -874,15 +875,15 @@ export default function AIAssistantPage() {
             <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-2xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] transition-all focus-within:border-blue-500/40 focus-within:ring-2 focus-within:ring-blue-500/10">
               <Link
                 to="/resume"
-                title="anhang_hinzufügen (Einen Lebenslauf oder ein Dokument ergänzen)"
+                title="Dokument hinzufügen"
                 className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition-all mb-0.5 hover:bg-white/5 hover:text-blue-300"
               >
-                <Plus className="h-4 w-4" />
+                <Paperclip className="h-4 w-4" />
               </Link>
               {/* Wand button */}
               <button
                 onClick={() => setWandOpen((v) => !v)}
-                title="impulse_anzeigen (Passende Eingabevorschläge einblenden)"
+                title="Vorschläge einblenden"
                 className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-blue-500/15 text-blue-300" : "text-slate-400 hover:bg-white/5 hover:text-blue-300"}`}
               >
                 <Wand2 className="h-4 w-4" />
@@ -900,7 +901,7 @@ export default function AIAssistantPage() {
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isStreaming || !!streamingMsg}
-                title="anfrage_senden (Deine Nachricht sicher an die Analyse übergeben)"
+                title="Senden"
                 className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
               >
                 <Send className="h-4 w-4" />

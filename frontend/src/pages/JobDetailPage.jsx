@@ -95,24 +95,31 @@ function deriveSubScores(s) {
 // ─── Circular match gauge (SVG) ──────────────────────────────────────────────
 
 function CircularGauge({ value }) {
-  const r = 40;
+  const [displayed, setDisplayed] = useState(0);
+  const r = 54;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (value / 100) * circ;
+  const offset = circ - (displayed / 100) * circ;
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setDisplayed(value));
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
   return (
-    <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 108, height: 108 }}>
-      <svg width="108" height="108" viewBox="0 0 100 100" className="-rotate-90">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#EEF2FF" strokeWidth="9" />
+    <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 128, height: 128 }}>
+      <svg width="128" height="128" viewBox="0 0 128 128" className="-rotate-90">
+        <circle cx="64" cy="64" r={r} fill="none" stroke="#1e3a5f" strokeWidth="9" />
         <circle
-          cx="50" cy="50" r={r} fill="none"
+          cx="64" cy="64" r={r} fill="none"
           stroke={PRIMARY} strokeWidth="9" strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset}
-          className="transition-all duration-700 ease-out"
-          style={{ filter: "drop-shadow(0 0 5px #2D5BFF44)" }}
+          className="transition-all duration-1000 ease-out"
+          style={{ filter: "drop-shadow(0 0 6px #3b82f655)" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-extrabold tabular-nums leading-none" style={{ color: PRIMARY }}>{value}%</span>
-        <span className="text-[9px] font-semibold text-gray-400 tracking-wider uppercase mt-0.5">Passung</span>
+        <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase mt-0.5">Passung</span>
       </div>
     </div>
   );
@@ -130,25 +137,25 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   ];
 
   return (
-    <div className="rounded-2xl border border-indigo-100 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-[#1f2937] bg-[#111827] overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px]"
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors min-h-[44px]"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/12">
             <Zap className="w-4 h-4" style={{ color: PRIMARY }} />
           </div>
           <div className="text-left">
-            <p className="text-sm font-bold text-gray-900">Eignungs-Analyse</p>
-            <p className="text-[11px] text-gray-500">Orientierungswert · EU AI Act konform</p>
+            <p className="text-sm font-bold text-white">Eignungs-Analyse</p>
+            <p className="text-[11px] text-slate-400">Orientierungswert · EU AI Act konform</p>
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 px-5 pb-5">
+        <div className="border-t border-[#1f2937] px-5 pb-5">
           {/* Gauge + sub-scores side by side */}
           <div className="mt-4 flex items-center gap-5">
             <CircularGauge value={overall} />
@@ -156,10 +163,10 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
               {subRows.map(({ label, value, emoji }) => (
                 <div key={label}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600">{emoji} {label}</span>
+                    <span className="text-xs text-slate-400">{emoji} {label}</span>
                     <span className="text-xs font-bold tabular-nums" style={{ color: PRIMARY }}>{Math.round(value)}%</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-[#1e2d3d] overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${value}%`, backgroundColor: PRIMARY }}
@@ -171,17 +178,17 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
           </div>
 
           {/* EU AI Act notice — compact */}
-          <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
-            <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[10px] text-blue-700 leading-relaxed">
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2">
+            <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-[10px] text-blue-300 leading-relaxed">
               Basiert ausschließlich auf verifizierbaren Lebenslauf-Daten. Kein Persönlichkeitsurteil — EU AI Act Art. 13.
             </p>
           </div>
 
           {matchFeedback?.summary && (
-            <div className="mt-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">KI-Zusammenfassung</p>
-              <p className="text-sm leading-relaxed text-gray-700">{matchFeedback.summary}</p>
+            <div className="mt-3 rounded-xl bg-[#0b1220] border border-[#1f2937] px-4 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">KI-Zusammenfassung</p>
+              <p className="text-sm leading-relaxed text-slate-300">{matchFeedback.summary}</p>
             </div>
           )}
         </div>
@@ -217,34 +224,34 @@ function getUpskillHint(text) {
 function BridgeTheGap({ gaps = [] }) {
   if (!gaps?.length) return null;
   return (
-    <div className="rounded-2xl border border-rose-100 bg-white shadow-sm p-5">
+    <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
-          <TrendingUp className="w-4 h-4 text-rose-500" />
+        <div className="w-7 h-7 rounded-lg bg-amber-500/12 flex items-center justify-center flex-shrink-0">
+          <TrendingUp className="w-4 h-4 text-amber-400" />
         </div>
-        <h3 className="text-sm font-bold text-gray-900">Dein Entwicklungspfad</h3>
-        <span className="ml-auto text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-semibold">
+        <h3 className="text-sm font-bold text-white">Wachstums-Potenziale</h3>
+        <span className="ml-auto text-[10px] bg-amber-500/12 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded-full font-semibold">
           {gaps.length} Skill{gaps.length > 1 ? "s" : ""}
         </span>
       </div>
-      <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-3">
+      <p className="text-[10px] text-slate-500 flex items-center gap-1 mb-3">
         <Shield className="w-3 h-3" /> Nur belegbare Qualifikationslücken — keine Persönlichkeitseinschätzung
       </p>
       <div className="space-y-2">
         {gaps.map((gap, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 px-3 py-2.5">
+          <div key={i} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-gray-800 leading-snug">{gap}</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">{getUpskillHint(gap)}</p>
+              <p className="text-sm font-semibold text-slate-200 leading-snug">{gap}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{getUpskillHint(gap)}</p>
             </div>
             <a
               href={getUpskillUrl(gap)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 flex items-center gap-1 rounded-lg bg-white border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors whitespace-nowrap min-h-[36px]"
+              className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors whitespace-nowrap min-h-[36px]"
             >
               <ExternalLink className="w-3 h-3" />
-              Lernressource
+              Weiterbilden
             </a>
           </div>
         ))}
@@ -257,13 +264,13 @@ function BridgeTheGap({ gaps = [] }) {
 
 function StrengthItem({ text, index }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-      <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <Check className="w-3 h-3 text-emerald-600" />
+    <div className="flex items-start gap-3 py-2.5 border-b border-[#1f2937] last:border-0">
+      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Check className="w-3 h-3 text-emerald-400" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm leading-relaxed text-gray-800">{text}</p>
-        <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+        <p className="text-sm leading-relaxed text-slate-200">{text}</p>
+        <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
           <Shield className="w-2.5 h-2.5" /> Gefunden in: Lebenslauf-Text
         </p>
       </div>
@@ -766,7 +773,7 @@ export default function JobDetailPage() {
                         <TrendingUp className="h-4 w-4 text-amber-300" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">Dein Entwicklungspfad</p>
+                        <p className="text-sm font-bold text-white">Wachstums-Potenziale</p>
                         <p className="text-xs text-slate-400">Motivierend priorisierte Entwicklungsschritte.</p>
                       </div>
                     </div>
@@ -810,12 +817,12 @@ export default function JobDetailPage() {
                 {(matchFeedback?.strengths?.length > 0 || matchFeedback?.gaps?.length > 0) && (
                   <div className={`sm:col-span-2 grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                     {matchFeedback?.strengths?.length > 0 && (
-                      <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm p-5">
+                      <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
                         <div className="flex items-center gap-2 mb-4">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
-                            <Check className="w-4 h-4 text-emerald-600" />
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-emerald-400" />
                           </div>
-                          <h3 className="text-sm font-bold text-gray-900">Stärken</h3>
+                          <h3 className="text-sm font-bold text-white">Stärken</h3>
                         </div>
                         <div className="divide-y divide-gray-50">
                           {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} index={i} />)}
@@ -830,12 +837,12 @@ export default function JobDetailPage() {
 
                 {/* Recommendations — left col */}
                 {matchFeedback?.recommendations?.length > 0 && (
-                  <div className="rounded-2xl border border-blue-100 bg-white shadow-sm p-5">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Empfehlungen</p>
+                  <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Empfehlungen</p>
                     <ul className="space-y-2.5">
                       {matchFeedback.recommendations.map((r, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700 leading-relaxed">
-                          <ChevronRight className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <li key={i} className="flex items-start gap-2.5 text-sm text-slate-300 leading-relaxed">
+                          <ChevronRight className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                           {r}
                         </li>
                       ))}
@@ -845,26 +852,26 @@ export default function JobDetailPage() {
 
                 {/* Job description — right col (or full width if no recommendations) */}
                 <div className={matchFeedback?.recommendations?.length > 0 ? "" : "sm:col-span-2"}>
-                  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
+                  <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                    <h3 className="text-sm font-bold text-gray-800">Stellenbeschreibung</h3>
+                    <h3 className="text-sm font-bold text-slate-200">Stellenbeschreibung</h3>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setHidePersonal(false)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-[#1f2937] text-slate-400 hover:bg-[#243041]"}`}
                         style={!hidePersonal ? { backgroundColor: PRIMARY } : undefined}
                       >
                         Alle
                       </button>
                       <button
                         onClick={() => setHidePersonal(true)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-[#1f2937] text-slate-400 hover:bg-[#243041]"}`}
                       >
                         Beruflich
                       </button>
                     </div>
                   </div>
-                  <p className="whitespace-pre-wrap leading-relaxed text-gray-700 text-sm">
+                  <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-sm">
                     {hidePersonal
                       ? (job.description || "").split(/\n{2,}/).filter(para => {
                           const t = para.toLowerCase();

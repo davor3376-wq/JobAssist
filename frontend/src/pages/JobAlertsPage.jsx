@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   Mail,
   MapPin,
+  MoreHorizontal,
   Pencil,
   Play,
   Plus,
@@ -112,6 +113,7 @@ function AlertListCard({ alert, isSelected, onSelect }) {
 }
 
 function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const typeLabel = JOB_TYPES.find((t) => t.value === alert.job_type)?.label || "Alle Stellenarten";
   const freqLabel = FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency;
 
@@ -179,13 +181,28 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
                 <Pencil className="h-4 w-4" />
                 Bearbeiten (Suchprofil anpassen)
               </button>
-              <button
-                onClick={() => onDelete(alert.id)}
-                className="inline-flex items-center gap-2 rounded-xl px-1 py-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
-              >
-                <Trash2 className="h-4 w-4" />
-                Löschen
-              </button>
+              <div className="relative">
+                {menuOpen && (
+                  <div className="fixed inset-0 z-[9]" onClick={() => setMenuOpen(false)} />
+                )}
+                <button
+                  onClick={() => setMenuOpen(v => !v)}
+                  className="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#334155] text-slate-400 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-10 z-10 min-w-[9rem] rounded-xl border border-[#1f2937] bg-[#0b1220] p-1.5 shadow-lg shadow-black/50">
+                    <button
+                      onClick={() => { onDelete(alert.id); setMenuOpen(false); }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Löschen
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -554,11 +571,11 @@ export default function JobAlertsPage() {
     <div className="animate-slide-up overflow-hidden rounded-2xl border border-[#1f2937] bg-black">
       <div className="flex items-center justify-between gap-3 border-b border-[#1f2937] p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300">
-            Alerts {alerts.length}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.15)]">
+            <Bell className="h-3 w-3" />{alerts.length} Job-Alerts
           </span>
-          <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-            Aktiv {activeCount}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+            <CheckCircle2 className="h-3 w-3" />{activeCount} Aktiv
           </span>
         </div>
         <button
