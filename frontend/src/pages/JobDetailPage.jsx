@@ -9,9 +9,9 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
-  ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X,
+  ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X, TrendingUp,
   Copy, Check, ChevronDown, Download, SearchCheck,
-  Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight,
+  Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight, MoreHorizontal,
 } from "lucide-react";
 import { coverLetterApi, interviewApi, jobApi, researchApi, resumeApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
@@ -92,25 +92,28 @@ function deriveSubScores(s) {
   };
 }
 
-function ScoreBar({ label, value, source, color }) {
-  const pct = Math.round(value);
-  const barColor = PRIMARY;
+// ─── Circular match gauge (SVG) ──────────────────────────────────────────────
+
+function CircularGauge({ value }) {
+  const r = 40;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (value / 100) * circ;
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-gray-800">{label}</span>
-        <span className="text-sm font-bold tabular-nums" style={{ color: barColor }}>{pct}%</span>
-      </div>
-      <div className="relative h-2.5 w-full rounded-full bg-gray-100 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{ width: `${pct}%`, backgroundColor: barColor }}
+    <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 108, height: 108 }}>
+      <svg width="108" height="108" viewBox="0 0 100 100" className="-rotate-90">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#EEF2FF" strokeWidth="9" />
+        <circle
+          cx="50" cy="50" r={r} fill="none"
+          stroke={PRIMARY} strokeWidth="9" strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={offset}
+          className="transition-all duration-700 ease-out"
+          style={{ filter: "drop-shadow(0 0 5px #2D5BFF44)" }}
         />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-extrabold tabular-nums leading-none" style={{ color: PRIMARY }}>{value}%</span>
+        <span className="text-[9px] font-semibold text-gray-400 tracking-wider uppercase mt-0.5">Match</span>
       </div>
-      <p className="flex items-center gap-1 text-[11px] text-gray-400">
-        <Shield className="w-3 h-3 flex-shrink-0" />
-        <span>Gefunden in: {source}</span>
-      </p>
     </div>
   );
 }
@@ -119,72 +122,66 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   const [open, setOpen] = useState(true);
   const scores = deriveSubScores(matchScore);
   const overall = Math.round(matchScore ?? 0);
-  const overallColor = PRIMARY;
+
+  const subRows = [
+    { label: "Hard Skills",  value: scores.hardSkills, emoji: "⚡" },
+    { label: "Formale Anf.", value: scores.formalReq,  emoji: "🎓" },
+    { label: "Erfahrung",    value: scores.experience,  emoji: "💼" },
+  ];
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Header */}
+    <div className="rounded-2xl border border-indigo-100 bg-white shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors min-h-[44px]"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#EEF2FF" }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50">
             <Zap className="w-4 h-4" style={{ color: PRIMARY }} />
           </div>
           <div className="text-left">
             <p className="text-sm font-bold text-gray-900">Qualifikations-Check</p>
-            <p className="text-[11px] text-gray-500">KI-Orientierungshilfe · Keine verbindliche Beurteilung</p>
+            <p className="text-[11px] text-gray-500">Orientierungswert · EU AI Act konform</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <span className="text-xl font-extrabold tabular-nums" style={{ color: overallColor }}>{overall}%</span>
-            <p className="text-[10px] text-gray-400 leading-tight">Orientierungswert</p>
-          </div>
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
-        </div>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-gray-100">
-          {/* EU AI Act notice */}
-          <div className="mt-4 mb-5 flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 p-3">
-            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] text-blue-700 leading-relaxed">
-              <strong>EU AI Act konform:</strong> Diese Analyse basiert ausschließlich auf verifizierbaren Daten aus deinem Lebenslauf. Persönlichkeitsmerkmale werden nicht inferiert. Alle Bewertungen sind Orientierungswerte und ersetzen keine professionelle Eignungsbeurteilung.
+        <div className="border-t border-gray-100 px-5 pb-5">
+          {/* Gauge + sub-scores side by side */}
+          <div className="mt-4 flex items-center gap-5">
+            <CircularGauge value={overall} />
+            <div className="flex-1 space-y-2.5 min-w-0">
+              {subRows.map(({ label, value, emoji }) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">{emoji} {label}</span>
+                    <span className="text-xs font-bold tabular-nums" style={{ color: PRIMARY }}>{Math.round(value)}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${value}%`, backgroundColor: PRIMARY }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* EU AI Act notice — compact */}
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+            <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <p className="text-[10px] text-blue-700 leading-relaxed">
+              Basiert ausschließlich auf verifizierbaren Lebenslauf-Daten. Kein Persönlichkeitsurteil — EU AI Act Art. 13.
             </p>
           </div>
 
-          {/* 3 progress bars */}
-          <div className="space-y-5">
-            <ScoreBar
-              label="Hard Skills & Fachkompetenz"
-              value={scores.hardSkills}
-              source="Fähigkeiten & Berufserfahrung im Lebenslauf"
-              color={PRIMARY}
-            />
-            <ScoreBar
-              label="Formale Anforderungen"
-              value={scores.formalReq}
-              source="Ausbildung & Qualifikationen im Lebenslauf"
-              color={PRIMARY}
-            />
-            <ScoreBar
-              label="Berufserfahrung"
-              value={scores.experience}
-              source="Beruflicher Werdegang im Lebenslauf"
-              color={PRIMARY}
-            />
-          </div>
-
           {matchFeedback?.summary && (
-            <div className="mt-5 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
+            <div className="mt-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
               <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">KI-Zusammenfassung</p>
               <p className="text-sm leading-relaxed text-gray-700">{matchFeedback.summary}</p>
-              <p className="mt-2 text-[10px] text-gray-400 flex items-center gap-1">
-                <Shield className="w-3 h-3" /> Quelle: Textabgleich Lebenslauf × Stellenbeschreibung
-              </p>
             </div>
           )}
         </div>
@@ -193,75 +190,64 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   );
 }
 
-// ─── EU AI Act: Entwicklungspotenzial ─────────────────────────────────────────
-// Replaces "Weaknesses" / "Gaps" — reframed as growth opportunities.
-// Clickable chips show actionable quick-guide suggestions.
+// ─── Bridge the Gap (replaces Entwicklungspotenzial) ─────────────────────────
+// Actionable flat cards — each skill gap has an inline Upskill link.
+// No personality inference — only text-based evidence from job description.
 
-const QUICK_GUIDE_TIPS = {
-  default: "Suche nach Online-Kursen auf Coursera, LinkedIn Learning oder Udemy zu diesem Thema.",
-  sprache: "Sprachkurse findest du auf Duolingo, Babbel oder dem ÖSD-Vorbereitungsportal.",
-  zertifikat: "Prüfe zertifizierte Weiterbildungen bei WKO, WIFI oder IHK.",
-  erfahrung: "Projektarbeiten, Ehrenamt oder Freelance-Projekte können fehlende Praxis überbrücken.",
-  ausbildung: "Berufsbegleitende Studiengänge oder Quereinsteiger-Programme können helfen.",
-  führung: "Leadership-Coachings und Führungstrainings bieten IHK und private Anbieter an.",
-  software: "Kostenlose Tutorials auf YouTube oder offizielle Dokumentationen sind ein guter Einstieg.",
-  analyse: "Datenanalyse-Grundlagen lernst du in Kursen auf Datacamp oder Google Skillshop.",
-};
-
-function getQuickGuideTip(text) {
+function getUpskillUrl(text) {
   const t = text.toLowerCase();
-  if (/sprach|englisch|deutsch|franzö|spanisch|itali/.test(t)) return QUICK_GUIDE_TIPS.sprache;
-  if (/zertifikat|zertifizier|licence|certification/.test(t)) return QUICK_GUIDE_TIPS.zertifikat;
-  if (/erfahrung|experience|berufspraxis|praxis/.test(t)) return QUICK_GUIDE_TIPS.erfahrung;
-  if (/studium|bachelor|master|ausbildung|degree|abschluss/.test(t)) return QUICK_GUIDE_TIPS.ausbildung;
-  if (/führung|management|leiter|team lead/.test(t)) return QUICK_GUIDE_TIPS.führung;
-  if (/software|programm|tool|system|plattform/.test(t)) return QUICK_GUIDE_TIPS.software;
-  if (/analyse|analys|data|daten/.test(t)) return QUICK_GUIDE_TIPS.analyse;
-  return QUICK_GUIDE_TIPS.default;
+  if (/sprach|englisch|deutsch|franzö|spanisch/.test(t)) return "https://www.duolingo.com";
+  if (/zertifikat|certification|aws|microsoft|google/.test(t)) return "https://www.coursera.org/search?query=" + encodeURIComponent(text);
+  if (/führung|management|team lead/.test(t)) return "https://www.linkedin.com/learning/search?keywords=" + encodeURIComponent(text);
+  if (/excel|sap|python|sql|java|react|javascript/.test(t)) return "https://www.udemy.com/courses/search/?q=" + encodeURIComponent(text);
+  if (/ausbildung|bachelor|master|studium/.test(t)) return "https://www.wifi.at/kurse";
+  return "https://www.coursera.org/search?query=" + encodeURIComponent(text);
 }
 
-function GapChip({ text, index }) {
-  const [open, setOpen] = useState(false);
-  const tip = getQuickGuideTip(text);
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-800 hover:bg-orange-100 transition-colors min-h-[44px] text-left"
-      >
-        <BookOpen className="w-3.5 h-3.5 flex-shrink-0 text-orange-500" />
-        <span className="leading-snug">{text}</span>
-        <ChevronRight className={`w-3 h-3 flex-shrink-0 text-orange-400 transition-transform ml-0.5 ${open ? "rotate-90" : ""}`} />
-      </button>
-      {open && (
-        <div className="mt-1 rounded-xl border border-orange-100 bg-white shadow-lg p-3 text-sm text-gray-700 leading-relaxed z-10 relative">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-1.5">Quick-Guide</p>
-          <p>{tip}</p>
-          <p className="mt-2 text-[10px] text-gray-400 flex items-center gap-1">
-            <Info className="w-3 h-3" /> Basierend auf: Stellenbeschreibung
-          </p>
-        </div>
-      )}
-    </div>
-  );
+function getUpskillHint(text) {
+  const t = text.toLowerCase();
+  if (/sprach|englisch|deutsch/.test(t)) return "Duolingo oder ÖSD-Vorbereitungskurse";
+  if (/zertifikat|certification/.test(t)) return "Zertifizierte Kurse auf Coursera oder WIFI";
+  if (/erfahrung|praxis/.test(t)) return "Freelance-Projekte oder Ehrenamt aufbauen";
+  if (/führung|management/.test(t)) return "LinkedIn Learning Leadership-Tracks";
+  if (/software|excel|python|sql/.test(t)) return "Udemy — praktische Kurse ab 15 €";
+  return "Coursera, LinkedIn Learning oder Udemy";
 }
 
-function EntwicklungsPotenzial({ gaps = [] }) {
+function BridgeTheGap({ gaps = [] }) {
   if (!gaps?.length) return null;
   return (
-    <div className="rounded-2xl border border-orange-100 bg-white shadow-sm p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <Sparkles className="w-4 h-4 text-orange-500" />
-        <h3 className="text-sm font-bold text-gray-900">Entwicklungspotenzial</h3>
+    <div className="rounded-2xl border border-rose-100 bg-white shadow-sm p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+          <TrendingUp className="w-4 h-4 text-rose-500" />
+        </div>
+        <h3 className="text-sm font-bold text-gray-900">Bridge the Gap</h3>
+        <span className="ml-auto text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-semibold">
+          {gaps.length} Skill{gaps.length > 1 ? "s" : ""}
+        </span>
       </div>
-      <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-        Diese Kompetenzen wurden in der Stellenbeschreibung erwähnt, jedoch nicht eindeutig im Lebenslauf nachgewiesen. Klicke auf eine Karte für Lernressourcen.
-      </p>
       <p className="text-[10px] text-gray-400 flex items-center gap-1 mb-3">
-        <Shield className="w-3 h-3" /> Nur belegbare Qualifikationslücken — keine Persönlichkeits­einschätzung
+        <Shield className="w-3 h-3" /> Nur belegbare Qualifikationslücken — keine Persönlichkeitseinschätzung
       </p>
-      <div className="flex flex-col gap-2">
-        {gaps.map((gap, i) => <GapChip key={i} text={gap} index={i} />)}
+      <div className="space-y-2">
+        {gaps.map((gap, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gray-800 leading-snug">{gap}</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">{getUpskillHint(gap)}</p>
+            </div>
+            <a
+              href={getUpskillUrl(gap)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 flex items-center gap-1 rounded-lg bg-white border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors whitespace-nowrap min-h-[36px]"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Upskill
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -297,6 +283,51 @@ function TransparencyFooter({ visible }) {
           <strong className="text-gray-700">KI-gestützte Analyse:</strong> Diese Daten dienen der Orientierung und müssen vom Nutzer verifiziert werden. Gemäß EU AI Act Art. 13: Entscheidungen basieren auf verifizierbaren Lebenslaufdaten, keine automatisierte Endentscheidung.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ─── Status Progress Bar ─────────────────────────────────────────────────────
+
+const STATUS_STEPS = [
+  { key: "bookmarked",   label: "Gespeichert" },
+  { key: "applied",      label: "Beworben" },
+  { key: "interviewing", label: "Gespräch" },
+  { key: "offered",      label: "Angebot" },
+];
+
+function StatusProgressBar({ status }) {
+  if (status === "rejected") return null;
+  const currentIdx = STATUS_STEPS.findIndex(s => s.key === status);
+  const active = currentIdx >= 0 ? currentIdx : 0;
+  return (
+    <div className="flex items-center gap-0 w-full">
+      {STATUS_STEPS.map((step, i) => {
+        const done = i < active;
+        const current = i === active;
+        return (
+          <div key={step.key} className="flex items-center flex-1 min-w-0">
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  done ? "bg-brand-500" : current ? "bg-brand-500 ring-2 ring-brand-200" : "bg-gray-200"
+                }`}
+                style={done || current ? { backgroundColor: PRIMARY } : undefined}
+              />
+              <span className={`mt-1 text-[9px] font-semibold whitespace-nowrap leading-none ${
+                current ? "text-gray-800" : done ? "text-gray-400" : "text-gray-300"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+            {i < STATUS_STEPS.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${
+                i < active ? "" : "bg-gray-100"
+              }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -348,6 +379,7 @@ export default function JobDetailPage() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
@@ -452,7 +484,12 @@ export default function JobDetailPage() {
         </button>
 
         {/* ── Header ───────────────────────────────────────────────────────── */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 rounded-2xl border border-gray-100 bg-white shadow-sm px-5 pt-4 pb-5">
+          {/* Thin status progress bar — top of card */}
+          <div className="mb-4 px-1">
+            <StatusProgressBar status={job.status} />
+          </div>
+          <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusCfg.cls}`}>
@@ -478,6 +515,7 @@ export default function JobDetailPage() {
           >
             {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4" />}
           </button>
+          </div>
         </div>
 
         {/* ── Desktop 2-col split / Mobile stack ───────────────────────────── */}
@@ -515,62 +553,110 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4 space-y-2.5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">KI-Werkzeuge</p>
+            {/* ── Dynamic Action Bar ── Primary action + Tools overflow ── */}
+            {(() => {
+              const isPrimCover = job.status === "bookmarked" || !job.status;
+              const isPrimInterview = job.status === "applied" || job.status === "interviewing";
+              const handleResearch = async () => {
+                setToolsOpen(false);
+                if (job.research_data) { setResearchData(parseJson(job.research_data)); setResearchOpen(true); return; }
+                setResearchData(null); setResearchOpen(true); setResearchLoading(true);
+                try {
+                  const res = await researchApi.research(job.company || "", job.description || "");
+                  setResearchData(res.data);
+                  updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
+                } catch (err) {
+                  if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429)
+                    toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
+                  setResearchOpen(false);
+                } finally { setResearchLoading(false); }
+              };
 
-              <ActionBtn
-                pending={matchMutation.isPending}
-                disabled={!resumeId}
-                onClick={() => matchMutation.mutate()}
-                icon={<Zap className="h-4 w-4" />}
-                pendingLabel="Wird analysiert…"
-                label="Qualifikations-Check"
-                variant="primary"
-              />
-              <ActionBtn
-                pending={coverLetterMutation.isPending}
-                disabled={!resumeId}
-                onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                icon={<FileText className="h-4 w-4" />}
-                pendingLabel="Wird erstellt…"
-                label={job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}
-                variant="success"
-              />
-              <ActionBtn
-                pending={interviewMutation.isPending}
-                disabled={!resumeId}
-                onClick={() => interviewMutation.mutate()}
-                icon={<MessageSquare className="h-4 w-4" />}
-                pendingLabel="Wird erstellt…"
-                label="Gesprächsvorbereitung"
-                variant="secondary"
-              />
-              <button
-                onClick={async () => {
-                  if (job.research_data) { setResearchData(parseJson(job.research_data)); setResearchOpen(true); return; }
-                  setResearchData(null); setResearchOpen(true); setResearchLoading(true);
-                  try {
-                    const res = await researchApi.research(job.company || "", job.description || "");
-                    setResearchData(res.data);
-                    updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
-                  } catch (err) {
-                    if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429)
-                      toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
-                    setResearchOpen(false);
-                  } finally { setResearchLoading(false); }
-                }}
-                disabled={!job?.company}
-                className={`w-full flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold border transition-all min-h-[44px] ${
-                  job?.research_data
-                    ? "border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
-                } disabled:opacity-40`}
-              >
-                <SearchCheck className="h-4 w-4" />
-                {job?.research_data ? "Unternehmensrecherche ansehen" : "Unternehmensrecherche"}
-              </button>
-            </div>
+              return (
+                <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4 space-y-2.5">
+                  {/* Primary CTA */}
+                  {isPrimInterview ? (
+                    <button
+                      disabled={!resumeId || interviewMutation.isPending}
+                      onClick={() => interviewMutation.mutate()}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-40 transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}
+                    >
+                      {interviewMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><MessageSquare className="h-4 w-4" /><span>Gesprächsvorbereitung starten</span></>}
+                    </button>
+                  ) : (
+                    <button
+                      disabled={!resumeId || coverLetterMutation.isPending}
+                      onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-40 transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg, #059669, #047857)" }}
+                    >
+                      {coverLetterMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><FileText className="h-4 w-4" /><span>{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span></>}
+                    </button>
+                  )}
+
+                  {/* Tools overflow */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setToolsOpen(v => !v)}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors min-h-[36px]"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                      Weitere Tools
+                    </button>
+                    {toolsOpen && (
+                      <div className="absolute left-0 right-0 mt-1 rounded-2xl border border-gray-100 bg-white shadow-lg z-20 p-2 space-y-1">
+                        <button
+                          disabled={!resumeId || matchMutation.isPending}
+                          onClick={() => { matchMutation.mutate(); setToolsOpen(false); }}
+                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                        >
+                          {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 text-indigo-500 flex-shrink-0" />}
+                          Qualifikations-Check
+                        </button>
+                        {isPrimInterview && (
+                          <button
+                            disabled={!resumeId || coverLetterMutation.isPending}
+                            onClick={() => { job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate(); setToolsOpen(false); }}
+                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                          >
+                            <FileText className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                            {job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}
+                          </button>
+                        )}
+                        {isPrimCover && job.interview_qa && (
+                          <button
+                            onClick={() => { setActiveTab("interview"); setToolsOpen(false); }}
+                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors min-h-[44px]"
+                          >
+                            <MessageSquare className="h-4 w-4 text-violet-500 flex-shrink-0" />
+                            Gesprächsvorbereitung ansehen
+                          </button>
+                        )}
+                        {isPrimCover && !job.interview_qa && (
+                          <button
+                            disabled={!resumeId || interviewMutation.isPending}
+                            onClick={() => { interviewMutation.mutate(); setToolsOpen(false); }}
+                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                          >
+                            <MessageSquare className="h-4 w-4 text-violet-500 flex-shrink-0" />
+                            Gesprächsvorbereitung
+                          </button>
+                        )}
+                        <button
+                          disabled={!job?.company}
+                          onClick={handleResearch}
+                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                        >
+                          <SearchCheck className="h-4 w-4 text-teal-500 flex-shrink-0" />
+                          {job?.research_data ? "Recherche ansehen" : "Unternehmensrecherche"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Job metadata */}
             {(job.deadline || job.notes) && (
@@ -639,9 +725,9 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Entwicklungspotenzial (replaces "Gaps" / "Weaknesses") */}
+                {/* Bridge the Gap (actionable upskill cards) */}
                 {matchFeedback?.gaps?.length > 0 && (
-                  <EntwicklungsPotenzial gaps={matchFeedback.gaps} />
+                  <BridgeTheGap gaps={matchFeedback.gaps} />
                 )}
 
                 {/* Recommendations */}
