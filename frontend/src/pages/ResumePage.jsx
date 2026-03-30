@@ -449,8 +449,8 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
                   style={{
                     top: section.top,
                     height: section.height,
-                    backgroundColor: isHovered ? style.bg.replace("0.1", "0.22").replace("0.12", "0.24").replace("0.13", "0.26") : style.bg,
-                    border: `1px solid ${section.heat === "high" && isHovered ? "rgba(239,68,68,0.6)" : section.heat === "medium" && isHovered ? "rgba(245,158,11,0.6)" : style.border}`,
+                    backgroundColor: isHovered ? style.bg.replace("0.1", "0.22").replace("0.12", "0.24").replace("0.13", "0.26") : "transparent",
+                    border: `1px solid ${isHovered ? (section.heat === "high" ? "rgba(239,68,68,0.6)" : section.heat === "medium" ? "rgba(245,158,11,0.6)" : "rgba(59,130,246,0.5)") : "transparent"}`,
                     transform: isHovered ? "scale(1.01)" : "scale(1)",
                   }}
                 >

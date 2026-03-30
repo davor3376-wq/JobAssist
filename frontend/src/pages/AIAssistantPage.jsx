@@ -481,7 +481,7 @@ export default function AIAssistantPage() {
           )}
 
           {/* Conversation list */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {conversations.length > 0 && (
               <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
                 <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
@@ -592,7 +592,7 @@ export default function AIAssistantPage() {
           )}
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 min-h-0">
+          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {messages.length === 0 ? (
 
               /* ── Empty-state launchpad ──────────────────────────────────── */

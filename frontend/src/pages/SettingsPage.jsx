@@ -14,6 +14,7 @@ import {
   Trash2,
   User,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import { authApi, settingsApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
@@ -46,7 +47,6 @@ function compressImage(file) {
       img.onload = () => {
         const MAX = 200;
         let { width, height } = img;
-
         if (width > height) {
           height = Math.round((height * MAX) / width);
           width = MAX;
@@ -54,7 +54,6 @@ function compressImage(file) {
           width = Math.round((width * MAX) / height);
           height = MAX;
         }
-
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
@@ -94,6 +93,11 @@ const INDUSTRIES = [
 ];
 const CURRENCIES = ["EUR"];
 const LANGUAGES = [{ code: "de", label: "Deutsch" }];
+
+const INPUT_CLS =
+  "w-full rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-0 min-h-[44px]";
+const LABEL_CLS =
+  "block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -192,7 +196,6 @@ export default function SettingsPage() {
         settingsApi.updateProfile(profilePayload, { signal: controller.signal }),
       ]);
 
-      // Immediately update caches so sidebar avatar changes without waiting for refetch
       const newAvatar = avatar ?? null;
       queryClient.setQueryData(["profile"], (old) =>
         old ? { ...old, avatar: newAvatar } : old
@@ -229,13 +232,11 @@ export default function SettingsPage() {
         );
         return;
       }
-
       if (preferencesFailed) {
         toast.error("App-Einstellungen konnten nicht gespeichert werden");
         toast.success("Jobpräferenzen gespeichert");
         return;
       }
-
       if (profileFailed) {
         toast.error("Jobpräferenzen konnten nicht gespeichert werden");
         toast.success("App-Einstellungen gespeichert");
@@ -253,17 +254,14 @@ export default function SettingsPage() {
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       toast.error("Bitte wähle eine Bilddatei aus");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Bild muss unter 5 MB sein");
       return;
     }
-
     try {
       const compressed = await compressImage(file);
       setAvatar(compressed);
@@ -274,10 +272,10 @@ export default function SettingsPage() {
 
   if (profileLoading || preferencesLoading) {
     return (
-      <div className="max-w-2xl animate-slide-up">
-        <div className="mb-8">
-          <div className="mb-2 h-8 w-48 animate-pulse rounded bg-gray-200" />
-          <div className="h-4 w-64 animate-pulse rounded bg-gray-100" />
+      <div className="animate-slide-up">
+        <div className="mb-6">
+          <div className="h-7 w-48 rounded-xl bg-[#111827] animate-pulse mb-2" />
+          <div className="h-4 w-64 rounded-xl bg-[#111827] animate-pulse" />
         </div>
         <FormSkeleton fields={6} />
       </div>
@@ -285,280 +283,380 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl animate-slide-up">
-      <div className="mb-8">
-        <h1 className="mb-2 text-2xl sm:text-3xl font-bold text-gray-900">{t("settings.title")}</h1>
-        <p className="text-gray-500">{t("settings.description")}</p>
+    <div className="animate-slide-up">
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none">
+          Einstellungen
+        </h1>
+        <p className="text-sm text-slate-400 mt-1">Profil & Jobpräferenzen konfigurieren</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <SectionCard icon={<User className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title="Profilfoto" description="Dein Foto wird in der Seitenleiste angezeigt">
-          <div className="flex items-center gap-6">
-            <div className="relative flex-shrink-0">
-              {avatar ? (
-                <img src={avatar} alt="Profil" className="h-24 w-24 rounded-full object-cover ring-4 ring-brand-100" />
-              ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-purple-600 ring-4 ring-brand-100">
-                  <User className="h-10 w-10 text-white" />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-white shadow-md transition-colors hover:bg-brand-700"
-                title="Foto ändern"
-              >
-                <Camera className="h-3.5 w-3.5" />
-              </button>
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 items-start">
 
-            <div className="flex flex-col gap-2">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-secondary px-4 py-2 text-sm">
-                {avatar ? "Foto ändern" : "Foto hochladen"}
-              </button>
-              {avatar && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAvatar(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="flex items-center gap-1.5 text-sm text-red-500 transition-colors hover:text-red-700"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Foto entfernen
-                </button>
-              )}
-              <p className="text-xs text-gray-400">JPG, PNG oder WebP · max. 5 MB</p>
-            </div>
-          </div>
+          {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
+          <div className="space-y-4">
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-        </SectionCard>
-
-        <SectionCard icon={<Sliders className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title={t("settings.appPreferences")} description="Passe dein Erlebnis an">
-          <div className="grid grid-cols-2 gap-4">
-            <Controller
-              name="currency"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="label">{t("settings.currency")}</label>
-                  <select {...field} className="input" value={field.value || "EUR"}>
-                    {CURRENCIES.map((currency) => (
-                      <option key={currency} value={currency}>
-                        {currency}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            />
-
-            <Controller
-              name="language"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="label">{t("settings.language")}</label>
-                  <select
-                    {...field}
-                    className="input"
-                    value={field.value || "de"}
-                    onChange={(e) => field.onChange(e.target.value)}
-                  >
-                    {LANGUAGES.map((language) => (
-                      <option key={language.code} value={language.code}>
-                        {language.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            />
-          </div>
-
-          <div className="mt-4">
-            <Controller
-              name="location"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="label">{t("settings.location")}</label>
-                  <input {...field} className="input" placeholder="Österreich" value={field.value || ""} />
-                </div>
-              )}
-            />
-          </div>
-        </SectionCard>
-
-        <div className="mt-8 border-t border-gray-200 pt-6">
-          <h3 className="mb-6 text-xl font-semibold text-gray-900">{t("settings.jobSearchPreferences")}</h3>
-        </div>
-
-        <SectionCard icon={<MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title="Gewünschte Arbeitsorte" description="Wo möchtest du arbeiten?">
-          <Controller
-            name="desired_locations"
-            control={control}
-            render={({ field }) => (
-              <input
-                {...field}
-                value={field.value?.join(", ") || ""}
-                onChange={(e) =>
-                  field.onChange(
-                    e.target.value ? e.target.value.split(",").map((part) => part.trim()) : []
-                  )
-                }
-                className="input"
-                placeholder="Wien, Graz, Linz, Salzburg"
-              />
-            )}
-          />
-        </SectionCard>
-
-        <SectionCard icon={<DollarSign className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title="Gehaltsvorstellung" description="In Tausend EUR, z. B. 30–50">
-          <div className="grid grid-cols-2 gap-4">
-            <Controller
-              name="salary_min"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="label">Mindestgehalt</label>
-                  <input {...field} type="number" className="input" placeholder="30" value={field.value || ""} />
-                </div>
-              )}
-            />
-            <Controller
-              name="salary_max"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <label className="label">Höchstgehalt</label>
-                  <input {...field} type="number" className="input" placeholder="50" value={field.value || ""} />
-                </div>
-              )}
-            />
-          </div>
-        </SectionCard>
-
-        <SectionCard icon={<Briefcase className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title="Stellenarten" description="Welche Stellenarten interessieren dich?">
-          <Controller
-            name="job_types"
-            control={control}
-            render={({ field }) => (
-              <div className="flex flex-wrap gap-2">
-                {JOB_TYPES.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => {
-                      const nextValue = field.value?.includes(type)
-                        ? field.value.filter((entry) => entry !== type)
-                        : [...(field.value || []), type];
-                      field.onChange(nextValue);
-                    }}
-                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                      field.value?.includes(type)
-                        ? "bg-brand-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
+            {/* Profilfoto */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <User className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <h2 className="font-semibold text-white">Profilfoto</h2>
               </div>
-            )}
-          />
-        </SectionCard>
-
-        <SectionCard icon={<Target className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-600" />} title="Erfahrungsstufe" description="Wo stehst du in deiner Karriere?">
-          <Controller
-            name="experience_level"
-            control={control}
-            render={({ field }) => (
-              <select {...field} className="input" value={field.value || ""}>
-                <option value="">Stufe auswählen...</option>
-                {EXPERIENCE_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-            )}
-          />
-        </SectionCard>
-
-        <div className="card">
-          <h3 className="mb-3 font-semibold text-gray-900">Branchen</h3>
-          <Controller
-            name="industries"
-            control={control}
-            render={({ field }) => (
-              <div className="grid grid-cols-2 gap-2">
-                {INDUSTRIES.map((industry) => (
-                  <label key={industry} className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={field.value?.includes(industry) || false}
-                      onChange={(e) => {
-                        const nextValue = e.target.checked
-                          ? [...(field.value || []), industry]
-                          : field.value?.filter((entry) => entry !== industry) || [];
-                        field.onChange(nextValue);
-                      }}
-                      className="h-4 w-4 rounded"
+              <div className="flex items-center gap-5">
+                <div className="relative flex-shrink-0">
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt="Profil"
+                      className="h-20 w-20 rounded-2xl object-cover ring-2 ring-blue-500/30"
                     />
-                    <span className="text-sm text-gray-700">{industry}</span>
-                  </label>
-                ))}
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 ring-2 ring-blue-500/20">
+                      <User className="h-8 w-8 text-white" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-xl bg-[#3b82f6] text-white shadow-md transition-colors hover:bg-blue-500"
+                    title="Foto ändern"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                  >
+                    {avatar ? "Foto ändern" : "Foto hochladen (Bild auswählen)"}
+                  </button>
+                  {avatar && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAvatar(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="flex items-center gap-1.5 text-sm text-red-400 transition-colors hover:text-red-300"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Foto entfernen
+                    </button>
+                  )}
+                  <p className="text-[11px] text-slate-500">JPG, PNG, WebP · max. 5 MB</p>
+                </div>
               </div>
-            )}
-          />
-        </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
 
-        <div className="card">
-          <Controller
-            name="is_open_to_relocation"
-            control={control}
-            render={({ field }) => (
-              <label className="flex cursor-pointer items-center gap-3">
-                <input {...field} type="checkbox" checked={field.value || false} className="h-4 w-4 rounded" />
-                <span className="text-sm font-medium text-gray-700">Offen für Umzug</span>
-              </label>
-            )}
-          />
-        </div>
+            {/* Basis-Konfiguration */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <Sliders className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h2 className="font-semibold text-white">Basis-Konfiguration</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Sprache, Währung & Marktstandort</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <Controller
+                  name="language"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <label className={LABEL_CLS}>Sprache (Interface-Sprache)</label>
+                      <div className="relative">
+                        <select
+                          {...field}
+                          className={`${INPUT_CLS} appearance-none pr-9`}
+                          value={field.value || "de"}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        >
+                          {LANGUAGES.map((l) => (
+                            <option key={l.code} value={l.code}>{l.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      </div>
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="currency"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <label className={LABEL_CLS}>Währung (Gehaltsanzeige)</label>
+                      <div className="relative">
+                        <select
+                          {...field}
+                          className={`${INPUT_CLS} appearance-none pr-9`}
+                          value={field.value || "EUR"}
+                        >
+                          {CURRENCIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      </div>
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <label className={LABEL_CLS}>Marktstandort (Suchregion für Jobvorschläge)</label>
+                      <input
+                        {...field}
+                        className={INPUT_CLS}
+                        placeholder="Österreich"
+                        value={field.value || ""}
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
 
-        <div className="flex gap-3">
-          <button type="submit" className="btn-primary flex items-center gap-2" disabled={isSubmitting}>
-            <Save className="h-4 w-4" />
-            {isSubmitting ? t("common.loading") : t("settings.savePreferences")}
-          </button>
+            {/* Danger Zone */}
+            <DeleteAccountSection />
+          </div>
+
+          {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Arbeitsorte */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h2 className="font-semibold text-white">Arbeitsorte</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Gewünschte Städte oder Regionen (kommagetrennt)</p>
+                </div>
+              </div>
+              <Controller
+                name="desired_locations"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value?.join(", ") || ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value ? e.target.value.split(",").map((p) => p.trim()) : []
+                      )
+                    }
+                    className={INPUT_CLS}
+                    placeholder="Wien, Graz, Linz, Salzburg"
+                  />
+                )}
+              />
+            </div>
+
+            {/* Gehalt */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <DollarSign className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h2 className="font-semibold text-white">Gehaltsvorstellung</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Brutto Jahresgehalt in Tausend EUR</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Controller
+                  name="salary_min"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <label className={LABEL_CLS}>Minimum (Untergrenze)</label>
+                      <input
+                        {...field}
+                        type="number"
+                        className={INPUT_CLS}
+                        placeholder="30"
+                        value={field.value || ""}
+                      />
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="salary_max"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <label className={LABEL_CLS}>Maximum (Obergrenze)</label>
+                      <input
+                        {...field}
+                        type="number"
+                        className={INPUT_CLS}
+                        placeholder="50"
+                        value={field.value || ""}
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Stellenarten */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <Briefcase className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h2 className="font-semibold text-white">Stellenarten</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Gewünschte Beschäftigungsformen auswählen</p>
+                </div>
+              </div>
+              <Controller
+                name="job_types"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex flex-wrap gap-2">
+                    {JOB_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          const next = field.value?.includes(type)
+                            ? field.value.filter((e) => e !== type)
+                            : [...(field.value || []), type];
+                          field.onChange(next);
+                        }}
+                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+                          field.value?.includes(type)
+                            ? "bg-[#3b82f6] text-white shadow-[0_0_0_1px_rgba(59,130,246,0.5)]"
+                            : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Erfahrungsstufe */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <Target className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h2 className="font-semibold text-white">Erfahrungsstufe</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Aktuelle Karrierephase angeben</p>
+                </div>
+              </div>
+              <Controller
+                name="experience_level"
+                control={control}
+                render={({ field }) => (
+                  <div className="relative">
+                    <select
+                      {...field}
+                      className={`${INPUT_CLS} appearance-none pr-9`}
+                      value={field.value || ""}
+                    >
+                      <option value="">Stufe auswählen…</option>
+                      {EXPERIENCE_LEVELS.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Branchen */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              <div className="mb-4">
+                <h2 className="font-semibold text-white">Branchen</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Bevorzugte Arbeitsbereiche auswählen</p>
+              </div>
+              <Controller
+                name="industries"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid grid-cols-3 gap-2">
+                    {INDUSTRIES.map((industry) => (
+                      <button
+                        key={industry}
+                        type="button"
+                        onClick={() => {
+                          const next = field.value?.includes(industry)
+                            ? field.value.filter((e) => e !== industry)
+                            : [...(field.value || []), industry];
+                          field.onChange(next);
+                        }}
+                        className={`rounded-lg px-2 py-2.5 text-xs font-semibold transition-all text-center ${
+                          field.value?.includes(industry)
+                            ? "bg-[#3b82f6] text-white shadow-[0_0_0_1px_rgba(59,130,246,0.5)]"
+                            : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
+                        }`}
+                      >
+                        {industry}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Umzugsbereitschaft */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] px-5 py-4">
+              <Controller
+                name="is_open_to_relocation"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Umzugsbereitschaft</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Offen für Stellen außerhalb der Heimatstadt
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => field.onChange(!field.value)}
+                      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+                        field.value ? "bg-[#3b82f6]" : "bg-[#1f2937]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                          field.value ? "translate-x-5" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Save */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-3.5 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors min-h-[44px] shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+            >
+              <Save className="h-4 w-4" />
+              {isSubmitting
+                ? "Wird gespeichert…"
+                : "Einstellungen speichern (Alle Änderungen übernehmen)"}
+            </button>
+          </div>
         </div>
       </form>
-
-      <DeleteAccountSection />
-    </div>
-  );
-}
-
-function SectionCard({ icon, title, description, children }) {
-  return (
-    <div className="card">
-      <div className="mb-4 flex items-start gap-3">
-        {icon}
-        <div>
-          <h2 className="font-semibold text-gray-900">{title}</h2>
-          <p className="mt-0.5 text-xs text-gray-500">{description}</p>
-        </div>
-      </div>
-      {children}
     </div>
   );
 }
@@ -575,9 +673,7 @@ function DeleteAccountSection() {
       toast.error("Bitte gib dein Passwort ein");
       return;
     }
-
     setDeleting(true);
-
     try {
       await authApi.deleteAccount(password);
       toast.success("Konto wurde gelöscht");
@@ -590,13 +686,13 @@ function DeleteAccountSection() {
   };
 
   return (
-    <div className="mt-10 border-t-2 border-red-100 pt-8">
+    <div className="rounded-xl border border-red-900/40 bg-[#0f0808] p-5">
       <div className="mb-4 flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
         <div>
-          <h2 className="font-semibold text-red-700">Konto löschen</h2>
-          <p className="mt-0.5 text-xs text-gray-500">
-            Alle deine Daten, Profile, Lebensläufe, Anschreiben und Jobs werden unwiderruflich gelöscht.
+          <h2 className="font-semibold text-red-400">Gefahrenzone (Unwiderrufliche Aktionen)</h2>
+          <p className="mt-0.5 text-xs text-slate-400">
+            Alle Daten, Profile, Lebensläufe und Jobs werden permanent gelöscht.
           </p>
         </div>
       </div>
@@ -604,42 +700,42 @@ function DeleteAccountSection() {
       {!showConfirm ? (
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
+          className="flex items-center gap-2 rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-950/60"
         >
           <Trash2 className="h-4 w-4" />
-          Konto endgültig löschen
+          Konto endgültig löschen (Alle Daten entfernen)
         </button>
       ) : (
-        <div className="space-y-4 rounded-xl border border-red-200 bg-red-50 p-5">
-          <p className="text-sm font-semibold text-red-800">
+        <div className="space-y-4 rounded-xl border border-red-900/60 bg-red-950/30 p-4">
+          <p className="text-sm font-semibold text-red-300">
             Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.
           </p>
-
           <div>
-            <label className="label text-red-700">Passwort zur Bestätigung</label>
+            <label className="block text-xs font-bold text-red-400/80 uppercase tracking-widest mb-2">
+              Passwort zur Bestätigung
+            </label>
             <input
               type="password"
-              className="input"
-              placeholder="Dein aktuelles Passwort"
+              className="w-full rounded-xl border border-red-900/60 bg-[#0b0606] px-4 py-3 text-sm text-white placeholder-red-900 focus:outline-none focus:border-red-500/50 min-h-[44px]"
+              placeholder="Aktuelles Passwort eingeben"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
           <div className="flex gap-3">
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
             >
-              {deleting ? "Wird gelöscht..." : "Unwiderruflich löschen"}
+              {deleting ? "Wird gelöscht…" : "Unwiderruflich löschen"}
             </button>
             <button
               onClick={() => {
                 setShowConfirm(false);
                 setPassword("");
               }}
-              className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+              className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-white"
             >
               Abbrechen
             </button>

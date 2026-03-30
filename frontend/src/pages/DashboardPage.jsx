@@ -214,7 +214,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
         className="hidden sm:grid gap-px bg-[#171a21]/80"
         style={{
           gridTemplateColumns: "176px 1fr 1fr 196px",
-          gridTemplateRows: compact ? "minmax(188px,1fr) minmax(188px,1fr)" : "minmax(208px,1fr) minmax(208px,1fr)",
+          gridTemplateRows: compact ? "188px 188px" : "208px 208px",
         }}
       >
 

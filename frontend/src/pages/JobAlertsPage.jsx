@@ -554,7 +554,7 @@ export default function JobAlertsPage() {
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
         >
           <Plus className="h-4 w-4" />
-          Neuer Alert (Job-Wächter einrichten)
+          Such-Agent einrichten (Automatisierte Jobsuche starten)
         </button>
         {showCreate && (
           <CreateAlertModal
@@ -583,7 +583,7 @@ export default function JobAlertsPage() {
           className="inline-flex items-center gap-2 rounded-xl bg-[#3b82f6] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
         >
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Neuer Alert (Job-Wächter einrichten)</span>
+          <span className="hidden sm:inline">Such-Agent einrichten</span>
           <span className="sm:hidden">Neu</span>
         </button>
       </div>
