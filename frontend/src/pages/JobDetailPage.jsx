@@ -4,11 +4,12 @@
  * Touch targets: min 44×44px | Body: 16px / leading-relaxed
  */
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
-  ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail,
+  ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X,
   Copy, Check, ChevronDown, Download, SearchCheck,
   Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight,
 } from "lucide-react";
@@ -346,6 +347,7 @@ export default function JobDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
+  const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
@@ -384,7 +386,7 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     const t = searchParams.get("tab");
-    if (t === "interview" || t === "cover-letter" || t === "overview") setActiveTab(t);
+    if (t === "interview" || t === "overview") setActiveTab(t);
   }, [searchParams]);
 
   useEffect(() => {
@@ -399,7 +401,7 @@ export default function JobDetailPage() {
   });
   const coverLetterMutation = useMutation({
     mutationFn: () => coverLetterApi.generate(Number(jobId), resumeId),
-    onSuccess: (res) => { updateJobCaches(res.data); invalidateJobs(); setActiveTab("cover-letter"); toast.success("Anschreiben fertig!"); },
+    onSuccess: (res) => { updateJobCaches(res.data); invalidateJobs(); setCoverLetterModalOpen(true); toast.success("Anschreiben fertig!"); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Anschreiben konnte nicht erstellt werden")),
   });
   const interviewMutation = useMutation({
@@ -432,9 +434,8 @@ export default function JobDetailPage() {
   const statusCfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.bookmarked;
   const hasAiContent = job.match_score != null || job.cover_letter || job.interview_qa;
   const tabs = [
-    { id: "overview",      label: "Übersicht" },
-    { id: "cover-letter",  label: "Anschreiben",          disabled: !job.cover_letter },
-    { id: "interview",     label: "Gesprächsvorbereitung", disabled: !job.interview_qa },
+    { id: "overview",  label: "Übersicht" },
+    { id: "interview", label: "Gesprächsvorbereitung", disabled: !job.interview_qa },
   ];
 
   return (
@@ -530,10 +531,10 @@ export default function JobDetailPage() {
               <ActionBtn
                 pending={coverLetterMutation.isPending}
                 disabled={!resumeId}
-                onClick={() => coverLetterMutation.mutate()}
+                onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
                 icon={<FileText className="h-4 w-4" />}
                 pendingLabel="Wird erstellt…"
-                label="Anschreiben erstellen"
+                label={job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}
                 variant="success"
               />
               <ActionBtn
@@ -675,46 +676,6 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* ── Cover Letter tab ────────────────────────────────────────── */}
-            {activeTab === "cover-letter" && job.cover_letter && (
-              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
-                  <h3 className="text-sm font-bold text-gray-900">Erstelltes Anschreiben</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(job.cover_letter); setCopiedIndex(-1); setTimeout(() => setCopiedIndex(null), 2000); toast.success("Kopiert!"); }}
-                      className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold min-h-[44px]"
-                      style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF", color: PRIMARY }}
-                    >
-                      {copiedIndex === -1 ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      {copiedIndex === -1 ? "Kopiert" : "Kopieren"}
-                    </button>
-                    {(() => {
-                      const companyEmail = parseJson(job.research_data)?.contact_info?.email;
-                      if (!companyEmail) return null;
-                      const subject = encodeURIComponent(`Bewerbung als ${job.role || "Kandidat"} – ${job.company || ""}`);
-                      const body = encodeURIComponent(job.cover_letter || "");
-                      return (
-                        <a
-                          href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
-                          className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors min-h-[44px]"
-                        >
-                          <Mail className="h-3.5 w-3.5" /> E-Mail Entwurf
-                        </a>
-                      );
-                    })()}
-                    <DownloadBtn kind="TXT" onClick={() => downloadTxt(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.txt`)} />
-                    <DownloadBtn kind="PDF" variant="red" onClick={() => printHtml("Anschreiben", `<pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(job.cover_letter)}</pre>`)} />
-                    <DownloadBtn kind="DOCX" variant="blue" onClick={() => downloadDoc(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.doc`)} />
-                  </div>
-                </div>
-                <div className="p-5 space-y-4">
-                  <AIDisclosureBanner feature="cover_letter" />
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{job.cover_letter}</p>
-                </div>
-              </div>
-            )}
-
             {/* ── Interview tab ────────────────────────────────────────────── */}
             {activeTab === "interview" && !interviewQA && (
               <div className="rounded-2xl border border-amber-100 bg-white shadow-sm p-6 text-center">
@@ -790,6 +751,64 @@ export default function JobDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Cover Letter Modal */}
+      {coverLetterModalOpen && job?.cover_letter && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setCoverLetterModalOpen(false); }}
+        >
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                <h2 className="truncate text-base font-bold text-gray-900">
+                  Anschreiben{job.company ? ` — ${job.company}` : ""}
+                </h2>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => { navigator.clipboard.writeText(job.cover_letter); setCopiedIndex(-1); setTimeout(() => setCopiedIndex(null), 2000); toast.success("Kopiert!"); }}
+                  className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold min-h-[44px]"
+                  style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF", color: PRIMARY }}
+                >
+                  {copiedIndex === -1 ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedIndex === -1 ? "Kopiert" : "Kopieren"}
+                </button>
+                {(() => {
+                  const companyEmail = parseJson(job.research_data)?.contact_info?.email;
+                  if (!companyEmail) return null;
+                  const subject = encodeURIComponent(`Bewerbung als ${job.role || "Kandidat"} – ${job.company || ""}`);
+                  const body = encodeURIComponent(job.cover_letter || "");
+                  return (
+                    <a
+                      href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
+                      className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors min-h-[44px]"
+                    >
+                      <Mail className="h-3.5 w-3.5" /> E-Mail Entwurf
+                    </a>
+                  );
+                })()}
+                <DownloadBtn kind="TXT" onClick={() => downloadTxt(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.txt`)} />
+                <DownloadBtn kind="PDF" variant="red" onClick={() => printHtml("Anschreiben", `<pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(job.cover_letter)}</pre>`)} />
+                <DownloadBtn kind="DOCX" variant="blue" onClick={() => downloadDoc(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.doc`)} />
+                <button
+                  onClick={() => setCoverLetterModalOpen(false)}
+                  className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100"
+                  aria-label="Schließen"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <AIDisclosureBanner feature="cover_letter" />
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{job.cover_letter}</p>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Research modal */}
       {researchOpen && (
