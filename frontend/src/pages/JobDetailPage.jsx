@@ -679,7 +679,7 @@ export default function JobDetailPage() {
           </aside>
 
           {/* ── Right panel: content (62% desktop) ───────────────────────── */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
 
             {/* Tabs */}
             <div className="flex gap-1 rounded-2xl bg-gray-100 p-1 overflow-x-auto">
@@ -704,16 +704,18 @@ export default function JobDetailPage() {
 
             {/* ── Overview tab ───────────────────────────────────────────── */}
             {activeTab === "overview" && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                {/* Qualifikations-Check — only when analysis exists */}
+                {/* Qualifikations-Check — full width */}
                 {job.match_score != null && (
-                  <QualifikationsCheck matchScore={job.match_score} matchFeedback={matchFeedback} />
+                  <div className="sm:col-span-2">
+                    <QualifikationsCheck matchScore={job.match_score} matchFeedback={matchFeedback} />
+                  </div>
                 )}
 
-                {/* Stärken + Lücken — side-by-side grid */}
+                {/* Stärken + Lücken — side-by-side, full width row */}
                 {(matchFeedback?.strengths?.length > 0 || matchFeedback?.gaps?.length > 0) && (
-                  <div className={`grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                  <div className={`sm:col-span-2 grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                     {matchFeedback?.strengths?.length > 0 && (
                       <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm p-5">
                         <div className="flex items-center gap-2 mb-4">
@@ -733,7 +735,7 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Recommendations */}
+                {/* Recommendations — left col */}
                 {matchFeedback?.recommendations?.length > 0 && (
                   <div className="rounded-2xl border border-blue-100 bg-white shadow-sm p-5">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Empfehlungen</p>
@@ -748,8 +750,9 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Job description */}
-                <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
+                {/* Job description — right col (or full width if no recommendations) */}
+                <div className={matchFeedback?.recommendations?.length > 0 ? "" : "sm:col-span-2"}>
+                  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                     <h3 className="text-sm font-bold text-gray-800">Stellenbeschreibung</h3>
                     <div className="flex items-center gap-1.5">
@@ -776,11 +779,12 @@ export default function JobDetailPage() {
                         }).join("\n\n") || job.description
                       : job.description}
                   </p>
+                  </div>
                 </div>
 
                 {/* No analysis yet — prompt */}
                 {job.match_score == null && resumes.length > 0 && (
-                  <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+                  <div className="sm:col-span-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 text-center">
                     <Zap className="w-8 h-8 mx-auto mb-3" style={{ color: PRIMARY }} />
                     <p className="text-sm font-semibold text-gray-700 mb-1">Noch kein Qualifikations-Check</p>
                     <p className="text-xs text-gray-500">Klicke links auf „Qualifikations-Check" um die KI-Analyse zu starten.</p>

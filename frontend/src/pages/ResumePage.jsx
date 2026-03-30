@@ -213,7 +213,7 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border"
                 style={{ backgroundColor: `${scoreColor}18`, borderColor: `${scoreColor}40`, color: scoreColor }}>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: scoreColor }} />
-                {score != null ? `Match Ø ${score}%` : "Analysiert"}
+                {score != null ? `Match ${score}%` : "Analysiert"}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-400">
@@ -339,7 +339,7 @@ function DocumentIntelligence({ resume, skills }) {
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.2) 0%, transparent 50%)" }} />
           <div className="relative z-10 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-extrabold text-white leading-none">Tailor Your CV</p>
+              <p className="text-xs font-extrabold text-white leading-none">Lebenslauf anpassen</p>
               <p className="text-[10px] text-violet-200 mt-1 leading-snug">KI optimiert deinen Lebenslauf für eine konkrete Stelle</p>
             </div>
             <Link
@@ -403,18 +403,15 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
         <div className="relative" style={{ paddingBottom: "141.4%" /* A4 ratio */ }}>
           <div className="absolute inset-0 p-3">
 
-            {/* Document background lines (wireframe text) */}
+            {/* Document wireframe — structured sections */}
             <div className="absolute inset-3 pointer-events-none">
-              {/* Name header area */}
-              <div className="mb-1.5">
-                <div className="h-2 w-2/3 rounded-sm bg-slate-200 mb-1" />
-                <div className="h-1.5 w-1/2 rounded-sm bg-slate-100" />
-              </div>
-              <div className="h-px bg-slate-200 mb-1.5" />
-              {/* Content lines */}
-              {Array.from({ length: 22 }).map((_, i) => (
-                <div key={i} className="flex gap-1.5 mb-1">
-                  <div className="h-1 rounded-sm bg-slate-100 flex-1" style={{ width: `${60 + (i * 17) % 35}%` }} />
+              <div className="h-2 w-1/2 rounded bg-slate-200 mb-1" />
+              <div className="h-1.5 w-1/3 rounded bg-slate-100 mb-1" />
+              <div className="h-px bg-slate-200 mb-2" />
+              {[["w-full","w-4/5"],["w-3/4","w-full"],["w-full","w-2/3"],["w-1/2",""],["w-full","w-5/6"],["w-3/4","w-full"],["w-full","w-2/3"],["w-1/2",""],["w-full","w-4/5"],["w-3/5",""]].map(([a, b], i) => (
+                <div key={i} className="mb-1.5">
+                  <div className={`h-1 rounded bg-slate-100 ${a}`} />
+                  {b && <div className={`h-1 rounded bg-slate-100 mt-0.5 ${b}`} />}
                 </div>
               ))}
             </div>

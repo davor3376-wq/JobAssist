@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { Briefcase, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck } from "lucide-react";
-import { jobApi, aiAssistantApi, researchApi } from "../services/api";
-import ApplicationsList from "../components/ApplicationsList";
+import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy } from "lucide-react";
+import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
 import ResearchModal from "../components/ResearchModal";
@@ -118,11 +118,12 @@ const CITY_DISTRICTS = {
 
 export default function JobsPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [mainTab, setMainTab] = useState("applications");
   const [searchTab, setSearchTab] = useState("recommended");
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const [savingJobId, setSavingJobId] = useState(null);
+  const [coverLetterModal, setCoverLetterModal] = useState(null); // { text, role, company }
+  const [copiedCover, setCopiedCover] = useState(false);
+const [savingJobId, setSavingJobId] = useState(null);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [expandedJob, setExpandedJob] = useState(null);
   const [jobAnalyses, setJobAnalyses] = useState({});
@@ -142,21 +143,10 @@ export default function JobsPage() {
   // Tracks what was last submitted — drives the query key so cache is reused for identical searches
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
-  const focusedJobId = searchParams.get("jobId");
   const { data: initData } = useQuery({ queryKey: ["init"] });
-  const me = initData?.me;
+  const { data: resumes = [] } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data), initialData: () => loadStored("resumes") || [] });
+  const resumeId = resumes[0]?.id;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
-
-  // Tracked jobs
-  const { data: jobs = [] } = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then((r) => {
-      saveStored("jobs", r.data);
-      return r.data;
-    }),
-    initialData: () => loadStored("jobs"),
-    retry: 1,
-  });
 
   // Recommended search (based on preferences)
   const {
@@ -220,12 +210,6 @@ export default function JobsPage() {
     }
   }, [customSearchParams, searchTab, submittedCustomParams]);
 
-  useEffect(() => {
-    if (focusedJobId) {
-      setMainTab("applications");
-    }
-  }, [focusedJobId]);
-
   const handleRecommendedSearch = () => {
     guardSearch(() => {
       if (recommendedEnabled) {
@@ -242,24 +226,43 @@ export default function JobsPage() {
   };
 
   const handleSaveSearchResult = (result) => {
-    const alreadySaved = jobs.some(
-      (j) =>
-        (result.full_url && j.url === result.full_url) ||
-        (j.company?.toLowerCase() === result.company?.toLowerCase() &&
-          j.role?.toLowerCase() === result.title?.toLowerCase())
-    );
-    if (alreadySaved) {
-      toast("Diese Stelle ist bereits gespeichert", { icon: "ℹ️" });
-      setSavedJobIds((prev) => new Set([...prev, result.source_id]));
-      return;
-    }
     setSavingJobId(result.source_id);
     saveJobMutation.mutate({
       company: result.company,
       role: result.title,
-      description: result.description || `${result.title} at ${result.company} in ${result.location}`,
+      description: result.description || `${result.title} bei ${result.company} in ${result.location}`,
       url: result.full_url || null,
     });
+  };
+
+  const handleCoverLetter = async (result, index) => {
+    if (!resumeId) { toast("Bitte zuerst einen Lebenslauf hochladen.", { icon: "📄" }); return; }
+    setAnalyzingJobId(`cl-${index}`);
+    try {
+      // Save job first, then generate cover letter
+      let savedJob = null;
+      try {
+        const saveRes = await jobApi.create({
+          company: result.company, role: result.title,
+          description: result.description || `${result.title} bei ${result.company}`,
+          url: result.full_url || null,
+        });
+        savedJob = saveRes.data;
+        qc.invalidateQueries({ queryKey: ["jobs"] });
+      } catch {}
+      if (savedJob?.id) {
+        const clRes = await coverLetterApi.generate(savedJob.id, resumeId);
+        const text = clRes.data?.cover_letter || clRes.data;
+        setCoverLetterModal({ text: typeof text === "string" ? text : JSON.stringify(text), role: result.title, company: result.company });
+        setSavedJobIds((prev) => new Set([...prev, result.source_id]));
+      } else {
+        toast.error("Stelle konnte nicht gespeichert werden");
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Anschreiben konnte nicht erstellt werden"));
+    } finally {
+      setAnalyzingJobId(null);
+    }
   };
 
   const handleAnalyzeJob = async (result, idx) => {
@@ -385,59 +388,13 @@ export default function JobsPage() {
       {/* Header Section */}
       <div className="flex items-center justify-between mb-6 animate-slide-up">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Bewerbungen</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Bewerbungen verwalten und Stellen finden</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Stellenmarkt</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Passende Stellen finden und direkt bewerben</p>
         </div>
       </div>
 
-      {/* Main Tabs */}
-      <div className="mb-6 flex gap-1 rounded-2xl bg-gray-100 p-1 animate-slide-up">
-        <button
-          onClick={() => setMainTab("applications")}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
-            mainTab === "applications" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          <CheckCircle className="w-4 h-4 flex-shrink-0" />
-          Meine Bewerbungen
-        </button>
-        <button
-          onClick={() => setMainTab("search")}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
-            mainTab === "search" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          <Search className="w-4 h-4 flex-shrink-0" />
-          Stellen finden
-        </button>
-      </div>
-
-      {/* My Applications Tab */}
-      {mainTab === "applications" && (
-        <div className="animate-slide-up">
-          <ApplicationsList jobs={jobs} focusedJobId={focusedJobId} />
-        </div>
-      )}
-
-      {/* Search for Jobs Tab */}
-      {mainTab === "search" && (
-        <div className="space-y-8">
-          <button
-            onClick={() => setSearchExpanded(!searchExpanded)}
-            className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-white shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] flex items-center justify-center">
-                <Search className="w-4 h-4 text-[#2D5BFF]" />
-              </div>
-              <span className="text-sm font-bold text-gray-900">Stellen suchen</span>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${searchExpanded ? "rotate-180" : ""}`} />
-          </button>
-
-          {searchExpanded && (
-            <div className="animate-slide-up">
-              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
                 {/* Tab Navigation */}
                 <div className="flex gap-1 rounded-2xl bg-gray-100 p-1 mb-5">
                   <button
@@ -752,6 +709,17 @@ export default function JobsPage() {
                                     {analyzingJobId === index ? "Analysiert…" : "KI-Analyse"}
                                   </button>
                                   <button
+                                    onClick={() => handleCoverLetter(result, index)}
+                                    disabled={analyzingJobId === `cl-${index}`}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-gray-200 text-gray-700 hover:border-[#C7D2FE] hover:text-[#2D5BFF] transition-colors min-h-[44px] disabled:opacity-50"
+                                  >
+                                    {analyzingJobId === `cl-${index}` ? (
+                                      <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Erstellt…</>
+                                    ) : (
+                                      <><FileText className="w-3.5 h-3.5" />Anschreiben</>
+                                    )}
+                                  </button>
+                                  <button
                                     onClick={() => handleResearch(result)}
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors min-h-[44px]"
                                   >
@@ -857,11 +825,8 @@ export default function JobsPage() {
                       </p>
                     </div>
                   )}
-              </div>
-            </div>
-          )}
         </div>
-      )}
+      </div>
 
       {researchModal && (
         <ResearchModal
@@ -871,6 +836,48 @@ export default function JobsPage() {
           onRefresh={handleRefreshResearch}
           onClose={() => { setResearchModal(null); setResearchData(null); }}
         />
+      )}
+
+      {coverLetterModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#EEF2FF] flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-[#2D5BFF]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900">Anschreiben</h3>
+                  <p className="text-xs text-gray-500">{coverLetterModal.role} · {coverLetterModal.company}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(coverLetterModal.text);
+                    setCopiedCover(true);
+                    setTimeout(() => setCopiedCover(false), 2000);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:border-[#C7D2FE] hover:text-[#2D5BFF] transition-colors"
+                >
+                  {copiedCover ? <><Check className="w-3.5 h-3.5 text-emerald-500" />Kopiert!</> : <><Copy className="w-3.5 h-3.5" />Kopieren</>}
+                </button>
+                <button
+                  onClick={() => setCoverLetterModal(null)}
+                  className="p-1.5 rounded-xl text-gray-400 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">{coverLetterModal.text}</pre>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
