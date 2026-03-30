@@ -6,10 +6,10 @@ import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
   ClipboardList, Upload, Search, ChevronLeft, Shield, X,
+  Wand2, Target, Zap, ArrowRight, ChevronDown,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { useStreamingChat } from "../hooks/useStreamingChat";
-import AIDisclosureBanner from "../components/AIDisclosureBanner";
 import useUsageGuard from "../hooks/useUsageGuard";
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -33,6 +33,13 @@ function loadStoredResumes() {
     const raw = localStorage.getItem("resumes");
     return raw ? JSON.parse(raw) : undefined;
   } catch { return undefined; }
+}
+
+function loadStoredJobs() {
+  try {
+    const raw = localStorage.getItem("jobs");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
 // ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
@@ -171,6 +178,8 @@ export default function AIAssistantPage() {
   const [simulationMode, setSimulationMode] = useState(false);
   const [assessmentMode, setAssessmentMode] = useState(false);
   const [historySearch,  setHistorySearch]  = useState("");
+  const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
+  const [wandOpen, setWandOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -349,10 +358,22 @@ export default function AIAssistantPage() {
     ? conversations.filter((c) => c.title.toLowerCase().includes(historySearch.toLowerCase()))
     : conversations;
 
+  // Context data for right panel + launchpad
+  const savedJobs = loadStoredJobs();
+  const contextJob = savedJobs.find(j => j.status === "interviewing") || savedJobs.find(j => j.status === "applied") || savedJobs[0] || null;
+  const contextResume = uploadedResumes[0] || null;
+
+  const WAND_SUGGESTIONS = [
+    contextJob ? `Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.` : "Bereite mich auf mein nächstes Vorstellungsgespräch vor.",
+    contextResume ? "Analysiere meinen Lebenslauf und nenne mir die 3 stärksten Punkte." : "Was sollte ein überzeugender Lebenslauf enthalten?",
+    contextJob ? `Schreib ein Anschreiben für die Stelle "${contextJob.role}" bei ${contextJob.company}.` : "Wie schreibe ich ein überzeugendes Anschreiben?",
+    "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
+  ];
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="max-w-6xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
+    <div className="max-w-7xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
 
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
@@ -396,7 +417,7 @@ export default function AIAssistantPage() {
         </div>
       </div>
 
-      {/* ── Main layout: sidebar + chat ───────────────────────────────────── */}
+      {/* ── Main layout: sidebar + chat + context panel ─────────────────── */}
       <div className="flex-1 flex gap-4 min-h-0 relative">
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
@@ -407,7 +428,7 @@ export default function AIAssistantPage() {
         `}>
           {/* Sidebar header */}
           <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setSidebarOpen(false)}
@@ -415,7 +436,12 @@ export default function AIAssistantPage() {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-xs font-bold text-slate-800 tracking-wide">Chat-Historie</span>
+                <div className="flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-violet-500" />
+                  <span className="text-xs font-bold text-slate-800 tracking-wide">
+                    {conversations.length === 0 ? "Starter Missionen" : "Aktive Missionen"}
+                  </span>
+                </div>
               </div>
               <button
                 onClick={handleNewChat}
@@ -424,24 +450,46 @@ export default function AIAssistantPage() {
                 <Plus className="w-3 h-3" /> Neu
               </button>
             </div>
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-              <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <input
-                type="text"
-                value={historySearch}
-                onChange={(e) => setHistorySearch(e.target.value)}
-                placeholder="Suche…"
-                className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
-              />
-            </div>
           </div>
+
+          {/* Starter missions (shown when no history) */}
+          {conversations.length === 0 && (
+            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-slate-100">
+              {[
+                { icon: MessageSquare, label: "Interview Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
+                { icon: ClipboardList, label: "Stärkenanalyse starten", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },
+                { icon: FileText, label: "Lebenslauf analysieren", color: "text-indigo-600 bg-indigo-50 border-indigo-100", onClick: () => handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?") },
+                { icon: Briefcase, label: "Bewerbungstipps holen", color: "text-emerald-600 bg-emerald-50 border-emerald-100", onClick: () => handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?") },
+              ].map((m) => (
+                <button
+                  key={m.label}
+                  onClick={() => { m.onClick(); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm ${m.color}`}
+                >
+                  <m.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="text-xs font-semibold leading-snug">{m.label}</span>
+                  <ArrowRight className="w-3 h-3 ml-auto flex-shrink-0 opacity-50" />
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Conversation list */}
           <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-            {filteredConversations.length === 0 ? (
-              <p className="px-2 py-8 text-center text-xs text-slate-400">
-                {historySearch ? "Keine Treffer" : "Noch kein Verlauf"}
-              </p>
+            {conversations.length > 0 && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mx-1 mb-2">
+                <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  placeholder="Gespräche suchen…"
+                  className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none min-w-0"
+                />
+              </div>
+            )}
+            {filteredConversations.length === 0 && conversations.length > 0 ? (
+              <p className="px-2 py-4 text-center text-xs text-slate-400">Keine Treffer</p>
             ) : (
               filteredConversations.map((conv) => {
                 const cat = getConvCategory(conv);
@@ -540,36 +588,53 @@ export default function AIAssistantPage() {
           <div className="flex-1 overflow-y-auto p-5 min-h-0">
             {messages.length === 0 ? (
 
-              /* ── Empty-state hub ────────────────────────────────────────── */
-              <div className="flex flex-col gap-2 py-0.5">
+              /* ── Empty-state launchpad ──────────────────────────────────── */
+              <div className="flex flex-col gap-3 py-0.5">
 
-                {/* Hero banner – soft indigo/violet gradient */}
-                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-3">
-                  {/* Glow orbs */}
-                  <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-400/10 blur-2xl" />
-                  <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-violet-400/10 blur-2xl" />
-                  <div className="relative flex items-center gap-3">
+                {/* Hero — action-oriented */}
+                <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-4 py-4">
+                  <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
+                  <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-violet-400/10 blur-2xl" />
+                  <div className="relative flex items-start gap-3">
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-base font-bold text-slate-900">Hallo. Woran arbeitest du gerade?</h3>
-                      <p className="mt-0.5 text-xs text-slate-500 max-w-lg leading-[1.5]">
-                        Lebenslauf, Anschreiben, Interview-Vorbereitung und Karriereberatung.
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-bold text-slate-900">Womit soll ich dir helfen?</h3>
+                      <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">
+                        Wähle eine Mission oder schreib direkt — ich kenne deinen Bewerbungsstand.
                       </p>
-                      {resumeContextLabel && (
-                        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-                          <FileText className="h-3 w-3" />
-                          {resumeContextLabel}
-                        </span>
-                      )}
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        {contextJob && (
+                          <button
+                            onClick={() => handleSend(`Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.`)}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
+                          >
+                            <Zap className="h-3 w-3" />
+                            Interview: {contextJob.role}
+                          </button>
+                        )}
+                        {contextJob && (
+                          <button
+                            onClick={() => handleSend(`Schreib ein Anschreiben für die Stelle "${contextJob.role}" bei ${contextJob.company}.`)}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Anschreiben: {contextJob.company}
+                          </button>
+                        )}
+                        {resumeContextLabel && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                            <FileText className="h-3 w-3" />
+                            {resumeContextLabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <AIDisclosureBanner feature="ai_chat" />
-
-                {/* Feature cards */}
+                {/* Feature mission cards — horizontal layout */}
                 <div className="grid grid-cols-2 gap-2">
 
                   {/* Interview Simulation */}
@@ -600,7 +665,7 @@ export default function AIAssistantPage() {
                       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-200">
                         <MessageSquare className="h-5 w-5 text-white" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900">Interview Simulation</h4>
+                      <h4 className="text-sm font-bold text-slate-900">Interview-Simulation</h4>
                       <p className="mt-1 text-xs leading-[1.5] text-slate-500">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
@@ -755,23 +820,16 @@ export default function AIAssistantPage() {
             )}
           </div>
 
-          {/* ── Guidelines bar ────────────────────────────────────────────── */}
-          {messages.length === 0 && (
-            <div className="flex-shrink-0 mx-4 mb-2 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5">
-              <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest mb-1.5">Tipps für bessere Ergebnisse</p>
-              <ul className="flex flex-wrap gap-x-5 gap-y-1">
-                {[
-                  "Lade deinen Lebenslauf hoch für personalisierte Antworten",
-                  "Sei so spezifisch wie möglich",
-                  "Nenne die Branche & Position",
-                  "Stelle Folgefragen für mehr Details",
-                ].map((tip) => (
-                  <li key={tip} className="flex items-center gap-1.5 text-[11px] text-indigo-700">
-                    <span className="w-1 h-1 rounded-full bg-indigo-400 flex-shrink-0" />
-                    {tip}
-                  </li>
-                ))}
-              </ul>
+          {/* ── EU AI Act micro-disclaimer ────────────────────────────────── */}
+          {!disclaimerDismissed && (
+            <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5">
+              <Shield className="w-3 h-3 text-slate-400 flex-shrink-0" />
+              <p className="flex-1 text-[11px] text-slate-400 leading-relaxed">
+                <strong className="text-slate-500">KI-System</strong> — Kein Mensch. Kann Fehler machen. Art. 50 EU AI Act.
+              </p>
+              <button onClick={() => setDisclaimerDismissed(true)} className="flex-shrink-0 text-slate-300 hover:text-slate-500 transition-colors">
+                <X className="w-3 h-3" />
+              </button>
             </div>
           )}
 
@@ -791,7 +849,31 @@ export default function AIAssistantPage() {
                 </select>
               </div>
             )}
+
+            {/* Wand suggestion pills */}
+            {wandOpen && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {WAND_SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setInput(s); setWandOpen(false); inputRef.current?.focus(); }}
+                    className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100 transition-colors text-left leading-snug"
+                  >
+                    {s.length > 60 ? s.slice(0, 60) + "…" : s}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+              {/* Wand button */}
+              <button
+                onClick={() => setWandOpen((v) => !v)}
+                title="Vorschläge anzeigen"
+                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-violet-100 text-violet-600" : "text-slate-400 hover:bg-slate-100 hover:text-violet-500"}`}
+              >
+                <Wand2 className="h-4 w-4" />
+              </button>
               <textarea
                 ref={inputRef}
                 value={input}
@@ -812,6 +894,79 @@ export default function AIAssistantPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Right Context Panel (desktop only) ────────────────────────── */}
+        <aside className="hidden lg:flex w-[260px] flex-shrink-0 flex-col gap-3">
+
+          {/* Kontext-Fenster header */}
+          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+              <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <Target className="w-3.5 h-3.5 text-indigo-500" />
+              </div>
+              <span className="text-xs font-bold text-slate-800">Kontext-Fenster</span>
+            </div>
+
+            {contextJob ? (
+              <div className="p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Aktive Stelle</p>
+                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                    <p className="text-xs font-bold text-slate-900 leading-snug">{contextJob.role || "Ohne Titel"}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{contextJob.company || "Unbekannt"}</p>
+                    {contextJob.status && (
+                      <span className={`mt-2 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        contextJob.status === "interviewing" ? "bg-violet-100 text-violet-700" :
+                        contextJob.status === "applied" ? "bg-emerald-100 text-emerald-700" :
+                        "bg-slate-100 text-slate-500"
+                      }`}>
+                        {contextJob.status === "interviewing" ? "Gespräch" : contextJob.status === "applied" ? "Beworben" : "Gespeichert"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnellaktionen</p>
+                  {[
+                    { label: "Interview vorbereiten", prompt: `Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.` },
+                    { label: "Anschreiben erstellen", prompt: `Schreib ein Anschreiben für "${contextJob.role}" bei ${contextJob.company}.` },
+                    { label: "Stellenanforderungen", prompt: `Welche Qualifikationen sind typisch für die Stelle "${contextJob.role}"?` },
+                  ].map((a) => (
+                    <button
+                      key={a.label}
+                      onClick={() => handleSend(a.prompt)}
+                      className="w-full flex items-center gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors"
+                    >
+                      <ArrowRight className="w-3 h-3 flex-shrink-0 text-indigo-400" />
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 text-center">
+                <Briefcase className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                <p className="text-xs text-slate-400">Keine aktive Stelle gefunden.</p>
+                <p className="text-[11px] text-slate-300 mt-1">Speichere eine Stelle unter „Bewerbungen" um sie hier zu sehen.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Resume context */}
+          {contextResume && (
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Lebenslauf</p>
+              <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <FileText className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-700 truncate">{contextResume.filename || "Lebenslauf"}</p>
+                  <p className="text-[11px] text-slate-400">Aktiv für Analysen</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+
       </div>
     </div>
     {/* ── EU AI Act Transparency Disclaimer Modal ───────────────────────── */}
