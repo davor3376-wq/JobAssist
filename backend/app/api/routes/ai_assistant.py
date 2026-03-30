@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -148,6 +149,67 @@ async def chat(
     reply = response.choices[0].message.content.strip()
 
     return AssistantChatResponse(reply=reply)
+
+
+@router.post("/chat-stream")
+@limiter.limit("20/minute")
+async def chat_stream(
+    request: Request,
+    payload: AssistantChatRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _usage=Depends(require_usage("ai_chat")),
+):
+    import json as _json
+    from groq import Groq as _Groq
+    from app.core.config import settings as _settings
+
+    resume_context = ""
+    if payload.resume_id:
+        result = await db.execute(
+            select(Resume).where(Resume.id == payload.resume_id, Resume.user_id == current_user.id)
+        )
+        resume = result.scalar_one_or_none()
+        if resume and resume.raw_text:
+            resume_context = f"\n\nLebenslauf des Benutzers:\n{resume.raw_text[:2000]}"
+
+    extra_context = f"\n\nZusätzlicher Kontext:\n{payload.context[:1000]}" if payload.context else ""
+
+    system = (
+        "Du bist ein erfahrener KI-Bewerbungsassistent für den österreichischen Arbeitsmarkt. "
+        "Du hilfst Benutzern bei allen Fragen rund um Bewerbungen in Österreich: "
+        "Lebenslauf-Optimierung, Motivationsschreiben, Vorstellungsgespräch-Vorbereitung, "
+        "Gehaltsverhandlung, Praktikum- und Samstagsjob-Suche, und allgemeine Karrieretipps. "
+        "Du antwortest immer auf Deutsch und kennst die österreichischen Bewerbungsstandards. "
+        "Sei freundlich, konkret und hilfsbereit. Gib praxisnahe Tipps."
+        f"{resume_context}{extra_context}"
+    )
+
+    messages = [{"role": "system", "content": system}]
+    for msg in payload.history[-10:]:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": payload.message})
+
+    def generate():
+        groq_client = _Groq(api_key=_settings.GROQ_API_KEY)
+        stream = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            max_tokens=1024,
+            temperature=0.5,
+            stream=True,
+        )
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield f"data: {_json.dumps({'text': content})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/optimize", response_model=OptimizeResponse)

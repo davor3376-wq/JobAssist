@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
   ClipboardList, Upload, Search, ChevronLeft,
 } from "lucide-react";
-import { resumeApi, aiAssistantApi } from "../services/api";
+import { resumeApi } from "../services/api";
+import { useStreamingChat } from "../hooks/useStreamingChat";
+import AIDisclosureBanner from "../components/AIDisclosureBanner";
 import useUsageGuard from "../hooks/useUsageGuard";
-import { getApiErrorMessage } from "../utils/apiError";
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 
@@ -175,6 +176,8 @@ export default function AIAssistantPage() {
   const inputRef       = useRef(null);
   const { guardedRun } = useUsageGuard("ai_chat");
   const [streamingMsg, setStreamingMsg] = useState(null); // { full, shown }
+  const streamingTextRef = useRef("");
+  const { send: streamChat, isStreaming } = useStreamingChat();
 
   const { data: uploadedResumes = [] } = useQuery({
     queryKey: ["resumes"],
@@ -191,8 +194,10 @@ export default function AIAssistantPage() {
   }, [messages]);
 
   // Typewriter streaming effect — 2 chars/tick at 22ms gives a calm, readable pace
+  // When full is absent (real SSE streaming), display is handled directly via onChunk.
   useEffect(() => {
     if (!streamingMsg) return;
+    if (!streamingMsg.full) return;
     if (streamingMsg.shown.length >= streamingMsg.full.length) {
       setMessages((prev) => [...prev, { role: "assistant", content: streamingMsg.full }]);
       setStreamingMsg(null);
@@ -227,33 +232,43 @@ export default function AIAssistantPage() {
     });
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const chatMutation = useMutation({
-    mutationFn: (data) => aiAssistantApi.chat(data),
-    onSuccess: (res) => {
-      setStreamingMsg({ full: res.data.reply, shown: "" });
-    },
-    onError: (err) => {
-      toast.error(getApiErrorMessage(err, "Fehler bei der KI-Antwort"));
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Entschuldigung, es gab einen Fehler. Bitte versuche es erneut." },
-      ]);
-    },
-  });
-
   const handleSend = useCallback((text) => {
     const message = (text ?? input).trim();
     if (!message) return;
     guardedRun(() => {
       setMessages((prev) => [...prev, { role: "user", content: message }]);
       setInput("");
-      chatMutation.mutate({
-        message,
-        history: messages.slice(-10),
-        ...(selectedResumeId ? { resume_id: selectedResumeId } : {}),
-      });
+      streamingTextRef.current = "";
+      streamChat(
+        {
+          message,
+          history: messages.slice(-10),
+          ...(selectedResumeId ? { resume_id: selectedResumeId } : {}),
+        },
+        {
+          onChunk: (chunk) => {
+            streamingTextRef.current += chunk;
+            setStreamingMsg({ shown: streamingTextRef.current });
+          },
+          onDone: () => {
+            const finalText = streamingTextRef.current;
+            streamingTextRef.current = "";
+            setMessages((prev) => [...prev, { role: "assistant", content: finalText }]);
+            setStreamingMsg(null);
+          },
+          onError: () => {
+            streamingTextRef.current = "";
+            setStreamingMsg(null);
+            toast.error("Fehler bei der KI-Antwort");
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: "Entschuldigung, es gab einen Fehler. Bitte versuche es erneut." },
+            ]);
+          },
+        }
+      );
     });
-  }, [input, messages, selectedResumeId, guardedRun, chatMutation]);
+  }, [input, messages, selectedResumeId, guardedRun, streamChat]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -538,6 +553,8 @@ export default function AIAssistantPage() {
                   </div>
                 </div>
 
+                <AIDisclosureBanner feature="ai_chat" />
+
                 {/* Feature cards */}
                 <div className="grid grid-cols-2 gap-2">
 
@@ -689,7 +706,7 @@ export default function AIAssistantPage() {
                 ))}
 
                 {/* Typing dots — only while API is loading, before streaming starts */}
-                {chatMutation.isPending && !streamingMsg && (
+                {isStreaming && !streamingMsg && (
                   <div className="flex items-end gap-2.5 justify-start">
                     <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
                       <Bot className="h-4 w-4 text-white" />
@@ -773,7 +790,7 @@ export default function AIAssistantPage() {
               />
               <button
                 onClick={() => handleSend()}
-                disabled={!input.trim() || chatMutation.isPending || !!streamingMsg}
+                disabled={!input.trim() || isStreaming || !!streamingMsg}
                 className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
               >
                 <Send className="h-4 w-4" />

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { jobApi } from "../services/api";
+import AIDisclosureBanner from "./AIDisclosureBanner";
 import { getApiErrorMessage } from "../utils/apiError";
 
 export default function ResearchModal({ companyName, data, loading, onClose, jobId, onRefresh }) {
@@ -68,6 +69,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
+          <AIDisclosureBanner feature="company_research" />
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-500">
               <Loader2 className="h-7 w-7 animate-spin text-blue-500" />

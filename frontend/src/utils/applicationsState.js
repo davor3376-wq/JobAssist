@@ -6,16 +6,8 @@ export function parseJson(value) {
   }
 }
 
-export function getMatchColorClass(score) {
-  if (score < 30) return "bg-red-100 text-red-800";
-  if (score < 40) return "bg-orange-100 text-orange-800";
-  if (score < 50) return "bg-amber-100 text-amber-800";
-  if (score < 60) return "bg-yellow-100 text-yellow-800";
-  if (score < 70) return "bg-green-100 text-green-700";
-  if (score < 80) return "bg-green-200 text-green-800";
-  if (score < 90) return "bg-green-300 text-green-900";
-  if (score < 100) return "bg-green-400 text-white";
-  return "bg-green-600 text-white";
+export function getMatchColorClass(_score) {
+  return "bg-blue-50 text-blue-700";
 }
 
 export function getDeadlineMeta(deadlineValue, now = Date.now()) {

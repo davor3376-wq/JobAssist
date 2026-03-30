@@ -1364,8 +1364,6 @@ export default function ApplicationsList({ jobs, onJobsUpdate, focusedJobId = nu
                 className="rounded-lg border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs"
               >
                 <option value="recent">Neueste</option>
-                <option value="match-high">Match ↓</option>
-                <option value="match-low">Match ↑</option>
               </select>
             </div>
           </div>

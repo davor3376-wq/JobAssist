@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FileText, Sparkles, Copy, Download, RefreshCw, Building2, ClipboardList } from "lucide-react";
 import { resumeApi, motivationsschreibenApi, jobApi } from "../services/api";
+import AIDisclosureBanner from "../components/AIDisclosureBanner";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { getApiErrorMessage } from "../utils/apiError";
 
@@ -190,6 +191,8 @@ export default function CoverLetterPage() {
           Erstelle ein überzeugendes Motivationsschreiben für deine Bewerbung
         </p>
       </div>
+
+      <AIDisclosureBanner feature="cover_letter" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Input Form */}

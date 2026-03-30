@@ -25,7 +25,6 @@ const loadContactPage = () => import("./pages/ContactPage");
 const loadForgotPasswordPage = () => import("./pages/ForgotPasswordPage");
 const loadResetPasswordPage = () => import("./pages/ResetPasswordPage");
 const loadVerifyEmailPage = () => import("./pages/VerifyEmailPage");
-const loadMotivationsschreibenPage = () => import("./pages/MotivationsschreibenPage");
 const loadUnsubscribePage = () => import("./pages/UnsubscribePage");
 
 const LoginPage = lazy(loadLoginPage);
@@ -46,7 +45,6 @@ const ContactPage = lazy(loadContactPage);
 const ForgotPasswordPage = lazy(loadForgotPasswordPage);
 const ResetPasswordPage = lazy(loadResetPasswordPage);
 const VerifyEmailPage = lazy(loadVerifyEmailPage);
-const MotivationsschreibenPage = lazy(loadMotivationsschreibenPage);
 const UnsubscribePage = lazy(loadUnsubscribePage);
 
 const preloaders = [
@@ -57,7 +55,6 @@ const preloaders = [
   loadSettingsPage,
   loadBillingPage,
   loadAIAssistantPage,
-  loadMotivationsschreibenPage,
 ];
 
 function PrivateRoute({ children }) {
@@ -95,7 +92,6 @@ function AppRoutes() {
           <Route path="resume" element={<ResumePage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/:jobId" element={<Suspense fallback={null}><JobDetailPage /></Suspense>} />
-          <Route path="motivationsschreiben" element={<Suspense fallback={null}><MotivationsschreibenPage /></Suspense>} />
           <Route path="ai-assistant" element={<AIAssistantPage />} />
           <Route path="job-alerts" element={<JobAlertsPage />} />
           <Route path="settings" element={<SettingsPage />} />

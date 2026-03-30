@@ -8,12 +8,13 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
-  ArrowLeft, Trash2, Zap, FileText, MessageSquare,
+  ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail,
   Copy, Check, ChevronDown, Download, SearchCheck,
   Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight,
 } from "lucide-react";
 import { coverLetterApi, interviewApi, jobApi, researchApi, resumeApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
+import AIDisclosureBanner from "../components/AIDisclosureBanner";
 import { getApiErrorMessage } from "../utils/apiError";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ function deriveSubScores(s) {
 
 function ScoreBar({ label, value, source, color }) {
   const pct = Math.round(value);
-  const barColor = pct >= 70 ? "#16a34a" : pct >= 50 ? "#d97706" : "#ef4444";
+  const barColor = PRIMARY;
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
@@ -117,7 +118,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   const [open, setOpen] = useState(true);
   const scores = deriveSubScores(matchScore);
   const overall = Math.round(matchScore ?? 0);
-  const overallColor = overall >= 70 ? "#16a34a" : overall >= 50 ? "#d97706" : "#ef4444";
+  const overallColor = PRIMARY;
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -688,12 +689,27 @@ export default function JobDetailPage() {
                       {copiedIndex === -1 ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                       {copiedIndex === -1 ? "Kopiert" : "Kopieren"}
                     </button>
+                    {(() => {
+                      const companyEmail = parseJson(job.research_data)?.contact_info?.email;
+                      if (!companyEmail) return null;
+                      const subject = encodeURIComponent(`Bewerbung als ${job.role || "Kandidat"} – ${job.company || ""}`);
+                      const body = encodeURIComponent(job.cover_letter || "");
+                      return (
+                        <a
+                          href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
+                          className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors min-h-[44px]"
+                        >
+                          <Mail className="h-3.5 w-3.5" /> E-Mail Entwurf
+                        </a>
+                      );
+                    })()}
                     <DownloadBtn kind="TXT" onClick={() => downloadTxt(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.txt`)} />
                     <DownloadBtn kind="PDF" variant="red" onClick={() => printHtml("Anschreiben", `<pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(job.cover_letter)}</pre>`)} />
                     <DownloadBtn kind="DOCX" variant="blue" onClick={() => downloadDoc(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.doc`)} />
                   </div>
                 </div>
-                <div className="p-5">
+                <div className="p-5 space-y-4">
+                  <AIDisclosureBanner feature="cover_letter" />
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{job.cover_letter}</p>
                 </div>
               </div>
@@ -719,6 +735,7 @@ export default function JobDetailPage() {
 
             {activeTab === "interview" && interviewQA && (
               <div className="space-y-3">
+                <AIDisclosureBanner feature="interview" />
                 <div className="flex justify-end gap-2">
                   <DownloadBtn kind="PDF" variant="red" onClick={() =>
                     printHtml("Gesprächsvorbereitung", `<h1>${escapeHtml(job.role || "Stelle")}</h1><p>${escapeHtml(job.company || "")}</p>${interviewQA.map((item, i) =>
