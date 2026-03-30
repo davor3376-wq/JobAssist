@@ -176,6 +176,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   const interviews = (jobs || []).filter(j => j.status === "interviewing").length;
   const rückläufer = total > 0 ? Math.round((applied / total) * 100) : 0;
   const todayCount = activitySeries[activitySeries.length - 1] ?? 0;
+  const openRoles = Math.max(total - applied, 0);
   const n = getNeon(avgScore);
 
   // Large frosted-glass score ring
@@ -186,7 +187,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   return (
     <div
       className="rounded-xl overflow-hidden border border-[#171a21] shadow-[0_20px_60px_rgba(0,0,0,0.35)] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,rgba(8,9,12,0.98),rgba(0,0,0,0.98))]"
-      style={{ minHeight: compact ? 348 : 452 }}
+      style={{ minHeight: compact ? 404 : 520 }}
     >
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-[#171a21] flex items-center justify-between">
@@ -208,7 +209,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       </div>
 
       {/* Bento grid — desktop */}
-      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "156px 1fr 1fr 168px", gridTemplateRows: compact ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1.16fr) minmax(0,1fr)" }}>
+      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "168px 1fr 1fr 188px", gridTemplateRows: "minmax(0,1fr) minmax(0,1fr)" }}>
 
         {/* Score ring — frosted glass, row-span 2 */}
         <div className="bg-[#08090c] flex flex-col items-center justify-center gap-3 px-4 py-6 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
@@ -251,13 +252,13 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
           <p className="text-[10px] text-slate-400 mt-1.5">von {total} Stellen</p>
         </div>
 
-        {/* Analysierte Stellen */}
+        {/* Analysen heute */}
         <div className="bg-[#08090c] px-5 py-4 flex flex-col justify-center">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Analysiert</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Heute</p>
           <p className="text-3xl font-extrabold text-white leading-none tabular-nums">
-            {scoredJobs.length}
+            {todayCount}
           </p>
-          <p className="text-[10px] text-slate-400 mt-1.5">mit KI bewertet</p>
+          <p className="text-[10px] text-slate-400 mt-1.5">Analysen heute</p>
         </div>
 
         {/* Activity chart — row-span 2 */}
@@ -288,11 +289,11 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
           <p className="text-[10px] text-slate-400 mt-1.5">aktive Gespräche</p>
         </div>
 
-        {/* Rücklaufquote */}
+        {/* Offene Chancen */}
         <div className="bg-[#08090c] px-5 py-4 flex flex-col justify-center">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Rücklaufquote</p>
-          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">{rückläufer}%</p>
-          <p className="text-[10px] text-slate-400 mt-1.5">Bewerbungen aktiv</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Offen</p>
+          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">{openRoles}</p>
+          <p className="text-[10px] text-slate-400 mt-1.5">noch nicht beworben</p>
         </div>
       </div>
 
@@ -300,9 +301,9 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       <div className="sm:hidden grid grid-cols-2 gap-px bg-[#171a21]/80">
         {[
           { label: "Beworben", value: applied },
-          { label: "Matching-Quote", value: avgScore != null ? `${avgScore}%` : "—" },
+          { label: "Heute", value: todayCount },
           { label: "Interviews", value: interviews },
-          { label: "Rücklaufquote", value: `${rückläufer}%` },
+          { label: "Offen", value: openRoles },
         ].map(({ label, value }) => (
           <div key={label} className="bg-[#08090c] px-4 py-3">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
@@ -423,8 +424,10 @@ function SuggestionBubble({ s, index }) {
   const style = SUGGESTION_STYLES[s.type] || SUGGESTION_STYLES.tip;
   const Icon = SUGGESTION_ICONS[s.icon] || Sparkles;
   return (
-    <div className={`rounded-xl border p-3.5 ${style.bg} ${style.border} animate-fade-in`}
-      style={{ animationDelay: `${index * 70}ms`, animationFillMode: "both" }}>
+    <div
+      className={`rounded-xl border p-3.5 ${style.bg} ${style.border} ${s.type === "alert" ? "" : "animate-fade-in"}`}
+      style={s.type === "alert" ? undefined : { animationDelay: `${index * 70}ms`, animationFillMode: "both" }}
+    >
       <div className="flex items-start gap-3">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${style.iconBg}`}>
           <Icon className={`w-4 h-4 ${style.iconColor}`} />

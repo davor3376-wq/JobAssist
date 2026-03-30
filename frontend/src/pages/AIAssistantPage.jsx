@@ -373,7 +373,7 @@ export default function AIAssistantPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="max-w-7xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
+    <div className="mx-auto h-[calc(100svh-120px)] max-w-[1520px] flex flex-col animate-slide-up px-1 xl:px-0">
 
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
@@ -429,7 +429,7 @@ export default function AIAssistantPage() {
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
           absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#0D1117] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
-          md:relative md:w-[260px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#1C2333] md:z-auto
+          md:relative md:w-[232px] xl:w-[248px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#1C2333] md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}>
           {/* Sidebar header */}
@@ -591,11 +591,11 @@ export default function AIAssistantPage() {
           )}
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-5 min-h-0">
+          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 min-h-0">
             {messages.length === 0 ? (
 
               /* ── Empty-state launchpad ──────────────────────────────────── */
-              <div className="flex flex-col gap-3 py-0.5">
+              <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-1">
 
                 {/* Hero — action-oriented */}
                 <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
@@ -641,7 +641,7 @@ export default function AIAssistantPage() {
                 </div>
 
                 {/* Feature mission cards — horizontal layout */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
 
                   {/* Interview Simulation */}
                   <button
@@ -726,7 +726,7 @@ export default function AIAssistantPage() {
                 {/* Schnell-Aktionen grid */}
                 <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
                     {SUGGESTIONS.map((s) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
@@ -910,7 +910,7 @@ export default function AIAssistantPage() {
         </div>
 
         {/* ── Right Context Panel (desktop only) ────────────────────────── */}
-        <aside className="hidden lg:flex w-[280px] flex-shrink-0 flex-col gap-3">
+        <aside className="hidden xl:flex w-[272px] flex-shrink-0 flex-col gap-3">
 
           {/* Kontext-Fenster header */}
           <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm overflow-hidden">
