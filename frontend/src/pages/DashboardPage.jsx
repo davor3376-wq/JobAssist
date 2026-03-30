@@ -142,7 +142,7 @@ function ActivityBars({ values }) {
             : "transparent";
         return (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
-            <div className="w-full relative flex items-end" style={{ height: 48 }}>
+            <div className="w-full relative flex items-end" style={{ height: 44 }}>
               <div className="absolute inset-x-0 bottom-0 h-full rounded-md bg-white/5" />
               <div
                 className="relative w-full rounded-md transition-all duration-700"
@@ -158,7 +158,7 @@ function ActivityBars({ values }) {
                 }}
               />
             </div>
-            <span className={`text-[8px] font-bold ${isToday ? "text-emerald-400" : "text-slate-500"}`}>
+            <span className={`text-[10px] font-bold ${isToday ? "text-emerald-400" : "text-slate-500"}`}>
               {DAY_LABELS[i]}
             </span>
           </div>
@@ -174,20 +174,19 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   const total     = jobs?.length ?? 0;
   const applied   = (jobs || []).filter(j => ["applied","interviewing","offered"].includes(j.status)).length;
   const interviews = (jobs || []).filter(j => j.status === "interviewing").length;
-  const rückläufer = total > 0 ? Math.round((applied / total) * 100) : 0;
+  const responseRate = total > 0 ? Math.round((applied / total) * 100) : 0;
   const todayCount = activitySeries[activitySeries.length - 1] ?? 0;
   const openRoles = Math.max(total - applied, 0);
   const n = getNeon(avgScore);
 
   // Large frosted-glass score ring
-  const ringSize = 112;
-  const ringR = 44;
+  const ringSize = 128;
+  const ringR = 50;
   const ringCirc = 2 * Math.PI * ringR;
 
   return (
     <div
       className="rounded-xl overflow-hidden border border-[#171a21] shadow-[0_20px_60px_rgba(0,0,0,0.35)] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,rgba(8,9,12,0.98),rgba(0,0,0,0.98))]"
-      style={{ minHeight: compact ? 404 : 520 }}
     >
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-[#171a21] flex items-center justify-between">
@@ -209,10 +208,10 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       </div>
 
       {/* Bento grid — desktop */}
-      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "168px 1fr 1fr 188px", gridTemplateRows: "minmax(0,1fr) minmax(0,1fr)" }}>
+      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "176px 1fr 1fr 196px", gridTemplateRows: "minmax(208px,1fr) minmax(208px,1fr)" }}>
 
         {/* Score ring — frosted glass, row-span 2 */}
-        <div className="bg-[#08090c] flex flex-col items-center justify-center gap-3 px-4 py-6 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
+        <div className="bg-[#08090c] flex h-full flex-col items-center justify-between gap-4 px-4 py-7 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
           {/* Dark glass ring card */}
           <div className="relative flex items-center justify-center rounded-xl"
             style={{
@@ -252,17 +251,17 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
           <p className="text-[10px] text-slate-400 mt-1.5">von {total} Stellen</p>
         </div>
 
-        {/* Analysen heute */}
+        {/* Rücklauf */}
         <div className="bg-[#08090c] px-5 py-4 flex flex-col justify-center">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Heute</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Rücklauf</p>
           <p className="text-3xl font-extrabold text-white leading-none tabular-nums">
-            {todayCount}
+            {responseRate}%
           </p>
-          <p className="text-[10px] text-slate-400 mt-1.5">Analysen heute</p>
+          <p className="text-[10px] text-slate-400 mt-1.5">bereits aktiv verfolgt</p>
         </div>
 
         {/* Activity chart — row-span 2 */}
-        <div className="bg-[#08090c] px-4 py-4 flex flex-col" style={{ gridRow: "1 / 3" }}>
+        <div className="bg-[#08090c] px-4 py-5 flex h-full flex-col" style={{ gridRow: "1 / 3" }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Aktivitätsverlauf</p>
             {todayCount > 0 && (
@@ -301,7 +300,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       <div className="sm:hidden grid grid-cols-2 gap-px bg-[#171a21]/80">
         {[
           { label: "Beworben", value: applied },
-          { label: "Heute", value: todayCount },
+          { label: "Rücklauf", value: `${responseRate}%` },
           { label: "Interviews", value: interviews },
           { label: "Offen", value: openRoles },
         ].map(({ label, value }) => (
@@ -357,7 +356,7 @@ function RecentJobsTable({ jobs }) {
 
       {/* Column headers */}
       <div className="hidden sm:grid px-5 py-2 border-b border-[#1C2333]" style={{ gridTemplateColumns: "1fr auto auto auto" }}>
-        {["Stelle", "Status", "Matching-Quote", ""].map(h => (
+        {["Stelle", "Status", "", ""].map(h => (
           <span key={h} className="text-[9px] font-bold uppercase tracking-widest text-slate-300">{h}</span>
         ))}
       </div>
@@ -384,18 +383,6 @@ function RecentJobsTable({ jobs }) {
             </div>
             <div className="px-3 flex items-center gap-2">
               <NeonRing score={job.match_score} size={40} />
-              {job.match_score != null && (
-                <div className="hidden md:block">
-                  <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: getNeon(job.match_score).text }}>
-                    {job.match_score >= 60 ? "Stark" : job.match_score >= 40 ? "Mittel" : "Niedrig"}
-                  </p>
-                  <div className="mt-0.5 w-14 h-1 rounded-full overflow-hidden" style={{ backgroundColor: getNeon(job.match_score).track }}>
-                    <div className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${job.match_score}%`, background: `linear-gradient(to right, #2563eb, ${getNeon(job.match_score).stroke})` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
             <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
           </Link>
@@ -420,14 +407,11 @@ const SUGGESTION_ICONS = {
   target: Target, award: Award, wand: Wand2,
 };
 
-function SuggestionBubble({ s, index }) {
+function SuggestionBubble({ s }) {
   const style = SUGGESTION_STYLES[s.type] || SUGGESTION_STYLES.tip;
   const Icon = SUGGESTION_ICONS[s.icon] || Sparkles;
   return (
-    <div
-      className={`rounded-xl border p-3.5 ${style.bg} ${style.border} ${s.type === "alert" ? "" : "animate-fade-in"}`}
-      style={s.type === "alert" ? undefined : { animationDelay: `${index * 70}ms`, animationFillMode: "both" }}
-    >
+    <div className={`rounded-xl border p-3.5 ${style.bg} ${style.border}`}>
       <div className="flex items-start gap-3">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${style.iconBg}`}>
           <Icon className={`w-4 h-4 ${style.iconColor}`} />
@@ -497,7 +481,7 @@ function AICopilotSidebar({ suggestions, userName, featuredTip }) {
 
       {/* Suggestion bubbles */}
       <div className="space-y-2.5">
-        {suggestions.map((s, i) => <SuggestionBubble key={i} s={s} index={i} />)}
+        {suggestions.map((s, i) => <SuggestionBubble key={i} s={s} />)}
       </div>
 
       {/* Direkt-Aktionen */}
