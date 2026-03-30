@@ -171,6 +171,8 @@ function ActivityBars({ values }) {
 // ─── Markt-Kompatibilität (bento card) ───────────────────────────────────────
 
 function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
+  if (!Array.isArray(jobs)) return null;
+
   const total     = jobs?.length ?? 0;
   const applied   = (jobs || []).filter(j => ["applied","interviewing","offered"].includes(j.status)).length;
   const interviews = (jobs || []).filter(j => j.status === "interviewing").length;
@@ -208,7 +210,13 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       </div>
 
       {/* Bento grid — desktop */}
-      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "176px 1fr 1fr 196px", gridTemplateRows: "minmax(208px,1fr) minmax(208px,1fr)" }}>
+      <div
+        className="hidden sm:grid gap-px bg-[#171a21]/80"
+        style={{
+          gridTemplateColumns: "176px 1fr 1fr 196px",
+          gridTemplateRows: compact ? "minmax(188px,1fr) minmax(188px,1fr)" : "minmax(208px,1fr) minmax(208px,1fr)",
+        }}
+      >
 
         {/* Score ring — frosted glass, row-span 2 */}
         <div className="bg-[#08090c] flex h-full flex-col items-center justify-between gap-4 px-4 py-7 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
