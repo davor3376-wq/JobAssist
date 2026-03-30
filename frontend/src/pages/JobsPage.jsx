@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Briefcase, ArrowRight, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck } from "lucide-react";
+import { Briefcase, Search, MapPin, Zap, CheckCircle, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck } from "lucide-react";
 import { jobApi, aiAssistantApi, researchApi } from "../services/api";
 import ApplicationsList from "../components/ApplicationsList";
 import ViennaMap from "../components/ViennaMap";
@@ -381,44 +381,34 @@ export default function JobsPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-4 sm:mb-8 animate-slide-up">
+      <div className="flex items-center justify-between mb-6 animate-slide-up">
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-            Bewerbungen
-          </h1>
-          <p className="text-xs sm:text-base text-gray-500 mt-0.5 truncate">Bewerbungen verwalten &amp; Stellen finden</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Bewerbungen</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Bewerbungen verwalten und Stellen finden</p>
         </div>
       </div>
 
       {/* Main Tabs */}
-      <div className="mb-4 sm:mb-8 flex gap-1 sm:gap-4 border-b border-gray-200 animate-slide-up">
+      <div className="mb-6 flex gap-1 rounded-2xl bg-gray-100 p-1 animate-slide-up">
         <button
           onClick={() => setMainTab("applications")}
-          className={`pb-3 sm:pb-4 px-2 sm:px-4 text-sm font-medium transition-colors ${
-            mainTab === "applications"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
+            mainTab === "applications" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
           }`}
         >
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <CheckCircle className="w-4 h-4" />
-            <span className="hidden xs:inline">Meine </span>Bewerbungen
-          </div>
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+          Meine Bewerbungen
         </button>
         <button
           onClick={() => setMainTab("search")}
-          className={`pb-3 sm:pb-4 px-2 sm:px-4 text-sm font-medium transition-colors ${
-            mainTab === "search"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
+            mainTab === "search" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
           }`}
         >
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Search className="w-4 h-4" />
-            Stellen finden
-          </div>
+          <Search className="w-4 h-4 flex-shrink-0" />
+          Stellen finden
         </button>
       </div>
 
@@ -434,52 +424,40 @@ export default function JobsPage() {
         <div className="space-y-8">
           <button
             onClick={() => setSearchExpanded(!searchExpanded)}
-            className="w-full flex items-center justify-between p-5 rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 hover:border-blue-300 transition-all duration-200"
+            className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-white shadow-sm hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Search className="w-5 h-5 text-blue-600" />
-              <span className="font-semibold text-gray-900">Stellen suchen</span>
+              <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] flex items-center justify-center">
+                <Search className="w-4 h-4 text-[#2D5BFF]" />
+              </div>
+              <span className="text-sm font-bold text-gray-900">Stellen suchen</span>
             </div>
-            <div
-              className={`transform transition-transform duration-200 ${
-                searchExpanded ? "rotate-180" : ""
-              }`}
-            >
-              <ArrowRight className="w-5 h-5 text-gray-400" />
-            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${searchExpanded ? "rotate-180" : ""}`} />
           </button>
 
           {searchExpanded && (
-            <div className="mt-4 overflow-hidden animate-slide-up">
-              <div className="card bg-white border border-gray-200 shadow-md">
+            <div className="animate-slide-up">
+              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
                 {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 mb-6">
+                <div className="flex gap-1 rounded-2xl bg-gray-100 p-1 mb-5">
                   <button
                     onClick={() => setSearchTab("recommended")}
-                    className={`flex-1 px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm transition-all ${
-                      searchTab === "recommended"
-                        ? "border-b-2 border-blue-600 text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
+                      searchTab === "recommended" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                      <Zap className="w-4 h-4 flex-shrink-0" />
-                      <span className="sm:hidden">Empfohlen</span>
-                      <span className="hidden sm:inline">Empfohlen (basierend auf Präferenzen)</span>
-                    </div>
+                    <Zap className="w-4 h-4 flex-shrink-0" />
+                    <span className="sm:hidden">Empfohlen</span>
+                    <span className="hidden sm:inline">Empfohlen (basierend auf Präferenzen)</span>
                   </button>
                   <button
                     onClick={() => setSearchTab("custom")}
-                    className={`flex-1 px-2 sm:px-4 py-3 font-medium text-xs sm:text-sm transition-all ${
-                      searchTab === "custom"
-                        ? "border-b-2 border-blue-600 text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
+                      searchTab === "custom" ? "bg-white shadow-sm text-[#2D5BFF]" : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                      <Search className="w-4 h-4 flex-shrink-0" />
-                      Eigene Suche
-                    </div>
+                    <Search className="w-4 h-4 flex-shrink-0" />
+                    Eigene Suche
                   </button>
                 </div>
 
@@ -492,7 +470,8 @@ export default function JobsPage() {
                     <button
                       onClick={handleRecommendedSearch}
                       disabled={recommendedLoading}
-                      className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] text-white font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-50 transition-all hover:opacity-90"
+                      style={{ backgroundColor: "#2D5BFF" }}
                     >
                       {recommendedLoading ? (
                         <>
@@ -513,7 +492,7 @@ export default function JobsPage() {
                 {searchTab === "custom" && (
                   <form onSubmit={handleCustomSearch} className="space-y-4">
                     <div className="space-y-2">
-                      <label className="label text-sm font-medium text-gray-700">Suchbegriffe</label>
+                      <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Suchbegriffe</label>
                       <input
                         type="text"
                         placeholder="z.B. Verkauf, Gastro, IT, Praktikum"
@@ -524,11 +503,11 @@ export default function JobsPage() {
                             keywords: e.target.value,
                           })
                         }
-                        className="input w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 min-h-[44px]"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="label text-sm font-medium text-gray-700">Ort</label>
+                      <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ort</label>
                       <input
                         type="text"
                         placeholder="z.B. Wien, Graz, Linz, Salzburg"
@@ -539,7 +518,7 @@ export default function JobsPage() {
                             location: e.target.value,
                           })
                         }
-                        className="input w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 min-h-[44px]"
                       />
                     </div>
                     {/wien|vienna/i.test(customSearchParams.location) && (
@@ -580,7 +559,7 @@ export default function JobsPage() {
                       return null;
                     })()}
                     <div className="space-y-2">
-                      <label className="label text-sm font-medium text-gray-700">Stellenart</label>
+                      <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Stellenart</label>
                       <select
                         value={customSearchParams.jobType}
                         onChange={(e) =>
@@ -589,7 +568,7 @@ export default function JobsPage() {
                             jobType: e.target.value,
                           })
                         }
-                        className="input w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 min-h-[44px]"
                       >
                         <option value="">Alle Stellenarten</option>
                         <option value="Vollzeit">Vollzeit</option>
@@ -605,7 +584,8 @@ export default function JobsPage() {
                     <button
                       type="submit"
                       disabled={customLoading || !customSearchParams.keywords}
-                      className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-50 transition-all hover:opacity-90"
+                      style={{ backgroundColor: "#2D5BFF" }}
                     >
                       {customLoading ? (
                         <>
@@ -660,10 +640,10 @@ export default function JobsPage() {
                         return (
                           <div
                             key={`${result.source_id}-${index}`}
-                            className={`rounded-xl border bg-white transition-all duration-200 overflow-hidden ${
+                            className={`rounded-2xl border bg-white transition-all duration-200 overflow-hidden ${
                               isExpanded
-                                ? "border-blue-300 shadow-lg ring-1 ring-blue-100"
-                                : "border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200"
+                                ? "border-[#C7D2FE] shadow-md"
+                                : "border-gray-100 shadow-sm hover:shadow-md hover:border-[#C7D2FE]"
                             }`}
                           >
                             {/* Card header — always visible */}
@@ -722,10 +702,10 @@ export default function JobsPage() {
 
                             {/* Expanded detail panel */}
                             {isExpanded && (
-                              <div className="border-t border-blue-100 bg-gradient-to-b from-blue-50/40 to-gray-50 p-5 space-y-4">
+                              <div className="border-t border-gray-100 bg-gray-50/60 p-5 space-y-4">
                                 {/* Description */}
                                 {result.description && (
-                                  <div className="bg-white rounded-lg border border-gray-100 p-4">
+                                  <div className="bg-white rounded-2xl border border-gray-100 p-4">
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Beschreibung</p>
                                     <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
                                   </div>
@@ -738,7 +718,7 @@ export default function JobsPage() {
                                       href={result.full_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 transition-colors"
+                                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-gray-200 text-gray-700 hover:border-[#C7D2FE] hover:text-[#2D5BFF] transition-colors min-h-[44px]"
                                     >
                                       <ExternalLink className="w-3.5 h-3.5" />
                                       Zur Stellenanzeige
@@ -747,11 +727,12 @@ export default function JobsPage() {
                                   <button
                                     onClick={() => handleSaveSearchResult(result)}
                                     disabled={savingJobId === result.source_id || savedJobIds.has(result.source_id)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 min-h-[44px] ${
                                       savedJobIds.has(result.source_id)
-                                        ? "bg-green-600 text-white scale-95"
-                                        : "bg-blue-600 text-white hover:bg-blue-700"
+                                        ? "bg-emerald-600 text-white"
+                                        : "text-white hover:opacity-90"
                                     } disabled:cursor-not-allowed`}
+                                    style={!savedJobIds.has(result.source_id) ? { backgroundColor: "#2D5BFF" } : undefined}
                                   >
                                     {savingJobId === result.source_id ? (
                                       <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Wird gespeichert…</>
@@ -764,14 +745,15 @@ export default function JobsPage() {
                                   <button
                                     onClick={() => handleAnalyzeJob(result, index)}
                                     disabled={analyzingJobId === index}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-50 min-h-[44px]"
+                                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}
                                   >
                                     <Sparkles className="w-3.5 h-3.5" />
                                     {analyzingJobId === index ? "Analysiert…" : "KI-Analyse"}
                                   </button>
                                   <button
                                     onClick={() => handleResearch(result)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors min-h-[44px]"
                                   >
                                     <SearchCheck className="w-3.5 h-3.5" />
                                     Recherche
@@ -819,7 +801,7 @@ export default function JobsPage() {
                                     )}
 
                                     {analysis.tips?.length > 0 && (
-                                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3">
                                         <p className="text-xs font-semibold text-amber-800 mb-1">Bewerbungstipps</p>
                                         <ul className="space-y-1">
                                           {analysis.tips.map((t, i) => (
@@ -843,7 +825,7 @@ export default function JobsPage() {
                         <button
                           type="button"
                           onClick={() => setVisibleCount((c) => c + 5)}
-                          className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors min-h-[44px]"
                         >
                           Mehr anzeigen ({searchResults.length - visibleCount} weitere)
                         </button>
@@ -852,7 +834,7 @@ export default function JobsPage() {
                         <button
                           type="button"
                           onClick={() => setVisibleCount(5)}
-                          className="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                          className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors min-h-[44px]"
                         >
                           Weniger anzeigen
                         </button>
@@ -868,7 +850,7 @@ export default function JobsPage() {
                     undefined &&
                   (searchTab === "custom" &&
                     submittedCustomParams?.keywords) && (
-                    <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-center">
+                    <div className="mt-6 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm text-center">
                       <Briefcase className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">
                         Keine Stellen zu deinen Suchkriterien gefunden

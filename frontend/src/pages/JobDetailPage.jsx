@@ -112,7 +112,7 @@ function CircularGauge({ value }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-extrabold tabular-nums leading-none" style={{ color: PRIMARY }}>{value}%</span>
-        <span className="text-[9px] font-semibold text-gray-400 tracking-wider uppercase mt-0.5">Match</span>
+        <span className="text-[9px] font-semibold text-gray-400 tracking-wider uppercase mt-0.5">Passung</span>
       </div>
     </div>
   );
@@ -124,7 +124,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   const overall = Math.round(matchScore ?? 0);
 
   const subRows = [
-    { label: "Hard Skills",  value: scores.hardSkills, emoji: "⚡" },
+    { label: "Fachkenntnisse", value: scores.hardSkills, emoji: "⚡" },
     { label: "Formale Anf.", value: scores.formalReq,  emoji: "🎓" },
     { label: "Erfahrung",    value: scores.experience,  emoji: "💼" },
   ];
@@ -222,7 +222,7 @@ function BridgeTheGap({ gaps = [] }) {
         <div className="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
           <TrendingUp className="w-4 h-4 text-rose-500" />
         </div>
-        <h3 className="text-sm font-bold text-gray-900">Bridge the Gap</h3>
+        <h3 className="text-sm font-bold text-gray-900">Lücken schließen</h3>
         <span className="ml-auto text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-semibold">
           {gaps.length} Skill{gaps.length > 1 ? "s" : ""}
         </span>
@@ -244,7 +244,7 @@ function BridgeTheGap({ gaps = [] }) {
               className="flex-shrink-0 flex items-center gap-1 rounded-lg bg-white border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors whitespace-nowrap min-h-[36px]"
             >
               <ExternalLink className="w-3 h-3" />
-              Upskill
+              Weiterbilden
             </a>
           </div>
         ))}
@@ -380,6 +380,7 @@ export default function JobDetailPage() {
   const [expandedQuestion, setExpandedQuestion] = useState(null);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [hidePersonal, setHidePersonal] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
@@ -519,10 +520,10 @@ export default function JobDetailPage() {
         </div>
 
         {/* ── Desktop 2-col split / Mobile stack ───────────────────────────── */}
-        <div className="flex flex-col gap-5 md:flex-row md:gap-6 md:items-start">
+        <div className="flex flex-col gap-5 sm:flex-row sm:gap-6 sm:items-start">
 
-          {/* ── Left panel: controls (30% desktop) ───────────────────────── */}
-          <aside className="md:w-[38%] md:flex-shrink-0 space-y-4">
+          {/* ── Left panel: controls (38% desktop) ───────────────────────── */}
+          <aside className="w-full sm:w-[38%] sm:flex-shrink-0 space-y-4">
 
             {/* Resume selector */}
             {resumes.length > 0 ? (
@@ -710,24 +711,26 @@ export default function JobDetailPage() {
                   <QualifikationsCheck matchScore={job.match_score} matchFeedback={matchFeedback} />
                 )}
 
-                {/* Strengths */}
-                {matchFeedback?.strengths?.length > 0 && (
-                  <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-emerald-600" />
+                {/* Stärken + Lücken — side-by-side grid */}
+                {(matchFeedback?.strengths?.length > 0 || matchFeedback?.gaps?.length > 0) && (
+                  <div className={`grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                    {matchFeedback?.strengths?.length > 0 && (
+                      <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">Stärken</h3>
+                        </div>
+                        <div className="divide-y divide-gray-50">
+                          {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} index={i} />)}
+                        </div>
                       </div>
-                      <h3 className="text-sm font-bold text-gray-900">Qualifikations-Übereinstimmungen</h3>
-                    </div>
-                    <div className="divide-y divide-gray-50">
-                      {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} index={i} />)}
-                    </div>
+                    )}
+                    {matchFeedback?.gaps?.length > 0 && (
+                      <BridgeTheGap gaps={matchFeedback.gaps} />
+                    )}
                   </div>
-                )}
-
-                {/* Bridge the Gap (actionable upskill cards) */}
-                {matchFeedback?.gaps?.length > 0 && (
-                  <BridgeTheGap gaps={matchFeedback.gaps} />
                 )}
 
                 {/* Recommendations */}
@@ -747,8 +750,32 @@ export default function JobDetailPage() {
 
                 {/* Job description */}
                 <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5">
-                  <h3 className="text-sm font-bold text-gray-800 mb-3">Stellenbeschreibung</h3>
-                  <p className="whitespace-pre-wrap leading-relaxed text-gray-700 text-sm">{job.description}</p>
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                    <h3 className="text-sm font-bold text-gray-800">Stellenbeschreibung</h3>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setHidePersonal(false)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        style={!hidePersonal ? { backgroundColor: PRIMARY } : undefined}
+                      >
+                        Alle
+                      </button>
+                      <button
+                        onClick={() => setHidePersonal(true)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                      >
+                        Beruflich
+                      </button>
+                    </div>
+                  </div>
+                  <p className="whitespace-pre-wrap leading-relaxed text-gray-700 text-sm">
+                    {hidePersonal
+                      ? (job.description || "").split(/\n{2,}/).filter(para => {
+                          const t = para.toLowerCase();
+                          return !/hobby|hobbies|interessen|freizeit|privat|persönlich|sport(?:lich)?|reise[n]?|familie|freizeit/.test(t);
+                        }).join("\n\n") || job.description
+                      : job.description}
+                  </p>
                 </div>
 
                 {/* No analysis yet — prompt */}
@@ -808,7 +835,7 @@ export default function JobDetailPage() {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-3 mb-2">
-                            <span className="flex-shrink-0 text-xs font-bold text-gray-400">Q{index + 1}</span>
+                            <span className="flex-shrink-0 text-xs font-bold text-gray-400">F{index + 1}</span>
                             <p className="text-sm font-semibold text-gray-900 leading-snug">{item.question}</p>
                           </div>
                           <span className={`ml-7 text-xs font-bold px-2.5 py-1 rounded-full ${TAG_COLORS[type] || "bg-gray-100 text-gray-700"}`}>{type}</span>
@@ -823,7 +850,7 @@ export default function JobDetailPage() {
                           </div>
                           {item.tip && (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                              <p className="text-xs font-bold text-amber-700 mb-1">PROFI-TIPP</p>
+                              <p className="text-xs font-bold text-amber-700 mb-1">TIPP</p>
                               <p className="text-sm text-amber-900">{item.tip}</p>
                             </div>
                           )}
