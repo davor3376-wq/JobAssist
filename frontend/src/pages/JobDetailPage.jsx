@@ -42,7 +42,7 @@ function printHtml(title, bodyHtml) {
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const PRIMARY = "#2D5BFF";
+const PRIMARY = "#3b82f6";
 
 const STATUS_CONFIG = {
   bookmarked:   { label: "Gespeichert",          cls: "bg-[#EEF2FF] text-[#2D5BFF] border border-[#C7D2FE]" },
@@ -140,7 +140,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
             <Zap className="w-4 h-4" style={{ color: PRIMARY }} />
           </div>
           <div className="text-left">
-            <p className="text-sm font-bold text-gray-900">Qualifikations-Check</p>
+            <p className="text-sm font-bold text-gray-900">Eignungs-Analyse</p>
             <p className="text-[11px] text-gray-500">Orientierungswert · EU AI Act konform</p>
           </div>
         </div>
@@ -222,7 +222,7 @@ function BridgeTheGap({ gaps = [] }) {
         <div className="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
           <TrendingUp className="w-4 h-4 text-rose-500" />
         </div>
-        <h3 className="text-sm font-bold text-gray-900">Lücken schließen</h3>
+        <h3 className="text-sm font-bold text-gray-900">Dein Entwicklungspfad</h3>
         <span className="ml-auto text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-semibold">
           {gaps.length} Skill{gaps.length > 1 ? "s" : ""}
         </span>
@@ -244,7 +244,7 @@ function BridgeTheGap({ gaps = [] }) {
               className="flex-shrink-0 flex items-center gap-1 rounded-lg bg-white border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors whitespace-nowrap min-h-[36px]"
             >
               <ExternalLink className="w-3 h-3" />
-              Weiterbilden
+              Lernressource
             </a>
           </div>
         ))}
@@ -429,7 +429,7 @@ export default function JobDetailPage() {
 
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
-    onSuccess: (res) => { updateJobCaches(res.data); invalidateJobs(); toast.success("Qualifikations-Check erstellt!"); },
+    onSuccess: (res) => { updateJobCaches(res.data); invalidateJobs(); toast.success("Eignungs-Analyse erstellt!"); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Analyse fehlgeschlagen")),
   });
   const coverLetterMutation = useMutation({
@@ -464,8 +464,22 @@ export default function JobDetailPage() {
 
   const matchFeedback = parseJson(job.match_feedback);
   const interviewQA = parseJson(job.interview_qa);
-  const statusCfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.bookmarked;
+  const statusCfg = {
+    bookmarked: { label: "Gespeichert", cls: "border border-blue-500/20 bg-blue-500/10 text-blue-300" },
+    applied: { label: "Beworben", cls: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300" },
+    interviewing: { label: "Vorstellungsgespräch", cls: "border border-violet-500/20 bg-violet-500/10 text-violet-300" },
+    offered: { label: "Angebot erhalten", cls: "border border-amber-500/20 bg-amber-500/10 text-amber-300" },
+    rejected: { label: "Abgelehnt", cls: "border border-red-500/20 bg-red-500/10 text-red-300" },
+  }[job.status] || { label: "Gespeichert", cls: "border border-blue-500/20 bg-blue-500/10 text-blue-300" };
   const hasAiContent = job.match_score != null || job.cover_letter || job.interview_qa;
+  const groupedStrengths = (matchFeedback?.strengths || []).reduce(
+    (acc, item) => {
+      if (/(kommunikation|team|fÃ¼hr|kunden|organisation|selbststÃ¤ndig|zuverlÃ¤ssig|empath|prÃ¤sent|zusammenarbeit|verantwort)/i.test(item || "")) acc.personal.push(item);
+      else acc.technical.push(item);
+      return acc;
+    },
+    { technical: [], personal: [] }
+  );
   const tabs = [
     { id: "overview",  label: "Übersicht" },
     { id: "interview", label: "Gesprächsvorbereitung", disabled: !job.interview_qa },
@@ -485,7 +499,7 @@ export default function JobDetailPage() {
         </button>
 
         {/* ── Header ───────────────────────────────────────────────────────── */}
-        <div className="mb-6 rounded-2xl border border-gray-100 bg-white shadow-sm px-5 pt-4 pb-5">
+        <div className="mb-6 rounded-xl border border-[#1f2937] bg-[#111827] px-5 pt-4 pb-5">
           {/* Thin status progress bar — top of card */}
           <div className="mb-4 px-1">
             <StatusProgressBar status={job.status} />
@@ -503,15 +517,15 @@ export default function JobDetailPage() {
                 </a>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight mb-1">
+            <h1 className="mb-1 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
               {job.role || "Ohne Titel"}
             </h1>
-            <p className="text-base text-gray-500">{job.company || "Unbekanntes Unternehmen"}</p>
+            <p className="text-base text-slate-400">{job.company || "Unbekanntes Unternehmen"}</p>
           </div>
           <button
             onClick={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
-            className="flex-shrink-0 flex h-11 w-11 items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all border border-gray-100"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#1f2937] text-slate-400 transition-all hover:border-red-500/30 hover:text-red-300"
             title="Stelle löschen"
           >
             {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4" />}
@@ -520,27 +534,27 @@ export default function JobDetailPage() {
         </div>
 
         {/* ── Desktop 2-col split / Mobile stack ───────────────────────────── */}
-        <div className="flex flex-col gap-5 sm:flex-row sm:gap-6 sm:items-start">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
           {/* ── Left panel: controls (38% desktop) ───────────────────────── */}
-          <aside className="w-full sm:w-[38%] sm:flex-shrink-0 space-y-4">
+          <aside className="space-y-4 xl:col-span-1">
 
             {/* Resume selector */}
             {resumes.length > 0 ? (
-              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+              <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-4">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
                   Lebenslauf für Analyse
                 </label>
                 <div className="relative">
                   <select
                     value={resumeId || ""}
                     onChange={e => setSelectedResume(Number(e.target.value))}
-                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 min-h-[44px]"
-                    style={{ "--tw-ring-color": "#2D5BFF33" }}
+                    className="min-h-[44px] w-full appearance-none rounded-xl border border-[#243041] bg-[#0b1220] px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2"
+                    style={{ "--tw-ring-color": "#3b82f633" }}
                   >
                     {resumes.map(r => <option key={r.id} value={r.id}>{r.filename}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 </div>
               </div>
             ) : (
@@ -551,6 +565,7 @@ export default function JobDetailPage() {
                 <Link to="/resume" className="text-sm font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1 min-h-[44px]">
                   <FileText className="w-4 h-4" /> Lebenslauf hochladen →
                 </Link>
+              </div>
               </div>
             )}
 
@@ -574,14 +589,14 @@ export default function JobDetailPage() {
               };
 
               return (
-                <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4 space-y-2.5">
+                <div className="space-y-2.5 rounded-xl border border-[#1f2937] bg-[#111827] p-4">
                   {/* Primary CTA */}
                   {isPrimInterview ? (
                     <button
                       disabled={!resumeId || interviewMutation.isPending}
                       onClick={() => interviewMutation.mutate()}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-40 transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)" }}
+                      className="min-h-[44px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+                      style={{ backgroundColor: "#3b82f6" }}
                     >
                       {interviewMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><MessageSquare className="h-4 w-4" /><span>Gesprächsvorbereitung starten</span></>}
                     </button>
@@ -589,8 +604,8 @@ export default function JobDetailPage() {
                     <button
                       disabled={!resumeId || coverLetterMutation.isPending}
                       onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-40 transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg, #059669, #047857)" }}
+                      className="min-h-[44px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+                      style={{ backgroundColor: "#3b82f6" }}
                     >
                       {coverLetterMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><FileText className="h-4 w-4" /><span>{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span></>}
                     </button>
@@ -600,29 +615,29 @@ export default function JobDetailPage() {
                   <div className="relative">
                     <button
                       onClick={() => setToolsOpen(v => !v)}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors min-h-[36px]"
+                      className="min-h-[36px] w-full rounded-xl border border-[#334155] px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
-                      Weitere Tools
+                      Weitere Werkzeuge
                     </button>
                     {toolsOpen && (
-                      <div className="absolute left-0 right-0 mt-1 rounded-2xl border border-gray-100 bg-white shadow-lg z-20 p-2 space-y-1">
+                      <div className="absolute left-0 right-0 z-20 mt-1 space-y-1 rounded-xl border border-[#1f2937] bg-[#0b1220] p-2 shadow-lg shadow-black/40">
                         <button
                           disabled={!resumeId || matchMutation.isPending}
                           onClick={() => { matchMutation.mutate(); setToolsOpen(false); }}
-                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                          className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
                         >
-                          {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 text-indigo-500 flex-shrink-0" />}
-                          Qualifikations-Check
+                          {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0 text-blue-400" />}
+                          Eignungs-Analyse starten (Passung datenbasiert bewerten)
                         </button>
                         {isPrimInterview && (
                           <button
                             disabled={!resumeId || coverLetterMutation.isPending}
                             onClick={() => { job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate(); setToolsOpen(false); }}
-                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                            className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
                           >
-                            <FileText className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                            {job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}
+                            <FileText className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                            {job.cover_letter ? "Anschreiben öffnen (Bestehenden Entwurf prüfen)" : "Anschreiben erstellen (KI-basierten Entwurf generieren)"}
                           </button>
                         )}
                         {isPrimCover && job.interview_qa && (
@@ -647,10 +662,10 @@ export default function JobDetailPage() {
                         <button
                           disabled={!job?.company}
                           onClick={handleResearch}
-                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors disabled:opacity-40 min-h-[44px]"
+                          className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
                         >
-                          <SearchCheck className="h-4 w-4 text-teal-500 flex-shrink-0" />
-                          {job?.research_data ? "Recherche ansehen" : "Unternehmensrecherche"}
+                          <SearchCheck className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                          {job?.research_data ? "Unternehmensrecherche öffnen (Bestehende Erkenntnisse prüfen)" : "Unternehmensrecherche starten (Marktumfeld und Firma auswerten)"}
                         </button>
                       </div>
                     )}
@@ -661,17 +676,17 @@ export default function JobDetailPage() {
 
             {/* Job metadata */}
             {(job.deadline || job.notes) && (
-              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4 space-y-3">
+               <div className="space-y-3 rounded-xl border border-[#1f2937] bg-[#111827] p-4">
                 {job.deadline && (
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Frist</p>
-                    <p className="text-sm text-gray-800">{new Date(job.deadline).toLocaleDateString("de-AT")}</p>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
+                    <p className="text-sm text-slate-200">{new Date(job.deadline).toLocaleDateString("de-AT")}</p>
                   </div>
                 )}
                 {job.notes && (
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Notizen</p>
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{job.notes}</p>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Notizen</p>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{job.notes}</p>
                   </div>
                 )}
               </div>
@@ -679,10 +694,10 @@ export default function JobDetailPage() {
           </aside>
 
           {/* ── Right panel: content (62% desktop) ───────────────────────── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-4">
+          <div className="min-w-0 xl:col-span-2">
 
             {/* Tabs */}
-            <div className="flex gap-1 rounded-2xl bg-gray-100 p-1 overflow-x-auto">
+            <div className="flex gap-1 overflow-x-auto rounded-xl border border-[#1f2937] bg-[#111827] p-1">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
@@ -690,10 +705,10 @@ export default function JobDetailPage() {
                   disabled={tab.disabled}
                   className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
                     activeTab === tab.id
-                      ? "bg-white shadow-sm"
+                      ? "bg-[#0b1220] shadow-sm"
                       : tab.disabled
-                        ? "cursor-not-allowed text-gray-300"
-                        : "text-gray-500 hover:text-gray-800"
+                        ? "cursor-not-allowed text-slate-600"
+                        : "text-slate-400 hover:text-white"
                   }`}
                   style={activeTab === tab.id ? { color: PRIMARY } : undefined}
                 >
@@ -704,7 +719,85 @@ export default function JobDetailPage() {
 
             {/* ── Overview tab ───────────────────────────────────────────── */}
             {activeTab === "overview" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Job-Fokus</p>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Status</p>
+                        <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusCfg.cls}`}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Hauptaktion</p>
+                        <button
+                          disabled={!resumeId || coverLetterMutation.isPending}
+                          onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
+                          className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Anschreiben erstellen (KI-basierten Entwurf generieren)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-300">Eignungs-Analyse</p>
+                    <div className="mt-4 flex items-center gap-4">
+                      <CircularGauge value={Math.round(job.match_score ?? 0)} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white">Strategische Einschätzung</p>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-300">
+                          {matchFeedback?.summary || "Die Analyse bündelt verifizierbare Lebenslauf-Daten und zeigt, wie gut dein Profil aktuell zur Rolle passt."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs leading-relaxed text-blue-200">
+                      KI-Transparenz: Diese Einschätzung nutzt ausschließlich belegbare Profil- und Stelleninformationen als Orientierungshilfe nach EU AI Act Art. 13.
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+                    <div className="mb-4 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10">
+                        <TrendingUp className="h-4 w-4 text-amber-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Dein Entwicklungspfad</p>
+                        <p className="text-xs text-slate-400">Motivierend priorisierte Entwicklungsschritte.</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {(matchFeedback?.gaps || []).slice(0, 3).map((gap, i) => (
+                        <div key={i} className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-amber-100">{gap}</p>
+                              <p className="mt-1 text-xs text-amber-200/80">{getUpskillHint(gap)}</p>
+                            </div>
+                            <a
+                              href={getUpskillUrl(gap)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/20 text-amber-200 transition-colors hover:border-amber-300/40 hover:text-amber-100"
+                              title="Lernressource öffnen"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                      {!matchFeedback?.gaps?.length && (
+                        <p className="text-sm text-slate-400">Aktuell wurden keine prioritären Entwicklungspunkte identifiziert.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {/* Qualifikations-Check — full width */}
                 {job.match_score != null && (
@@ -786,8 +879,8 @@ export default function JobDetailPage() {
                 {job.match_score == null && resumes.length > 0 && (
                   <div className="sm:col-span-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 text-center">
                     <Zap className="w-8 h-8 mx-auto mb-3" style={{ color: PRIMARY }} />
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Noch kein Qualifikations-Check</p>
-                    <p className="text-xs text-gray-500">Klicke links auf „Qualifikations-Check" um die KI-Analyse zu starten.</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-1">Noch keine Eignungs-Analyse</p>
+                    <p className="text-xs text-gray-500">Starte links die Eignungs-Analyse, um die KI-gestützte Einschätzung zu laden.</p>
                   </div>
                 )}
               </div>

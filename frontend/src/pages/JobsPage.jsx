@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, ChevronRight, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy } from "lucide-react";
+import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy, Bookmark } from "lucide-react";
 import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
 
 const SAVED_STATUS_CFG = {
@@ -16,6 +16,45 @@ const SAVED_STATUS_CFG = {
 function StatusBadge({ status }) {
   const cfg = SAVED_STATUS_CFG[status] || SAVED_STATUS_CFG.bookmarked;
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${cfg.cls}`}>{cfg.label}</span>;
+}
+
+function MatchProgressBadge({ score }) {
+  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
+
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-[#243041] bg-[#0b1220] px-2.5 py-2">
+      <div className="relative h-11 w-11 flex-shrink-0">
+        <svg viewBox="0 0 40 40" className="-rotate-90">
+          <circle cx="20" cy="20" r={radius} fill="none" stroke="#1f2937" strokeWidth="3" />
+          <circle
+            cx="20"
+            cy="20"
+            r={radius}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            className="transition-all duration-500"
+            style={{ filter: "drop-shadow(0 0 8px rgba(59,130,246,0.35))" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-blue-300">
+          {normalized == null ? "KI" : `${normalized}%`}
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Matching-Quote</p>
+        <p className="text-xs font-semibold text-slate-200">
+          {normalized == null ? "Analyse ausstehend" : "Passung datenbasiert"}
+        </p>
+      </div>
+    </div>
+  );
 }
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
@@ -401,46 +440,52 @@ const [savingJobId, setSavingJobId] = useState(null);
   });
 
   return (
-    <div className="max-w-4xl mx-auto pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
+    <div className="mx-auto max-w-6xl bg-black pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
       {/* Header Section */}
       <div className="flex items-center justify-between mb-6 animate-slide-up">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Stellenmarkt</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Passende Stellen finden und direkt bewerben</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Stellen-Zentrale</h1>
+          <p className="mt-0.5 text-sm text-slate-400">Passende Stellen kuratieren, bewerten und für den nächsten Schritt vorbereiten.</p>
         </div>
       </div>
 
       <div className="space-y-6">
         {/* Saved jobs section */}
         {savedJobs.length > 0 && (
-          <div className="rounded-xl border border-[#171a21] bg-[#08090c] p-5 mb-2">
+          <div className="mb-2 rounded-xl border border-[#1f2937] bg-[#111827] p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-white">Gespeicherte Stellen</h2>
               <span className="text-xs text-slate-400">{savedJobs.length} gespeichert</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {savedJobs.slice(0, 5).map(job => (
-                <Link key={job.id} to={`/jobs/${job.id}`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-[#111827] transition-colors group">
-                  <div className="min-w-0">
+                <Link
+                  key={job.id}
+                  to={`/jobs/${job.id}`}
+                  className="group flex items-center justify-between gap-4 rounded-xl border border-[#1f2937] bg-[#0b1220] p-4 transition-all hover:border-[#3b82f6] hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                >
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
                     <p className="text-xs text-slate-400 truncate">{job.company}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                  <div className="ml-3 flex flex-shrink-0 items-center gap-3">
                     <StatusBadge status={job.status} />
-                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                    <span className="inline-flex items-center rounded-xl border border-[#334155] px-3 py-2 text-xs font-semibold text-slate-200 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
+                      Analyse öffnen (Details anzeigen)
+                    </span>
                   </div>
                 </Link>
               ))}
               {savedJobs.length > 5 && (
                 <Link to="/jobs" className="block text-center text-xs font-semibold text-slate-400 hover:text-blue-300 transition-colors py-1">
-                  +{savedJobs.length - 5} weitere ansehen
+                  Mehr laden (Weitere Favoriten anzeigen)
                 </Link>
               )}
             </div>
           </div>
         )}
 
-        <div className="rounded-xl border border-[#171a21] bg-[#08090c] shadow-sm p-5">
+        <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 shadow-none">
                 {/* Tab Navigation */}
                 <div className="flex gap-1 rounded-xl bg-[#111827] p-1 mb-5">
                   <button
@@ -643,10 +688,10 @@ const [savingJobId, setSavingJobId] = useState(null);
                         return (
                           <div
                             key={`${result.source_id}-${index}`}
-                            className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                            className={`overflow-hidden rounded-xl border transition-all duration-200 ${
                               isExpanded
-                                ? "border-blue-500/30 bg-[#08090c] shadow-md"
-                                : "border-[#171a21] bg-[#08090c] shadow-sm hover:shadow-md hover:border-blue-500/30"
+                                ? "border-[#3b82f6] bg-[#111827] shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                : "border-[#1f2937] bg-[#111827] hover:border-[#3b82f6] hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                             }`}
                           >
                             {/* Card header — always visible */}
@@ -699,16 +744,21 @@ const [savingJobId, setSavingJobId] = useState(null);
                                     )}
                                   </div>
                                 </div>
-                                <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-1 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                                <div className="flex flex-shrink-0 flex-col items-end gap-3">
+                                  <MatchProgressBadge score={analysis?.match_score ?? analysis?.matching_score ?? analysis?.score ?? null} />
+                                  <span className="inline-flex items-center rounded-xl border border-[#334155] px-3 py-2 text-xs font-semibold text-slate-200 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
+                                    {isExpanded ? "Analyse schließen (Details ausblenden)" : "Analyse öffnen (Details anzeigen)"}
+                                  </span>
+                                </div>
                               </div>
                             </button>
 
                             {/* Expanded detail panel */}
                             {isExpanded && (
-                              <div className="border-t border-[#1C2333] bg-[#0D1117]/60 p-5 space-y-4">
+                              <div className="space-y-4 border-t border-[#1f2937] bg-black/40 p-5">
                                 {/* Description */}
                                 {result.description && (
-                                  <div className="bg-[#08090c] rounded-xl border border-[#171a21] p-4">
+                                  <div className="rounded-xl border border-[#1f2937] bg-[#0b1220] p-4">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Beschreibung</p>
                                     <p className="text-sm text-slate-300 leading-relaxed">{result.description}</p>
                                   </div>
@@ -721,56 +771,50 @@ const [savingJobId, setSavingJobId] = useState(null);
                                       href={result.full_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#171a21] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px]"
+                                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#1f2937] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px]"
                                     >
                                       <ExternalLink className="w-3.5 h-3.5" />
-                                      Zur Stellenanzeige
+                                      Stellenanzeige öffnen (Originalquelle ansehen)
                                     </a>
                                   )}
                                   <button
                                     onClick={() => handleSaveSearchResult(result)}
-                                    disabled={savingJobId === result.source_id || savedJobIds.has(result.source_id)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 min-h-[44px] ${
-                                      savedJobIds.has(result.source_id)
-                                        ? "bg-emerald-600 text-white"
-                                        : "text-white hover:opacity-90"
-                                    } disabled:cursor-not-allowed`}
-                                    style={!savedJobIds.has(result.source_id) ? { backgroundColor: "#3b82f6" } : undefined}
+                                    disabled={savingJobId === result.source_id}
+                                    aria-label={savedJobIds.has(result.source_id) ? "Gespeichert" : "Speichern"}
+                                    className="flex items-center justify-center rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-2 text-sm text-slate-300 transition-colors hover:border-blue-500/30 hover:text-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
                                   >
                                     {savingJobId === result.source_id ? (
-                                      <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Wird sicher hinterlegt…</>
-                                    ) : savedJobIds.has(result.source_id) ? (
-                                      <><Check className="w-3.5 h-3.5" />Sicher hinterlegt</>
+                                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                      "stelle_speichern (Die Stelle in deiner Bewerbungsübersicht sichern)"
+                                      <Bookmark className={`h-4 w-4 ${savedJobIds.has(result.source_id) ? "fill-[#3b82f6] text-[#3b82f6]" : ""}`} />
                                     )}
                                   </button>
                                   <button
                                     onClick={() => handleAnalyzeJob(result, index)}
                                     disabled={analyzingJobId === index}
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-50 min-h-[44px]"
-                                    style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}
+                                    style={{ backgroundColor: "#3b82f6" }}
                                   >
                                     <Sparkles className="w-3.5 h-3.5" />
-                                    {analyzingJobId === index ? "Analysiere…" : "stellen_analyse_starten (Die Stelle fachlich auswerten)"}
+                                    {analyzingJobId === index ? "Analyse läuft…" : "Analyse aktualisieren (Passung datenbasiert bewerten)"}
                                   </button>
                                   <button
                                     onClick={() => handleCoverLetter(result, index)}
                                     disabled={analyzingJobId === `cl-${index}`}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#171a21] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px] disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#1f2937] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px] disabled:opacity-50"
                                   >
                                     {analyzingJobId === `cl-${index}` ? (
-                                      <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Erstellt…</>
+                                      <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Entwurf läuft…</>
                                     ) : (
-                                      <><FileText className="w-3.5 h-3.5" />anschreiben_erstellen (Ein passendes Anschreiben erzeugen)</>
+                                      <><FileText className="w-3.5 h-3.5" />Anschreiben erstellen (KI-basierten Entwurf generieren)</>
                                     )}
                                   </button>
                                   <button
                                     onClick={() => handleResearch(result)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-[#111827] border border-[#171a21] text-emerald-300 hover:bg-[#172033] transition-colors min-h-[44px]"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-[#0b1220] border border-[#1f2937] text-emerald-300 hover:border-emerald-500/30 transition-colors min-h-[44px]"
                                   >
                                     <SearchCheck className="w-3.5 h-3.5" />
-                                    unternehmens_recherche_starten (Hintergrundwissen zum Unternehmen laden)
+                                    Unternehmensrecherche öffnen (Hintergrundwissen laden)
                                   </button>
                                 </div>
 
@@ -841,7 +885,7 @@ const [savingJobId, setSavingJobId] = useState(null);
                           onClick={() => setVisibleCount((c) => c + 5)}
                           className="flex-1 py-2.5 rounded-xl border border-[#1C2333] text-sm font-semibold text-slate-400 hover:bg-white/5 hover:border-[#2D3748] transition-colors min-h-[44px]"
                         >
-                          Mehr anzeigen ({searchResults.length - visibleCount} weitere)
+                          Mehr laden (Weitere Favoriten anzeigen)
                         </button>
                       )}
                       {visibleCount > 5 && (
