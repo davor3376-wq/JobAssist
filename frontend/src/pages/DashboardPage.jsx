@@ -186,7 +186,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   return (
     <div
       className="rounded-xl overflow-hidden border border-[#171a21] shadow-[0_20px_60px_rgba(0,0,0,0.35)] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,rgba(8,9,12,0.98),rgba(0,0,0,0.98))]"
-      style={{ minHeight: compact ? 332 : 396 }}
+      style={{ minHeight: compact ? 348 : 452 }}
     >
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-[#171a21] flex items-center justify-between">
@@ -208,7 +208,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       </div>
 
       {/* Bento grid — desktop */}
-      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "156px 1fr 1fr 168px", gridTemplateRows: compact ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1.08fr) minmax(0,0.92fr)" }}>
+      <div className="hidden sm:grid gap-px bg-[#171a21]/80" style={{ gridTemplateColumns: "156px 1fr 1fr 168px", gridTemplateRows: compact ? "minmax(0,1fr) minmax(0,1fr)" : "minmax(0,1.16fr) minmax(0,1fr)" }}>
 
         {/* Score ring — frosted glass, row-span 2 */}
         <div className="bg-[#08090c] flex flex-col items-center justify-center gap-3 px-4 py-6 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
@@ -240,7 +240,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
             </div>
           </div>
           <p className="text-[9px] text-slate-400 text-center leading-snug">
-            {scoredJobs.length > 0 ? `Ø aus ${scoredJobs.length} analysierten Stellen` : "Noch keine Analyse"}
+            {scoredJobs.length > 0 ? `Aus ${scoredJobs.length} analysierten Stellen` : "Noch keine Analyse"}
           </p>
         </div>
 
@@ -251,16 +251,13 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
           <p className="text-[10px] text-slate-400 mt-1.5">von {total} Stellen</p>
         </div>
 
-        {/* Matching-Quote bar */}
+        {/* Analysierte Stellen */}
         <div className="bg-[#08090c] px-5 py-4 flex flex-col justify-center">
-          <p className="text-3xl font-extrabold tabular-nums leading-none" style={{ color: avgScore != null ? n.text : "#94a3b8" }}>
-            {avgScore != null ? `${avgScore}%` : "—"}
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Analysiert</p>
+          <p className="text-3xl font-extrabold text-white leading-none tabular-nums">
+            {scoredJobs.length}
           </p>
-          {avgScore != null && (
-            <div className="mt-3 h-2 rounded-full overflow-hidden border border-white/5" style={{ backgroundColor: n.track }}>
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${avgScore}%`, background: `linear-gradient(to right, #2563eb, ${n.stroke})` }} />
-            </div>
-          )}
+          <p className="text-[10px] text-slate-400 mt-1.5">mit KI bewertet</p>
         </div>
 
         {/* Activity chart — row-span 2 */}
@@ -662,9 +659,8 @@ export default function DashboardPage() {
             </span>
           )}
           {avgScore != null && (
-            <span className="text-xs font-bold text-white rounded-xl px-3 py-1.5 shadow-sm"
-              style={{ backgroundColor: neon.stroke, boxShadow: `0 0 14px ${neon.stroke}55` }}>
-              Matching-Quote {avgScore}%
+            <span className="text-xs font-semibold text-slate-300 rounded-xl px-3 py-1.5 border border-[#171a21] bg-[#08090c] shadow-[0_1px_6px_rgba(0,0,0,0.12)]">
+              {scoredJobs.length} Analysen verfügbar
             </span>
           )}
         </div>
