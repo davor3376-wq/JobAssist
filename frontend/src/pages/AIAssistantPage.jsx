@@ -351,6 +351,7 @@ export default function AIAssistantPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
+    <>
     <div className="max-w-6xl mx-auto h-[calc(100svh-120px)] flex flex-col animate-slide-up">
 
       {/* ── Page header ───────────────────────────────────────────────────── */}
@@ -813,7 +814,6 @@ export default function AIAssistantPage() {
         </div>
       </div>
     </div>
-
     {/* ── EU AI Act Transparency Disclaimer Modal ───────────────────────── */}
     {assessmentDisclaimerOpen && (
       <div
@@ -881,5 +881,6 @@ export default function AIAssistantPage() {
         </div>
       </div>
     )}
+    </>
   );
 }
