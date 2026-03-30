@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy, Bookmark } from "lucide-react";
+import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy, Bookmark, ArrowRight } from "lucide-react";
 import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
 
 const SAVED_STATUS_CFG = {
@@ -468,10 +468,14 @@ const [savingJobId, setSavingJobId] = useState(null);
                     <p className="text-sm font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
                     <p className="text-xs text-slate-400 truncate">{job.company}</p>
                   </div>
-                  <div className="ml-3 flex flex-shrink-0 items-center gap-3">
-                    <StatusBadge status={job.status} />
-                    <span className="inline-flex items-center rounded-xl border border-[#334155] px-3 py-2 text-xs font-semibold text-slate-200 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
-                      Analyse öffnen (Details anzeigen)
+                  <div className="ml-3 flex flex-shrink-0 items-center gap-2">
+                    {job.match_score != null && (
+                      <span className="text-[11px] font-bold tabular-nums px-2 py-1 rounded-lg bg-[#0b1220] border border-[#1f2937] text-blue-300">
+                        {Math.round(job.match_score)}%
+                      </span>
+                    )}
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#334155] text-slate-400 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
+                      <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
                 </Link>
@@ -746,8 +750,8 @@ const [savingJobId, setSavingJobId] = useState(null);
                                 </div>
                                 <div className="flex flex-shrink-0 flex-col items-end gap-3">
                                   <MatchProgressBadge score={analysis?.match_score ?? analysis?.matching_score ?? analysis?.score ?? null} />
-                                  <span className="inline-flex items-center rounded-xl border border-[#334155] px-3 py-2 text-xs font-semibold text-slate-200 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
-                                    {isExpanded ? "Analyse schließen (Details ausblenden)" : "Analyse öffnen (Details anzeigen)"}
+                                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#334155] text-slate-400 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                   </span>
                                 </div>
                               </div>

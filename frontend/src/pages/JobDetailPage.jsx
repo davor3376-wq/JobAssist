@@ -237,7 +237,7 @@ function BridgeTheGap({ gaps = [] }) {
       <p className="text-[10px] text-slate-500 flex items-center gap-1 mb-3">
         <Shield className="w-3 h-3" /> Nur belegbare Qualifikationslücken — keine Persönlichkeitseinschätzung
       </p>
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {gaps.map((gap, i) => (
           <div key={i} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
             <div className="min-w-0 flex-1">
@@ -543,8 +543,47 @@ export default function JobDetailPage() {
         {/* ── Desktop 2-col split / Mobile stack ───────────────────────────── */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
-          {/* ── Left panel: controls (38% desktop) ───────────────────────── */}
-          <aside className="space-y-4 xl:col-span-1">
+          {/* ── Left panel: sticky hero (38% desktop) ───────────────────── */}
+          <aside className="space-y-4 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
+
+            {/* ── Match Score Hero ───────────────────────────────────────── */}
+            {job.match_score != null && (
+              <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 flex flex-col items-center gap-3">
+                <CircularGauge value={Math.round(job.match_score)} />
+                {matchFeedback?.summary && (
+                  <p className="text-xs text-slate-400 text-center leading-relaxed line-clamp-3">
+                    {matchFeedback.summary}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* ── Primary Action ─────────────────────────────────────────── */}
+            <div>
+              {job.status === "applied" || job.status === "interviewing" ? (
+                <button
+                  disabled={!resumeId || interviewMutation.isPending}
+                  onClick={() => interviewMutation.mutate()}
+                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
+                  style={{ backgroundColor: "#3b82f6" }}
+                >
+                  {interviewMutation.isPending
+                    ? <span className="flex items-center justify-center gap-2"><LoadingSpinner />Wird erstellt…</span>
+                    : <span className="flex items-center justify-center gap-2"><MessageSquare className="h-4 w-4" />Gesprächsvorbereitung</span>}
+                </button>
+              ) : (
+                <button
+                  disabled={!resumeId || coverLetterMutation.isPending}
+                  onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
+                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
+                  style={{ backgroundColor: "#3b82f6" }}
+                >
+                  {coverLetterMutation.isPending
+                    ? <span className="flex items-center justify-center gap-2"><LoadingSpinner />Wird erstellt…</span>
+                    : <span className="flex items-center justify-center gap-2"><FileText className="h-4 w-4" />{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span>}
+                </button>
+              )}
+            </div>
 
             {/* Resume selector */}
             {resumes.length > 0 ? (
@@ -595,29 +634,8 @@ export default function JobDetailPage() {
               };
 
               return (
-                <div className="space-y-2.5 rounded-xl border border-[#1f2937] bg-[#111827] p-4">
-                  {/* Primary CTA */}
-                  {isPrimInterview ? (
-                    <button
-                      disabled={!resumeId || interviewMutation.isPending}
-                      onClick={() => interviewMutation.mutate()}
-                      className="min-h-[44px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
-                      style={{ backgroundColor: "#3b82f6" }}
-                    >
-                      {interviewMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><MessageSquare className="h-4 w-4" /><span>Gesprächsvorbereitung starten</span></>}
-                    </button>
-                  ) : (
-                    <button
-                      disabled={!resumeId || coverLetterMutation.isPending}
-                      onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                      className="min-h-[44px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
-                      style={{ backgroundColor: "#3b82f6" }}
-                    >
-                      {coverLetterMutation.isPending ? <><LoadingSpinner /><span>Wird erstellt…</span></> : <><FileText className="h-4 w-4" /><span>{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span></>}
-                    </button>
-                  )}
-
-                  {/* Tools overflow */}
+                <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-4">
+                  {/* Weitere Werkzeuge dropdown */}
                   <div className="relative">
                     <button
                       onClick={() => setToolsOpen(v => !v)}
@@ -726,83 +744,6 @@ export default function JobDetailPage() {
             {/* ── Overview tab ───────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Job-Fokus</p>
-                    <div className="mt-3 space-y-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Status</p>
-                        <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusCfg.cls}`}>
-                          {statusCfg.label}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Hauptaktion</p>
-                        <button
-                          disabled={!resumeId || coverLetterMutation.isPending}
-                          onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                          className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Anschreiben erstellen (KI-basierten Entwurf generieren)
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-300">Eignungs-Analyse</p>
-                    <div className="mt-4 flex items-center gap-4">
-                      <CircularGauge value={Math.round(job.match_score ?? 0)} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white">Strategische Einschätzung</p>
-                        <p className="mt-1 text-sm leading-relaxed text-slate-300">
-                          {matchFeedback?.summary || "Die Analyse bündelt verifizierbare Lebenslauf-Daten und zeigt, wie gut dein Profil aktuell zur Rolle passt."}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs leading-relaxed text-blue-200">
-                      KI-Transparenz: Diese Einschätzung nutzt ausschließlich belegbare Profil- und Stelleninformationen als Orientierungshilfe nach EU AI Act Art. 13.
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-                    <div className="mb-4 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10">
-                        <TrendingUp className="h-4 w-4 text-amber-300" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">Wachstums-Potenziale</p>
-                        <p className="text-xs text-slate-400">Motivierend priorisierte Entwicklungsschritte.</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      {(matchFeedback?.gaps || []).slice(0, 3).map((gap, i) => (
-                        <div key={i} className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-amber-100">{gap}</p>
-                              <p className="mt-1 text-xs text-amber-200/80">{getUpskillHint(gap)}</p>
-                            </div>
-                            <a
-                              href={getUpskillUrl(gap)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/20 text-amber-200 transition-colors hover:border-amber-300/40 hover:text-amber-100"
-                              title="Lernressource öffnen"
-                            >
-                              <BookOpen className="h-4 w-4" />
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                      {!matchFeedback?.gaps?.length && (
-                        <p className="text-sm text-slate-400">Aktuell wurden keine prioritären Entwicklungspunkte identifiziert.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {/* Qualifikations-Check — full width */}
