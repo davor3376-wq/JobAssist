@@ -130,7 +130,7 @@ function ActivityBars({ values }) {
   const todayIdx = values.length - 1;
 
   return (
-    <div className="flex items-end gap-1 h-16">
+    <div className="flex items-end gap-1 h-24">
       {values.map((v, i) => {
         const isToday = i === todayIdx;
         const intensity = v / max;
@@ -269,8 +269,8 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
         </div>
 
         {/* Activity chart — row-span 2 */}
-        <div className="bg-[#08090c] px-4 py-5 flex h-full flex-col" style={{ gridRow: "1 / 3" }}>
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-[#08090c] px-4 py-5 flex h-full flex-col gap-3" style={{ gridRow: "1 / 3" }}>
+          <div className="flex items-center justify-between flex-shrink-0">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Aktivitätsverlauf</p>
             {todayCount > 0 && (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/12 text-emerald-300 border border-emerald-500/20">
@@ -278,14 +278,24 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
               </span>
             )}
           </div>
-          <div className="flex-1 flex items-end">
-            <ActivityBars values={activitySeries} />
+
+          {/* Mini stats */}
+          <div className="grid grid-cols-2 gap-2 flex-shrink-0">
+            {[
+              { label: "Diese Woche", value: activitySeries.reduce((s, v) => s + v, 0), sub: "Analysen" },
+              { label: "Heute", value: todayCount, sub: "Analysen" },
+            ].map(({ label, value, sub }) => (
+              <div key={label} className="rounded-lg bg-white/4 border border-[#1C2333] px-3 py-2.5">
+                <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
+                <p className="text-2xl font-extrabold text-white tabular-nums leading-none mt-1">{value}</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">{sub}</p>
+              </div>
+            ))}
           </div>
-          <div className="mt-2 pt-2 border-t border-[#171a21] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-            <p className="text-[9px] text-slate-400">
-              {activitySeries.reduce((s, v) => s + v, 0)} Analysen diese Woche
-            </p>
+
+          {/* Bars fill remaining space */}
+          <div className="flex-1 flex flex-col justify-end">
+            <ActivityBars values={activitySeries} />
           </div>
         </div>
 

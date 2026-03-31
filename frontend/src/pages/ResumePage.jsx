@@ -373,17 +373,41 @@ const HEAT_STYLE = {
   low:    { bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.30)",  label: "bg-blue-100 text-blue-700 border-blue-200",  dot: "bg-blue-400" },
 };
 
-function LivePreview({ resume, hoveredSection, setHoveredSection }) {
+// Map CV sections to skill keys
+const SECTION_SKILL_MAP = {
+  summary:    "soft",
+  experience: "exp",
+  skills:     "tech",
+  education:  "edu",
+  languages:  "lang",
+};
+
+function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
-        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-          <Eye className="w-6 h-6 text-slate-300" />
+        <div className="w-12 h-12 rounded-2xl bg-[#08090c] border border-[#171a21] flex items-center justify-center">
+          <Eye className="w-6 h-6 text-slate-600" />
         </div>
         <p className="text-xs text-slate-400 font-medium">Wähle einen Lebenslauf aus</p>
       </div>
     );
   }
+
+  const skillMap = Object.fromEntries((skills || []).map(s => [s.key, s]));
+
+  const sections = [
+    { key: "summary",    title: "Kurzprofil",  width: "w-20" },
+    { key: "experience", title: "Erfahrung",   width: "w-24" },
+    { key: "skills",     title: "Skills",      width: "w-16" },
+    { key: "education",  title: "Ausbildung",  width: "w-24" },
+    { key: "languages",  title: "Sprachen",    width: "w-20" },
+  ].map(s => {
+    const sk = skillMap[SECTION_SKILL_MAP[s.key]];
+    const score = sk?.value ?? 50;
+    const heat = score < 50 ? "high" : score < 72 ? "medium" : "low";
+    return { ...s, score, heat, skillLabel: sk?.label };
+  });
 
   return (
     <div className="flex flex-col h-full gap-3">
@@ -398,96 +422,63 @@ function LivePreview({ resume, hoveredSection, setHoveredSection }) {
         </div>
       </div>
 
-      {/* A4 document mock */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card overflow-hidden">
-        <div className="relative" style={{ paddingBottom: "141.4%" /* A4 ratio */ }}>
-          <div className="absolute inset-0 p-3">
-
-            {/* Document wireframe — structured sections */}
-            <div className="absolute inset-3 rounded-[18px] border border-[#1C2333] bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(2,6,23,0.98))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div className="mb-4 border-b border-[#1C2333] pb-3">
-                <div className="h-3 w-32 rounded-full bg-slate-200/90" />
-                <div className="mt-2 h-2 w-24 rounded-full bg-blue-400/70" />
-              </div>
-              <div className="space-y-3">
-                {[
-                  { key: "summary", title: "Kurzprofil", width: "w-20", heat: "medium" },
-                  { key: "experience", title: "Erfahrung", width: "w-24", heat: "high" },
-                  { key: "skills", title: "Skills", width: "w-16", heat: "high" },
-                  { key: "education", title: "Ausbildung", width: "w-24", heat: "medium" },
-                  { key: "languages", title: "Sprachen", width: "w-20", heat: "low" },
-                ].map(({ key, title, width, heat }) => {
-                  const tone = HEAT_STYLE[heat];
-                  return (
-                    <div key={key} className="rounded-xl border p-2.5" style={{ background: tone.bg, borderColor: tone.border }}>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className={`h-2 rounded-full bg-white/85 ${width}`} />
-                        <div className={`h-2 w-2 rounded-full ${tone.dot}`} />
-                      </div>
-                      <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-400">{title}</p>
-                      <div className="mt-2 space-y-1.5">
-                        <div className="h-1.5 w-full rounded-full bg-white/10" />
-                        <div className="h-1.5 w-5/6 rounded-full bg-white/10" />
-                        <div className="h-1.5 w-2/3 rounded-full bg-white/10" />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Heat-map overlays */}
-            {HEATMAP_SECTIONS.map(section => {
-              const style = HEAT_STYLE[section.heat];
-              const isHovered = hoveredSection === section.id;
-              return (
-                <div
-                  key={section.id}
-                  onMouseEnter={() => setHoveredSection(section.id)}
-                  onMouseLeave={() => setHoveredSection(null)}
-                  className="absolute left-3 right-3 rounded-lg cursor-pointer transition-all duration-200"
-                  style={{
-                    top: section.top,
-                    height: section.height,
-                    backgroundColor: isHovered ? style.bg.replace("0.1", "0.22").replace("0.12", "0.24").replace("0.13", "0.26") : "transparent",
-                    border: `1px solid ${isHovered ? (section.heat === "high" ? "rgba(239,68,68,0.6)" : section.heat === "medium" ? "rgba(245,158,11,0.6)" : "rgba(59,130,246,0.5)") : "transparent"}`,
-                    transform: isHovered ? "scale(1.01)" : "scale(1)",
-                  }}
-                >
-                  {isHovered && (
-                    <div className={`absolute right-1 top-1 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[8px] font-bold ${style.label}`}>
-                      {section.label}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      {/* Section cards — data-driven */}
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] overflow-hidden">
+        {/* Doc header mock */}
+        <div className="px-4 pt-4 pb-3 border-b border-[#1C2333]">
+          <div className="h-2.5 w-28 rounded-full bg-slate-200/80" />
+          <div className="mt-1.5 h-1.5 w-20 rounded-full bg-blue-400/60" />
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-3 flex-shrink-0">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">ATS-Fokus</p>
-        <div className="space-y-1.5">
-          {[
-            { heat: "high",   label: "Hohe Relevanz",    note: "Kontakt, Erfahrung, Skills" },
-            { heat: "medium", label: "Mittlere Relevanz", note: "Summary, Ausbildung" },
-            { heat: "low",    label: "Niedrige Relevanz", note: "Sprachen, Sonstiges" },
-          ].map(({ heat, label, note }) => {
-            const s = HEAT_STYLE[heat];
+        <div className="p-3 space-y-1.5">
+          {sections.map(({ key, title, width, score, heat, skillLabel }) => {
+            const tone = HEAT_STYLE[heat];
+            const poor = score < 50;
             return (
-              <div key={heat} className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
-                <span className="text-[10px] font-semibold text-slate-300 flex-shrink-0">{label}</span>
-                <span className="text-[9px] text-slate-400 truncate">— {note}</span>
+              <div key={key} className="rounded-lg border px-3 py-2" style={{ background: tone.bg, borderColor: tone.border }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`h-1.5 rounded-full bg-white/80 flex-shrink-0 ${width}`} />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex-shrink-0">{title}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className={`text-[9px] font-bold tabular-nums ${poor ? "text-red-400" : score < 72 ? "text-amber-400" : "text-emerald-400"}`}>
+                      {score}%
+                    </span>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tone.dot}`} />
+                  </div>
+                </div>
+                {/* Score bar */}
+                <div className="mt-1.5 h-1 rounded-full bg-white/8 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${score}%`, backgroundColor: poor ? "#ef4444" : score < 72 ? "#f59e0b" : "#10b981" }}
+                  />
+                </div>
+                {poor && skillLabel && (
+                  <p className="mt-1 text-[8px] text-red-400 font-medium">↑ {skillLabel}-Stichworte fehlen</p>
+                )}
               </div>
             );
           })}
         </div>
-        <p className="text-[9px] text-slate-400 mt-2.5 pt-2 border-t border-[#1C2333] leading-relaxed">
-          Zeigt, welche Abschnitte von ATS-Systemen priorisiert werden. Mit dem Mauszeiger erhältst du Details.
-        </p>
+      </div>
+
+      {/* Legend */}
+      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">ATS-Fokus</p>
+        <div className="flex items-center gap-4">
+          {[
+            { cls: "bg-red-500",   label: "Lücke" },
+            { cls: "bg-amber-500", label: "Ausbaufähig" },
+            { cls: "bg-emerald-500", label: "Stark" },
+          ].map(({ cls, label }) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cls}`} />
+              <span className="text-[9px] text-slate-400">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -658,6 +649,7 @@ export default function ResumePage() {
           <div className="hidden lg:flex flex-col">
             <LivePreview
               resume={selectedResume}
+              skills={skills}
               hoveredSection={hoveredSection}
               setHoveredSection={setHoveredSection}
             />
