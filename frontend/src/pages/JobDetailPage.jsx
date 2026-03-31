@@ -137,7 +137,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
   ];
 
   return (
-    <div className="rounded-2xl border border-[#1f2937] bg-[#111827] overflow-hidden">
+    <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors min-h-[44px]"
@@ -155,7 +155,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
       </button>
 
       {open && (
-        <div className="border-t border-[#1f2937] px-5 pb-5">
+        <div className="border-t border-[#1e293b] px-5 pb-5">
           {/* Gauge + sub-scores side by side */}
           <div className="mt-4 flex items-center gap-5">
             <CircularGauge value={overall} />
@@ -186,7 +186,7 @@ function QualifikationsCheck({ matchScore, matchFeedback }) {
           </div>
 
           {matchFeedback?.summary && (
-            <div className="mt-3 rounded-xl bg-[#0b1220] border border-[#1f2937] px-4 py-3">
+            <div className="mt-3 rounded-xl bg-[#030712] border border-[#1e293b] px-4 py-3">
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">KI-Zusammenfassung</p>
               <p className="text-sm leading-relaxed text-slate-300">{matchFeedback.summary}</p>
             </div>
@@ -224,7 +224,7 @@ function getUpskillHint(text) {
 function BridgeTheGap({ gaps = [] }) {
   if (!gaps?.length) return null;
   return (
-    <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
+    <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] shadow-sm p-5">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-7 h-7 rounded-lg bg-amber-500/12 flex items-center justify-center flex-shrink-0">
           <TrendingUp className="w-4 h-4 text-amber-400" />
@@ -264,7 +264,7 @@ function BridgeTheGap({ gaps = [] }) {
 
 function StrengthItem({ text, index }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-[#1f2937] last:border-0">
+    <div className="flex items-start gap-3 py-2.5 border-b border-[#1e293b] last:border-0">
       <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
         <Check className="w-3 h-3 text-emerald-400" />
       </div>
@@ -283,11 +283,11 @@ function StrengthItem({ text, index }) {
 function TransparencyFooter({ visible }) {
   if (!visible) return null;
   return (
-    <div className="sticky bottom-0 left-0 right-0 z-40 border-t border-blue-100 bg-white/95 backdrop-blur-sm px-4 py-2.5 md:px-6">
-      <div className="max-w-4xl mx-auto flex items-start gap-2">
+    <div className="sticky bottom-0 left-0 right-0 z-40 border-t border-[#1e293b] bg-[#030712]/95 backdrop-blur-sm px-4 py-2.5 md:px-6">
+      <div className="max-w-6xl mx-auto flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-        <p className="text-[11px] text-gray-500 leading-relaxed">
-          <strong className="text-gray-700">KI-gestützte Analyse:</strong> Diese Daten dienen der Orientierung und müssen vom Nutzer verifiziert werden. Gemäß EU AI Act Art. 13: Entscheidungen basieren auf verifizierbaren Lebenslaufdaten, keine automatisierte Endentscheidung.
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          <strong className="text-slate-300">KI-gestützte Analyse:</strong> Diese Daten dienen der Orientierung und müssen vom Nutzer verifiziert werden. Gemäß EU AI Act Art. 13: Entscheidungen basieren auf verifizierbaren Lebenslaufdaten, keine automatisierte Endentscheidung.
         </p>
       </div>
     </div>
@@ -317,19 +317,19 @@ function StatusProgressBar({ status }) {
             <div className="flex flex-col items-center flex-shrink-0">
               <div
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  done ? "bg-brand-500" : current ? "bg-brand-500 ring-2 ring-brand-200" : "bg-gray-200"
+                  done || current ? "" : "bg-[#1e293b]"
                 }`}
                 style={done || current ? { backgroundColor: PRIMARY } : undefined}
               />
               <span className={`mt-1 text-[9px] font-semibold whitespace-nowrap leading-none ${
-                current ? "text-gray-800" : done ? "text-gray-400" : "text-gray-300"
+                current ? "text-white" : done ? "text-slate-400" : "text-slate-600"
               }`}>
                 {step.label}
               </span>
             </div>
             {i < STATUS_STEPS.length - 1 && (
               <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${
-                i < active ? "" : "bg-gray-100"
+                i < active ? "" : "bg-[#1e293b]"
               }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
             )}
           </div>
@@ -479,115 +479,127 @@ export default function JobDetailPage() {
     rejected: { label: "Abgelehnt", cls: "border border-red-500/20 bg-red-500/10 text-red-300" },
   }[job.status] || { label: "Gespeichert", cls: "border border-blue-500/20 bg-blue-500/10 text-blue-300" };
   const hasAiContent = job.match_score != null || job.cover_letter || job.interview_qa;
-  const groupedStrengths = (matchFeedback?.strengths || []).reduce(
-    (acc, item) => {
-      if (/(kommunikation|team|führ|kunden|organisation|selbstständig|zuverlässig|empath|präsent|zusammenarbeit|verantwort)/i.test(item || "")) acc.personal.push(item);
-      else acc.technical.push(item);
-      return acc;
-    },
-    { technical: [], personal: [] }
-  );
   const tabs = [
     { id: "overview",  label: "Übersicht" },
     { id: "interview", label: "Gesprächsvorbereitung", disabled: !job.interview_qa },
   ];
 
+  const isPrimCover = job.status === "bookmarked" || !job.status;
+  const isPrimInterview = job.status === "applied" || job.status === "interviewing";
+
+  const handleResearch = async () => {
+    setToolsOpen(false);
+    if (job.research_data) { setResearchData(parseJson(job.research_data)); setResearchOpen(true); return; }
+    setResearchData(null); setResearchOpen(true); setResearchLoading(true);
+    try {
+      const res = await researchApi.research(job.company || "", job.description || "");
+      setResearchData(res.data);
+      updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
+    } catch (err) {
+      if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429)
+        toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
+      setResearchOpen(false);
+    } finally { setResearchLoading(false); }
+  };
+
   return (
     <>
-      {/* ── Page wrapper: adds bottom padding so sticky footer doesn't overlap content ── */}
-      <div className="mx-auto max-w-4xl pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif", fontSize: "16px", lineHeight: "1.5" }}>
+      <div className="mx-auto max-w-6xl pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif", fontSize: "16px", lineHeight: "1.5" }}>
 
-        {/* ── Back button ──────────────────────────────────────────────────── */}
+        {/* Back button */}
         <button
           onClick={() => navigate("/jobs")}
-          className="mb-5 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors min-h-[44px]"
+          className="mb-5 flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" /> Zurück zu Stellen
         </button>
 
-        {/* ── Header ───────────────────────────────────────────────────────── */}
-        <div className="mb-6 rounded-xl border border-[#1f2937] bg-[#111827] px-5 pt-4 pb-5">
-          {/* Thin status progress bar — top of card */}
-          <div className="mb-4 px-1">
-            <StatusProgressBar status={job.status} />
-          </div>
-          <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusCfg.cls}`}>
-                {statusCfg.label}
-              </span>
-              {job.url && (
-                <a href={job.url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline min-h-[44px]">
-                  <ExternalLink className="w-3 h-3" /> Stellenanzeige öffnen
-                </a>
-              )}
-            </div>
-            <h1 className="mb-1 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
-              {job.role || "Ohne Titel"}
-            </h1>
-            <p className="text-base text-slate-400">{job.company || "Unbekanntes Unternehmen"}</p>
-          </div>
-          <button
-            onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#1f2937] text-slate-400 transition-all hover:border-red-500/30 hover:text-red-300"
-            title="Stelle löschen"
-          >
-            {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4" />}
-          </button>
-          </div>
-        </div>
+        {/* ── 2-col dashboard: 340px sticky left + 1fr right ── */}
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[340px_1fr]">
 
-        {/* ── Desktop 2-col split / Mobile stack ───────────────────────────── */}
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+          {/* ── LEFT: sticky sidebar ─────────────────────────────────────── */}
+          <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
 
-          {/* ── Left panel: sticky hero (38% desktop) ───────────────────── */}
-          <aside className="space-y-4 xl:col-span-1 xl:sticky xl:top-4 xl:self-start">
-
-            {/* ── Match Score Hero ───────────────────────────────────────── */}
-            {job.match_score != null && (
-              <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 flex flex-col items-center gap-3">
-                <CircularGauge value={Math.round(job.match_score)} />
-                {matchFeedback?.summary && (
-                  <p className="text-xs text-slate-400 text-center leading-relaxed line-clamp-3">
-                    {matchFeedback.summary}
-                  </p>
-                )}
+            {/* Hero card: title + company + delete + gauge + CTA + status */}
+            <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
+              {/* Title row */}
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg font-extrabold leading-tight text-white mb-1">
+                    {job.role || "Ohne Titel"}
+                  </h1>
+                  <p className="text-sm text-slate-400">{job.company || "Unbekanntes Unternehmen"}</p>
+                </div>
+                <button
+                  onClick={() => deleteMutation.mutate()}
+                  disabled={deleteMutation.isPending}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-[#1e293b] text-slate-400 hover:border-red-500/30 hover:text-red-300 transition-all"
+                  title="Stelle löschen"
+                >
+                  {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4" />}
+                </button>
               </div>
-            )}
 
-            {/* ── Primary Action ─────────────────────────────────────────── */}
-            <div>
-              {job.status === "applied" || job.status === "interviewing" ? (
+              {/* Gauge */}
+              {job.match_score != null && (
+                <div className="flex justify-center mb-5">
+                  <CircularGauge value={Math.round(job.match_score)} />
+                </div>
+              )}
+
+              {/* Primary CTA */}
+              {isPrimInterview ? (
                 <button
                   disabled={!resumeId || interviewMutation.isPending}
                   onClick={() => interviewMutation.mutate()}
-                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
+                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)] flex items-center justify-center gap-2 mb-4"
                   style={{ backgroundColor: "#3b82f6" }}
                 >
                   {interviewMutation.isPending
-                    ? <span className="flex items-center justify-center gap-2"><LoadingSpinner />Wird erstellt…</span>
-                    : <span className="flex items-center justify-center gap-2"><MessageSquare className="h-4 w-4" />Gesprächsvorbereitung</span>}
+                    ? <><LoadingSpinner /><span>Wird erstellt…</span></>
+                    : <><MessageSquare className="h-4 w-4" /><span>Gesprächsvorbereitung</span></>}
                 </button>
               ) : (
                 <button
                   disabled={!resumeId || coverLetterMutation.isPending}
                   onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
+                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)] flex items-center justify-center gap-2 mb-4"
                   style={{ backgroundColor: "#3b82f6" }}
                 >
                   {coverLetterMutation.isPending
-                    ? <span className="flex items-center justify-center gap-2"><LoadingSpinner />Wird erstellt…</span>
-                    : <span className="flex items-center justify-center gap-2"><FileText className="h-4 w-4" />{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span>}
+                    ? <><LoadingSpinner /><span>Wird erstellt…</span></>
+                    : <><FileText className="h-4 w-4" /><span>{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span></>}
                 </button>
               )}
+
+              {/* Status pill + URL */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusCfg.cls}`}>
+                  {statusCfg.label}
+                </span>
+                {job.url && (
+                  <a
+                    href={job.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Stellenanzeige
+                  </a>
+                )}
+              </div>
             </div>
+
+            {/* Bewerbungsfortschritt stepper */}
+            {job.status !== "rejected" && (
+              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-5 py-4">
+                <StatusProgressBar status={job.status} />
+              </div>
+            )}
 
             {/* Resume selector */}
             {resumes.length > 0 ? (
-              <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-4">
+              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
                 <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
                   Lebenslauf für Analyse
                 </label>
@@ -595,7 +607,7 @@ export default function JobDetailPage() {
                   <select
                     value={resumeId || ""}
                     onChange={e => setSelectedResume(Number(e.target.value))}
-                    className="min-h-[44px] w-full appearance-none rounded-xl border border-[#243041] bg-[#0b1220] px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2"
+                    className="min-h-[44px] w-full appearance-none rounded-xl border border-[#243041] bg-[#030712] px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2"
                     style={{ "--tw-ring-color": "#3b82f633" }}
                   >
                     {resumes.map(r => <option key={r.id} value={r.id}>{r.filename}</option>)}
@@ -604,103 +616,81 @@ export default function JobDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-medium text-amber-900 mb-2">
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                <p className="text-sm font-medium text-amber-300 mb-2">
                   Kein Lebenslauf hochgeladen — für die Analyse erforderlich.
                 </p>
-                <Link to="/resume" className="text-sm font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1 min-h-[44px]">
+                <Link to="/resume" className="text-sm font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1 min-h-[44px]">
                   <FileText className="w-4 h-4" /> Lebenslauf hochladen →
                 </Link>
               </div>
             )}
 
-            {/* ── Dynamic Action Bar ── Primary action + Tools overflow ── */}
-            {(() => {
-              const isPrimCover = job.status === "bookmarked" || !job.status;
-              const isPrimInterview = job.status === "applied" || job.status === "interviewing";
-              const handleResearch = async () => {
-                setToolsOpen(false);
-                if (job.research_data) { setResearchData(parseJson(job.research_data)); setResearchOpen(true); return; }
-                setResearchData(null); setResearchOpen(true); setResearchLoading(true);
-                try {
-                  const res = await researchApi.research(job.company || "", job.description || "");
-                  setResearchData(res.data);
-                  updateJobCaches({ ...job, research_data: JSON.stringify(res.data) });
-                } catch (err) {
-                  if (!(err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") && err.response?.status !== 429)
-                    toast.error(getApiErrorMessage(err, "Recherche fehlgeschlagen"));
-                  setResearchOpen(false);
-                } finally { setResearchLoading(false); }
-              };
-
-              return (
-                <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-4">
-                  {/* Weitere Werkzeuge dropdown */}
-                  <div className="relative">
+            {/* Weitere Werkzeuge */}
+            <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
+              <div className="relative">
+                <button
+                  onClick={() => setToolsOpen(v => !v)}
+                  className="min-h-[36px] w-full flex items-center justify-center gap-2 rounded-xl border border-[#334155] px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                  Weitere Werkzeuge
+                </button>
+                {toolsOpen && (
+                  <div className="absolute left-0 right-0 z-20 mt-1 space-y-1 rounded-xl border border-[#1e293b] bg-[#030712] p-2 shadow-lg shadow-black/40">
                     <button
-                      onClick={() => setToolsOpen(v => !v)}
-                      className="min-h-[36px] w-full rounded-xl border border-[#334155] px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                      disabled={!resumeId || matchMutation.isPending}
+                      onClick={() => { matchMutation.mutate(); setToolsOpen(false); }}
+                      className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
                     >
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                      Weitere Werkzeuge
+                      {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0 text-blue-400" />}
+                      Eignungs-Analyse starten
                     </button>
-                    {toolsOpen && (
-                      <div className="absolute left-0 right-0 z-20 mt-1 space-y-1 rounded-xl border border-[#1f2937] bg-[#0b1220] p-2 shadow-lg shadow-black/40">
-                        <button
-                          disabled={!resumeId || matchMutation.isPending}
-                          onClick={() => { matchMutation.mutate(); setToolsOpen(false); }}
-                          className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                        >
-                          {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0 text-blue-400" />}
-                          Eignungs-Analyse starten (Passung datenbasiert bewerten)
-                        </button>
-                        {isPrimInterview && (
-                          <button
-                            disabled={!resumeId || coverLetterMutation.isPending}
-                            onClick={() => { job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate(); setToolsOpen(false); }}
-                            className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                            {job.cover_letter ? "Anschreiben öffnen (Bestehenden Entwurf prüfen)" : "Anschreiben erstellen (KI-basierten Entwurf generieren)"}
-                          </button>
-                        )}
-                        {isPrimCover && job.interview_qa && (
-                          <button
-                            onClick={() => { setActiveTab("interview"); setToolsOpen(false); }}
-                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors min-h-[44px]"
-                          >
-                            <MessageSquare className="h-4 w-4 text-violet-500 flex-shrink-0" />
-                            Gesprächsvorbereitung ansehen
-                          </button>
-                        )}
-                        {isPrimCover && !job.interview_qa && (
-                          <button
-                            disabled={!resumeId || interviewMutation.isPending}
-                            onClick={() => { interviewMutation.mutate(); setToolsOpen(false); }}
-                            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors disabled:opacity-40 min-h-[44px]"
-                          >
-                            <MessageSquare className="h-4 w-4 text-violet-500 flex-shrink-0" />
-                            Gesprächsvorbereitung
-                          </button>
-                        )}
-                        <button
-                          disabled={!job?.company}
-                          onClick={handleResearch}
-                          className="min-h-[44px] w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                        >
-                          <SearchCheck className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                          {job?.research_data ? "Unternehmensrecherche öffnen (Bestehende Erkenntnisse prüfen)" : "Unternehmensrecherche starten (Marktumfeld und Firma auswerten)"}
-                        </button>
-                      </div>
+                    {isPrimInterview && (
+                      <button
+                        disabled={!resumeId || coverLetterMutation.isPending}
+                        onClick={() => { job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate(); setToolsOpen(false); }}
+                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
+                      >
+                        <FileText className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                        {job.cover_letter ? "Anschreiben öffnen" : "Anschreiben erstellen"}
+                      </button>
                     )}
+                    {isPrimCover && job.interview_qa && (
+                      <button
+                        onClick={() => { setActiveTab("interview"); setToolsOpen(false); }}
+                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-violet-500/10 hover:text-violet-300 transition-colors"
+                      >
+                        <MessageSquare className="h-4 w-4 text-violet-400 flex-shrink-0" />
+                        Gesprächsvorbereitung ansehen
+                      </button>
+                    )}
+                    {isPrimCover && !job.interview_qa && (
+                      <button
+                        disabled={!resumeId || interviewMutation.isPending}
+                        onClick={() => { interviewMutation.mutate(); setToolsOpen(false); }}
+                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-violet-500/10 hover:text-violet-300 transition-colors disabled:opacity-40"
+                      >
+                        <MessageSquare className="h-4 w-4 text-violet-400 flex-shrink-0" />
+                        Gesprächsvorbereitung erstellen
+                      </button>
+                    )}
+                    <button
+                      disabled={!job?.company}
+                      onClick={handleResearch}
+                      className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
+                    >
+                      <SearchCheck className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                      {job?.research_data ? "Unternehmensrecherche öffnen" : "Unternehmensrecherche starten"}
+                    </button>
                   </div>
-                </div>
-              );
-            })()}
+                )}
+              </div>
+            </div>
 
-            {/* Job metadata */}
+            {/* Deadline / Notes metadata */}
             {(job.deadline || job.notes) && (
-               <div className="space-y-3 rounded-xl border border-[#1f2937] bg-[#111827] p-4">
+              <div className="space-y-3 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
                 {job.deadline && (
                   <div>
                     <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
@@ -717,11 +707,11 @@ export default function JobDetailPage() {
             )}
           </aside>
 
-          {/* ── Right panel: content (62% desktop) ───────────────────────── */}
-          <div className="min-w-0 xl:col-span-2">
+          {/* ── RIGHT: scrollable content ─────────────────────────────────── */}
+          <div className="min-w-0">
 
             {/* Tabs */}
-            <div className="flex gap-1 overflow-x-auto rounded-xl border border-[#1f2937] bg-[#111827] p-1">
+            <div className="flex gap-1 overflow-x-auto rounded-2xl border border-[#1e293b] bg-[#0f172a] p-1 mb-4">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
@@ -729,7 +719,7 @@ export default function JobDetailPage() {
                   disabled={tab.disabled}
                   className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] ${
                     activeTab === tab.id
-                      ? "bg-[#0b1220] shadow-sm"
+                      ? "bg-[#030712] shadow-sm"
                       : tab.disabled
                         ? "cursor-not-allowed text-slate-600"
                         : "text-slate-400 hover:text-white"
@@ -741,30 +731,27 @@ export default function JobDetailPage() {
               ))}
             </div>
 
-            {/* ── Overview tab ───────────────────────────────────────────── */}
+            {/* ── Overview tab ─────────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                {/* Qualifikations-Check — full width */}
+                {/* QualifikationsCheck — full width */}
                 {job.match_score != null && (
-                  <div className="sm:col-span-2">
-                    <QualifikationsCheck matchScore={job.match_score} matchFeedback={matchFeedback} />
-                  </div>
+                  <QualifikationsCheck matchScore={job.match_score} matchFeedback={matchFeedback} />
                 )}
 
-                {/* Stärken + Lücken — side-by-side, full width row */}
+                {/* Stärken + Lücken side-by-side */}
                 {(matchFeedback?.strengths?.length > 0 || matchFeedback?.gaps?.length > 0) && (
-                  <div className={`sm:col-span-2 grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                  <div className={`grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                     {matchFeedback?.strengths?.length > 0 && (
-                      <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
+                      <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
                         <div className="flex items-center gap-2 mb-4">
                           <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                             <Check className="w-4 h-4 text-emerald-400" />
                           </div>
                           <h3 className="text-sm font-bold text-white">Stärken</h3>
                         </div>
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-[#1e293b]">
                           {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} index={i} />)}
                         </div>
                       </div>
@@ -775,10 +762,15 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Recommendations — left col */}
+                {/* Empfehlungen */}
                 {matchFeedback?.recommendations?.length > 0 && (
-                  <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Empfehlungen</p>
+                  <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white">Empfehlungen</h3>
+                    </div>
                     <ul className="space-y-2.5">
                       {matchFeedback.recommendations.map((r, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-slate-300 leading-relaxed">
@@ -790,22 +782,21 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Job description — right col (or full width if no recommendations) */}
-                <div className={matchFeedback?.recommendations?.length > 0 ? "" : "sm:col-span-2"}>
-                  <div className="rounded-2xl border border-[#1f2937] bg-[#111827] shadow-sm p-5">
+                {/* Stellenbeschreibung */}
+                <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
                   <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                     <h3 className="text-sm font-bold text-slate-200">Stellenbeschreibung</h3>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setHidePersonal(false)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-[#1f2937] text-slate-400 hover:bg-[#243041]"}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-[#1e293b] text-slate-400 hover:bg-[#243041]"}`}
                         style={!hidePersonal ? { backgroundColor: PRIMARY } : undefined}
                       >
                         Alle
                       </button>
                       <button
                         onClick={() => setHidePersonal(true)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-[#1f2937] text-slate-400 hover:bg-[#243041]"}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-[#1e293b] text-slate-400 hover:bg-[#243041]"}`}
                       >
                         Beruflich
                       </button>
@@ -819,27 +810,25 @@ export default function JobDetailPage() {
                         }).join("\n\n") || job.description
                       : job.description}
                   </p>
-                  </div>
                 </div>
 
-                {/* No analysis yet — prompt */}
+                {/* No analysis prompt */}
                 {job.match_score == null && resumes.length > 0 && (
-                  <div className="sm:col-span-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+                  <div className="rounded-2xl border-2 border-dashed border-[#1e293b] bg-[#0f172a] p-6 text-center">
                     <Zap className="w-8 h-8 mx-auto mb-3" style={{ color: PRIMARY }} />
-                    <p className="text-sm font-semibold text-gray-700 mb-1">Noch keine Eignungs-Analyse</p>
-                    <p className="text-xs text-gray-500">Starte links die Eignungs-Analyse, um die KI-gestützte Einschätzung zu laden.</p>
+                    <p className="text-sm font-semibold text-slate-200 mb-1">Noch keine Eignungs-Analyse</p>
+                    <p className="text-xs text-slate-500">Starte links die Eignungs-Analyse, um die KI-gestützte Einschätzung zu laden.</p>
                   </div>
                 )}
-                </div>
               </div>
             )}
 
-            {/* ── Interview tab ────────────────────────────────────────────── */}
+            {/* ── Interview tab — no content ────────────────────────────────── */}
             {activeTab === "interview" && !interviewQA && (
-              <div className="rounded-2xl border border-amber-100 bg-white shadow-sm p-6 text-center">
-                <MessageSquare className="w-8 h-8 mx-auto mb-3 text-amber-500" />
-                <h3 className="text-sm font-bold text-gray-900 mb-1">Keine Gesprächsvorbereitung</h3>
-                <p className="text-xs text-gray-500 mb-4">Noch keine Fragen generiert. Starte die Erstellung über den Button links.</p>
+              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6 text-center">
+                <MessageSquare className="w-8 h-8 mx-auto mb-3 text-violet-400" />
+                <h3 className="text-sm font-bold text-white mb-1">Keine Gesprächsvorbereitung</h3>
+                <p className="text-xs text-slate-500 mb-4">Noch keine Fragen generiert. Starte die Erstellung über den Button links.</p>
                 <ActionBtn
                   pending={interviewMutation.isPending}
                   disabled={!resumeId}
@@ -852,6 +841,7 @@ export default function JobDetailPage() {
               </div>
             )}
 
+            {/* ── Interview tab — with content ─────────────────────────────── */}
             {activeTab === "interview" && interviewQA && (
               <div className="space-y-3">
                 <AIDisclosureBanner feature="interview" />
@@ -871,7 +861,7 @@ export default function JobDetailPage() {
                     <div
                       key={index}
                       className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
-                        expandedQuestion === index ? "border-blue-200 bg-white shadow-md" : "border-gray-100 bg-gray-50"
+                        expandedQuestion === index ? "border-[#1e293b] bg-[#0f172a] shadow-md shadow-black/30" : "border-[#1e293b] bg-[#030712]"
                       }`}
                     >
                       <button
@@ -880,23 +870,23 @@ export default function JobDetailPage() {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-3 mb-2">
-                            <span className="flex-shrink-0 text-xs font-bold text-gray-400">F{index + 1}</span>
-                            <p className="text-sm font-semibold text-gray-900 leading-snug">{item.question}</p>
+                            <span className="flex-shrink-0 text-xs font-bold text-slate-500">F{index + 1}</span>
+                            <p className="text-sm font-semibold text-slate-100 leading-snug">{item.question}</p>
                           </div>
-                          <span className={`ml-7 text-xs font-bold px-2.5 py-1 rounded-full ${TAG_COLORS[type] || "bg-gray-100 text-gray-700"}`}>{type}</span>
+                          <span className={`ml-7 text-xs font-bold px-2.5 py-1 rounded-full ${TAG_COLORS[type] || "bg-[#1e293b] text-slate-300"}`}>{type}</span>
                         </div>
-                        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${expandedQuestion === index ? "rotate-180" : ""}`} />
+                        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform ${expandedQuestion === index ? "rotate-180" : ""}`} />
                       </button>
                       {expandedQuestion === index && (
-                        <div className="space-y-3 border-t border-gray-100 bg-white px-5 py-4">
+                        <div className="space-y-3 border-t border-[#1e293b] bg-[#0f172a] px-5 py-4">
                           <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Antwort</p>
-                            <p className="text-sm leading-relaxed text-gray-700">{item.answer}</p>
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Antwort</p>
+                            <p className="text-sm leading-relaxed text-slate-300">{item.answer}</p>
                           </div>
                           {item.tip && (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                              <p className="text-xs font-bold text-amber-700 mb-1">TIPP</p>
-                              <p className="text-sm text-amber-900">{item.tip}</p>
+                            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
+                              <p className="text-xs font-bold text-amber-400 mb-1">TIPP</p>
+                              <p className="text-sm text-amber-200">{item.tip}</p>
                             </div>
                           )}
                         </div>
@@ -910,27 +900,26 @@ export default function JobDetailPage() {
         </div>
       </div>
 
-      {/* Cover Letter Modal */}
+      {/* ── Cover Letter Modal ──────────────────────────────────────────────── */}
       {coverLetterModalOpen && job?.cover_letter && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setCoverLetterModalOpen(false); }}
         >
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-[#1e293b] bg-[#0f172a] shadow-2xl shadow-black/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1e293b] px-5 py-4">
               <div className="flex items-center gap-2 min-w-0">
-                <FileText className="h-5 w-5 flex-shrink-0 text-emerald-600" />
-                <h2 className="truncate text-base font-bold text-gray-900">
+                <FileText className="h-5 w-5 flex-shrink-0 text-emerald-400" />
+                <h2 className="truncate text-base font-bold text-white">
                   Anschreiben{job.company ? ` — ${job.company}` : ""}
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => { navigator.clipboard.writeText(job.cover_letter); setCopiedIndex(-1); setTimeout(() => setCopiedIndex(null), 2000); toast.success("Kopiert!"); }}
-                  className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold min-h-[44px]"
-                  style={{ borderColor: "#C7D2FE", backgroundColor: "#EEF2FF", color: PRIMARY }}
+                  className="flex items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#030712] px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white min-h-[44px]"
                 >
-                  {copiedIndex === -1 ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedIndex === -1 ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                   {copiedIndex === -1 ? "Kopiert" : "Kopieren"}
                 </button>
                 {(() => {
@@ -941,7 +930,7 @@ export default function JobDetailPage() {
                   return (
                     <a
                       href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
-                      className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors min-h-[44px]"
+                      className="flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors min-h-[44px]"
                     >
                       <Mail className="h-3.5 w-3.5" /> E-Mail Entwurf
                     </a>
@@ -952,23 +941,23 @@ export default function JobDetailPage() {
                 <DownloadBtn kind="DOCX" variant="blue" onClick={() => downloadDoc(job.cover_letter, `Anschreiben_${job.company || "Bewerbung"}.doc`)} />
                 <button
                   onClick={() => setCoverLetterModalOpen(false)}
-                  className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100"
+                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-[#1e293b] hover:text-white"
                   aria-label="Schließen"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e293b] [&::-webkit-scrollbar-thumb]:rounded-full">
               <AIDisclosureBanner feature="cover_letter" />
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{job.cover_letter}</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{job.cover_letter}</p>
             </div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* Research modal */}
+      {/* ── Research modal ──────────────────────────────────────────────────── */}
       {researchOpen && (
         <ResearchModal
           companyName={job.company || ""}
