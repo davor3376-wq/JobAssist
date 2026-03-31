@@ -12,6 +12,7 @@ import {
   ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X, TrendingUp,
   Copy, Check, ChevronDown, Download, SearchCheck,
   Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight, MoreHorizontal,
+  Users, Award, Heart, Cpu,
 } from "lucide-react";
 import { coverLetterApi, interviewApi, jobApi, researchApi, resumeApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
@@ -221,6 +222,17 @@ function getUpskillHint(text) {
   return "Coursera, LinkedIn Learning oder Udemy";
 }
 
+function getGapIcon(text) {
+  const t = (text || "").toLowerCase();
+  if (/java|python|sql|code|software|tech|it|data|program|digital|erfahrung mit neuen/.test(t)) return Cpu;
+  if (/kommunik|sprach|präsent|interdisziplinär/.test(t)) return MessageSquare;
+  if (/team|zusammen|kollabor/.test(t)) return Users;
+  if (/führung|management|leitung/.test(t)) return Award;
+  if (/pflege|betreu|gesund|medizin|alters/.test(t)) return Heart;
+  if (/zertifi|ausbildung|studium|kurs/.test(t)) return BookOpen;
+  return TrendingUp;
+}
+
 function BridgeTheGap({ gaps = [] }) {
   if (!gaps?.length) return null;
   return (
@@ -238,26 +250,29 @@ function BridgeTheGap({ gaps = [] }) {
         <Shield className="w-3 h-3" /> Nur belegbare Qualifikationslücken — keine Persönlichkeitseinschätzung
       </p>
       <div className="space-y-1.5">
-        {gaps.map((gap, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
-            <div className="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-3 h-3 text-amber-400" />
+        {gaps.map((gap, i) => {
+          const Icon = getGapIcon(gap);
+          return (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+              <div className="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3 h-3 text-amber-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-slate-200 leading-snug truncate">{gap}</p>
+                <p className="text-[10px] text-slate-500 leading-none mt-0.5 truncate">{getUpskillHint(gap)}</p>
+              </div>
+              <a
+                href={getUpskillUrl(gap)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-colors"
+                title="Weiterbilden"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </a>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-200 leading-snug truncate">{gap}</p>
-              <p className="text-[10px] text-slate-500 leading-none mt-0.5 truncate">{getUpskillHint(gap)}</p>
-            </div>
-            <a
-              href={getUpskillUrl(gap)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors whitespace-nowrap"
-            >
-              <ExternalLink className="w-3 h-3" />
-              Weiterbilden
-            </a>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -306,38 +321,45 @@ const STATUS_STEPS = [
   { key: "offered",      label: "Angebot" },
 ];
 
-function StatusProgressBar({ status }) {
+function StatusProgressBar({ status, onStatusChange, isPending }) {
   if (status === "rejected") return null;
   const currentIdx = STATUS_STEPS.findIndex(s => s.key === status);
   const active = currentIdx >= 0 ? currentIdx : 0;
   return (
-    <div className="flex items-center gap-0 w-full">
-      {STATUS_STEPS.map((step, i) => {
-        const done = i < active;
-        const current = i === active;
-        return (
-          <div key={step.key} className="flex items-center flex-1 min-w-0">
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  done || current ? "" : "bg-[#1e293b]"
-                }`}
-                style={done || current ? { backgroundColor: PRIMARY } : undefined}
-              />
-              <span className={`mt-1 text-[9px] font-semibold whitespace-nowrap leading-none ${
-                current ? "text-white" : done ? "text-slate-400" : "text-slate-600"
-              }`}>
-                {step.label}
-              </span>
+    <div className="space-y-3">
+      <div className="flex items-center gap-0 w-full">
+        {STATUS_STEPS.map((step, i) => {
+          const done = i < active;
+          const current = i === active;
+          return (
+            <div key={step.key} className="flex items-center flex-1 min-w-0">
+              <button
+                onClick={() => !current && !isPending && onStatusChange?.(step.key)}
+                disabled={current || isPending}
+                className="flex flex-col items-center flex-shrink-0 group disabled:cursor-default"
+              >
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    !done && !current ? "bg-[#1e293b] group-hover:bg-slate-600" : ""
+                  } ${!current ? "group-hover:ring-2 group-hover:ring-blue-500/30" : ""}`}
+                  style={done || current ? { backgroundColor: PRIMARY } : undefined}
+                />
+                <span className={`mt-1 text-[9px] font-semibold whitespace-nowrap leading-none transition-colors ${
+                  current ? "text-white" : done ? "text-slate-400 group-hover:text-blue-400" : "text-slate-600 group-hover:text-slate-400"
+                }`}>
+                  {step.label}
+                </span>
+              </button>
+              {i < STATUS_STEPS.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${
+                  i < active ? "" : "bg-[#1e293b]"
+                }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
+              )}
             </div>
-            {i < STATUS_STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${
-                i < active ? "" : "bg-[#1e293b]"
-              }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      <p className="text-[9px] text-slate-600 text-center">Klicke auf einen Schritt um den Status zu ändern</p>
     </div>
   );
 }
@@ -459,6 +481,12 @@ export default function JobDetailPage() {
     mutationFn: () => jobApi.delete(jobId),
     onSuccess: () => { toast.success("Stelle gelöscht"); navigate("/jobs"); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Löschen fehlgeschlagen")),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (status) => jobApi.updateStatus(jobId, status),
+    onSuccess: (res) => { updateJobCaches(res.data); toast.success("Status aktualisiert"); },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden")),
   });
 
   if (isLoading) {
@@ -596,7 +624,11 @@ export default function JobDetailPage() {
             {/* Bewerbungsfortschritt stepper */}
             {job.status !== "rejected" && (
               <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-5 py-4">
-                <StatusProgressBar status={job.status} />
+                <StatusProgressBar
+                  status={job.status}
+                  onStatusChange={(s) => statusMutation.mutate(s)}
+                  isPending={statusMutation.isPending}
+                />
               </div>
             )}
 
@@ -787,32 +819,8 @@ export default function JobDetailPage() {
 
                 {/* Stellenbeschreibung */}
                 <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
-                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                    <h3 className="text-sm font-bold text-slate-200">Stellenbeschreibung</h3>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setHidePersonal(false)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${!hidePersonal ? "text-white" : "bg-[#1e293b] text-slate-400 hover:bg-[#243041]"}`}
-                        style={!hidePersonal ? { backgroundColor: PRIMARY } : undefined}
-                      >
-                        Alle
-                      </button>
-                      <button
-                        onClick={() => setHidePersonal(true)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${hidePersonal ? "bg-rose-500 text-white" : "bg-[#1e293b] text-slate-400 hover:bg-[#243041]"}`}
-                      >
-                        Beruflich
-                      </button>
-                    </div>
-                  </div>
-                  <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-sm">
-                    {hidePersonal
-                      ? (job.description || "").split(/\n{2,}/).filter(para => {
-                          const t = para.toLowerCase();
-                          return !/hobby|hobbies|interessen|freizeit|privat|persönlich|sport(?:lich)?|reise[n]?|familie|freizeit/.test(t);
-                        }).join("\n\n") || job.description
-                      : job.description}
-                  </p>
+                  <h3 className="text-sm font-bold text-slate-200 mb-3">Stellenbeschreibung</h3>
+                  <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-sm">{job.description}</p>
                 </div>
 
                 {/* No analysis prompt */}

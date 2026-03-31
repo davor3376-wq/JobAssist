@@ -181,9 +181,9 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
   const openRoles = Math.max(total - applied, 0);
   const n = getNeon(avgScore);
 
-  // Large frosted-glass score ring
-  const ringSize = 128;
-  const ringR = 50;
+  // Compact score ring
+  const ringSize = 96;
+  const ringR = 36;
   const ringCirc = 2 * Math.PI * ringR;
 
   return (
@@ -213,28 +213,21 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       <div
         className="hidden sm:grid gap-px bg-[#171a21]/80"
         style={{
-          gridTemplateColumns: "176px 1fr 1fr 196px",
+          gridTemplateColumns: "160px 1fr 1fr 196px",
           gridTemplateRows: compact ? "188px 188px" : "208px 208px",
         }}
       >
 
-        {/* Score ring — frosted glass, row-span 2 */}
-        <div className="bg-[#08090c] flex h-full flex-col items-center justify-between gap-4 px-4 py-7 backdrop-blur-sm" style={{ gridRow: "1 / 3" }}>
-          {/* Dark glass ring card */}
-          <div className="relative flex items-center justify-center rounded-xl"
-            style={{
-              width: ringSize, height: ringSize,
-              background: "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.07), transparent 36%), linear-gradient(145deg, rgba(8,9,12,0.98) 0%, rgba(0,0,0,1) 100%)",
-              boxShadow: avgScore != null
-                ? `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.05), 0 16px 32px rgba(0,0,0,0.26), 0 0 28px ${n.stroke}18`
-                : "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.05), 0 16px 32px rgba(0,0,0,0.26)",
-            }}>
+        {/* Score ring — row-span 2, ring + stats below */}
+        <div className="bg-[#08090c] flex h-full flex-col items-center justify-center gap-3 px-4 py-5" style={{ gridRow: "1 / 3" }}>
+          {/* Compact ring */}
+          <div className="relative flex items-center justify-center">
             <svg width={ringSize} height={ringSize} className="-rotate-90 overflow-visible">
-              <circle cx={ringSize/2} cy={ringSize/2} r={ringR} fill="none" stroke={n.track} strokeWidth="8" />
+              <circle cx={ringSize/2} cy={ringSize/2} r={ringR} fill="none" stroke={n.track} strokeWidth="7" />
               {avgScore != null && (
                 <circle
                   cx={ringSize/2} cy={ringSize/2} r={ringR} fill="none"
-                  stroke={n.stroke} strokeWidth="8" strokeLinecap="round"
+                  stroke={n.stroke} strokeWidth="7" strokeLinecap="round"
                   strokeDasharray={ringCirc}
                   strokeDashoffset={ringCirc * (1 - avgScore / 100)}
                   style={{ filter: n.glow, transition: "stroke-dashoffset 0.9s ease" }}
@@ -242,14 +235,28 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
               )}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[22px] font-extrabold tabular-nums leading-none" style={{ color: avgScore != null ? n.text : "#94a3b8" }}>
+              <span className="text-xl font-extrabold tabular-nums leading-none" style={{ color: avgScore != null ? n.text : "#94a3b8" }}>
                 {avgScore != null ? `${avgScore}%` : "—"}
               </span>
             </div>
           </div>
-          <p className="text-[9px] text-slate-400 text-center leading-snug">
-            {scoredJobs.length > 0 ? `Aus ${scoredJobs.length} analysierten Stellen` : "Noch keine Analyse"}
-          </p>
+          {/* Supporting context */}
+          <div className="text-center">
+            <p className="text-xs font-bold text-white leading-none">
+              {avgScore != null ? (avgScore >= 60 ? "Auf Erfolgskurs" : avgScore >= 40 ? "Ausbaufähig" : "Optimierungsbedarf") : "Kein Score"}
+            </p>
+            <p className="text-[9px] text-slate-500 mt-1">
+              {scoredJobs.length > 0 ? `Ø aus ${scoredJobs.length} Stellen` : "Noch keine Analyse"}
+            </p>
+          </div>
+          {/* Mini score bar */}
+          {avgScore != null && (
+            <div className="w-full px-2">
+              <div className="h-1 rounded-full bg-white/8 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${avgScore}%`, backgroundColor: n.stroke }} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Beworben */}
@@ -279,16 +286,15 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
             )}
           </div>
 
-          {/* Mini stats */}
-          <div className="grid grid-cols-2 gap-2 flex-shrink-0">
+          {/* Mini stats — no box, integrated into panel */}
+          <div className="grid grid-cols-2 gap-x-4 flex-shrink-0 border-b border-[#1C2333] pb-3">
             {[
-              { label: "Diese Woche", value: activitySeries.reduce((s, v) => s + v, 0), sub: "Analysen" },
-              { label: "Heute", value: todayCount, sub: "Analysen" },
-            ].map(({ label, value, sub }) => (
-              <div key={label} className="rounded-lg bg-white/4 border border-[#1C2333] px-3 py-2.5">
+              { label: "Diese Woche", value: activitySeries.reduce((s, v) => s + v, 0) },
+              { label: "Heute", value: todayCount },
+            ].map(({ label, value }) => (
+              <div key={label}>
                 <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
-                <p className="text-2xl font-extrabold text-white tabular-nums leading-none mt-1">{value}</p>
-                <p className="text-[9px] text-slate-500 mt-0.5">{sub}</p>
+                <p className="text-2xl font-extrabold text-white tabular-nums leading-none mt-0.5">{value}</p>
               </div>
             ))}
           </div>

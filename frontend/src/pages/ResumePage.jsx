@@ -396,6 +396,8 @@ function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
 
   const skillMap = Object.fromEntries((skills || []).map(s => [s.key, s]));
 
+  const rawText = (resume?.raw_text || "").toLowerCase();
+
   const sections = [
     { key: "summary",    title: "Kurzprofil",  width: "w-20" },
     { key: "experience", title: "Erfahrung",   width: "w-24" },
@@ -406,7 +408,11 @@ function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
     const sk = skillMap[SECTION_SKILL_MAP[s.key]];
     const score = sk?.value ?? 50;
     const heat = score < 50 ? "high" : score < 72 ? "medium" : "low";
-    return { ...s, score, heat, skillLabel: sk?.label };
+    // show up to 3 detected or missing keywords
+    const allKw = sk?.keywords || [];
+    const found = rawText ? allKw.filter(kw => rawText.includes(kw)).slice(0, 3) : [];
+    const missing = allKw.filter(kw => !rawText.includes(kw)).slice(0, 2);
+    return { ...s, score, heat, skillLabel: sk?.label, found, missing };
   });
 
   return (
@@ -431,32 +437,31 @@ function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
         </div>
 
         <div className="p-3 space-y-1.5">
-          {sections.map(({ key, title, width, score, heat, skillLabel }) => {
+          {sections.map(({ key, title, width, score, heat, skillLabel, found, missing }) => {
             const tone = HEAT_STYLE[heat];
             const poor = score < 50;
+            const barColor = poor ? "#ef4444" : score < 72 ? "#f59e0b" : "#10b981";
             return (
               <div key={key} className="rounded-lg border px-3 py-2" style={{ background: tone.bg, borderColor: tone.border }}>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className={`h-1.5 rounded-full bg-white/80 flex-shrink-0 ${width}`} />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex-shrink-0">{title}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className={`text-[9px] font-bold tabular-nums ${poor ? "text-red-400" : score < 72 ? "text-amber-400" : "text-emerald-400"}`}>
-                      {score}%
-                    </span>
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tone.dot}`} />
-                  </div>
+                  <span className="text-[9px] font-bold tabular-nums flex-shrink-0" style={{ color: barColor }}>
+                    {score}%
+                  </span>
                 </div>
-                {/* Score bar */}
-                <div className="mt-1.5 h-1 rounded-full bg-white/8 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${score}%`, backgroundColor: poor ? "#ef4444" : score < 72 ? "#f59e0b" : "#10b981" }}
-                  />
+                {/* Score bar — no dot, bar is the signal */}
+                <div className="h-1 rounded-full bg-white/8 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: barColor }} />
                 </div>
-                {poor && skillLabel && (
-                  <p className="mt-1 text-[8px] text-red-400 font-medium">↑ {skillLabel}-Stichworte fehlen</p>
+                {/* Keyword context */}
+                {found.length > 0 && (
+                  <p className="mt-1 text-[8px] text-emerald-400 truncate">✓ {found.join(", ")}</p>
+                )}
+                {poor && missing.length > 0 && (
+                  <p className="mt-0.5 text-[8px] text-red-400 truncate">↑ fehlt: {missing.join(", ")}</p>
                 )}
               </div>
             );
@@ -466,15 +471,14 @@ function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
 
       {/* Legend */}
       <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">ATS-Fokus</p>
         <div className="flex items-center gap-4">
           {[
-            { cls: "bg-red-500",   label: "Lücke" },
-            { cls: "bg-amber-500", label: "Ausbaufähig" },
-            { cls: "bg-emerald-500", label: "Stark" },
-          ].map(({ cls, label }) => (
+            { color: "#ef4444", label: "Lücke" },
+            { color: "#f59e0b", label: "Ausbaufähig" },
+            { color: "#10b981", label: "Stark" },
+          ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cls}`} />
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
               <span className="text-[9px] text-slate-400">{label}</span>
             </div>
           ))}
