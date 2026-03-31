@@ -185,6 +185,8 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
   const [sortBy, setSortBy] = useState("date");
   const [visibleCount, setVisibleCount] = useState(5);
+  const [savedFilter, setSavedFilter] = useState("all");
+  const [savedSort, setSavedSort] = useState("score");
   const [customSearchParams, setCustomSearchParams] = useState({
     keywords: "",
     location: "",
@@ -451,43 +453,107 @@ const [savingJobId, setSavingJobId] = useState(null);
 
       <div className="space-y-6">
         {/* Saved jobs section */}
-        {savedJobs.length > 0 && (
-          <div className="mb-2 rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-white">Gespeicherte Stellen</h2>
-              <span className="text-xs text-slate-400">{savedJobs.length} gespeichert</span>
-            </div>
-            <div className="space-y-3">
-              {savedJobs.slice(0, 5).map(job => (
-                <Link
-                  key={job.id}
-                  to={`/jobs/${job.id}`}
-                  className="group flex items-center justify-between gap-4 rounded-xl border border-[#1f2937] bg-[#0b1220] p-4 transition-all hover:border-[#3b82f6] hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+        {savedJobs.length > 0 && (() => {
+          const STATUS_FILTERS = [
+            { key: "all", label: "Alle" },
+            { key: "bookmarked", label: "Gespeichert" },
+            { key: "applied", label: "Beworben" },
+            { key: "interviewing", label: "Gespräch" },
+            { key: "offered", label: "Angebot" },
+            { key: "rejected", label: "Abgelehnt" },
+          ].filter(f => f.key === "all" || savedJobs.some(j => j.status === f.key));
+
+          const filtered = savedFilter === "all" ? savedJobs : savedJobs.filter(j => j.status === savedFilter);
+          const sorted = [...filtered].sort((a, b) => {
+            if (savedSort === "score") return (b.match_score ?? -1) - (a.match_score ?? -1);
+            if (savedSort === "status") return (a.status || "").localeCompare(b.status || "");
+            return 0; // date = insertion order
+          });
+          const visible = sorted.slice(0, 10);
+
+          return (
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+              {/* Header + sort */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-white">Gespeicherte Stellen</h2>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0b1220] border border-[#1f2937] text-slate-400">{filtered.length}</span>
+                </div>
+                <select
+                  value={savedSort}
+                  onChange={e => setSavedSort(e.target.value)}
+                  className="text-[11px] px-2 py-1 border border-[#1C2333] rounded-lg bg-[#0b1220] text-slate-400 focus:outline-none"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
-                    <p className="text-xs text-slate-400 truncate">{job.company}</p>
-                  </div>
-                  <div className="ml-3 flex flex-shrink-0 items-center gap-2">
-                    {job.match_score != null && (
-                      <span className="text-[11px] font-bold tabular-nums px-2 py-1 rounded-lg bg-[#0b1220] border border-[#1f2937] text-blue-300">
-                        {Math.round(job.match_score)}%
-                      </span>
-                    )}
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#334155] text-slate-400 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-              {savedJobs.length > 5 && (
-                <Link to="/jobs" className="block text-center text-xs font-semibold text-slate-400 hover:text-blue-300 transition-colors py-1">
-                  Mehr laden (Weitere Favoriten anzeigen)
-                </Link>
+                  <option value="score">Match ↓</option>
+                  <option value="status">Status</option>
+                  <option value="date">Datum</option>
+                </select>
+              </div>
+
+              {/* Status filter pills */}
+              <div className="flex gap-1.5 flex-wrap mb-4">
+                {STATUS_FILTERS.map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setSavedFilter(f.key)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
+                      savedFilter === f.key
+                        ? "bg-blue-500 text-white"
+                        : "bg-[#0b1220] border border-[#1f2937] text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 2-column grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {visible.map(job => {
+                  const cfg = SAVED_STATUS_CFG[job.status] || SAVED_STATUS_CFG.bookmarked;
+                  const score = job.match_score != null ? Math.round(job.match_score) : null;
+                  const scoreColor = score == null ? "#94a3b8" : score >= 60 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444";
+                  return (
+                    <Link
+                      key={job.id}
+                      to={`/jobs/${job.id}`}
+                      className="group flex items-center gap-3 rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-2.5 transition-all hover:border-blue-500/30 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+                    >
+                      {/* Score ring */}
+                      <div className="flex-shrink-0 relative w-9 h-9">
+                        <svg viewBox="0 0 36 36" className="-rotate-90 w-9 h-9">
+                          <circle cx="18" cy="18" r="14" fill="none" stroke="#1f2937" strokeWidth="3" />
+                          {score != null && (
+                            <circle cx="18" cy="18" r="14" fill="none"
+                              stroke={scoreColor} strokeWidth="3" strokeLinecap="round"
+                              strokeDasharray={2 * Math.PI * 14}
+                              strokeDashoffset={2 * Math.PI * 14 * (1 - score / 100)}
+                              style={{ filter: `drop-shadow(0 0 4px ${scoreColor}55)` }}
+                            />
+                          )}
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-extrabold tabular-nums" style={{ color: scoreColor }}>
+                          {score != null ? `${score}` : "—"}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{job.company}</p>
+                      </div>
+                      <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.cls}`}>{cfg.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {sorted.length > 10 && (
+                <p className="text-center text-[11px] text-slate-500 mt-3">
+                  +{sorted.length - 10} weitere — filtere nach Status um sie zu sehen
+                </p>
               )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 shadow-none">
                 {/* Tab Navigation */}
@@ -778,7 +844,7 @@ const [savingJobId, setSavingJobId] = useState(null);
                                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#1f2937] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px]"
                                     >
                                       <ExternalLink className="w-3.5 h-3.5" />
-                                      Stellenanzeige öffnen (Originalquelle ansehen)
+                                      Stellenanzeige
                                     </a>
                                   )}
                                   <button

@@ -331,7 +331,7 @@ export default function SettingsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
                   >
-                    {avatar ? "Foto ändern" : "Foto hochladen (Bild auswählen)"}
+                    {avatar ? "Foto ändern" : "Foto hochladen"}
                   </button>
                   {avatar && (
                     <button
@@ -373,7 +373,7 @@ export default function SettingsPage() {
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <label className={LABEL_CLS}>Sprache (Interface-Sprache)</label>
+                      <label className={LABEL_CLS}>Sprache</label>
                       <div className="relative">
                         <select
                           {...field}
@@ -395,7 +395,7 @@ export default function SettingsPage() {
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <label className={LABEL_CLS}>Währung (Gehaltsanzeige)</label>
+                      <label className={LABEL_CLS}>Währung</label>
                       <div className="relative">
                         <select
                           {...field}
@@ -416,7 +416,7 @@ export default function SettingsPage() {
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <label className={LABEL_CLS}>Marktstandort (Suchregion für Jobvorschläge)</label>
+                      <label className={LABEL_CLS}>Suchregion</label>
                       <input
                         {...field}
                         className={INPUT_CLS}
@@ -436,57 +436,40 @@ export default function SettingsPage() {
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
           <div className="space-y-4">
 
-            {/* Arbeitsorte */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
+            {/* Jobsuche — Orte + Gehalt combined */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 space-y-4">
+              <div className="flex items-center gap-3">
                 <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <div>
-                  <h2 className="font-semibold text-white">Arbeitsorte</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Gewünschte Städte oder Regionen (kommagetrennt)</p>
-                </div>
+                <h2 className="font-semibold text-white">Jobsuche</h2>
               </div>
               <Controller
                 name="desired_locations"
                 control={control}
                 render={({ field }) => (
-                  <input
-                    {...field}
-                    value={field.value?.join(", ") || ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value ? e.target.value.split(",").map((p) => p.trim()) : []
-                      )
-                    }
-                    className={INPUT_CLS}
-                    placeholder="Wien, Graz, Linz, Salzburg"
-                  />
+                  <div>
+                    <label className={LABEL_CLS}>Arbeitsorte</label>
+                    <input
+                      {...field}
+                      value={field.value?.join(", ") || ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? e.target.value.split(",").map((p) => p.trim()) : []
+                        )
+                      }
+                      className={INPUT_CLS}
+                      placeholder="Wien, Graz, Linz, Salzburg"
+                    />
+                  </div>
                 )}
               />
-            </div>
-
-            {/* Gehalt */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <DollarSign className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <div>
-                  <h2 className="font-semibold text-white">Gehaltsvorstellung</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Brutto Jahresgehalt in Tausend EUR</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Controller
                   name="salary_min"
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <label className={LABEL_CLS}>Minimum (Untergrenze)</label>
-                      <input
-                        {...field}
-                        type="number"
-                        className={INPUT_CLS}
-                        placeholder="30"
-                        value={field.value || ""}
-                      />
+                      <label className={LABEL_CLS}>Gehalt min (k€)</label>
+                      <input {...field} type="number" className={INPUT_CLS} placeholder="30" value={field.value || ""} />
                     </div>
                   )}
                 />
@@ -495,118 +478,101 @@ export default function SettingsPage() {
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <label className={LABEL_CLS}>Maximum (Obergrenze)</label>
-                      <input
-                        {...field}
-                        type="number"
-                        className={INPUT_CLS}
-                        placeholder="50"
-                        value={field.value || ""}
-                      />
+                      <label className={LABEL_CLS}>Gehalt max (k€)</label>
+                      <input {...field} type="number" className={INPUT_CLS} placeholder="50" value={field.value || ""} />
                     </div>
                   )}
                 />
               </div>
             </div>
 
-            {/* Stellenarten */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
+            {/* Stellenarten + Erfahrung + Branchen combined */}
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 space-y-5">
+              <div className="flex items-center gap-3">
                 <Briefcase className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <div>
-                  <h2 className="font-semibold text-white">Stellenarten</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Gewünschte Beschäftigungsformen auswählen</p>
-                </div>
+                <h2 className="font-semibold text-white">Präferenzen</h2>
               </div>
-              <Controller
-                name="job_types"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex flex-wrap gap-2">
-                    {JOB_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => {
-                          const next = field.value?.includes(type)
-                            ? field.value.filter((e) => e !== type)
-                            : [...(field.value || []), type];
-                          field.onChange(next);
-                        }}
-                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
-                          field.value?.includes(type)
-                            ? "bg-[#3b82f6] text-white shadow-[0_0_0_1px_rgba(59,130,246,0.5)]"
-                            : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              />
-            </div>
 
-            {/* Erfahrungsstufe */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <Target className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <div>
-                  <h2 className="font-semibold text-white">Erfahrungsstufe</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Aktuelle Karrierephase angeben</p>
-                </div>
-              </div>
+              {/* Erfahrungsstufe */}
               <Controller
                 name="experience_level"
                 control={control}
                 render={({ field }) => (
-                  <div className="relative">
-                    <select
-                      {...field}
-                      className={`${INPUT_CLS} appearance-none pr-9`}
-                      value={field.value || ""}
-                    >
-                      <option value="">Stufe auswählen…</option>
-                      {EXPERIENCE_LEVELS.map((l) => (
-                        <option key={l} value={l}>{l}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <div>
+                    <label className={LABEL_CLS}>Erfahrungsstufe</label>
+                    <div className="relative">
+                      <select {...field} className={`${INPUT_CLS} appearance-none pr-9`} value={field.value || ""}>
+                        <option value="">Stufe auswählen…</option>
+                        {EXPERIENCE_LEVELS.map((l) => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    </div>
                   </div>
                 )}
               />
-            </div>
 
-            {/* Branchen */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4">
-                <h2 className="font-semibold text-white">Branchen</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Bevorzugte Arbeitsbereiche auswählen</p>
-              </div>
+              {/* Stellenarten */}
+              <Controller
+                name="job_types"
+                control={control}
+                render={({ field }) => (
+                  <div>
+                    <label className={LABEL_CLS}>Stellenarten</label>
+                    <div className="flex flex-wrap gap-2">
+                      {JOB_TYPES.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            const next = field.value?.includes(type)
+                              ? field.value.filter((e) => e !== type)
+                              : [...(field.value || []), type];
+                            field.onChange(next);
+                          }}
+                          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
+                            field.value?.includes(type)
+                              ? "bg-[#3b82f6] text-white"
+                              : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              />
+
+              {/* Branchen */}
               <Controller
                 name="industries"
                 control={control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-3 gap-2">
-                    {INDUSTRIES.map((industry) => (
-                      <button
-                        key={industry}
-                        type="button"
-                        onClick={() => {
-                          const next = field.value?.includes(industry)
-                            ? field.value.filter((e) => e !== industry)
-                            : [...(field.value || []), industry];
-                          field.onChange(next);
-                        }}
-                        className={`rounded-lg px-2 py-2.5 text-xs font-semibold transition-all text-center ${
-                          field.value?.includes(industry)
-                            ? "bg-[#3b82f6] text-white shadow-[0_0_0_1px_rgba(59,130,246,0.5)]"
-                            : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
-                        }`}
-                      >
-                        {industry}
-                      </button>
-                    ))}
+                  <div>
+                    <label className={LABEL_CLS}>Branchen</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {INDUSTRIES.map((industry) => (
+                        <button
+                          key={industry}
+                          type="button"
+                          onClick={() => {
+                            const next = field.value?.includes(industry)
+                              ? field.value.filter((e) => e !== industry)
+                              : [...(field.value || []), industry];
+                            field.onChange(next);
+                          }}
+                          className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all text-center ${
+                            field.value?.includes(industry)
+                              ? "bg-[#3b82f6] text-white"
+                              : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
+                          }`}
+                        >
+                          {industry}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               />
@@ -652,7 +618,7 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" />
               {isSubmitting
                 ? "Wird gespeichert…"
-                : "Einstellungen speichern (Alle Änderungen übernehmen)"}
+                : "Einstellungen speichern"}
             </button>
           </div>
         </div>
@@ -690,7 +656,7 @@ function DeleteAccountSection() {
       <div className="mb-4 flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
         <div>
-          <h2 className="font-semibold text-red-400">Gefahrenzone (Unwiderrufliche Aktionen)</h2>
+          <h2 className="font-semibold text-red-400">Gefahrenzone</h2>
           <p className="mt-0.5 text-xs text-slate-400">
             Alle Daten, Profile, Lebensläufe und Jobs werden permanent gelöscht.
           </p>
@@ -703,7 +669,7 @@ function DeleteAccountSection() {
           className="flex items-center gap-2 rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-950/60"
         >
           <Trash2 className="h-4 w-4" />
-          Konto endgültig löschen (Alle Daten entfernen)
+          Konto löschen
         </button>
       ) : (
         <div className="space-y-4 rounded-xl border border-red-900/60 bg-red-950/30 p-4">
