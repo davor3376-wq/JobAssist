@@ -424,7 +424,7 @@ export default function AIAssistantPage() {
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
-          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#0D1117] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
+          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#08090c] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
           md:relative md:w-[232px] xl:w-[248px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#1C2333] md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}>
@@ -456,7 +456,7 @@ export default function AIAssistantPage() {
 
           {/* Starter missions (shown when no history) */}
           {conversations.length === 0 && (
-            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-white/5 bg-slate-900/50">
+            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-white/5 bg-[#08090c]">
               {[
                 { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
                 { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },
