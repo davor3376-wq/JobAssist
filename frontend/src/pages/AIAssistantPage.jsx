@@ -388,10 +388,6 @@ export default function AIAssistantPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
               KI-Bewerbungsassistent
             </h1>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Bereit</span>
-            </div>
           </div>
         </div>
 
@@ -460,7 +456,7 @@ export default function AIAssistantPage() {
 
           {/* Starter missions (shown when no history) */}
           {conversations.length === 0 && (
-            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-slate-100">
+            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-white/5 bg-slate-900/50">
               {[
                 { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
                 { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },

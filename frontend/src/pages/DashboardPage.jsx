@@ -219,7 +219,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
       >
 
         {/* Score ring — row-span 2, ring + stats below */}
-        <div className="bg-[#08090c] flex h-full flex-col items-center justify-center gap-3 px-4 py-5" style={{ gridRow: "1 / 3" }}>
+        <div className="bg-[#08090c] flex h-full flex-col items-center justify-center gap-3 px-4 py-5 border border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]" style={{ gridRow: "1 / 3" }}>
           {/* Compact ring */}
           <div className="relative flex items-center justify-center">
             <svg width={ringSize} height={ringSize} className="-rotate-90 overflow-visible">
@@ -242,11 +242,11 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
           </div>
           {/* Supporting context */}
           <div className="text-center">
-            <p className="text-xs font-bold text-white leading-none">
+            <p className="text-xs font-extrabold text-white leading-none">
               {avgScore != null ? (avgScore >= 60 ? "Auf Erfolgskurs" : avgScore >= 40 ? "Ausbaufähig" : "Optimierungsbedarf") : "Kein Score"}
             </p>
             <p className="text-[9px] text-slate-500 mt-1">
-              {scoredJobs.length > 0 ? `Ø aus ${scoredJobs.length} Stellen` : "Noch keine Analyse"}
+              {scoredJobs.length > 0 ? `aus ${scoredJobs.length} Stellen` : "Noch keine Analyse"}
             </p>
           </div>
           {/* Mini score bar */}
@@ -276,7 +276,7 @@ function MarketCard({ jobs, avgScore, activitySeries, scoredJobs, compact }) {
         </div>
 
         {/* Activity chart — row-span 2 */}
-        <div className="bg-[#08090c] px-4 py-5 flex h-full flex-col gap-3" style={{ gridRow: "1 / 3" }}>
+        <div className="bg-[#08090c] px-3 py-3 flex h-full flex-col gap-2" style={{ gridRow: "1 / 3" }}>
           <div className="flex items-center justify-between flex-shrink-0">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Aktivitätsverlauf</p>
             {todayCount > 0 && (
@@ -544,6 +544,7 @@ function AICopilotSidebar({ suggestions, userName, featuredTip }) {
 function DeadlineBanner({ job }) {
   if (!job) return null;
   const daysLeft = Math.ceil((new Date(job.deadline).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+  if (daysLeft < 0) return null;
   const urgent = daysLeft <= 7;
   return (
     <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 shadow-sm ${urgent ? "bg-emerald-500/10 border-emerald-500/20" : "bg-amber-500/10 border-amber-500/20"}`}>
@@ -607,7 +608,7 @@ export default function DashboardPage() {
   }, [jobs]);
 
   const nextDeadline = useMemo(() =>
-    [...(jobs || [])].filter(j => j.deadline).sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0] || null
+    [...(jobs || [])].filter(j => j.deadline && new Date(j.deadline) >= new Date()).sort((a, b) => new Date(a.deadline) - new Date(b.deadline))[0] || null
   , [jobs]);
   const hasUrgentDeadline = !!nextDeadline && Math.ceil((new Date(nextDeadline.deadline).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000) <= 7;
 
@@ -635,7 +636,7 @@ export default function DashboardPage() {
     }
     if (nextDeadline) {
       const d = Math.ceil((new Date(nextDeadline.deadline) - new Date()) / 86400000);
-      if (d <= 14) list.push({ type: "alert", icon: "clock", title: `Bewerbungsfrist in ${d} Tag${d !== 1 ? "en" : ""}`, text: `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"} — handle jetzt!`, to: `/jobs/${nextDeadline.id}`, cta: "Öffnen" });
+      if (d >= 0 && d <= 14) list.push({ type: "alert", icon: "clock", title: `Bewerbungsfrist in ${d} Tag${d !== 1 ? "en" : ""}`, text: `${nextDeadline.role || "Stelle"} bei ${nextDeadline.company || "Unternehmen"} — handle jetzt!`, to: `/jobs/${nextDeadline.id}`, cta: "Öffnen" });
     }
     if (applied.length === 0 && (jobs?.length ?? 0) > 2)
       list.push({ type: "tip", icon: "star", title: "Tipp: Bewirb dich aktiv!", text: "Du hast gespeicherte Stellen aber noch keine Bewerbung abgeschickt. Nutze deinen Schwung!", to: "/jobs", cta: "Stellen öffnen" });

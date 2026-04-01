@@ -185,7 +185,7 @@ function UsageHeroChart({ usage }) {
               {/* Value + limit on same baseline */}
               <text
                 x={cx} y={Math.max(padT + 13, barY - 4)}
-                textAnchor="middle" fontSize="9" fontWeight="700" fill={valColor}
+                textAnchor="middle" fontSize="9" fontWeight="700" fill="#94a3b8"
               >
                 {unlimited ? "∞" : `${item.used} / ${item.limit}`}
               </text>
@@ -334,7 +334,7 @@ export default function BillingPage() {
     ? Math.round(limitedItems.reduce((s, u) => s + Math.min(100, (u.used / u.limit) * 100), 0) / limitedItems.length)
     : 0;
   const healthColor  = avgUsagePct >= 80 ? "text-amber-300" : avgUsagePct >= 60 ? "text-blue-300" : "text-emerald-300";
-  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "Im grünen Bereich";
+  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "Optimal";
   const comparisonRows = [
     { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
     { row: "Motivationsschreiben / Monat", vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
@@ -353,9 +353,7 @@ export default function BillingPage() {
       </div>
 
       {/* ── Plan hero card ───────────────────────────────────────────────────── */}
-      <div className={`relative overflow-hidden rounded-2xl border bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] ${currentPlan.borderCls}`}>
-        {/* Gradient glow */}
-        <div className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${currentPlan.iconCls} opacity-10 blur-3xl`} />
+      <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 sm:p-6 shadow-none`}>
 
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
