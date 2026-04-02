@@ -168,10 +168,10 @@ function MarkdownMessage({ text }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const STARTER_MISSIONS = [
-  { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100" },
-  { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-purple-600 bg-purple-50 border-purple-100" },
-  { icon: FileText, label: "Lebenslauf analysieren", color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
-  { icon: Briefcase, label: "Bewerbungsstrategie öffnen", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+  { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-blue-300 bg-blue-500/10 border-blue-500/20" },
+  { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-blue-300 bg-blue-500/10 border-blue-500/20" },
+  { icon: FileText, label: "Lebenslauf analysieren", color: "text-blue-300 bg-blue-500/10 border-blue-500/20" },
+  { icon: Briefcase, label: "Bewerbungsstrategie öffnen", color: "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" },
 ];
 
 export default function AIAssistantPage() {
@@ -453,8 +453,8 @@ export default function AIAssistantPage() {
             </div>
           </div>
 
-          {/* Starter missions - project system colors, no bottom border */}
-          {conversations.length === 0 && (
+          {/* Starter missions - only show when no active chat */}
+          {conversations.length === 0 && !activeId && (
             <div className="flex-shrink-0 px-3 py-3 space-y-1.5 bg-[#08090c]">
               {STARTER_MISSIONS.map((m, index) => (
                 <button
@@ -668,16 +668,18 @@ export default function AIAssistantPage() {
                         <rect x="15" y="60" width="110" height="6" rx="3" fill="#4f46e5"/>
                         <rect x="40" y="20" width="60" height="40" rx="4" fill="#4f46e5"/>
                         <rect x="43" y="23" width="54" height="34" rx="2" fill="#6366f1"/>
-                        <circle cx="70" cy="40" r="9" fill="#a5b4fc"/>
-                        <rect x="61" y="50" width="18" height="2.5" rx="1.25" fill="#a5b4fc"/>
-                        <circle cx="105" cy="68" r="12" fill="#e0e7ff"/>
-                        <rect x="99" y="54" width="12" height="18" rx="6" fill="#818cf8"/>
-                        <circle cx="105" cy="48" r="8" fill="#fde68a"/>
-                        <rect x="18" y="12" width="42" height="22" rx="6" fill="white" stroke="#c7d2fe" strokeWidth="1.5"/>
-                        <rect x="24" y="19" width="10" height="1.5" rx="0.75" fill="#c7d2fe"/>
-                        <rect x="24" y="23" width="30" height="1.5" rx="0.75" fill="#c7d2fe"/>
-                        <rect x="24" y="27" width="22" height="1.5" rx="0.75" fill="#c7d2fe"/>
-                        <polygon points="44,34 50,38 38,38" fill="white"/>
+                        <circle cx="70" cy="40" r="9" fill="#ddd6fe"/>
+                        <polyline points="48.5,33 51,35.5 55.5,29.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                        <rect x="62" y="30" width="34" height="2.5" rx="1.25" fill="#ddd6fe"/>
+                        <circle cx="52" cy="50" r="6" fill="#ddd6fe"/>
+                        <polyline points="48.5,50 51,52.5 55.5,46.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
+                        <rect x="62" y="47" width="28" height="2.5" rx="1.25" fill="#ddd6fe"/>
+                        <circle cx="52" cy="67" r="6" fill="#ede9fe"/>
+                        <rect x="62" y="64" width="22" height="2.5" rx="1.25" fill="#ede9fe"/>
+                        <circle cx="115" cy="78" r="14" fill="#e0e7ff"/>
+                        <circle cx="115" cy="66" r="10" fill="#fde68a"/>
+                        <circle cx="111" cy="65" r="1.5" fill="#1e293b"/>
+                        <circle cx="119" cy="65" r="1.5" fill="#1e293b"/>
                       </svg>
                     </div>
                     <div className="relative">
@@ -792,7 +794,7 @@ export default function AIAssistantPage() {
                       <div className={`px-4 py-3
                         ${msg.role === "user"
                           ? "bg-blue-500 text-white rounded-xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
-                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm"
+                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-300 rounded-xl rounded-bl-sm"
                         }`}
                       >
                         {msg.role === "user"
