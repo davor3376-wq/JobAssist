@@ -199,18 +199,23 @@ function RadarChart({ skills, size = 220 }) {
 
       {/* Labels positioned outside the pentagon at fixed radius */}
       {skills.map((s, i) => {
-        const labelR = maxR + 28;
+        const labelR = maxR + 32;
         const lx = cx + labelR * Math.cos(angles[i]);
         const ly = cy + labelR * Math.sin(angles[i]);
+        // Determine text anchor based on position
+        const isRight = Math.cos(angles[i]) > 0.1;
+        const isLeft = Math.cos(angles[i]) < -0.1;
+        const textAnchor = isRight ? "start" : isLeft ? "end" : "middle";
+        const offsetX = isRight ? 8 : isLeft ? -8 : 0;
         return (
           <text
             key={`label-${i}`}
-            x={lx}
+            x={lx + offsetX}
             y={ly}
             fill={s.color}
             fontSize="11"
             fontWeight="600"
-            textAnchor="middle"
+            textAnchor={textAnchor}
             dominantBaseline="middle"
           >
             {s.label}
@@ -370,6 +375,73 @@ function Checklist({ gamification }) {
   );
 }
 
+// ─── Feedback Box Component ──────────────────────────────────────────────────
+
+function FeedbackBox({ gamification }) {
+  const { tasks = [], completedTasks = [], projectedScore = 0, potentialPoints = 0 } = gamification || {};
+  const total = tasks.length;
+  const completed = completedTasks.length;
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  const messages = {
+    complete: {
+      icon: Trophy,
+      color: "emerald",
+      title: "Super!",
+      text: "Alle Optimierungen erledigt",
+    },
+    high: {
+      icon: TrendingUp,
+      color: "blue",
+      title: "Gut gemacht!",
+      text: `${completed}/${total} Aufgaben erledigt`,
+    },
+    medium: {
+      icon: Target,
+      color: "amber",
+      title: "Weiter so!",
+      text: `${potentialPoints} Punkte möglich`,
+    },
+    low: {
+      icon: Sparkles,
+      color: "slate",
+      title: "Starte jetzt!",
+      text: `+${potentialPoints} Punkte erreichbar`,
+    },
+  };
+
+  const getStatus = () => {
+    if (completed === total && total > 0) return "complete";
+    if (progress >= 60) return "high";
+    if (progress >= 30) return "medium";
+    return "low";
+  };
+
+  const status = getStatus();
+  const { icon: Icon, color, title, text } = messages[status];
+
+  const colorClasses = {
+    emerald: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: "text-emerald-400", title: "text-emerald-300" },
+    blue: { bg: "bg-blue-500/10", border: "border-blue-500/20", icon: "text-blue-400", title: "text-blue-300" },
+    amber: { bg: "bg-amber-500/10", border: "border-amber-500/20", icon: "text-amber-400", title: "text-amber-300" },
+    slate: { bg: "bg-slate-500/10", border: "border-slate-500/20", icon: "text-slate-400", title: "text-slate-300" },
+  }[color];
+
+  return (
+    <div className={`flex-1 rounded-xl ${colorClasses.bg} border ${colorClasses.border} p-3`}>
+      <div className="flex items-center gap-2">
+        <div className={`w-7 h-7 rounded-lg ${colorClasses.bg} flex items-center justify-center`}>
+          <Icon className={`w-3.5 h-3.5 ${colorClasses.icon}`} />
+        </div>
+        <div>
+          <p className={`text-[11px] font-bold ${colorClasses.title}`}>{title}</p>
+          <p className="text-[10px] text-slate-400">{text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
 function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) {
@@ -410,7 +482,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
 
           <h2 className="text-sm font-bold text-white truncate">{resume.filename}</h2>
 
-          {/* Gamified Score Display */}
+          {/* Gamified Score Display with Feedback Box */}
           <div className="mt-4 flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -430,6 +502,9 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
                 <p className="text-[10px] text-slate-400">Aktueller Score</p>
               </div>
             </div>
+
+            {/* Feedback Box based on checklist completion */}
+            <FeedbackBox gamification={gamification} />
           </div>
         </div>
       </div>
