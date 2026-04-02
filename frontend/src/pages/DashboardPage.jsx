@@ -79,6 +79,36 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Top Widget: Profile Strength Score */}
+            <div className="w-full rounded-xl border border-blue-400/20 bg-blue-500/5 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15">
+                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 10C11.2091 10 13 8.20914 13 6C13 3.79086 11.2091 2 9 2C6.79086 2 5 3.79086 5 6C5 8.20914 6.79086 10 9 10Z" stroke="#60A5FA" strokeWidth="1.5"/>
+                      <path d="M2 16C2 13.5 4 11 9 11C14 11 16 13.5 16 16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-xs font-semibold text-blue-300">Profil-Stärke</p>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">94%</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Lebenslauf</span>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Fähigkeiten</span>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Präferenzen</span>
+                  <span className="text-amber-400">2/3</span>
+                </div>
+              </div>
+            </div>
+
             {/* New Performance Widget */}
             <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
               <div className="flex items-center justify-between mb-3">
@@ -96,6 +126,29 @@ export default function DashboardPage() {
                   style={{ width: '87%' }}
                 />
               </div>
+            </div>
+
+            {/* Bottom Widget: Next Milestone Preview */}
+            <div className="w-full rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/15">
+                  <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+                    <path d="M9 2L11.5 6.5L16.5 7.5L13 11L14 16L9 13.5L4 16L5 11L1.5 7.5L6.5 6.5L9 2Z" stroke="#A78BFA" strokeWidth="1.5" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p className="text-xs font-semibold text-violet-300">Nächster Meilenstein</p>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white">"Experte"</span>
+                <span className="text-[10px] text-slate-400">90 Pkt.</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1C2333]">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-violet-400 to-violet-500"
+                  style={{ width: '72%' }}
+                />
+              </div>
+              <p className="mt-2 text-[10px] text-slate-400">Noch 3 Punkte erforderlich</p>
             </div>
           </div>
         </section>
