@@ -188,28 +188,35 @@ function RadarChart({ skills, size = 220 }) {
         strokeLinejoin="round"
       />
 
-      {/* Data dots with labels */}
+      {/* Data dots only — labels moved outside SVG */}
       {dataPts.map((p, i) => (
         <g key={i}>
           <circle cx={p[0]} cy={p[1]} r="6" fill="none" stroke={skills[i].color} strokeWidth="2" opacity="0.4" />
           <circle cx={p[0]} cy={p[1]} r="4" fill="#0f172a" stroke={skills[i].color} strokeWidth="2" />
           <circle cx={p[0]} cy={p[1]} r="2" fill={skills[i].color} />
-          {/* Skill label */}
-          <text
-            x={p[0] + (p[0] > cx ? 12 : -12)}
-            y={p[1]}
-            fill={skills[i].color}
-            fontSize="10"
-            fontWeight="600"
-            textAnchor={p[0] > cx ? "start" : "end"}
-            dominantBaseline="middle"
-          >
-            {skills[i].label}
-          </text>
         </g>
       ))}
 
-      {/* Labels removed - kept only grid structure */}
+      {/* Labels positioned outside the pentagon at fixed radius */}
+      {skills.map((s, i) => {
+        const labelR = maxR + 28;
+        const lx = cx + labelR * Math.cos(angles[i]);
+        const ly = cy + labelR * Math.sin(angles[i]);
+        return (
+          <text
+            key={`label-${i}`}
+            x={lx}
+            y={ly}
+            fill={s.color}
+            fontSize="11"
+            fontWeight="600"
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {s.label}
+          </text>
+        );
+      })}
     </svg>
   );
 }
@@ -463,7 +470,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
         style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}
       >
         <div className="p-4 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-white/10 to-transparent" />
+          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent" />
           <div className="relative z-10 flex items-center justify-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform">
