@@ -548,7 +548,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
         style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}
       >
         <div className="p-4 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent" />
+          <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-[#3b82f6]/10 to-transparent" />
           <div className="relative z-10 flex items-center justify-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform">
