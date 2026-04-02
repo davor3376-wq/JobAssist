@@ -3,35 +3,35 @@ import { ArrowLeft } from "lucide-react";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-[#0A0A0A]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-20">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors mb-8">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-8">
           <ArrowLeft className="w-4 h-4" /> Zurück
         </Link>
 
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Datenschutzerklärung</h1>
-        <p className="text-sm text-gray-400 mb-10">Stand: 23. März 2026 — gemäß DSGVO (EU-Datenschutz-Grundverordnung)</p>
+        <h1 className="text-3xl font-extrabold text-white mb-2">Datenschutzerklärung</h1>
+        <p className="text-sm text-slate-500 mb-10">Stand: 23. März 2026 — gemäß DSGVO (EU-Datenschutz-Grundverordnung)</p>
 
-        <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-gray-700">
-          <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">1. Verantwortliche Stelle</h2>
+        <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-slate-300">
+          <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-white mb-3">1. Verantwortliche Stelle</h2>
             <p>
-              Verantwortlich für die Datenverarbeitung ist der Betreiber von JobAssist (siehe <Link to="/impressum" className="text-blue-600 hover:underline">Impressum</Link>). Bei Fragen zum Datenschutz erreichst du uns unter <strong>jobassistsupport@gmail.com</strong>.
+              Verantwortlich für die Datenverarbeitung ist der Betreiber von JobAssist (siehe <Link to="/impressum" className="text-blue-400 hover:underline">Impressum</Link>). Bei Fragen zum Datenschutz erreichst du uns unter <strong className="text-white">info@jobassist.tech</strong>.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">2. Welche Daten wir erheben</h2>
+          <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-white mb-3">2. Welche Daten wir erheben</h2>
             <p>Wir verarbeiten folgende personenbezogene Daten:</p>
 
-            <h3 className="text-base font-semibold text-gray-800 mt-4 mb-2">a) Registrierungsdaten</h3>
+            <h3 className="text-base font-semibold text-white mt-4 mb-2">a) Registrierungsdaten</h3>
             <ul className="list-disc pl-5 space-y-1">
               <li>E-Mail-Adresse</li>
               <li>Name (optional)</li>
               <li>Passwort (verschlüsselt gespeichert, bcrypt)</li>
             </ul>
 
-            <h3 className="text-base font-semibold text-gray-800 mt-4 mb-2">b) Bewerbungsdaten</h3>
+            <h3 className="text-base font-semibold text-white mt-4 mb-2">b) Bewerbungsdaten</h3>
             <ul className="list-disc pl-5 space-y-1">
               <li>Hochgeladene Lebensläufe (PDF-Dateien)</li>
               <li>Generierte Motivationsschreiben</li>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
               <li>Jobsuche-Präferenzen und Suchverläufe</li>
             </ul>
 
-            <h3 className="text-base font-semibold text-gray-800 mt-4 mb-2">c) Nutzungsdaten</h3>
+            <h3 className="text-base font-semibold text-white mt-4 mb-2">c) Nutzungsdaten</h3>
             <ul className="list-disc pl-5 space-y-1">
               <li>Feature-Nutzung (Anzahl Analysen, Anschreiben, Chat-Nachrichten)</li>
               <li>Geräte- und Browser-Informationen (User-Agent)</li>
