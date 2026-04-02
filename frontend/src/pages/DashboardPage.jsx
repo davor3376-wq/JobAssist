@@ -20,22 +20,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-12 gap-[1px] overflow-hidden rounded-[18px] border border-white/10 bg-white/10">
         <div className="col-span-12 flex items-center justify-between bg-[#090B0F] px-6 py-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#3B82F6] shadow-[0_0_30px_rgba(59,130,246,0.28)]">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path d="M5 12V8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M10 14V6" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-                <path d="M15 11V9" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-            </div>
-
-            <div>
               <h1 className="text-[15px] font-semibold leading-none text-white sm:text-[17px]">
                 Markt-Kompatibilität
               </h1>
@@ -53,11 +37,12 @@ export default function DashboardPage() {
         <section className="col-span-12 bg-[#090B0F] p-6 md:col-span-3">
           <div className="flex h-full flex-col items-center justify-center gap-4">
             {/* Progress circle showing 63% - uses conic-gradient for accurate visual */}
-          <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
+          <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)] shadow-[0_0_60px_rgba(16,185,129,0.3),0_0_120px_rgba(16,185,129,0.15)] animate-pulse">
             <div
-              className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[32px] font-bold text-emerald-400 relative overflow-hidden"
+              className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[32px] font-bold text-emerald-400 relative overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.4),inset_0_0_20px_rgba(16,185,129,0.1)]"
             >
-              <span className="relative z-10 text-[42px] font-extrabold tracking-tight">63%</span>
+              <span className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 via-transparent to-emerald-400/20 animate-pulse"></span>
+              <span className="relative z-10 text-[42px] font-extrabold tracking-tight drop-shadow-[0_0_10px_rgba(52,226,161,0.8)]">63%</span>
             </div>
           </div>
 
@@ -91,6 +76,25 @@ export default function DashboardPage() {
               <div className="rounded-xl border border-blue-400/10 bg-[#0A0C12] px-3 py-2.5 text-center">
                 <div className="text-base font-semibold text-blue-300">21</div>
                 <p className="text-[10px] text-slate-500">Analysiert</p>
+              </div>
+            </div>
+
+            {/* New Performance Widget */}
+            <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-emerald-300">Performance Index</p>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">TOP 15%</span>
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="text-3xl font-bold text-white">87</span>
+                <span className="text-xs text-emerald-400 mb-1">↑ 12%</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">Besser als 85% aller Bewerber</p>
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#1C2333]">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_10px_rgba(52,226,161,0.5)]"
+                  style={{ width: '87%' }}
+                />
               </div>
             </div>
           </div>
@@ -256,55 +260,52 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Application Progress Timeline Widget */}
+        {/* Weekly Goals & Achievements Widget */}
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
           <div className="rounded-xl border border-slate-700/50 bg-[#0A0C12] p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-white">Dein Fortschritt</h3>
-                <p className="text-xs text-slate-400 mt-1">Letzte 30 Tage in Bewegung</p>
+                <h3 className="text-sm font-semibold text-white">Wochenziele & Erfolge</h3>
+                <p className="text-xs text-slate-400 mt-1">Deine aktiven Herausforderungen</p>
               </div>
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
-                +12% Aktivität
+              <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
+                3/5 erledigt
               </span>
             </div>
             
-            {/* Progress bars */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Beworben</span>
-                  <span className="text-white font-semibold">5</span>
+            {/* Achievement cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 10L8 14L16 6" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-                <div className="h-2 rounded-full bg-[#1C2333]">
-                  <div className="h-full rounded-full bg-blue-500" style={{ width: '25%' }} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Gespeichert</span>
-                  <span className="text-white font-semibold">16</span>
-                </div>
-                <div className="h-2 rounded-full bg-[#1C2333]">
-                  <div className="h-full rounded-full bg-slate-500" style={{ width: '80%' }} />
+                <div>
+                  <p className="text-sm font-semibold text-white">5 Analysen</p>
+                  <p className="text-xs text-emerald-400">Abgeschlossen</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Rücklauf</span>
-                  <span className="text-indigo-400 font-semibold">24%</span>
+              <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 bg-blue-400/5 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-                <div className="h-2 rounded-full bg-[#1C2333]">
-                  <div className="h-full rounded-full bg-indigo-500" style={{ width: '24%' }} />
+                <div>
+                  <p className="text-sm font-semibold text-white">Top-Bewerber</p>
+                  <p className="text-xs text-blue-400">In der Top 20%</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Interviews</span>
-                  <span className="text-violet-400 font-semibold">1</span>
+              <div className="flex items-center gap-3 rounded-xl border border-violet-400/20 bg-violet-400/5 p-4 opacity-60">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 6V14M6 10H14" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                 </div>
-                <div className="h-2 rounded-full bg-[#1C2333]">
-                  <div className="h-full rounded-full bg-violet-500" style={{ width: '5%' }} />
+                <div>
+                  <p className="text-sm font-semibold text-white">3 Bewerbungen</p>
+                  <p className="text-xs text-violet-400">Noch 2 offen</p>
                 </div>
               </div>
             </div>
@@ -351,7 +352,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div onClick={() => navigate('/applications')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
+            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M9 2L2 7V16H6V11H12V16H16V7L9 2Z" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
