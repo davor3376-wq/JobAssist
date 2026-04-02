@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   Upload, FileText, Sparkles, Brain,
   Clock, CheckCircle, X, Trophy, Target,
-  TrendingUp, ArrowUpRight,
+  TrendingUp,
   Edit3
 } from "lucide-react";
 import { resumeApi } from "../services/api";
@@ -454,12 +454,6 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
               </div>
               <div>
                 <p className="text-[10px] text-slate-400">Aktueller Score</p>
-                {potentialPoints > 0 && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                    <span className="text-[11px] font-semibold text-emerald-400">+{potentialPoints}% möglich</span>
-                  </div>
-                )}
               </div>
             </div>
 
