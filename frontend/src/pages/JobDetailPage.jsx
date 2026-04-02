@@ -935,12 +935,21 @@ export default function JobDetailPage() {
                 </button>
                 {(() => {
                   const companyEmail = parseJson(job.research_data)?.contact_info?.email;
-                  if (!companyEmail) return null;
                   const subject = encodeURIComponent(`Bewerbung als ${job.role || "Kandidat"} – ${job.company || ""}`);
                   const body = encodeURIComponent(job.cover_letter || "");
+                  if (companyEmail) {
+                    return (
+                      <a
+                        href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
+                        className="flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors min-h-[44px]"
+                      >
+                        <Mail className="h-3.5 w-3.5" /> E-Mail senden
+                      </a>
+                    );
+                  }
                   return (
                     <a
-                      href={`mailto:${companyEmail}?subject=${subject}&body=${body}`}
+                      href={`mailto:?subject=${subject}&body=${body}`}
                       className="flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors min-h-[44px]"
                     >
                       <Mail className="h-3.5 w-3.5" /> E-Mail Entwurf

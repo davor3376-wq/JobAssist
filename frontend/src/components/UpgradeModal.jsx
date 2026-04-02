@@ -50,24 +50,24 @@ export default function UpgradeModal() {
       onClick={() => setData(null)}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border border-[#1e293b] bg-[#0f172a] p-6 shadow-2xl shadow-black/60"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
             <Zap className="h-6 w-6 text-white" />
           </div>
-          <button onClick={() => setData(null)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+          <button onClick={() => setData(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-[#1e293b]">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <h2 className="mb-2 text-xl font-bold text-gray-900">Limit erreicht</h2>
-        <p className="mb-4 text-gray-600">
-          Du hast <strong>{data.used}/{data.limit}</strong> {featureLabel} in deinem{" "}
-          <strong>{data.plan === "basic" ? "Basic" : data.plan}</strong>-Plan verwendet.
+        <h2 className="mb-2 text-xl font-bold text-white">Limit erreicht</h2>
+        <p className="mb-4 text-slate-300">
+          Du hast <strong className="text-white">{data.used}/{data.limit}</strong> {featureLabel} in deinem{" "}
+          <strong className="text-white">{data.plan === "basic" ? "Basic" : data.plan}</strong>-Plan verwendet.
         </p>
-        <p className="mb-6 text-sm text-gray-500">
+        <p className="mb-6 text-sm text-slate-400">
           Upgrade auf Pro oder Max, um mehr Funktionen freizuschalten.
         </p>
 
@@ -83,7 +83,7 @@ export default function UpgradeModal() {
           </button>
           <button
             onClick={() => setData(null)}
-            className="rounded-xl px-4 py-2.5 font-medium text-gray-600 transition-colors hover:bg-gray-100"
+            className="rounded-xl px-4 py-2.5 font-medium text-slate-300 transition-colors hover:bg-[#1e293b]"
           >
             Später
           </button>

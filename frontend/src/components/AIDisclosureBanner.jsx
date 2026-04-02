@@ -27,12 +27,12 @@ export default function AIDisclosureBanner({ feature }) {
   const info = CONFIGS[feature];
   if (!info) return null;
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm">
-      <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+    <div className="flex items-start gap-2 rounded-xl border border-[#1e293b] bg-[#0f172a] p-3 text-sm">
+      <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
       <div>
-        <strong className="text-blue-800">{info.title}</strong>
-        <p className="mt-0.5 text-blue-700">{info.text}</p>
-        <p className="mt-1 text-[11px] text-blue-400">{info.article}</p>
+        <strong className="text-emerald-300">{info.title}</strong>
+        <p className="mt-0.5 text-slate-300">{info.text}</p>
+        <p className="mt-1 text-[11px] text-emerald-400">{info.article}</p>
       </div>
     </div>
   );
