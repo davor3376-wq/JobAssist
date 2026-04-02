@@ -420,7 +420,7 @@ export default function SettingsPage() {
                       <input
                         {...field}
                         className={INPUT_CLS}
-                        placeholder="Österreich"
+                        placeholder="z.B. Wien, Graz"
                         value={field.value || ""}
                       />
                     </div>
@@ -429,8 +429,10 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Danger Zone */}
-            <DeleteAccountSection />
+            {/* Danger Zone - moves to bottom on mobile */}
+            <div className="order-last md:order-none">
+              <DeleteAccountSection />
+            </div>
           </div>
 
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
