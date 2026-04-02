@@ -1,4 +1,5 @@
 import React from 'react';
+import { Flame, TrendingUp, ArrowRight } from 'lucide-react';
 
 export default function DashboardPage() {
   const bars = [
@@ -48,7 +49,7 @@ export default function DashboardPage() {
         </div>
 
         <section className="col-span-12 bg-[#090B0F] p-6 md:col-span-3">
-          <div className="flex h-full flex-col items-center justify-center gap-5">
+          <div className="flex h-full flex-col items-center justify-center gap-4">
             <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
               <div
                 className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[9px] border-[#34E2A1] bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)]"
@@ -58,6 +59,24 @@ export default function DashboardPage() {
                 }}
               >
                 63%
+              </div>
+            </div>
+
+            {/* Momentum indicators */}
+            <div className="w-full space-y-2">
+              <div className="flex items-center justify-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/8 px-3 py-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-blue-400" />
+                <span className="text-xs font-semibold text-blue-300">+2% seit gestern</span>
+              </div>
+              <p className="text-center text-xs text-slate-400">
+                <span className="text-emerald-400 font-medium">Noch 7%</span> bis "Sehr Gut"
+              </p>
+              {/* Progress to next milestone */}
+              <div className="mx-auto h-1.5 w-24 overflow-hidden rounded-full bg-[#1C2333]">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-[#34E2A1] to-[#10B981]"
+                  style={{ width: '90%' }}
+                />
               </div>
             </div>
 
@@ -84,9 +103,31 @@ export default function DashboardPage() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
                 Aktivitätsverlauf
               </h2>
-              <div className="rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1.5 text-xs font-semibold text-emerald-300">
-                +2 heute
+              <div className="flex items-center gap-2">
+                {/* Daily Streak indicator */}
+                <div className="flex items-center gap-1.5 rounded-full border border-orange-400/20 bg-orange-400/10 px-2.5 py-1">
+                  <Flame className="h-3.5 w-3.5 text-orange-400" />
+                  <span className="text-[11px] font-bold text-orange-300">5 Tage</span>
+                </div>
+                <div className="rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                  +2 heute
+                </div>
               </div>
+            </div>
+
+            {/* Daily goal progress */}
+            <div className="mt-3 rounded-xl border border-[#233250] bg-[#0A0C12] p-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-semibold text-slate-300">Tagesziel: 3 Analysen</p>
+                <span className="text-[11px] font-bold text-blue-400">2/3</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[#1C2333]">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#60A5FA]"
+                  style={{ width: '66%' }}
+                />
+              </div>
+              <p className="mt-1.5 text-[10px] text-slate-500">Noch 1 Analyse für deine Belohnung</p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
@@ -135,37 +176,90 @@ export default function DashboardPage() {
         </section>
 
         <section className="col-span-12 bg-[#090B0F] md:col-span-4">
-          <div className="grid h-full grid-cols-2 grid-rows-2">
-            <div className="flex flex-col justify-center border-r border-b border-white/10 px-6 py-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Bewerben
+          {/* Visual Funnel - Application Journey */}
+          <div className="flex h-full flex-col">
+            {/* Funnel header */}
+            <div className="border-b border-white/10 px-6 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Deine Bewerbungsreise
               </p>
-              <div className="mt-3 text-[38px] font-semibold leading-none text-white">5</div>
-              <p className="mt-3 text-[17px] text-slate-400">von 21 Stellen</p>
             </div>
+            
+            {/* Funnel steps */}
+            <div className="flex-1 flex flex-col">
+              {/* Step 1: Applied */}
+              <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-400">
+                      Beworben
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-1">
+                      <span className="text-[32px] font-semibold leading-none text-white">5</span>
+                      <span className="text-sm text-slate-500">/ 21 Stellen</span>
+                    </div>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+                    <ArrowRight className="h-5 w-5 text-blue-400" />
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">Erster Schritt getan</p>
+              </div>
 
-            <div className="flex flex-col justify-center border-b border-white/10 px-6 py-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Rücklauf
-              </p>
-              <div className="mt-3 text-[38px] font-semibold leading-none text-white">24%</div>
-              <p className="mt-3 text-[17px] text-slate-400">bereits aktiv verfolgt</p>
-            </div>
+              {/* Step 2: Response Rate */}
+              <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-indigo-400">
+                      Rücklauf
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-1">
+                      <span className="text-[32px] font-semibold leading-none text-white">24%</span>
+                    </div>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10">
+                    <ArrowRight className="h-5 w-5 text-indigo-400" />
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">Aktiv verfolgt</p>
+              </div>
 
-            <div className="flex flex-col justify-center border-r border-white/10 px-6 py-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Interviews
-              </p>
-              <div className="mt-3 text-[38px] font-semibold leading-none text-white">1</div>
-              <p className="mt-3 text-[17px] text-slate-400">aktive Gespräche</p>
-            </div>
+              {/* Step 3: Interviews */}
+              <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-violet-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-400">
+                      Interviews
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-1">
+                      <span className="text-[32px] font-semibold leading-none text-white">1</span>
+                    </div>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10">
+                    <ArrowRight className="h-5 w-5 text-violet-400" />
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">Aktive Gespräche</p>
+              </div>
 
-            <div className="flex flex-col justify-center px-6 py-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Offen
-              </p>
-              <div className="mt-3 text-[38px] font-semibold leading-none text-white">16</div>
-              <p className="mt-3 text-[17px] text-slate-400">noch nicht beworben</p>
+              {/* Step 4: Remaining */}
+              <div className="group relative flex flex-1 flex-col justify-center px-6 py-5 hover:bg-white/[0.02] transition-colors">
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-slate-500 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      Offen
+                    </p>
+                    <div className="mt-1 flex items-baseline gap-1">
+                      <span className="text-[32px] font-semibold leading-none text-slate-300">16</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Noch nicht beworben</p>
+              </div>
             </div>
           </div>
         </section>
@@ -181,15 +275,19 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-12 gap-3">
-            <div className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-500/15 bg-blue-500/5 p-4 md:col-span-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/15">
+            {/* Primary CTA - Enhanced visibility with glow and filled background */}
+            <div className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 p-4 shadow-[0_0_30px_rgba(59,130,246,0.15)] md:col-span-4 cursor-pointer hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-shadow">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 shadow-md shadow-blue-500/30">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M9 2v14M2 9h14" stroke="#60A5FA" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M9 2v14M2 9h14" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Top-Matches bewerben</p>
-                <p className="mt-0.5 text-xs text-slate-400">3 Stellen mit &gt;80% Übereinstimmung</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-white">3 neue Matches heute</p>
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEU</span>
+                </div>
+                <p className="mt-0.5 text-xs text-blue-200/80">Top-Matches &gt;80% Übereinstimmung – Jetzt bewerben!</p>
               </div>
             </div>
 
@@ -200,8 +298,8 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Profil optimieren</p>
-                <p className="mt-0.5 text-xs text-slate-400">+12% Match durch Skill-Update</p>
+                <p className="text-sm font-semibold text-white">Profilboost aktivieren</p>
+                <p className="mt-0.5 text-xs text-slate-400">+12% Match-Chance heute noch</p>
               </div>
             </div>
 
@@ -213,8 +311,8 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Interview vorbereiten</p>
-                <p className="mt-0.5 text-xs text-slate-400">1 aktives Gespräch steht an</p>
+                <p className="text-sm font-semibold text-white">Interview morgen vorbereiten</p>
+                <p className="mt-0.5 text-xs text-slate-400">1 Gespräch in 24 Stunden</p>
               </div>
             </div>
           </div>
