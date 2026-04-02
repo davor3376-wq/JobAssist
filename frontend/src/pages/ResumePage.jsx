@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Upload, FileText, Sparkles, Brain,
-  Eye, Clock, CheckCircle, X, Trophy, Target,
+  Clock, CheckCircle, X, Trophy, Target,
   TrendingUp, ArrowUpRight,
-  AlertCircle, Edit3
+  Edit3
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
@@ -529,161 +529,6 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
   );
 }
 
-// ─── Heat-map Live Preview ────────────────────────────────────────────────────
-
-
-function ATSInsights({ resume, skills, gamification }) {
-  if (!resume) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
-        <div className="w-12 h-12 rounded-2xl bg-[#08090c] border border-[#171a21] flex items-center justify-center">
-          <Eye className="w-6 h-6 text-slate-600" />
-        </div>
-        <p className="text-xs text-slate-400 font-medium">Wähle einen Lebenslauf aus</p>
-      </div>
-    );
-  }
-
-  const topSkill = [...skills].sort((a, b) => b.value - a.value)[0];
-  const weakSkills = [...skills].filter(s => s.value < 50);
-  const { currentScore, projectedScore, potentialPoints } = gamification || {};
-  const displayScore = currentScore || Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
-
-  return (
-    <div className="flex flex-col h-full gap-3">
-      {/* Header with explanation */}
-      <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
-          <Eye className="w-3.5 h-3.5 text-white" />
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-white leading-none">ATS-Insights</h3>
-          <p className="text-[9px] text-slate-400 mt-0.5">Bewerber-Tracking-System Analyse</p>
-        </div>
-      </div>
-
-      {/* What is ATS? - clearer explanation */}
-      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3">
-        <p className="text-[10px] text-slate-300 leading-relaxed">
-          <span className="text-blue-400 font-semibold">ATS-Fokus</span> zeigt, wie gut dein Lebenslauf von automatischen Bewerber-Systemen erkannt wird. Höhere Werte = bessere Chancen vor dem ersten Menschenkontakt.
-        </p>
-      </div>
-
-      {/* Score summary - uses gamification currentScore */}
-      <div className="rounded-xl bg-gradient-to-br from-[#0d1117] to-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-semibold text-slate-400">Aktueller Score</span>
-          <span className={`text-xs font-bold ${displayScore >= 70 ? "text-emerald-400" : displayScore >= 50 ? "text-amber-400" : "text-red-400"}`}>
-            {displayScore}%
-          </span>
-        </div>
-        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${displayScore}%`, backgroundColor: displayScore >= 70 ? "#10b981" : displayScore >= 50 ? "#f59e0b" : "#ef4444" }}
-          />
-        </div>
-
-        {/* Goal system - shows potential */}
-        {potentialPoints > 0 && (
-          <div className="mt-3 pt-3 border-t border-slate-800/50">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-slate-400">Nach Optimierung</span>
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                {projectedScore}%
-              </span>
-            </div>
-            <p className="mt-1 text-[9px] text-slate-500">
-              Noch <span className="text-amber-400 font-semibold">{potentialPoints}%</span> durch Checkliste möglich
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Missing Keywords - compact */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 min-h-0">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-semibold text-slate-400">Fehlende Keywords</p>
-          <span className="text-[9px] text-amber-400 font-medium flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            {skills.filter(s => s.value < 70).length > 0 ? `${skills.filter(s => s.value < 70).length} Bereiche` : "Optimal"}
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          {(() => {
-            const criticalSkill = [...skills].sort((a, b) => a.value - b.value)[0];
-            if (!criticalSkill || criticalSkill.value >= 70) {
-              return (
-                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2">
-                  <p className="text-[9px] text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle className="w-3 h-3" />
-                    Alle Keywords vorhanden!
-                  </p>
-                </div>
-              );
-            }
-            return (
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: criticalSkill.color }} />
-                  <span className="text-[9px] font-semibold text-slate-300">{criticalSkill.label}</span>
-                  <span className="text-[9px] text-slate-500 ml-auto">{criticalSkill.value}%</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {criticalSkill.missingKeywords.slice(0, 3).map((kw, i) => (
-                    <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300">
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Strengths & Weaknesses */}
-      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
-        <p className="text-[10px] font-semibold text-slate-400 mb-2">Stärken & Schwächen</p>
-
-        <div className="space-y-2">
-          {/* Top strength */}
-          {topSkill && topSkill.value >= 60 && (
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[9px] font-semibold text-emerald-400">Stärke: {topSkill.label}</span>
-              </div>
-              <p className="text-[8px] text-slate-400">Dieser Bereich ist gut ausgeprägt und wird von ATS-Systemen erkannt.</p>
-            </div>
-          )}
-
-          {/* Weak areas */}
-          {weakSkills.length > 0 ? (
-            weakSkills.slice(0, 1).map(skill => (
-              <div key={skill.key} className="rounded-lg border border-red-500/20 bg-red-500/5 p-2.5">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                  <span className="text-[9px] font-semibold text-red-400">Optimieren: {skill.label}</span>
-                </div>
-                <p className="text-[8px] text-slate-400">
-                  Ergänze {skill.label.toLowerCase()} für bessere ATS-Erkennung.
-                </p>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
-              <p className="text-[9px] text-emerald-400 font-medium">Alle Bereiche sind gut abgedeckt!</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ResumePage() {
@@ -784,33 +629,11 @@ export default function ResumePage() {
       {isLoading ? (
         <ListSkeleton rows={3} />
       ) : (
-        /* ── 3-column workspace ─────────────────────────────────────────────── */
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] xl:grid-cols-[300px_1fr_320px] gap-4 flex-1">
+        /* ── 2-column workspace ─────────────────────────────────────────────── */
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr] gap-4 flex-1">
 
           {/* ── LEFT: Document List + Info ──────────────────────────────── */}
           <div className="flex flex-col gap-3">
-            {/* Info card - at top */}
-            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-                <p className="text-[11px] font-bold text-emerald-300">KI-Analyse Vorteile</p>
-              </div>
-              <ul className="space-y-2">
-                {[
-                  "Automatische Keyword-Erkennung",
-                  "ATS-Kompatibilitäts-Check",
-                  "Verbesserungsvorschläge in Echtzeit",
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-center gap-2 text-[10px] text-slate-400">
-                    <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             <UploadZone getRootProps={getRootProps} getInputProps={getInputProps} isDragActive={isDragActive} uploading={uploading} />
 
             {resumes.length === 0 ? (
@@ -837,6 +660,28 @@ export default function ResumePage() {
                 ))}
               </div>
             )}
+
+            {/* Info card - under Dokumente */}
+            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-4 mt-auto">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+                <p className="text-[11px] font-bold text-emerald-300">KI-Analyse Vorteile</p>
+              </div>
+              <ul className="space-y-2">
+                {[
+                  "Automatische Keyword-Erkennung",
+                  "ATS-Kompatibilitäts-Check",
+                  "Verbesserungsvorschläge in Echtzeit",
+                ].map((benefit, i) => (
+                  <li key={i} className="flex items-center gap-2 text-[10px] text-slate-400">
+                    <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
@@ -846,15 +691,6 @@ export default function ResumePage() {
               skills={skills}
               gamification={gamification}
               onImproveClick={handleImproveClick}
-            />
-          </div>
-
-          {/* ── RIGHT: ATS Insights ─────────────────────────────────────────── */}
-          <div className="hidden lg:flex flex-col">
-            <ATSInsights
-              resume={selectedResume}
-              skills={skills}
-              gamification={gamification}
             />
           </div>
         </div>
