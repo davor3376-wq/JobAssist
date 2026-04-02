@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  Upload, FileText, Sparkles, Zap, Brain,
-  Eye, Clock, CheckCircle, X,
+  Upload, FileText, Sparkles, Brain,
+  Eye, Clock, CheckCircle, X, Trophy, Target,
+  TrendingUp, History, ChevronRight, ArrowUpRight,
+  AlertCircle, Edit3
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
@@ -35,32 +36,37 @@ const SKILL_DEFS = [
   {
     key: "tech",
     label: "Tech Skills",
-    color: "#7c3aed",
+    color: "#a855f7",
     keywords: ["python","java","javascript","typescript","sql","excel","software","system","data","api","react","node","html","css","php","c++","c#","aws","azure","docker","git"],
+    missingKeywords: ["Kubernetes", "Terraform", "GraphQL", "Redis", "MongoDB"],
   },
   {
     key: "exp",
     label: "Erfahrung",
-    color: "#0ea5e9",
+    color: "#38bdf8",
     keywords: ["jahre","years","erfahrung","experience","projekt","project","team","managed","led","developed","koordiniert","verantwortlich","geleitet","aufgebaut"],
+    missingKeywords: ["5+ Jahre", "Team-Lead", "Agile", "Scrum", "Stakeholder"],
   },
   {
     key: "edu",
     label: "Ausbildung",
-    color: "#10b981",
+    color: "#34d399",
     keywords: ["bachelor","master","mba","phd","studium","universität","university","abschluss","degree","zertifikat","certificate","fh","hochschule","htl","berufsschule"],
+    missingKeywords: ["Zertifizierung", "Weiterbildung", "Bootcamp", "Online-Kurs"],
   },
   {
     key: "soft",
     label: "Soft Skills",
-    color: "#f59e0b",
+    color: "#fbbf24",
     keywords: ["kommunikation","communication","teamwork","leadership","führung","präsentation","analytisch","problem","lösungsorientiert","selbstständig","kreativ","motiviert"],
+    missingKeywords: ["Konfliktlösung", "Verhandlung", "Mentoring", "Remote-Arbeit"],
   },
   {
     key: "lang",
     label: "Sprachen",
-    color: "#ec4899",
+    color: "#f472b6",
     keywords: ["deutsch","englisch","english","french","spanisch","italian","language","sprache","c1","c2","b2","b1","native","muttersprache","fließend","fluent"],
+    missingKeywords: ["Business English", "C2-Niveau", "Mehrsprachig"],
   },
 ];
 
@@ -75,6 +81,140 @@ function extractSkillScores(resume) {
     const value = Math.min(97, Math.round(28 + (matches / s.keywords.length) * 68));
     return { ...s, value };
   });
+}
+
+// ─── Gamification: Score Goal System ────────────────────────────────────────
+
+function useGamification(skills) {
+  const [completedTasks, setCompletedTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem("resume_optimization_tasks");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const avgScore = useMemo(() => {
+    return Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
+  }, [skills]);
+
+  const tasks = useMemo(() => [
+    { id: "keywords", label: "Keywords aus Stellenanzeige einfügen", points: 8, icon: Target },
+    { id: "length", label: "Lebenslauf auf 1-2 Seiten kürzen", points: 5, icon: FileText },
+    { id: "achievements", label: "Messbare Erfolge hinzufügen", points: 10, icon: TrendingUp },
+    { id: "format", label: "ATS-freundliches Format wählen", points: 6, icon: CheckCircle },
+    { id: "contact", label: "Kontaktdaten vervollständigen", points: 4, icon: CheckCircle },
+  ], []);
+
+  const potentialPoints = useMemo(() => {
+    return tasks
+      .filter(t => !completedTasks.includes(t.id))
+      .reduce((sum, t) => sum + t.points, 0);
+  }, [tasks, completedTasks]);
+
+  const projectedScore = Math.min(100, avgScore + potentialPoints);
+
+  const toggleTask = useCallback((taskId) => {
+    setCompletedTasks(prev => {
+      const next = prev.includes(taskId)
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId];
+      try {
+        localStorage.setItem("resume_optimization_tasks", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  return { avgScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask };
+}
+
+// ─── Animated Score Display ───────────────────────────────────────────────────
+
+function AnimatedScore({ current, target, duration = 600 }) {
+  const [display, setDisplay] = useState(current);
+
+  useEffect(() => {
+    setDisplay(current);
+  }, [current]);
+
+  useEffect(() => {
+    let animationId;
+    const start = display;
+    const diff = target - start;
+    const startTime = performance.now();
+
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(start + diff * easeOut));
+
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [target, duration, display]);
+
+  return <span>{display}%</span>;
+}
+
+// ─── History Sidebar ──────────────────────────────────────────────────────────
+
+function HistorySidebar() {
+  const history = [
+    { version: "v2", date: "Heute", score: 75, change: "+12%", improvements: ["Keywords optimiert", "Format verbessert"] },
+    { version: "v1", date: "Vor 3 Tagen", score: 63, change: null, improvements: ["Erste Version"] },
+  ];
+
+  return (
+    <div className="rounded-xl bg-[#08090c]/80 border border-[#171a21] p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 rounded-lg bg-indigo-500/15 flex items-center justify-center">
+          <History className="w-3.5 h-3.5 text-indigo-400" />
+        </div>
+        <p className="text-[11px] font-bold text-slate-300">Versionen-Historie</p>
+      </div>
+
+      <div className="space-y-3">
+        {history.map((item, idx) => (
+          <div key={item.version} className={`relative pl-4 ${idx !== history.length - 1 ? "pb-3 border-l border-slate-700/50" : ""}`}>
+            <div className={`absolute left-0 top-1 w-2 h-2 rounded-full -translate-x-[3px] ${idx === 0 ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,226,161,0.5)]" : "bg-slate-600"}`} />
+
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-semibold text-slate-300">{item.version}</span>
+              <span className="text-[9px] text-slate-500">{item.date}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className={`text-[18px] font-bold ${item.score >= 70 ? "text-emerald-400" : item.score >= 50 ? "text-amber-400" : "text-red-400"}`}>
+                {item.score}%
+              </div>
+              {item.change && (
+                <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-0.5">
+                  <TrendingUp className="w-3 h-3" />
+                  {item.change}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-1.5 space-y-0.5">
+              {item.improvements.map((imp, i) => (
+                <p key={i} className="text-[9px] text-slate-500 flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-slate-600" />
+                  {imp}
+                </p>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ─── Radar Chart ──────────────────────────────────────────────────────────────
@@ -111,39 +251,44 @@ function RadarChart({ skills, size = 220 }) {
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
       <defs>
         <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.06" />
+          <stop offset="0%" stopColor="#a855f7" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0.08" />
         </radialGradient>
+        <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#38bdf8" />
+        </linearGradient>
       </defs>
 
-      {/* Grid rings */}
+      {/* Grid rings - dark mode */}
       {[0.25, 0.5, 0.75, 1].map(level => (
-        <polygon key={level} points={polyPts(level)} fill="none" stroke="#e2e8f0" strokeWidth={level === 1 ? 1.5 : 1} />
+        <polygon key={level} points={polyPts(level)} fill="none" stroke="#334155" strokeWidth={level === 1 ? 1.5 : 1} strokeOpacity={0.6} />
       ))}
 
-      {/* Axis spokes */}
+      {/* Axis spokes - dark mode */}
       {angles.map((a, i) => (
-        <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)} stroke="#e2e8f0" strokeWidth="1" />
+        <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)} stroke="#334155" strokeWidth="1" strokeOpacity={0.5} />
       ))}
 
       {/* Data fill */}
       <polygon
         points={dataPts.map(p => p.join(",")).join(" ")}
         fill="url(#radarGrad)"
-        stroke="#7c3aed"
-        strokeWidth="2"
+        stroke="url(#radarStroke)"
+        strokeWidth="2.5"
         strokeLinejoin="round"
       />
 
-      {/* Data dots */}
+      {/* Data dots with glow */}
       {dataPts.map((p, i) => (
         <g key={i}>
-          <circle cx={p[0]} cy={p[1]} r="5" fill="white" stroke="#7c3aed" strokeWidth="2" />
-          <circle cx={p[0]} cy={p[1]} r="2.5" fill="#7c3aed" />
+          <circle cx={p[0]} cy={p[1]} r="6" fill="none" stroke={skills[i].color} strokeWidth="2" opacity="0.4" />
+          <circle cx={p[0]} cy={p[1]} r="4" fill="#0f172a" stroke={skills[i].color} strokeWidth="2" />
+          <circle cx={p[0]} cy={p[1]} r="2" fill={skills[i].color} />
         </g>
       ))}
 
-      {/* Labels */}
+      {/* Labels - neon colors on dark */}
       {skills.map((s, i) => {
         const a = angles[i];
         const x = cx + labelR * Math.cos(a);
@@ -152,7 +297,7 @@ function RadarChart({ skills, size = 220 }) {
           <text
             key={i} x={x} y={y}
             textAnchor={anchor(a)} dominantBaseline={baseline(a)}
-            fontSize="9.5" fontWeight="700" fill="#475569" fontFamily="Inter, sans-serif"
+            fontSize="10" fontWeight="600" fill={s.color} fontFamily="Inter, sans-serif"
             letterSpacing="0.02em"
           >
             {s.label}
@@ -262,7 +407,9 @@ function UploadZone({ getRootProps, getInputProps, isDragActive, uploading }) {
 
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
-function DocumentIntelligence({ resume, skills }) {
+function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) {
+  const { avgScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask } = gamification || {};
+
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
@@ -277,26 +424,125 @@ function DocumentIntelligence({ resume, skills }) {
     );
   }
 
-  const topSkill = [...skills].sort((a, b) => b.value - a.value)[0];
-
   return (
     <div className="flex flex-col h-full gap-4">
-      {/* Panel header */}
+      {/* Panel header with Gamified Score */}
       <div className="rounded-xl bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#08090c_0%,#000000_100%)] p-5 text-white relative overflow-hidden flex-shrink-0 border border-[#171a21]">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 60%)" }} />
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-lg bg-blue-500/12 flex items-center justify-center">
-              <Brain className="w-3.5 h-3.5 text-blue-300" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-blue-500/12 flex items-center justify-center">
+                <Brain className="w-3.5 h-3.5 text-blue-300" />
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-blue-300">Dokumenten-Analyse</span>
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-blue-300">Dokumenten-Analyse</span>
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5">
+              <Trophy className="w-3 h-3 text-emerald-400" />
+              <span className="text-[9px] font-semibold text-emerald-400">Ziel: 85%</span>
+            </div>
           </div>
-          <h2 className="text-sm font-bold text-white truncate mt-1">{resume.filename}</h2>
-          <p className="text-[10px] text-slate-400 mt-0.5">
-            KI-Analyse · Top-Kompetenz: <span className="text-blue-300 font-semibold">{topSkill?.label}</span> ({topSkill?.value}%)
-          </p>
+
+          <h2 className="text-sm font-bold text-white truncate">{resume.filename}</h2>
+
+          {/* Gamified Score Display */}
+          <div className="mt-4 flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
+                  <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#08090c] text-[18px] font-bold text-emerald-400 shadow-[0_0_20px_rgba(52,226,161,0.2)]"
+                    style={{ borderLeftColor: "#1a513e", borderTopColor: "#15382d" }}
+                  >
+                    {avgScore}%
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400">Aktueller Score</p>
+                {potentialPoints > 0 && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[11px] font-semibold text-emerald-400">+{potentialPoints}% möglich</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Potential Score Preview */}
+            {potentialPoints > 0 && (
+              <div className="flex-1 rounded-lg bg-slate-800/50 border border-slate-700/50 p-2.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[9px] text-slate-400">Nach Optimierung</span>
+                  <span className="text-[11px] font-bold text-blue-400">
+                    <AnimatedScore current={avgScore} target={projectedScore} />%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
+                    style={{ width: `${projectedScore}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Interactive Checklist */}
+      {gamification && (
+        <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/12 flex items-center justify-center">
+                <Target className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <span className="text-[11px] font-bold text-slate-300">Optimierungs-Checkliste</span>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-500">
+              {completedTasks?.length || 0}/{tasks?.length || 0} erledigt
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {tasks?.map((task) => {
+              const isCompleted = completedTasks?.includes(task.id);
+              const TaskIcon = task.icon;
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => toggleTask?.(task.id)}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-200 text-left ${
+                    isCompleted
+                      ? "bg-emerald-500/10 border-emerald-500/30"
+                      : "bg-slate-800/30 border-slate-700/50 hover:border-amber-500/30 hover:bg-slate-800/50"
+                  }`}
+                >
+                  <div className={`flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                    isCompleted ? "bg-emerald-500/20" : "bg-slate-700/50"
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <TaskIcon className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[10px] font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
+                      {task.label}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                    isCompleted ? "text-emerald-400 bg-emerald-500/10" : "text-amber-400 bg-amber-500/10"
+                  }`}>
+                    +{task.points}%
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Radar + skills */}
       <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-5 flex flex-col gap-4 min-h-0 overflow-y-auto">
@@ -305,18 +551,18 @@ function DocumentIntelligence({ resume, skills }) {
           <RadarChart skills={skills} size={220} />
         </div>
 
-        {/* Skill bars */}
+        {/* Skill bars with better contrast */}
         <div className="space-y-2.5">
           {[...skills].sort((a, b) => b.value - a.value).map((s) => (
             <div key={s.key}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                  <span className="text-[10px] font-semibold text-slate-600">{s.label}</span>
+                  <span className="text-[11px] font-semibold text-slate-400">{s.label}</span>
                 </div>
-                <span className="text-[10px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
+                <span className="text-[11px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+              <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${s.value}%`, backgroundColor: s.color }}
@@ -327,24 +573,31 @@ function DocumentIntelligence({ resume, skills }) {
         </div>
       </div>
 
-      {/* Tailor CTA */}
-      <div className="rounded-xl overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}>
+      {/* Focus CTA - Single prominent button */}
+      <button
+        onClick={onImproveClick}
+        className="w-full rounded-xl overflow-hidden flex-shrink-0 group"
+        style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}
+      >
         <div className="p-4 relative overflow-hidden">
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.2) 0%, transparent 50%)" }} />
-          <div className="relative z-10 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-extrabold text-white leading-none">Lebenslauf anpassen</p>
-              <p className="text-[10px] text-blue-100 mt-1 leading-snug">KI optimiert deinen Lebenslauf für eine konkrete Stelle</p>
+          <div className="relative z-10 flex items-center justify-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Edit3 className="w-4 h-4 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-extrabold text-white leading-none">Jetzt Score verbessern</p>
+                <p className="text-[10px] text-blue-100 mt-1">In den Bearbeitungsmodus wechseln</p>
+              </div>
             </div>
-            <Link
-              to="/ai-assistant"
-              className="flex-shrink-0 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 transition-colors border border-white/20 rounded-xl px-3 py-2 text-[11px] font-bold text-white whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5" /> Starten
-            </Link>
+            <div className="flex items-center gap-1.5 bg-white/20 group-hover:bg-white/30 transition-colors rounded-lg px-3 py-2">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+              <span className="text-[11px] font-bold text-white">Starten</span>
+            </div>
           </div>
         </div>
-      </div>
+      </button>
     </div>
   );
 }
@@ -353,6 +606,8 @@ function DocumentIntelligence({ resume, skills }) {
 
 
 function ATSInsights({ resume, skills }) {
+  const [expandedSkill, setExpandedSkill] = useState(null);
+
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
@@ -388,27 +643,90 @@ function ATSInsights({ resume, skills }) {
         </p>
       </div>
 
-      {/* Score summary */}
-      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
+      {/* Score summary - with gamification potential */}
+      <div className="rounded-xl bg-gradient-to-br from-[#0d1117] to-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-semibold text-slate-400">Gesamt-Score</span>
-          <span className={`text-xs font-bold ${avgScore >= 70 ? 'text-emerald-400' : avgScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+          <span className="text-[10px] font-semibold text-slate-400">Aktueller Score</span>
+          <span className={`text-xs font-bold ${avgScore >= 70 ? "text-emerald-400" : avgScore >= 50 ? "text-amber-400" : "text-red-400"}`}>
             {avgScore}%
           </span>
         </div>
         <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${avgScore}%`, backgroundColor: avgScore >= 70 ? '#10b981' : avgScore >= 50 ? '#f59e0b' : '#ef4444' }}
+            style={{ width: `${avgScore}%`, backgroundColor: avgScore >= 70 ? "#10b981" : avgScore >= 50 ? "#f59e0b" : "#ef4444" }}
           />
         </div>
-        <p className="mt-2 text-[9px] text-slate-500">
-          {avgScore >= 70 ? 'Ausgezeichnete ATS-Kompatibilität' : avgScore >= 50 ? 'Gute Basis mit Optimierungspotenzial' : 'Wichtige Inhalte fehlen für ATS-Filter'}
-        </p>
+
+        {/* Goal system - potential points */}
+        <div className="mt-3 pt-3 border-t border-slate-800/50">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold text-slate-400">Ziel-Score</span>
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <Trophy className="w-3 h-3" />
+              85%+
+            </span>
+          </div>
+          <p className="mt-1 text-[9px] text-slate-500">
+            Noch <span className="text-amber-400 font-semibold">{Math.max(0, 85 - avgScore)}%</span> bis zur Top-Bewertung
+          </p>
+        </div>
+      </div>
+
+      {/* Missing Keywords - ATS Simulation */}
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 overflow-y-auto">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-semibold text-slate-400">Fehlende Keywords</p>
+          <span className="text-[9px] text-amber-400 font-medium flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Optimieren
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {skills.filter(s => s.value < 70).map(skill => (
+            <div key={skill.key} className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
+              <button
+                onClick={() => setExpandedSkill(expandedSkill === skill.key ? null : skill.key)}
+                className="w-full flex items-center justify-between"
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: skill.color }} />
+                  <span className="text-[9px] font-semibold text-slate-300">{skill.label}</span>
+                </div>
+                <ChevronRight className={`w-3 h-3 text-slate-500 transition-transform ${expandedSkill === skill.key ? "rotate-90" : ""}`} />
+              </button>
+
+              {expandedSkill === skill.key && (
+                <div className="mt-2 pt-2 border-t border-amber-500/10 space-y-1">
+                  <p className="text-[8px] text-slate-500 mb-1">Füge diese Keywords hinzu:</p>
+                  {skill.missingKeywords.map((kw, i) => (
+                    <div key={i} className="flex items-center gap-1.5 text-[9px]">
+                      <div className="w-1 h-1 rounded-full bg-amber-400/60" />
+                      <span className="text-amber-300/80">{kw}</span>
+                    </div>
+                  ))}
+                  <p className="text-[8px] text-slate-500 mt-2 italic">
+                    Nachbessern und erneut hochladen für bessere Ergebnisse
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {skills.filter(s => s.value >= 70).length === skills.length && (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+              <p className="text-[9px] text-emerald-400 font-medium flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3" />
+                Alle wichtigen Keywords vorhanden!
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Strengths & Weaknesses */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 overflow-y-auto">
+      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
         <p className="text-[10px] font-semibold text-slate-400 mb-2">Stärken & Schwächen</p>
 
         <div className="space-y-2">
@@ -425,7 +743,7 @@ function ATSInsights({ resume, skills }) {
 
           {/* Weak areas */}
           {weakSkills.length > 0 ? (
-            weakSkills.slice(0, 2).map(skill => (
+            weakSkills.slice(0, 1).map(skill => (
               <div key={skill.key} className="rounded-lg border border-red-500/20 bg-red-500/5 p-2.5">
                 <div className="flex items-center gap-1.5 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
@@ -442,18 +760,6 @@ function ATSInsights({ resume, skills }) {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Action CTA */}
-      <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 flex-shrink-0">
-        <p className="text-[9px] text-slate-400 mb-2">Verbessere deine Chancen</p>
-        <Link
-          to="/ai-assistant"
-          className="flex items-center justify-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/30 transition-colors rounded-lg py-2 text-[10px] font-semibold text-blue-300"
-        >
-          <Sparkles className="w-3 h-3" />
-          KI-Optimierung starten
-        </Link>
       </div>
     </div>
   );
@@ -532,6 +838,11 @@ export default function ResumePage() {
 
   const selectedResume = resumes.find(r => r.id === selectedId) || null;
   const skills = extractSkillScores(selectedResume);
+  const gamification = useGamification(skills);
+
+  const handleImproveClick = useCallback(() => {
+    window.location.href = "/ai-assistant";
+  }, []);
 
   return (
     <div className="animate-slide-up flex flex-col gap-4" style={{ minHeight: "calc(100svh - 140px)" }}>
@@ -555,9 +866,9 @@ export default function ResumePage() {
         <ListSkeleton rows={3} />
       ) : (
         /* ── 3-column workspace ─────────────────────────────────────────────── */
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[280px_1fr_280px] gap-4 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] xl:grid-cols-[300px_1fr_320px] gap-4 flex-1">
 
-          {/* ── LEFT: Document List ──────────────────────────────────────────── */}
+          {/* ── LEFT: Document List + History ──────────────────────────────── */}
           <div className="flex flex-col gap-3">
             <UploadZone getRootProps={getRootProps} getInputProps={getInputProps} isDragActive={isDragActive} uploading={uploading} />
 
@@ -610,32 +921,18 @@ export default function ResumePage() {
               </div>
             )}
 
-            {/* Optimierungstipps - always show when resumes exist */}
-            {resumes.length > 0 && (
-              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 mt-auto">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                  <p className="text-[10px] font-bold text-blue-300">Optimierungstipps</p>
-                </div>
-                <ul className="space-y-1.5">
-                  {[
-                    "Nutze Keywords aus der Stellenanzeige",
-                    "Halte den Lebenslauf auf 1-2 Seiten",
-                    "Messbare Erfolge steigern den Match-Score",
-                  ].map(tip => (
-                    <li key={tip} className="flex items-start gap-1.5 text-[9px] text-blue-300">
-                      <CheckCircle className="w-2.5 h-2.5 flex-shrink-0 mt-0.5 text-blue-400" />
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* History Sidebar - shows version progression */}
+            {resumes.length > 0 && <HistorySidebar />}
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
           <div className="min-h-[500px]">
-            <DocumentIntelligence resume={selectedResume} skills={skills} />
+            <DocumentIntelligence
+              resume={selectedResume}
+              skills={skills}
+              gamification={gamification}
+              onImproveClick={handleImproveClick}
+            />
           </div>
 
           {/* ── RIGHT: ATS Insights ─────────────────────────────────────────── */}
