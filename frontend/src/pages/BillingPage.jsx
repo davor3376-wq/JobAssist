@@ -185,7 +185,7 @@ function UsageHeroChart({ usage }) {
               {/* Value + limit on same baseline */}
               <text
                 x={cx} y={Math.max(padT + 13, barY - 4)}
-                textAnchor="middle" fontSize="9" fontWeight="700" fill={valColor}
+                textAnchor="middle" fontSize="9" fontWeight="700" fill={isAtLimit ? "#111827" : valColor}
               >
                 {unlimited ? "∞" : `${item.used} / ${item.limit}`}
               </text>
@@ -334,7 +334,7 @@ export default function BillingPage() {
     ? Math.round(limitedItems.reduce((s, u) => s + Math.min(100, (u.used / u.limit) * 100), 0) / limitedItems.length)
     : 0;
   const healthColor  = avgUsagePct >= 80 ? "text-amber-300" : avgUsagePct >= 60 ? "text-blue-300" : "text-emerald-300";
-  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "Im grünen Bereich";
+  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "optimal";
   const comparisonRows = [
     { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
     { row: "Motivationsschreiben / Monat", vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
@@ -465,7 +465,7 @@ export default function BillingPage() {
           </div>
 
           {!isMax && (
-            <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3">
+            <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <Rocket className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <p className="text-xs sm:text-sm text-blue-100 font-medium">
@@ -476,7 +476,7 @@ export default function BillingPage() {
                 onClick={() => navigate("/pricing")}
                 className="flex-shrink-0 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 transition-colors"
               >
-                Mehr erfahren (Alle Vorteile vergleichen)
+                Mehr erfahren
               </button>
             </div>
           )}
@@ -484,156 +484,9 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* ── Plan comparison ───────────────────────────────────────────────────── */}
-      <div>
-        <h3 className="mb-4 text-sm sm:text-base font-bold text-white">Planvergleich</h3>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {PLANS.filter((p) => p.key !== "enterprise").map((p) => {
-            const isCurrent = p.key === planKey;
-            const isRecommended = p.key === "pro";
-            const planIndex = PLANS.findIndex((entry) => entry.key === p.key);
-            return (
-              <div
-                key={`bento-${p.key}`}
-                className={`rounded-2xl border p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] ${
-                  isRecommended
-                    ? "border-blue-500/40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_36%),linear-gradient(180deg,#111827_0%,#000000_100%)]"
-                    : "border-[#1C2333] bg-[linear-gradient(180deg,#111827_0%,#000000_100%)]"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{p.sub}</p>
-                    <h4 className="mt-1 text-xl font-bold text-white">{p.name}</h4>
-                  </div>
-                  {isRecommended && <span className="rounded-full bg-blue-500 px-2.5 py-1 text-[10px] font-bold text-white">Empfohlen</span>}
-                  {isCurrent && !isRecommended && <span className="rounded-full bg-[#111827] px-2.5 py-1 text-[10px] font-bold text-slate-300 border border-[#1C2333]">Aktuell</span>}
-                </div>
-
-                <div className="mt-4 flex items-end gap-1">
-                  <span className="text-3xl font-extrabold text-white">{p.price}</span>
-                  {p.period && <span className="pb-1 text-xs text-slate-400">{p.period}</span>}
-                </div>
-
-                <div className="mt-5 space-y-3">
-                  {comparisonRows.map(({ row, vals }) => (
-                    <div key={`${p.key}-${row}`} className="flex items-center justify-between gap-3 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2.5">
-                      <span className="text-xs text-slate-400">{row}</span>
-                      <span className="text-xs font-semibold text-white">{vals[planIndex]}</span>
-                    </div>
-                  ))}
-
-                  {p.features.filter((feature) => feature.soon).slice(0, 2).map((feature) => (
-                    <div key={`${p.key}-${feature.label}`} className="flex items-center gap-2 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2.5">
-                      <Clock3 className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
-                      <span className="text-xs text-slate-500">{feature.label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-5">
-                  {isCurrent ? (
-                    <div className="rounded-xl border border-[#1C2333] bg-[#111827] py-2 text-center text-xs font-semibold text-slate-300">
-                      Aktueller Plan
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => navigate("/pricing")}
-                      className={`w-full rounded-xl py-2.5 text-xs font-semibold transition-all ${p.btnCls}`}
-                    >
-                      Plan wählen (Jetzt durchstarten)
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Feature comparison table — scrollable on all screen sizes */}
-        <div className="hidden mt-6 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-          <table className="w-full min-w-[600px] text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Feature</th>
-                {PLANS.map((p) => (
-                  <th key={p.key} className={`px-3 py-4 text-center text-xs font-bold ${p.key === planKey ? "text-blue-600" : "text-slate-600"}`}>
-                    <span className="flex flex-col items-center gap-0.5">
-                      {p.key === planKey && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
-                      {p.name}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {[
-                { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
-                { row: "Anschreiben / Monat",          vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
-                { row: "Aktive Job-Alerts",             vals: ["2", "10", "Unbegrenzt", "Unbegrenzt"] },
-                { row: "KI-Nachrichten / Monat",       vals: ["15", "200", "Unbegrenzt", "Unbegrenzt"] },
-                { row: "Jobsuche / Tag",                vals: ["5", "20", "Unbegrenzt", "Unbegrenzt"] },
-                { row: "Prioritäts-Support",            vals: [null, null, null, true], soon: [false, true, true, false] },
-                { row: "24h Support",                   vals: [null, null, null, true], soon: [false, false, true, false] },
-                { row: "Dedizierter Manager",           vals: [null, null, null, null], soon: [false, false, false, true] },
-              ].map(({ row, vals, soon = [] }, ri) => (
-                <tr key={row} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50/40"}>
-                  <td className="px-4 py-3 text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap">{row}</td>
-                  {vals.map((v, ci) => {
-                    const isCur = PLANS[ci].key === planKey;
-                    const isSoon = soon[ci];
-                    return (
-                      <td key={ci} className={`px-3 py-3 text-center ${isCur ? "bg-blue-50/30" : ""}`}>
-                        {v === true ? (
-                          <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-500" />
-                        ) : v === null ? (
-                          isSoon
-                            ? <span className="text-[10px] font-semibold text-slate-300">Bald</span>
-                            : <span className="text-slate-200 text-base leading-none">—</span>
-                        ) : (
-                          <span className={`text-xs sm:text-sm font-semibold ${isCur ? "text-blue-700" : "text-slate-700"}`}>{v}</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              {/* Price row */}
-              <tr className="border-t-2 border-slate-100 bg-slate-50">
-                <td className="px-4 py-3.5 text-xs sm:text-sm font-bold text-slate-800">Preis / Monat</td>
-                {PLANS.map((p) => (
-                  <td key={p.key} className={`px-3 py-3.5 text-center ${p.key === planKey ? "bg-blue-50/30" : ""}`}>
-                    <span className={`text-sm sm:text-base font-bold ${p.key === planKey ? "text-blue-700" : "text-slate-800"}`}>{p.price}</span>
-                    {p.period && <span className="text-[10px] text-slate-400 ml-0.5">{p.period}</span>}
-                  </td>
-                ))}
-              </tr>
-              {/* CTA row */}
-              <tr className="bg-white">
-                <td className="px-4 py-3" />
-                {PLANS.map((p) => (
-                  <td key={p.key} className={`px-3 py-3 ${p.key === planKey ? "bg-blue-50/30" : ""}`}>
-                    {p.key === planKey ? (
-                      <div className="rounded-lg bg-slate-100 py-1.5 text-center text-[11px] font-semibold text-slate-500">Aktuell</div>
-                    ) : (
-                      <button
-                        onClick={() => navigate("/pricing")}
-                        className={`w-full rounded-lg py-1.5 text-[11px] font-semibold transition-all ${p.btnCls}`}
-                      >
-                        {p.btnLabel || "Upgraden"}
-                      </button>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ── Bottom: payment + no-open-invoices ───────────────────────────────── */}
-      <div className={`grid grid-cols-1 gap-4 ${isPaid ? "sm:grid-cols-2" : ""}`}>
-        {isPaid && (
+      {/* ── Bottom: payment method only ───────────────────────────────── */}
+      {isPaid && (
+        <div className="grid grid-cols-1 gap-4">
           <div className="rounded-2xl border border-[#1C2333] bg-[#0D1117] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
             <div className="mb-3 flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-slate-400" />
@@ -652,28 +505,8 @@ export default function BillingPage() {
               </button>
             </div>
           </div>
-        )}
-
-        <div className="rounded-2xl border border-blue-500/20 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_32%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-          <div className="mb-3 flex items-center gap-2">
-            <Rocket className="h-4 w-4 text-blue-400" />
-            <p className="text-sm font-bold text-white">Vertrauen in JobAssist</p>
-          </div>
-          <p className="text-2xl font-extrabold text-white">500+ Nutzer</p>
-          <p className="mt-2 text-sm text-slate-300">
-            setzen JobAssist bereits ein, um Bewerbungen präziser zu steuern, ihre Unterlagen zu schärfen und schneller ins Gespräch zu kommen.
-          </p>
-          {!isMax && (
-            <button
-              onClick={() => navigate("/pricing")}
-              className="mt-4 flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
-            >
-              <Zap className="h-4 w-4" />
-              Upgrade auf Pro (Volle KI-Leistung freischalten)
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
       <div className="hidden grid grid-cols-1 gap-4 sm:grid-cols-2">
 
