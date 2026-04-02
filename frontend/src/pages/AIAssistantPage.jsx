@@ -423,12 +423,12 @@ export default function AIAssistantPage() {
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className={`
-          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#0D1117] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
-          md:relative md:w-[232px] xl:w-[248px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#1C2333] md:z-auto
+          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#08090c] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
+          md:relative md:w-[232px] xl:w-[248px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#171a21] md:z-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}>
-          {/* Sidebar header */}
-          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-[#1C2333]">
+          {/* Sidebar header - project system colors */}
+          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-[#171a21] bg-[#08090c]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <button
@@ -453,9 +453,9 @@ export default function AIAssistantPage() {
             </div>
           </div>
 
-          {/* Starter missions (shown when no history) */}
+          {/* Starter missions - project system colors, no bottom border */}
           {conversations.length === 0 && (
-            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-slate-100">
+            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 bg-[#08090c]">
               {STARTER_MISSIONS.map((m, index) => (
                 <button
                   key={m.label}
@@ -688,9 +688,9 @@ export default function AIAssistantPage() {
                       <p className="mt-1 text-xs leading-[1.5] text-slate-400">
                         Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
                       </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18 min-h-[44px] md:min-h-0">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18">
                         <Sparkles className="h-3.5 w-3.5" />
-                        Simulation starten
+                        Starten
                       </div>
                     </div>
                   </button>
@@ -728,9 +728,9 @@ export default function AIAssistantPage() {
                       <p className="mt-1 text-xs leading-[1.5] text-slate-400">
                         Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
                       </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18 min-h-[44px] md:min-h-0">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18">
                         <ClipboardList className="h-3.5 w-3.5" />
-                        Analyse starten
+                        Starten
                       </div>
                     </div>
                   </button>
@@ -1053,7 +1053,7 @@ export default function AIAssistantPage() {
               onClick={startAssessment}
               className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 transition-colors shadow-sm shadow-blue-500/20"
             >
-              Stärkenanalyse starten (Erstellt dein Kompetenzprofil)
+              Stärkenanalyse starten
             </button>
           </div>
         </div>
