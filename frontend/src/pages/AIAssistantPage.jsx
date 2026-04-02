@@ -379,7 +379,7 @@ export default function AIAssistantPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="mx-auto h-[calc(100svh-120px)] max-w-[1520px] flex flex-col animate-slide-up px-1 xl:px-0">
+    <div className="mx-auto h-[calc(100svh-64px)] sm:h-[calc(100svh-120px)] max-w-[1520px] flex flex-col animate-slide-up px-2 sm:px-4 xl:px-0">
 
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
@@ -476,7 +476,7 @@ export default function AIAssistantPage() {
             </div>
           )}
 
-          {/* Conversation list */}
+          {/* Conversation list with date grouping */}
           <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {conversations.length > 0 && (
               <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
@@ -493,40 +493,71 @@ export default function AIAssistantPage() {
             {filteredConversations.length === 0 && conversations.length > 0 ? (
               <p className="px-2 py-4 text-center text-xs text-slate-400">Keine Treffer</p>
             ) : (
-              filteredConversations.map((conv) => {
-                const cat = getConvCategory(conv);
-                return (
-                  <button
-                    key={conv.id}
-                    title={conv.title}
-                    onClick={() => handleSelectConversation(conv)}
-                    className={`group w-full text-left px-3 py-3 rounded-xl transition-all duration-200
-                      ${conv.id === activeId
-                        ? "bg-blue-500/15 border border-blue-500/30 shadow-sm shadow-blue-500/10"
-                        : "border border-transparent hover:bg-white/[0.03] hover:border-[#1C2333]"
-                      }`}
-                  >
-                    <div className="flex items-start gap-2 mb-1.5">
-                      <span className={`mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>
-                        {cat.label}
-                      </span>
-                      <button
-                        onClick={(e) => handleDeleteConversation(e, conv.id)}
-                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+              (() => {
+                // Group conversations by date
+                const now = Date.now();
+                const today = new Date().setHours(0, 0, 0, 0);
+                const yesterday = today - 86400000;
+                const weekAgo = today - 604800000;
+                
+                const groups = {
+                  today: { label: "Heute", convs: [] },
+                  yesterday: { label: "Gestern", convs: [] },
+                  thisWeek: { label: "Diese Woche", convs: [] },
+                  older: { label: "Älter", convs: [] },
+                };
+                
+                filteredConversations.forEach((conv) => {
+                  const convDate = new Date(conv.updatedAt).setHours(0, 0, 0, 0);
+                  if (convDate === today) groups.today.convs.push(conv);
+                  else if (convDate === yesterday) groups.yesterday.convs.push(conv);
+                  else if (conv.updatedAt > weekAgo) groups.thisWeek.convs.push(conv);
+                  else groups.older.convs.push(conv);
+                });
+                
+                return Object.entries(groups).map(([key, group]) => {
+                  if (group.convs.length === 0) return null;
+                  return (
+                    <div key={key} className="mb-2">
+                      <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
+                      {group.convs.map((conv) => {
+                        const cat = getConvCategory(conv);
+                        return (
+                          <button
+                            key={conv.id}
+                            title={conv.title}
+                            onClick={() => handleSelectConversation(conv)}
+                            className={`group w-full text-left px-3 py-3 rounded-xl transition-all duration-200 mb-1
+                              ${conv.id === activeId
+                                ? "bg-blue-500/15 border border-blue-500/30 shadow-sm shadow-blue-500/10"
+                                : "border border-transparent hover:bg-white/[0.03] hover:border-[#1C2333]"
+                              }`}
+                          >
+                            <div className="flex items-start gap-2 mb-1.5">
+                              <span className={`mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>
+                                {cat.label}
+                              </span>
+                              <button
+                                onClick={(e) => handleDeleteConversation(e, conv.id)}
+                                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <p className="truncate text-xs font-medium text-slate-200 leading-snug mb-1.5">{conv.title}</p>
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                              <Clock className="w-2.5 h-2.5 flex-shrink-0" />
+                              <span>{relativeTime(conv.updatedAt)}</span>
+                              <span className="opacity-40">·</span>
+                              <span>{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <p className="truncate text-xs font-medium text-slate-200 leading-snug mb-1.5">{conv.title}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                      <Clock className="w-2.5 h-2.5 flex-shrink-0" />
-                      <span>{relativeTime(conv.updatedAt)}</span>
-                      <span className="opacity-40">·</span>
-                      <span>{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
-                    </div>
-                  </button>
-                );
-              })
+                  );
+                });
+              })()
             )}
           </div>
         </aside>
@@ -595,7 +626,7 @@ export default function AIAssistantPage() {
               <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-1">
 
                 {/* Hero — action-oriented */}
-                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
+                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-3 sm:px-4 py-4">
                   <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
                   <div className="relative flex items-start gap-3">
@@ -617,33 +648,18 @@ export default function AIAssistantPage() {
                             Interview: {contextJob.role}
                           </button>
                         )}
-                        {contextJob && (
-                          <button
-                            onClick={() => handleSend(`Schreib ein Anschreiben für die Stelle "${contextJob.role}" bei ${contextJob.company}.`)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#111827] border border-blue-500/20 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-[#172033] transition-colors"
-                          >
-                            <FileText className="h-3 w-3" />
-                            Anschreiben: {contextJob.company}
-                          </button>
-                        )}
-                        {resumeContextLabel && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300 border border-blue-500/20">
-                            <FileText className="h-3 w-3" />
-                            {resumeContextLabel}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Feature mission cards — horizontal layout */}
-                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 transition-all duration-300 ease-out">
+                {/* Feature mission cards — 12-col grid for mobile */}
+                <div className="grid grid-cols-12 gap-3">
 
                   {/* Interview Simulation */}
                   <button
                     onClick={startSimulation}
-                    className="group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-3 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.12)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30"
+                    className="col-span-12 sm:col-span-6 group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-3 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.12)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                     {/* Undraw-style interview illustration */}
@@ -674,7 +690,7 @@ export default function AIAssistantPage() {
                       </p>
                       <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18 min-h-[44px] md:min-h-0">
                         <Sparkles className="h-3.5 w-3.5" />
-                        Interview-Simulation starten (Trainiert deine Antwortsicherheit)
+                        Simulation starten
                       </div>
                     </div>
                   </button>
@@ -682,7 +698,7 @@ export default function AIAssistantPage() {
                   {/* Stärkenanalyse */}
                   <button
                     onClick={() => setAssessmentDisclaimerOpen(true)}
-                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
+                    className="col-span-12 sm:col-span-6 group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
                   >
                     <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl transition-all group-hover:bg-blue-400/20" />
                     {/* Undraw-style assessment illustration */}
@@ -714,7 +730,7 @@ export default function AIAssistantPage() {
                       </p>
                       <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18 min-h-[44px] md:min-h-0">
                         <ClipboardList className="h-3.5 w-3.5" />
-                        Stärkenanalyse starten (Kompetenzprofil erstellen)
+                        Analyse starten
                       </div>
                     </div>
                   </button>
@@ -934,7 +950,7 @@ export default function AIAssistantPage() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnellaktionen</p>
                   {[
                     { label: "Interview vorbereiten", prompt: `Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.` },
-                    { label: "Anschreiben erstellen", prompt: `Schreib ein Anschreiben für "${contextJob.role}" bei ${contextJob.company}.` },
+                    { label: "Bewerbung optimieren", prompt: `Optimiere meine Bewerbung für "${contextJob.role}" bei ${contextJob.company}.` },
                     { label: "Stellenanforderungen", prompt: `Welche Qualifikationen sind typisch für die Stelle "${contextJob.role}"?` },
                   ].map((a) => (
                     <button
