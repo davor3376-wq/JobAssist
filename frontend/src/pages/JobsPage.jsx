@@ -486,7 +486,7 @@ const [savingJobId, setSavingJobId] = useState(null);
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 animate-slide-up">
         {/* Saved jobs section */}
         {savedJobs.length > 0 && (() => {
           const STATUS_FILTERS = [
@@ -513,7 +513,7 @@ const [savingJobId, setSavingJobId] = useState(null);
           }, {});
 
           return (
-            <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg">
+            <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg animate-slide-up">
               {/* Header + sort */}
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
@@ -621,7 +621,7 @@ const [savingJobId, setSavingJobId] = useState(null);
         })()}
 
         {/* Search Section with Glassmorphism */}
-        <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg">
+        <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg animate-slide-up">
                 {/* Tab Navigation */}
                 <div className="flex gap-1 rounded-xl bg-[#111827] p-1 mb-5">
                   <button
