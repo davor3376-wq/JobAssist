@@ -209,7 +209,12 @@ export default function AIAssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Typewriter streaming effect — 2 chars/tick at 22ms gives a calm, readable pace
+  // Auto-scroll effect for streaming messages - scroll on every content change
+  useEffect(() => {
+    if (streamingMsg) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [streamingMsg?.shown]);
   // When full is absent (real SSE streaming), display is handled directly via onChunk.
   useEffect(() => {
     if (!streamingMsg) return;
@@ -791,10 +796,10 @@ export default function AIAssistantPage() {
                       </div>
                     )}
                     <div className={`max-w-[80%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-3
+                      <div className={`px-4 py-3 overflow-hidden
                         ${msg.role === "user"
                           ? "bg-blue-500 text-white rounded-xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
-                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-300 rounded-xl rounded-bl-sm"
+                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm text-sm leading-relaxed"
                         }`}
                       >
                         {msg.role === "user"
@@ -822,14 +827,14 @@ export default function AIAssistantPage() {
                   </div>
                 )}
 
-                {/* Streaming message — typewriter reveal */}
+                {/* Streaming message — typewriter reveal with scroll */}
                 {streamingMsg && (
                   <div className="flex items-end gap-2.5 justify-start">
                     <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="max-w-[80%] flex flex-col gap-1 items-start">
-                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm px-4 py-3">
+                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden">
                         <MarkdownMessage text={streamingMsg.shown} />
                         <span className="inline-block w-0.5 h-3.5 bg-blue-400 animate-pulse ml-0.5 align-middle" />
                       </div>
