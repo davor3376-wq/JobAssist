@@ -417,6 +417,10 @@ export default function JobDetailPage() {
   const [researchData, setResearchData] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
   const [selectedResume, setSelectedResume] = useState(null);
+  const [editingDeadline, setEditingDeadline] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [editedDeadline, setEditedDeadline] = useState(null);
+  const [editedNotes, setEditedNotes] = useState(null);
   const { data: initData } = useQuery({ queryKey: ["init"] });
 
   const updateJobCaches = (nextJob) => {
@@ -489,6 +493,12 @@ export default function JobDetailPage() {
     onError: (err) => toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden")),
   });
 
+  const updateJobMetaMutation = useMutation({
+    mutationFn: (data) => jobApi.update(jobId, data),
+    onSuccess: (res) => { updateJobCaches(res.data); toast.success("Aktualisiert"); },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Aktualisierung fehlgeschlagen")),
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-3 py-16 justify-center text-gray-500">
@@ -548,8 +558,8 @@ export default function JobDetailPage() {
         {/* ── 2-col dashboard: 340px sticky left + 1fr right ── */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[340px_1fr]">
 
-          {/* ── LEFT: sticky sidebar ─────────────────────────────────────── */}
-          <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+          {/* ── LEFT: scrollable sidebar ─────────────────────────────────────── */}
+          <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-120px)] xl:overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e293b] [&::-webkit-scrollbar-thumb]:rounded-full">
 
             {/* Hero card: title + company + delete + gauge + CTA + status */}
             <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
@@ -723,23 +733,87 @@ export default function JobDetailPage() {
               </div>
             </div>
 
-            {/* Deadline / Notes metadata */}
-            {(job.deadline || job.notes) && (
-              <div className="space-y-3 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
-                {job.deadline && (
-                  <div>
-                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
-                    <p className="text-sm text-slate-200">{new Date(job.deadline).toLocaleDateString("de-AT")}</p>
+            {/* Deadline / Notes metadata - with edit option */}
+            <div className="space-y-3 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
+              {(job.deadline || editingDeadline) && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
+                    <button
+                      onClick={() => setEditingDeadline(!editingDeadline)}
+                      className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      {editingDeadline ? "Speichern" : "Bearbeiten"}
+                    </button>
                   </div>
-                )}
-                {job.notes && (
-                  <div>
-                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Notizen</p>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{job.notes}</p>
+                  {editingDeadline ? (
+                    <input
+                      type="date"
+                      value={editedDeadline || job.deadline || ""}
+                      onChange={(e) => setEditedDeadline(e.target.value)}
+                      onBlur={() => {
+                        if (editedDeadline !== job.deadline) {
+                          updateJobMetaMutation.mutate({ deadline: editedDeadline || null });
+                        }
+                        setEditingDeadline(false);
+                      }}
+                      className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30"
+                    />
+                  ) : (
+                    <p className="text-sm text-slate-200">
+                      {job.deadline ? new Date(job.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
+                    </p>
+                  )}
+                </div>
+              )}
+              {(job.notes || editingNotes) && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Notizen</p>
+                    <button
+                      onClick={() => {
+                        if (editingNotes && editedNotes !== job.notes) {
+                          updateJobMetaMutation.mutate({ notes: editedNotes || null });
+                        }
+                        setEditingNotes(!editingNotes);
+                      }}
+                      className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      {editingNotes ? "Speichern" : "Bearbeiten"}
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
+                  {editingNotes ? (
+                    <textarea
+                      value={editedNotes || job.notes || ""}
+                      onChange={(e) => setEditedNotes(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30 resize-y"
+                      placeholder="Notizen hinzufügen..."
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+                      {job.notes || "Keine Notizen"}
+                    </p>
+                  )}
+                </div>
+              )}
+              {!job.deadline && !job.notes && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => { setEditingDeadline(true); setEditedDeadline(""); }}
+                    className="w-full flex items-center gap-2 rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-300 hover:border-blue-500/30 hover:text-blue-300 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" /> Frist hinzufügen
+                  </button>
+                  <button
+                    onClick={() => { setEditingNotes(true); setEditedNotes(""); }}
+                    className="w-full flex items-center gap-2 rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-300 hover:border-blue-500/30 hover:text-blue-300 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" /> Notizen hinzufügen
+                  </button>
+                </div>
+              )}
+            </div>
           </aside>
 
           {/* ── RIGHT: scrollable content ─────────────────────────────────── */}
