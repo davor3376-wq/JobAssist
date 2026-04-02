@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   Upload, FileText, Sparkles, Brain,
   Eye, Clock, CheckCircle, X, Trophy, Target,
-  TrendingUp, History, ArrowUpRight,
+  TrendingUp, ArrowUpRight,
   AlertCircle, Edit3
 } from "lucide-react";
 import { resumeApi } from "../services/api";
@@ -169,60 +169,6 @@ function AnimatedScore({ current, target, duration = 600 }) {
   }, [target, duration, display]);
 
   return <span>{display}%</span>;
-}
-
-// ─── History Sidebar ──────────────────────────────────────────────────────────
-
-function HistorySidebar() {
-  const history = [
-    { version: "v2", date: "Heute", score: 75, change: "+12%", improvements: ["Keywords optimiert", "Format verbessert"] },
-    { version: "v1", date: "Vor 3 Tagen", score: 63, change: null, improvements: ["Erste Version"] },
-  ];
-
-  return (
-    <div className="rounded-xl bg-[#08090c]/80 border border-[#171a21] p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-indigo-500/15 flex items-center justify-center">
-          <History className="w-3.5 h-3.5 text-indigo-400" />
-        </div>
-        <p className="text-[11px] font-bold text-slate-300">Versionen-Historie</p>
-      </div>
-
-      <div className="space-y-0">
-        {history.map((item, idx) => (
-          <div key={item.version} className={`relative pl-5 ${idx !== history.length - 1 ? "pb-4 border-l border-slate-700/50" : ""}`}>
-            <div className={`absolute left-0 top-0.5 w-2 h-2 rounded-full -translate-x-[5px] ${idx === 0 ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,226,161,0.5)]" : "bg-slate-600"}`} />
-
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-semibold text-slate-300">{item.version}</span>
-              <span className="text-[9px] text-slate-500">{item.date}</span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-[16px] font-bold ${item.score >= 70 ? "text-emerald-400" : item.score >= 50 ? "text-amber-400" : "text-red-400"}`}>
-                {item.score}%
-              </span>
-              {item.change && (
-                <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-0.5">
-                  <TrendingUp className="w-3 h-3" />
-                  {item.change}
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-0.5">
-              {item.improvements.map((imp, i) => (
-                <p key={i} className="text-[9px] text-slate-500 flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-slate-600 flex-shrink-0" />
-                  {imp}
-                </p>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ─── Radar Chart ──────────────────────────────────────────────────────────────
@@ -561,7 +507,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
         style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}
       >
         <div className="p-4 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 90% 10%, rgba(255,255,255,0.2) 0%, transparent 50%)" }} />
+          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-white/10 to-transparent" />
           <div className="relative z-10 flex items-center justify-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -586,7 +532,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
 // ─── Heat-map Live Preview ────────────────────────────────────────────────────
 
 
-function ATSInsights({ resume, skills }) {
+function ATSInsights({ resume, skills, gamification }) {
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
@@ -600,7 +546,8 @@ function ATSInsights({ resume, skills }) {
 
   const topSkill = [...skills].sort((a, b) => b.value - a.value)[0];
   const weakSkills = [...skills].filter(s => s.value < 50);
-  const avgScore = Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
+  const { currentScore, projectedScore, potentialPoints } = gamification || {};
+  const displayScore = currentScore || Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
 
   return (
     <div className="flex flex-col h-full gap-3">
@@ -622,38 +569,40 @@ function ATSInsights({ resume, skills }) {
         </p>
       </div>
 
-      {/* Score summary - with gamification potential */}
+      {/* Score summary - uses gamification currentScore */}
       <div className="rounded-xl bg-gradient-to-br from-[#0d1117] to-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-semibold text-slate-400">Aktueller Score</span>
-          <span className={`text-xs font-bold ${avgScore >= 70 ? "text-emerald-400" : avgScore >= 50 ? "text-amber-400" : "text-red-400"}`}>
-            {avgScore}%
+          <span className={`text-xs font-bold ${displayScore >= 70 ? "text-emerald-400" : displayScore >= 50 ? "text-amber-400" : "text-red-400"}`}>
+            {displayScore}%
           </span>
         </div>
         <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${avgScore}%`, backgroundColor: avgScore >= 70 ? "#10b981" : avgScore >= 50 ? "#f59e0b" : "#ef4444" }}
+            style={{ width: `${displayScore}%`, backgroundColor: displayScore >= 70 ? "#10b981" : displayScore >= 50 ? "#f59e0b" : "#ef4444" }}
           />
         </div>
 
-        {/* Goal system - potential points */}
-        <div className="mt-3 pt-3 border-t border-slate-800/50">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-slate-400">Ziel-Score</span>
-            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-              <Trophy className="w-3 h-3" />
-              85%+
-            </span>
+        {/* Goal system - shows potential */}
+        {potentialPoints > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-800/50">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-slate-400">Nach Optimierung</span>
+              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                {projectedScore}%
+              </span>
+            </div>
+            <p className="mt-1 text-[9px] text-slate-500">
+              Noch <span className="text-amber-400 font-semibold">{potentialPoints}%</span> durch Checkliste möglich
+            </p>
           </div>
-          <p className="mt-1 text-[9px] text-slate-500">
-            Noch <span className="text-amber-400 font-semibold">{Math.max(0, 85 - avgScore)}%</span> bis zur Top-Bewertung
-          </p>
-        </div>
+        )}
       </div>
 
-      {/* Missing Keywords - ATS Simulation - show only most critical */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 overflow-y-auto">
+      {/* Missing Keywords - compact */}
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 min-h-0">
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-semibold text-slate-400">Fehlende Keywords</p>
           <span className="text-[9px] text-amber-400 font-medium flex items-center gap-1">
@@ -663,27 +612,25 @@ function ATSInsights({ resume, skills }) {
         </div>
 
         <div className="space-y-2">
-          {/* Show only the most critical skill (lowest score) */}
           {(() => {
             const criticalSkill = [...skills].sort((a, b) => a.value - b.value)[0];
             if (!criticalSkill || criticalSkill.value >= 70) {
               return (
-                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2">
                   <p className="text-[9px] text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle className="w-3 h-3" />
-                    Alle wichtigen Keywords vorhanden!
+                    Alle Keywords vorhanden!
                   </p>
                 </div>
               );
             }
             return (
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5">
-                <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
+                <div className="flex items-center gap-1.5 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: criticalSkill.color }} />
                   <span className="text-[9px] font-semibold text-slate-300">{criticalSkill.label}</span>
                   <span className="text-[9px] text-slate-500 ml-auto">{criticalSkill.value}%</span>
                 </div>
-                <p className="text-[8px] text-slate-400 mb-1.5">Füge diese Keywords hinzu:</p>
                 <div className="flex flex-wrap gap-1">
                   {criticalSkill.missingKeywords.slice(0, 3).map((kw, i) => (
                     <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300">
@@ -840,8 +787,30 @@ export default function ResumePage() {
         /* ── 3-column workspace ─────────────────────────────────────────────── */
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] xl:grid-cols-[300px_1fr_320px] gap-4 flex-1">
 
-          {/* ── LEFT: Document List + History ──────────────────────────────── */}
+          {/* ── LEFT: Document List + Info ──────────────────────────────── */}
           <div className="flex flex-col gap-3">
+            {/* Info card - at top */}
+            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+                <p className="text-[11px] font-bold text-emerald-300">KI-Analyse Vorteile</p>
+              </div>
+              <ul className="space-y-2">
+                {[
+                  "Automatische Keyword-Erkennung",
+                  "ATS-Kompatibilitäts-Check",
+                  "Verbesserungsvorschläge in Echtzeit",
+                ].map((benefit, i) => (
+                  <li key={i} className="flex items-center gap-2 text-[10px] text-slate-400">
+                    <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <UploadZone getRootProps={getRootProps} getInputProps={getInputProps} isDragActive={isDragActive} uploading={uploading} />
 
             {resumes.length === 0 ? (
@@ -868,31 +837,6 @@ export default function ResumePage() {
                 ))}
               </div>
             )}
-
-            {/* Info card - fills empty space */}
-            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-4 mt-auto">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-                <p className="text-[11px] font-bold text-emerald-300">KI-Analyse Vorteile</p>
-              </div>
-              <ul className="space-y-2">
-                {[
-                  "Automatische Keyword-Erkennung",
-                  "ATS-Kompatibilitäts-Check",
-                  "Verbesserungsvorschläge in Echtzeit",
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-center gap-2 text-[10px] text-slate-400">
-                    <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* History Sidebar - shows version progression */}
-            {resumes.length > 0 && <HistorySidebar />}
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
@@ -910,6 +854,7 @@ export default function ResumePage() {
             <ATSInsights
               resume={selectedResume}
               skills={skills}
+              gamification={gamification}
             />
           </div>
         </div>
