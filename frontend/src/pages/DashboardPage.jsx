@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <div
               className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[32px] font-bold text-emerald-400 relative overflow-hidden"
             >
-              <span className="relative z-10 text-[36px] font-bold">63%</span>
+              <span className="relative z-10 text-[42px] font-extrabold tracking-tight">63%</span>
             </div>
           </div>
 
@@ -256,30 +256,55 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Bottom widget - stretches across */}
+        {/* Application Progress Timeline Widget */}
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
           <div className="rounded-xl border border-slate-700/50 bg-[#0A0C12] p-5">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-white">Bewerbungs-Übersicht</h3>
-                <p className="text-xs text-slate-400 mt-1">Alle deine Aktivitäten auf einen Blick</p>
+                <h3 className="text-sm font-semibold text-white">Dein Fortschritt</h3>
+                <p className="text-xs text-slate-400 mt-1">Letzte 30 Tage in Bewegung</p>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">5</div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Beworben</p>
+              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                +12% Aktivität
+              </span>
+            </div>
+            
+            {/* Progress bars */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Beworben</span>
+                  <span className="text-white font-semibold">5</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">24%</div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Rücklauf</p>
+                <div className="h-2 rounded-full bg-[#1C2333]">
+                  <div className="h-full rounded-full bg-blue-500" style={{ width: '25%' }} />
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-violet-400">1</div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Interviews</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Gespeichert</span>
+                  <span className="text-white font-semibold">16</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-emerald-400">3</div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Neue Matches</p>
+                <div className="h-2 rounded-full bg-[#1C2333]">
+                  <div className="h-full rounded-full bg-slate-500" style={{ width: '80%' }} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Rücklauf</span>
+                  <span className="text-indigo-400 font-semibold">24%</span>
+                </div>
+                <div className="h-2 rounded-full bg-[#1C2333]">
+                  <div className="h-full rounded-full bg-indigo-500" style={{ width: '24%' }} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Interviews</span>
+                  <span className="text-violet-400 font-semibold">1</span>
+                </div>
+                <div className="h-2 rounded-full bg-[#1C2333]">
+                  <div className="h-full rounded-full bg-violet-500" style={{ width: '5%' }} />
                 </div>
               </div>
             </div>
@@ -326,7 +351,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div onClick={() => navigate('/applications?status=interview')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
+            <div onClick={() => navigate('/applications')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M9 2L2 7V16H6V11H12V16H16V7L9 2Z" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
