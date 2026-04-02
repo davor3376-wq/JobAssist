@@ -4,9 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  Upload, Trash2, FileText, Sparkles, Zap, Brain,
-  Eye, Clock, CheckCircle, ChevronRight, X,
-  BookOpen, Globe, Briefcase, GraduationCap, Code,
+  Upload, FileText, Sparkles, Zap, Brain,
+  Eye, Clock, CheckCircle, X,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { ListSkeleton } from "../components/PageSkeleton";
@@ -36,35 +35,30 @@ const SKILL_DEFS = [
   {
     key: "tech",
     label: "Tech Skills",
-    Icon: Code,
     color: "#7c3aed",
     keywords: ["python","java","javascript","typescript","sql","excel","software","system","data","api","react","node","html","css","php","c++","c#","aws","azure","docker","git"],
   },
   {
     key: "exp",
     label: "Erfahrung",
-    Icon: Briefcase,
     color: "#0ea5e9",
     keywords: ["jahre","years","erfahrung","experience","projekt","project","team","managed","led","developed","koordiniert","verantwortlich","geleitet","aufgebaut"],
   },
   {
     key: "edu",
     label: "Ausbildung",
-    Icon: GraduationCap,
     color: "#10b981",
     keywords: ["bachelor","master","mba","phd","studium","universität","university","abschluss","degree","zertifikat","certificate","fh","hochschule","htl","berufsschule"],
   },
   {
     key: "soft",
     label: "Soft Skills",
-    Icon: Brain,
     color: "#f59e0b",
     keywords: ["kommunikation","communication","teamwork","leadership","führung","präsentation","analytisch","problem","lösungsorientiert","selbstständig","kreativ","motiviert"],
   },
   {
     key: "lang",
     label: "Sprachen",
-    Icon: Globe,
     color: "#ec4899",
     keywords: ["deutsch","englisch","english","french","spanisch","italian","language","sprache","c1","c2","b2","b1","native","muttersprache","fließend","fluent"],
   },
@@ -317,7 +311,7 @@ function DocumentIntelligence({ resume, skills }) {
             <div key={s.key}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <s.Icon className="w-3 h-3 flex-shrink-0" style={{ color: s.color }} />
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                   <span className="text-[10px] font-semibold text-slate-600">{s.label}</span>
                 </div>
                 <span className="text-[10px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
@@ -357,32 +351,8 @@ function DocumentIntelligence({ resume, skills }) {
 
 // ─── Heat-map Live Preview ────────────────────────────────────────────────────
 
-const HEATMAP_SECTIONS = [
-  { id: "header",     label: "Name & Kontakt",    heat: "high",   top: "3%",   height: "11%" },
-  { id: "summary",    label: "Zusammenfassung",   heat: "medium", top: "15%",  height: "9%" },
-  { id: "experience", label: "Berufserfahrung",   heat: "high",   top: "25%",  height: "30%" },
-  { id: "skills",     label: "Kenntnisse",        heat: "high",   top: "56%",  height: "12%" },
-  { id: "education",  label: "Ausbildung",        heat: "medium", top: "69%",  height: "14%" },
-  { id: "languages",  label: "Sprachen",          heat: "low",    top: "84%",  height: "8%" },
-  { id: "extras",     label: "Sonstiges",         heat: "low",    top: "93%",  height: "5%" },
-];
 
-const HEAT_STYLE = {
-  high:   { bg: "rgba(239,68,68,0.13)",   border: "rgba(239,68,68,0.35)",   label: "bg-red-100 text-red-700 border-red-200",    dot: "bg-red-500" },
-  medium: { bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.35)",  label: "bg-amber-100 text-amber-700 border-amber-200",  dot: "bg-amber-500" },
-  low:    { bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.30)",  label: "bg-blue-100 text-blue-700 border-blue-200",  dot: "bg-blue-400" },
-};
-
-// Map CV sections to skill keys
-const SECTION_SKILL_MAP = {
-  summary:    "soft",
-  experience: "exp",
-  skills:     "tech",
-  education:  "edu",
-  languages:  "lang",
-};
-
-function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
+function ATSInsights({ resume, skills }) {
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
@@ -394,95 +364,96 @@ function LivePreview({ resume, skills, hoveredSection, setHoveredSection }) {
     );
   }
 
-  const skillMap = Object.fromEntries((skills || []).map(s => [s.key, s]));
-
-  const rawText = (resume?.raw_text || "").toLowerCase();
-
-  const sections = [
-    { key: "summary",    title: "Kurzprofil",  width: "w-20" },
-    { key: "experience", title: "Erfahrung",   width: "w-24" },
-    { key: "skills",     title: "Skills",      width: "w-16" },
-    { key: "education",  title: "Ausbildung",  width: "w-24" },
-    { key: "languages",  title: "Sprachen",    width: "w-20" },
-  ].map(s => {
-    const sk = skillMap[SECTION_SKILL_MAP[s.key]];
-    const score = sk?.value ?? 50;
-    const heat = score < 50 ? "high" : score < 72 ? "medium" : "low";
-    // show up to 3 detected or missing keywords
-    const allKw = sk?.keywords || [];
-    const found = rawText ? allKw.filter(kw => rawText.includes(kw)).slice(0, 3) : [];
-    const missing = allKw.filter(kw => !rawText.includes(kw)).slice(0, 2);
-    return { ...s, score, heat, skillLabel: sk?.label, found, missing };
-  });
+  const topSkill = [...skills].sort((a, b) => b.value - a.value)[0];
+  const weakSkills = [...skills].filter(s => s.value < 50);
+  const avgScore = Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
 
   return (
     <div className="flex flex-col h-full gap-3">
-      {/* Header */}
+      {/* Header with explanation */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
           <Eye className="w-3.5 h-3.5 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-white leading-none">Live-Vorschau</h3>
-          <p className="text-[9px] text-slate-400 mt-0.5">KI-Scan · Fokusanalyse</p>
+          <h3 className="text-sm font-bold text-white leading-none">ATS-Insights</h3>
+          <p className="text-[9px] text-slate-400 mt-0.5">Bewerber-Tracking-System Analyse</p>
         </div>
       </div>
 
-      {/* Section cards — data-driven */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] overflow-hidden">
-        {/* Doc header mock */}
-        <div className="px-4 pt-4 pb-3 border-b border-[#1C2333]">
-          <div className="h-2.5 w-28 rounded-full bg-slate-200/80" />
-          <div className="mt-1.5 h-1.5 w-20 rounded-full bg-blue-400/60" />
-        </div>
-
-        <div className="p-3 space-y-1.5">
-          {sections.map(({ key, title, width, score, heat, skillLabel, found, missing }) => {
-            const tone = HEAT_STYLE[heat];
-            const poor = score < 50;
-            const barColor = poor ? "#ef4444" : score < 72 ? "#f59e0b" : "#10b981";
-            return (
-              <div key={key} className="rounded-lg border px-3 py-2" style={{ background: tone.bg, borderColor: tone.border }}>
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`h-1.5 rounded-full bg-white/80 flex-shrink-0 ${width}`} />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex-shrink-0">{title}</span>
-                  </div>
-                  <span className="text-[9px] font-bold tabular-nums flex-shrink-0" style={{ color: barColor }}>
-                    {score}%
-                  </span>
-                </div>
-                {/* Score bar — no dot, bar is the signal */}
-                <div className="h-1 rounded-full bg-white/8 overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: barColor }} />
-                </div>
-                {/* Keyword context */}
-                {found.length > 0 && (
-                  <p className="mt-1 text-[8px] text-emerald-400 truncate">✓ {found.join(", ")}</p>
-                )}
-                {poor && missing.length > 0 && (
-                  <p className="mt-0.5 text-[8px] text-red-400 truncate">↑ fehlt: {missing.join(", ")}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* What is ATS? */}
+      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3">
+        <p className="text-[10px] text-slate-300 leading-relaxed">
+          <span className="text-blue-400 font-semibold">ATS</span> (Applicant Tracking System) filtert Lebensläufe automatisch vor dem ersten Menschenkontakt. Unsere Analyse zeigt, wie gut dein CV maschinell lesbar ist.
+        </p>
       </div>
 
-      {/* Legend */}
+      {/* Score summary */}
       <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-3 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          {[
-            { color: "#ef4444", label: "Lücke" },
-            { color: "#f59e0b", label: "Ausbaufähig" },
-            { color: "#10b981", label: "Stark" },
-          ].map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-              <span className="text-[9px] text-slate-400">{label}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-semibold text-slate-400">Gesamt-Score</span>
+          <span className={`text-xs font-bold ${avgScore >= 70 ? 'text-emerald-400' : avgScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+            {avgScore}%
+          </span>
         </div>
+        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${avgScore}%`, backgroundColor: avgScore >= 70 ? '#10b981' : avgScore >= 50 ? '#f59e0b' : '#ef4444' }}
+          />
+        </div>
+        <p className="mt-2 text-[9px] text-slate-500">
+          {avgScore >= 70 ? 'Ausgezeichnete ATS-Kompatibilität' : avgScore >= 50 ? 'Gute Basis mit Optimierungspotenzial' : 'Wichtige Inhalte fehlen für ATS-Filter'}
+        </p>
+      </div>
+
+      {/* Strengths & Weaknesses */}
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-3 overflow-y-auto">
+        <p className="text-[10px] font-semibold text-slate-400 mb-2">Stärken & Schwächen</p>
+
+        <div className="space-y-2">
+          {/* Top strength */}
+          {topSkill && topSkill.value >= 60 && (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[9px] font-semibold text-emerald-400">Stärke: {topSkill.label}</span>
+              </div>
+              <p className="text-[8px] text-slate-400">Dieser Bereich ist gut ausgeprägt und wird von ATS-Systemen erkannt.</p>
+            </div>
+          )}
+
+          {/* Weak areas */}
+          {weakSkills.length > 0 ? (
+            weakSkills.slice(0, 2).map(skill => (
+              <div key={skill.key} className="rounded-lg border border-red-500/20 bg-red-500/5 p-2.5">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  <span className="text-[9px] font-semibold text-red-400">Optimieren: {skill.label}</span>
+                </div>
+                <p className="text-[8px] text-slate-400">
+                  Ergänze {skill.label.toLowerCase()} für bessere ATS-Erkennung.
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+              <p className="text-[9px] text-emerald-400 font-medium">Alle Bereiche sind gut abgedeckt!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action CTA */}
+      <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 flex-shrink-0">
+        <p className="text-[9px] text-slate-400 mb-2">Verbessere deine Chancen</p>
+        <Link
+          to="/ai-assistant"
+          className="flex items-center justify-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/30 transition-colors rounded-lg py-2 text-[10px] font-semibold text-blue-300"
+        >
+          <Sparkles className="w-3 h-3" />
+          KI-Optimierung starten
+        </Link>
       </div>
     </div>
   );
@@ -494,7 +465,6 @@ export default function ResumePage() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [hoveredSection, setHoveredSection] = useState(null);
   const { guardedRun } = useUsageGuard("cv_analysis");
 
   const { data: initData } = useQuery({
@@ -577,11 +547,6 @@ export default function ResumePage() {
             <span className="text-[10px] font-bold text-slate-400 bg-[#08090c] border border-[#171a21] rounded-xl px-3 py-1.5 shadow-card">
               {resumes.length} Dokument{resumes.length > 1 ? "e" : ""}
             </span>
-            {avgMatchScore != null && (
-              <span className="text-[10px] font-bold text-white rounded-xl px-3 py-1.5" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 12px rgba(59,130,246,0.3)" }}>
-                Matching-Quote {avgMatchScore}%
-              </span>
-            )}
           </div>
         )}
       </div>
@@ -621,7 +586,31 @@ export default function ResumePage() {
               </div>
             )}
 
-            {/* Tips card */}
+            {/* Info card - fills empty space */}
+            {resumes.length === 0 && (
+              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/15 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <p className="text-[11px] font-bold text-emerald-300">KI-Analyse Vorteile</p>
+                </div>
+                <ul className="space-y-2">
+                  {[
+                    "Automatische Keyword-Erkennung",
+                    "ATS-Kompatibilitäts-Check",
+                    "Verbesserungsvorschläge in Echtzeit",
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-center gap-2 text-[10px] text-slate-400">
+                      <div className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Optimierungstipps - always show when resumes exist */}
             {resumes.length > 0 && (
               <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 mt-auto">
                 <div className="flex items-center gap-2 mb-2">
@@ -649,13 +638,11 @@ export default function ResumePage() {
             <DocumentIntelligence resume={selectedResume} skills={skills} />
           </div>
 
-          {/* ── RIGHT: Live Preview ─────────────────────────────────────────── */}
+          {/* ── RIGHT: ATS Insights ─────────────────────────────────────────── */}
           <div className="hidden lg:flex flex-col">
-            <LivePreview
+            <ATSInsights
               resume={selectedResume}
               skills={skills}
-              hoveredSection={hoveredSection}
-              setHoveredSection={setHoveredSection}
             />
           </div>
         </div>
