@@ -1,7 +1,9 @@
 import React from 'react';
-import { Flame, TrendingUp, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Flame, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const bars = [
     { day: 'Mo', value: 4, color: 'bg-white/[0.06]' },
     { day: 'Di', value: 2, color: 'bg-white/[0.06]' },
@@ -51,13 +53,7 @@ export default function DashboardPage() {
         <section className="col-span-12 bg-[#090B0F] p-6 md:col-span-3">
           <div className="flex h-full flex-col items-center justify-center gap-4">
             <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
-              <div
-                className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[9px] border-[#34E2A1] bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)]"
-                style={{
-                  borderLeftColor: '#1A513E',
-                  borderTopColor: '#15382D',
-                }}
-              >
+              <div className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[9px] border-[#34E2A1] bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)]">
                 63%
               </div>
             </div>
@@ -152,7 +148,8 @@ export default function DashboardPage() {
               Wochenübersicht
             </p>
 
-            <div className="mt-3 flex flex-1 items-end gap-3">
+            <div className="mt-3 rounded-xl border border-[#233250] bg-[#0A0C12] p-4">
+              <div className="flex flex-1 items-end gap-3">
               {bars.map((bar) => (
                 <div key={bar.day} className="flex flex-1 flex-col items-center gap-1.5">
                   <span className={`text-xs font-medium ${bar.textColor ?? 'text-slate-500'}`}>
@@ -172,6 +169,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
           </div>
         </section>
 
@@ -201,7 +199,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                    <ArrowRight className="h-5 w-5 text-blue-400" />
+                    
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Erster Schritt getan</p>
@@ -220,7 +218,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10">
-                    <ArrowRight className="h-5 w-5 text-indigo-400" />
+                    
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Aktiv verfolgt</p>
@@ -239,7 +237,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10">
-                    <ArrowRight className="h-5 w-5 text-violet-400" />
+                    
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Aktive Gespräche</p>
@@ -276,7 +274,7 @@ export default function DashboardPage() {
 
           <div className="mt-4 grid grid-cols-12 gap-3">
             {/* Primary CTA - Enhanced visibility with glow and filled background */}
-            <div className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 p-4 shadow-[0_0_30px_rgba(59,130,246,0.15)] md:col-span-4 cursor-pointer hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-shadow">
+            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 p-4 shadow-[0_0_30px_rgba(59,130,246,0.15)] md:col-span-4 cursor-pointer hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-shadow">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 shadow-md shadow-blue-500/30">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M9 2v14M2 9h14" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
@@ -291,7 +289,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="col-span-12 flex items-center gap-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4 md:col-span-4">
+            <div onClick={() => navigate('/assistant')} className="col-span-12 flex items-center gap-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-emerald-400/10 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-400/15">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M3 9.5L7 13.5L15 4.5" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -303,7 +301,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4">
+            <div onClick={() => navigate('/applications')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M9 3v5l3.5 2" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
