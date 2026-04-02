@@ -52,11 +52,17 @@ export default function DashboardPage() {
 
         <section className="col-span-12 bg-[#090B0F] p-6 md:col-span-3">
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
-              <div className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[9px] border-[#34E2A1] bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)]">
-                63%
-              </div>
+            {/* Progress circle showing 63% - uses conic-gradient for accurate visual */}
+          <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
+            <div
+              className="flex h-[130px] w-[130px] items-center justify-center rounded-full bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)] relative overflow-hidden"
+              style={{
+                background: `conic-gradient(#34E2A1 0deg, #34E2A1 ${63 * 3.6}deg, #1a3a2e ${63 * 3.6}deg, #1a3a2e 360deg)`
+              }}
+            >
+              <span className="relative z-10">63%</span>
             </div>
+          </div>
 
             {/* Momentum indicators */}
             <div className="w-full space-y-2">
@@ -198,9 +204,6 @@ export default function DashboardPage() {
                       <span className="text-sm text-slate-500">/ 21 Stellen</span>
                     </div>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                    
-                  </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Erster Schritt getan</p>
               </div>
@@ -217,9 +220,6 @@ export default function DashboardPage() {
                       <span className="text-[32px] font-semibold leading-none text-white">24%</span>
                     </div>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10">
-                    
-                  </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Aktiv verfolgt</p>
               </div>
@@ -235,9 +235,6 @@ export default function DashboardPage() {
                     <div className="mt-1 flex items-baseline gap-1">
                       <span className="text-[32px] font-semibold leading-none text-white">1</span>
                     </div>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10">
-                    
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-400">Aktive Gespräche</p>
@@ -289,7 +286,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div onClick={() => navigate('/assistant')} className="col-span-12 flex items-center gap-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-emerald-400/10 transition-colors">
+            <div onClick={() => navigate('/ai-assistant')} className="col-span-12 flex items-center gap-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-emerald-400/10 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-400/15">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path d="M3 9.5L7 13.5L15 4.5" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
