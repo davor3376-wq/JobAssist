@@ -408,13 +408,6 @@ export default function AIAssistantPage() {
               <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
             ))}
           </select>
-          <Link
-            to="/resume"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] text-slate-300 text-xs font-semibold hover:bg-white/5 transition-colors"
-          >
-            <Wand2 className="w-3.5 h-3.5" />
-            Lebenslauf hochladen
-          </Link>
           <button
             onClick={handleNewChat}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors shadow-sm shadow-blue-500/20"
