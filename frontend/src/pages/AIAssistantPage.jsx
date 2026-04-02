@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
   ClipboardList, Search, ChevronLeft, Shield, X,
-  Wand2, Target, Zap, ArrowRight, Paperclip,
+  Wand2, Target, Zap, ArrowRight,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -485,7 +484,7 @@ export default function AIAssistantPage() {
           )}
 
           {/* Conversation list */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {conversations.length > 0 && (
               <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
                 <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
@@ -508,29 +507,29 @@ export default function AIAssistantPage() {
                     key={conv.id}
                     title={conv.title}
                     onClick={() => handleSelectConversation(conv)}
-                    className={`group w-full text-left px-3 py-3.5 rounded-xl transition-all duration-200
+                    className={`group w-full text-left px-3 py-3 rounded-xl transition-all duration-200
                       ${conv.id === activeId
-                        ? "bg-indigo-900/30 border border-indigo-800 shadow-sm shadow-indigo-900/20"
-                        : "border border-transparent hover:bg-white/5 hover:border-[#1C2333] hover:shadow-sm"
+                        ? "bg-blue-500/15 border border-blue-500/30 shadow-sm shadow-blue-500/10"
+                        : "border border-transparent hover:bg-white/[0.03] hover:border-[#1C2333]"
                       }`}
                   >
-                    <div className="flex items-center justify-between gap-1.5 mb-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>
+                    <div className="flex items-start gap-2 mb-1.5">
+                      <span className={`mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>
                         {cat.label}
                       </span>
                       <button
                         onClick={(e) => handleDeleteConversation(e, conv.id)}
-                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <p className="truncate text-xs font-semibold text-slate-200 leading-snug mb-1">{conv.title}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                    <p className="truncate text-xs font-medium text-slate-200 leading-snug mb-1.5">{conv.title}</p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                       <Clock className="w-2.5 h-2.5 flex-shrink-0" />
                       <span>{relativeTime(conv.updatedAt)}</span>
                       <span className="opacity-40">·</span>
-                      <span className="opacity-60">{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                      <span>{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
                     </div>
                   </button>
                 );
@@ -732,7 +731,7 @@ export default function AIAssistantPage() {
                 <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-                    {SUGGESTIONS.map((s) => {
+                    {SUGGESTIONS.map((s, idx) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
                         <button
@@ -741,13 +740,14 @@ export default function AIAssistantPage() {
                             if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                             handleSend(s.prompt);
                           }}
-                          className={`group flex flex-col gap-1 rounded-xl border p-2.5 text-left transition-all duration-200
+                          className={`group flex flex-col gap-1.5 rounded-xl border p-3 text-left transition-all duration-300
                             ${locked
-                              ? "cursor-not-allowed border-[#1C2333] bg-white/3 opacity-50"
-                              : "border-[#1C2333] bg-[#131C2C] shadow-sm hover:-translate-y-1 hover:border-[#2D3748] hover:shadow-md"
+                              ? "cursor-not-allowed border-[#1C2333] bg-white/[0.02] opacity-50"
+                              : "border-[#1C2333] bg-[#131C2C] shadow-sm hover:-translate-y-0.5 hover:border-blue-500/20 hover:shadow-md hover:shadow-blue-500/5"
                             }`}
+                          style={{ animationDelay: `${idx * 50}ms` }}
                         >
-                          <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${locked ? "bg-slate-100" : s.iconCls}`}>
+                          <span className={`flex h-8 w-8 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 ${locked ? "bg-slate-100" : s.iconCls}`}>
                             {locked
                               ? <Lock className="h-3.5 w-3.5 text-slate-300" />
                               : <s.icon className="h-4 w-4" />
@@ -877,13 +877,6 @@ export default function AIAssistantPage() {
             )}
 
             <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-2xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] transition-all focus-within:border-blue-500/40 focus-within:ring-2 focus-within:ring-blue-500/10">
-              <Link
-                to="/resume"
-                title="Dokument hinzufügen"
-                className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition-all mb-0.5 hover:bg-white/5 hover:text-blue-300"
-              >
-                <Paperclip className="h-4 w-4" />
-              </Link>
               {/* Wand button */}
               <button
                 onClick={() => setWandOpen((v) => !v)}
@@ -974,12 +967,14 @@ export default function AIAssistantPage() {
           {/* Resume context */}
           {contextResume && (
             <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Lebenslauf</p>
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-3">
-                <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Lebenslauf</p>
+              <div className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
+                  <FileText className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-slate-100 truncate">{contextResume.filename || "Lebenslauf"}</p>
-                  <p className="text-[11px] text-slate-400">Aktiv für Analysen</p>
+                  <p className="text-[11px] text-blue-300/80">Aktiv für Analysen</p>
                 </div>
               </div>
             </div>
