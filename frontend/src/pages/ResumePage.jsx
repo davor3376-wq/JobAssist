@@ -199,7 +199,7 @@ function RadarChart({ skills, size = 220 }) {
 
       {/* Labels positioned outside the pentagon at fixed radius */}
       {skills.map((s, i) => {
-        const labelR = maxR + 32;
+        const labelR = maxR + 20;
         const lx = cx + labelR * Math.cos(angles[i]);
         const ly = cy + labelR * Math.sin(angles[i]);
         // Determine text anchor based on position
@@ -400,13 +400,13 @@ function FeedbackBox({ gamification }) {
       icon: Target,
       color: "amber",
       title: "Weiter so!",
-      text: `${potentialPoints} Punkte möglich`,
+      text: `Aufgabe ${completed + 1} von ${total}`,
     },
     low: {
       icon: Sparkles,
       color: "slate",
       title: "Starte jetzt!",
-      text: `+${potentialPoints} Punkte erreichbar`,
+      text: `Aufgabe 1 von ${total}`,
     },
   };
 
