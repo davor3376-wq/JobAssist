@@ -138,39 +138,6 @@ function useGamification(skills) {
   return { avgScore, currentScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask };
 }
 
-// ─── Animated Score Display ───────────────────────────────────────────────────
-
-function AnimatedScore({ current, target, duration = 600 }) {
-  const [display, setDisplay] = useState(current);
-
-  useEffect(() => {
-    setDisplay(current);
-  }, [current]);
-
-  useEffect(() => {
-    let animationId;
-    const start = display;
-    const diff = target - start;
-    const startTime = performance.now();
-
-    const animate = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(start + diff * easeOut));
-
-      if (progress < 1) {
-        animationId = requestAnimationFrame(animate);
-      }
-    };
-
-    animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, [target, duration, display]);
-
-  return <span>{display}%</span>;
-}
-
 // ─── Radar Chart ──────────────────────────────────────────────────────────────
 
 function RadarChart({ skills, size = 220 }) {
@@ -399,7 +366,7 @@ function Checklist({ gamification }) {
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
 function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) {
-  const { currentScore, potentialPoints, projectedScore } = gamification || {};
+  const { currentScore } = gamification || {};
 
   if (!resume) {
     return (
@@ -456,24 +423,6 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
                 <p className="text-[10px] text-slate-400">Aktueller Score</p>
               </div>
             </div>
-
-            {/* Potential Score Preview */}
-            {potentialPoints > 0 && (
-              <div className="flex-1 rounded-lg bg-slate-800/50 border border-slate-700/50 p-2.5">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[9px] text-slate-400">Nach Optimierung</span>
-                  <span className="text-[11px] font-bold text-blue-400">
-                    <AnimatedScore current={currentScore} target={projectedScore} />
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
-                    style={{ width: `${projectedScore}%` }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
