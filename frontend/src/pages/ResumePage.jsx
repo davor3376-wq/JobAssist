@@ -119,9 +119,12 @@ function useGamification(skills) {
       .reduce((sum, t) => sum + t.points, 0);
   }, [tasks, completedTasks]);
 
-  // Current score includes completed task points
-  const currentScore = Math.min(100, avgScore + completedPoints);
-  const projectedScore = Math.min(100, avgScore + completedPoints + potentialPoints);
+  // Current score includes completed task points with weighting
+  // Lower base scores get more benefit from tasks (fairness factor)
+  const fairnessMultiplier = Math.max(1, (100 - avgScore) / 50); // 1x at score 50, up to 2x at score 0
+  const weightedCompletedPoints = Math.round(completedPoints * fairnessMultiplier);
+  const currentScore = Math.min(100, avgScore + weightedCompletedPoints);
+  const projectedScore = Math.min(100, avgScore + weightedCompletedPoints + Math.round(potentialPoints * fairnessMultiplier));
 
   const toggleTask = useCallback((taskId) => {
     setCompletedTasks(prev => {
@@ -199,7 +202,7 @@ function RadarChart({ skills, size = 220 }) {
 
       {/* Labels positioned outside the pentagon at fixed radius */}
       {skills.map((s, i) => {
-        const labelR = maxR + 20;
+        const labelR = maxR + 14;
         const lx = cx + labelR * Math.cos(angles[i]);
         const ly = cy + labelR * Math.sin(angles[i]);
         // Determine text anchor based on position
@@ -400,13 +403,13 @@ function FeedbackBox({ gamification }) {
       icon: Target,
       color: "amber",
       title: "Weiter so!",
-      text: `Aufgabe ${completed + 1} von ${total}`,
+      text: "Aufgabe one to five",
     },
     low: {
       icon: Sparkles,
       color: "slate",
       title: "Starte jetzt!",
-      text: `Aufgabe 1 von ${total}`,
+      text: "Aufgabe one to five",
     },
   };
 
