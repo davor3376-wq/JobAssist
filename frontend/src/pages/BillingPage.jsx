@@ -334,7 +334,7 @@ export default function BillingPage() {
     ? Math.round(limitedItems.reduce((s, u) => s + Math.min(100, (u.used / u.limit) * 100), 0) / limitedItems.length)
     : 0;
   const healthColor  = avgUsagePct >= 80 ? "text-amber-300" : avgUsagePct >= 60 ? "text-blue-300" : "text-emerald-300";
-  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "optimal";
+  const healthLabel  = avgUsagePct >= 80 ? "Aktion nötig" : avgUsagePct >= 60 ? "Hohe Nutzung" : "Optimal";
   const comparisonRows = [
     { row: "Lebenslauf-Analysen / Monat", vals: ["5", "15", "Unbegrenzt", "Unbegrenzt"] },
     { row: "Motivationsschreiben / Monat", vals: ["5", "25", "Unbegrenzt", "Unbegrenzt"] },
