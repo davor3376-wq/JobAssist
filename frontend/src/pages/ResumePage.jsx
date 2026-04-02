@@ -100,11 +100,11 @@ function useGamification(skills) {
   }, [skills]);
 
   const tasks = useMemo(() => [
-    { id: "keywords", label: "Keywords aus Stellenanzeige einfügen", points: 8, icon: Target },
-    { id: "length", label: "Lebenslauf auf 1-2 Seiten kürzen", points: 5, icon: FileText },
-    { id: "achievements", label: "Messbare Erfolge hinzufügen", points: 10, icon: TrendingUp },
-    { id: "format", label: "ATS-freundliches Format wählen", points: 6, icon: CheckCircle },
-    { id: "contact", label: "Kontaktdaten vervollständigen", points: 4, icon: CheckCircle },
+    { id: "keywords", label: "Keywords aus Stellenanzeige einfügen", points: 3, icon: Target },
+    { id: "length", label: "Lebenslauf auf 1-2 Seiten kürzen", points: 2, icon: FileText },
+    { id: "achievements", label: "Messbare Erfolge hinzufügen", points: 4, icon: TrendingUp },
+    { id: "format", label: "ATS-freundliches Format wählen", points: 2, icon: CheckCircle },
+    { id: "contact", label: "Kontaktdaten vervollständigen", points: 2, icon: CheckCircle },
   ], []);
 
   const completedPoints = useMemo(() => {
@@ -221,12 +221,24 @@ function RadarChart({ skills, size = 220 }) {
         strokeLinejoin="round"
       />
 
-      {/* Data dots with glow */}
+      {/* Data dots with labels */}
       {dataPts.map((p, i) => (
         <g key={i}>
           <circle cx={p[0]} cy={p[1]} r="6" fill="none" stroke={skills[i].color} strokeWidth="2" opacity="0.4" />
           <circle cx={p[0]} cy={p[1]} r="4" fill="#0f172a" stroke={skills[i].color} strokeWidth="2" />
           <circle cx={p[0]} cy={p[1]} r="2" fill={skills[i].color} />
+          {/* Skill label */}
+          <text
+            x={p[0] + (p[0] > cx ? 12 : -12)}
+            y={p[1]}
+            fill={skills[i].color}
+            fontSize="10"
+            fontWeight="600"
+            textAnchor={p[0] > cx ? "start" : "end"}
+            dominantBaseline="middle"
+          >
+            {skills[i].label}
+          </text>
         </g>
       ))}
 
@@ -428,7 +440,13 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
           <div className="mt-4 flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
+                {/* Progress ring using conic-gradient */}
+                <div 
+                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full"
+                  style={{ 
+                    background: `conic-gradient(rgba(16,185,129,0.3) ${currentScore * 3.6}deg, transparent ${currentScore * 3.6}deg)`,
+                  }}
+                >
                   <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#08090c] text-[18px] font-bold text-emerald-400">
                     {currentScore}%
                   </div>
