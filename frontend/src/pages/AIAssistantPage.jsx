@@ -5,8 +5,8 @@ import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
-  ClipboardList, Upload, Search, ChevronLeft, Shield, X,
-  Wand2, Target, Zap, ArrowRight, ChevronDown, Paperclip,
+  ClipboardList, Search, ChevronLeft, Shield, X,
+  Wand2, Target, Zap, ArrowRight, Paperclip,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
 import { useStreamingChat } from "../hooks/useStreamingChat";
@@ -167,6 +167,13 @@ function MarkdownMessage({ text }) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
+
+const STARTER_MISSIONS = [
+  { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100" },
+  { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-purple-600 bg-purple-50 border-purple-100" },
+  { icon: FileText, label: "Lebenslauf analysieren", color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
+  { icon: Briefcase, label: "Bewerbungsstrategie öffnen", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+];
 
 export default function AIAssistantPage() {
   const [conversations, setConversations] = useState(() => loadHistory());
@@ -457,15 +464,16 @@ export default function AIAssistantPage() {
           {/* Starter missions (shown when no history) */}
           {conversations.length === 0 && (
             <div className="flex-shrink-0 px-3 py-3 space-y-1.5 border-b border-slate-100">
-              {[
-                { icon: MessageSquare, label: "Interview-Simulation starten", color: "text-violet-600 bg-violet-50 border-violet-100", onClick: startSimulation },
-                { icon: ClipboardList, label: "Karriere-Analyse starten", color: "text-purple-600 bg-purple-50 border-purple-100", onClick: () => setAssessmentDisclaimerOpen(true) },
-                { icon: FileText, label: "Lebenslauf analysieren", color: "text-indigo-600 bg-indigo-50 border-indigo-100", onClick: () => handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?") },
-                { icon: Briefcase, label: "Bewerbungsstrategie öffnen", color: "text-emerald-600 bg-emerald-50 border-emerald-100", onClick: () => handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?") },
-              ].map((m) => (
+              {STARTER_MISSIONS.map((m, index) => (
                 <button
                   key={m.label}
-                  onClick={() => { m.onClick(); setSidebarOpen(false); }}
+                  onClick={() => { 
+                    if (index === 0) startSimulation();
+                    else if (index === 1) setAssessmentDisclaimerOpen(true);
+                    else if (index === 2) handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?");
+                    else if (index === 3) handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?");
+                    setSidebarOpen(false); 
+                  }}
                   className={`w-full flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm ${m.color}`}
                 >
                   <m.icon className="w-3.5 h-3.5 flex-shrink-0" />
