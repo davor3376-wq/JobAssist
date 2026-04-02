@@ -55,9 +55,9 @@ export default function DashboardPage() {
             {/* Progress circle showing 63% - uses conic-gradient for accurate visual */}
           <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
             <div
-              className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[28px] font-semibold text-emerald-400 relative overflow-hidden"
+              className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[32px] font-bold text-emerald-400 relative overflow-hidden"
             >
-              <span className="relative z-10">63%</span>
+              <span className="relative z-10 text-[36px] font-bold">63%</span>
             </div>
           </div>
 
@@ -256,6 +256,37 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* Bottom widget - stretches across */}
+        <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
+          <div className="rounded-xl border border-slate-700/50 bg-[#0A0C12] p-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Bewerbungs-Übersicht</h3>
+                <p className="text-xs text-slate-400 mt-1">Alle deine Aktivitäten auf einen Blick</p>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">5</div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Beworben</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400">24%</div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Rücklauf</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-violet-400">1</div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Interviews</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-emerald-400">3</div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider">Neue Matches</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Nächste Schritte section */}
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -296,6 +327,11 @@ export default function DashboardPage() {
             </div>
 
             <div onClick={() => navigate('/applications?status=interview')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M9 2L2 7V16H6V11H12V16H16V7L9 2Z" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white">Interview morgen vorbereiten</p>
                 <p className="mt-0.5 text-xs text-slate-400">1 Gespräch in 24 Stunden</p>
