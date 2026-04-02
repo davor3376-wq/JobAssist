@@ -7,52 +7,76 @@ import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Bu
 import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
 
 const SAVED_STATUS_CFG = {
-  bookmarked:   { label: "Gespeichert",  cls: "bg-slate-800 text-slate-300 border border-slate-700" },
-  applied:      { label: "Beworben",     cls: "bg-emerald-900/40 text-emerald-400 border border-emerald-800" },
+  bookmarked:   { label: "Gespeichert",  cls: "bg-slate-800/60 text-slate-300 border border-slate-700/60" },
+  applied:      { label: "Beworben",     cls: "bg-emerald-900/30 text-emerald-300 border border-emerald-500/20" },
   interviewing: { label: "Gespräch",     cls: "bg-blue-500/10 text-blue-300 border border-blue-500/20" },
-  offered:      { label: "Angebot",      cls: "bg-amber-900/40 text-amber-400 border border-amber-800" },
-  rejected:     { label: "Abgelehnt",    cls: "bg-red-900/40 text-red-400 border border-red-800" },
+  offered:      { label: "Angebot",      cls: "bg-[#2D2600] text-[#FFD700] border border-[#FFD700]/30", icon: "🏆" },
+  rejected:     { label: "Abgelehnt",    cls: "bg-red-900/30 text-red-400 border border-red-500/20" },
 };
-function StatusBadge({ status }) {
+function StatusBadge({ status, timeAgo }) {
   const cfg = SAVED_STATUS_CFG[status] || SAVED_STATUS_CFG.bookmarked;
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${cfg.cls}`}>{cfg.label}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${cfg.cls}`}>
+      {cfg.icon && <span>{cfg.icon}</span>}
+      {cfg.label}
+      {timeAgo && <span className="opacity-70">· {timeAgo}</span>}
+    </span>
+  );
 }
 
-function MatchProgressBadge({ score }) {
+// Large Match Score Ring for Hero (80px)
+function HeroMatchRing({ score }) {
+  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
+  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
+
+  return (
+    <div className="relative w-20 h-20 flex-shrink-0">
+      <svg viewBox="0 0 80 80" className="-rotate-90 w-20 h-20">
+        <circle cx="40" cy="40" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+        <circle
+          cx="40" cy="40" r={radius} fill="none"
+          stroke={color} strokeWidth="4" strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          className="transition-all duration-700"
+          style={{ filter: `drop-shadow(0 0 12px ${color}60)` }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold tabular-nums" style={{ color }}>
+          {normalized != null ? `${normalized}%` : "—"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Compact Match Score Ring for List (40px)
+function CompactMatchRing({ score }) {
   const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
+  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[#243041] bg-[#0b1220] px-2.5 py-2">
-      <div className="relative h-11 w-11 flex-shrink-0">
-        <svg viewBox="0 0 40 40" className="-rotate-90">
-          <circle cx="20" cy="20" r={radius} fill="none" stroke="#1f2937" strokeWidth="3" />
-          <circle
-            cx="20"
-            cy="20"
-            r={radius}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            className="transition-all duration-500"
-            style={{ filter: "drop-shadow(0 0 8px rgba(59,130,246,0.35))" }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-blue-300">
-          {normalized == null ? "KI" : `${normalized}%`}
-        </div>
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Matching-Quote</p>
-        <p className="text-xs font-semibold text-slate-200">
-          {normalized == null ? "Analyse ausstehend" : "Passung datenbasiert"}
-        </p>
-      </div>
+    <div className="relative w-10 h-10 flex-shrink-0">
+      <svg viewBox="0 0 40 40" className="-rotate-90 w-10 h-10">
+        <circle cx="20" cy="20" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+        <circle
+          cx="20" cy="20" r={radius} fill="none"
+          stroke={color} strokeWidth="3" strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          style={{ filter: `drop-shadow(0 0 6px ${color}50)` }}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold tabular-nums" style={{ color }}>
+        {normalized != null ? `${normalized}` : "—"}
+      </span>
     </div>
   );
 }
@@ -368,6 +392,16 @@ const [savingJobId, setSavingJobId] = useState(null);
     }
   };
 
+  // Time ago formatter
+  const timeAgo = (date) => {
+    if (!date) return null;
+    const diff = Date.now() - new Date(date).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return "Heute";
+    if (days === 1) return "Gestern";
+    return `Vor ${days} Tagen`;
+  };
+
   const handleRefreshResearch = async () => {
     if (!researchModal) return;
     setResearchLoading(true);
@@ -442,7 +476,8 @@ const [savingJobId, setSavingJobId] = useState(null);
   });
 
   return (
-    <div className="mx-auto max-w-6xl bg-black pb-16" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
+    <div className="min-h-screen bg-[#080808]" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
       {/* Header Section */}
       <div className="flex items-center justify-between mb-6 animate-slide-up">
         <div>
@@ -471,18 +506,26 @@ const [savingJobId, setSavingJobId] = useState(null);
           });
           const visible = sorted.slice(0, 10);
 
+          // Get counts for filter pills
+          const statusCounts = STATUS_FILTERS.reduce((acc, f) => {
+            acc[f.key] = f.key === "all" ? savedJobs.length : savedJobs.filter(j => j.status === f.key).length;
+            return acc;
+          }, {});
+
           return (
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
+            <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg">
               {/* Header + sort */}
-              <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-white">Gespeicherte Stellen</h2>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0b1220] border border-[#1f2937] text-slate-400">{filtered.length}</span>
+                  <h2 className="text-base font-bold text-white">Gespeicherte Stellen</h2>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400">
+                    {filtered.length}
+                  </span>
                 </div>
                 <select
                   value={savedSort}
                   onChange={e => setSavedSort(e.target.value)}
-                  className="text-[11px] px-2 py-1 border border-[#1C2333] rounded-lg bg-[#0b1220] text-slate-400 focus:outline-none"
+                  className="text-xs px-3 py-1.5 border border-white/10 rounded-lg bg-white/5 text-slate-400 focus:outline-none focus:border-blue-500/30"
                 >
                   <option value="score">Match ↓</option>
                   <option value="status">Status</option>
@@ -490,44 +533,51 @@ const [savingJobId, setSavingJobId] = useState(null);
                 </select>
               </div>
 
-              {/* Status filter pills */}
-              <div className="flex gap-1.5 flex-wrap mb-4">
+              {/* Status filter pills with counters - sticky on mobile */}
+              <div className="flex gap-2 flex-wrap mb-4 pb-2 sm:sticky sm:top-0 sm:z-10 sm:bg-[#0A0A0A]/95 sm:backdrop-blur-md sm:-mx-5 sm:px-5 sm:pt-2">
                 {STATUS_FILTERS.map(f => (
                   <button
                     key={f.key}
                     onClick={() => setSavedFilter(f.key)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                       savedFilter === f.key
-                        ? "bg-blue-500 text-white"
-                        : "bg-[#0b1220] border border-[#1f2937] text-slate-400 hover:text-slate-200"
+                        ? "bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]"
+                        : "bg-white/5 border border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20"
                     }`}
                   >
                     {f.label}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      savedFilter === f.key ? "bg-white/20" : "bg-white/10"
+                    }`}>
+                      {statusCounts[f.key]}
+                    </span>
                   </button>
                 ))}
               </div>
 
-              {/* 2-column grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* 2-column grid with glassmorphism cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {visible.map(job => {
                   const cfg = SAVED_STATUS_CFG[job.status] || SAVED_STATUS_CFG.bookmarked;
                   const score = job.match_score != null ? Math.round(job.match_score) : null;
                   const scoreColor = score == null ? "#94a3b8" : score >= 60 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444";
+                  const jobTimeAgo = timeAgo(job.updated_at || job.created_at);
+                  
                   return (
                     <Link
                       key={job.id}
                       to={`/jobs/${job.id}`}
-                      className="group flex items-center gap-3 rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-2.5 transition-all hover:border-blue-500/30 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+                      className="group relative flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 transition-all hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:bg-white/[0.07]"
                     >
-                      {/* Score ring */}
-                      <div className="flex-shrink-0 relative w-9 h-9">
-                        <svg viewBox="0 0 36 36" className="-rotate-90 w-9 h-9">
-                          <circle cx="18" cy="18" r="14" fill="none" stroke="#1f2937" strokeWidth="3" />
+                      {/* Compact Score ring */}
+                      <div className="flex-shrink-0 relative w-10 h-10">
+                        <svg viewBox="0 0 40 40" className="-rotate-90 w-10 h-10">
+                          <circle cx="20" cy="20" r={16} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
                           {score != null && (
-                            <circle cx="18" cy="18" r="14" fill="none"
+                            <circle cx="20" cy="20" r={16} fill="none"
                               stroke={scoreColor} strokeWidth="3" strokeLinecap="round"
-                              strokeDasharray={2 * Math.PI * 14}
-                              strokeDashoffset={2 * Math.PI * 14 * (1 - score / 100)}
+                              strokeDasharray={2 * Math.PI * 16}
+                              strokeDashoffset={2 * Math.PI * 16 * (1 - score / 100)}
                               style={{ filter: `drop-shadow(0 0 4px ${scoreColor}55)` }}
                             />
                           )}
@@ -536,11 +586,26 @@ const [savingJobId, setSavingJobId] = useState(null);
                           {score != null ? `${score}` : "—"}
                         </span>
                       </div>
+                      
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{job.company}</p>
+                        <p className="text-sm font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
+                        <p className="text-xs text-slate-500 truncate">{job.company}</p>
                       </div>
-                      <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.cls}`}>{cfg.label}</span>
+                      
+                      {/* Status badge with time for applied */}
+                      <div className="flex-shrink-0">
+                        <StatusBadge status={job.status} timeAgo={job.status === "applied" ? jobTimeAgo : null} />
+                      </div>
+                      
+                      {/* Hover quick-actions */}
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 transition-colors"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Navigate to job */ }}
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </Link>
                   );
                 })}
@@ -555,7 +620,8 @@ const [savingJobId, setSavingJobId] = useState(null);
           );
         })()}
 
-        <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 shadow-none">
+        {/* Search Section with Glassmorphism */}
+        <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg">
                 {/* Tab Navigation */}
                 <div className="flex gap-1 rounded-xl bg-[#111827] p-1 mb-5">
                   <button
@@ -588,8 +654,7 @@ const [savingJobId, setSavingJobId] = useState(null);
                     <button
                       onClick={handleRecommendedSearch}
                       disabled={recommendedLoading}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-50 transition-all hover:opacity-90"
-                      style={{ backgroundColor: "#2D5BFF" }}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white border border-white/10 bg-white/5 backdrop-blur-sm min-h-[44px] disabled:opacity-50 transition-all hover:bg-white/10 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
                     >
                       {recommendedLoading ? (
                         <>
@@ -598,8 +663,8 @@ const [savingJobId, setSavingJobId] = useState(null);
                         </>
                       ) : (
                         <>
-                          <Zap className="w-4 h-4" />
-                          Empfohlene Stellen laden
+                          <Sparkles className="w-4 h-4 text-blue-400" />
+                          Neue Chancen entdecken
                         </>
                       )}
                     </button>
@@ -702,8 +767,7 @@ const [savingJobId, setSavingJobId] = useState(null);
                     <button
                       type="submit"
                       disabled={customLoading || !customSearchParams.keywords}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm min-h-[44px] disabled:opacity-50 transition-all hover:opacity-90"
-                      style={{ backgroundColor: "#2D5BFF" }}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white border border-white/10 bg-white/5 backdrop-blur-sm min-h-[44px] disabled:opacity-50 transition-all hover:bg-white/10 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
                     >
                       {customLoading ? (
                         <>
@@ -712,7 +776,7 @@ const [savingJobId, setSavingJobId] = useState(null);
                         </>
                       ) : (
                         <>
-                          <Search className="w-4 h-4" />
+                          <Search className="w-4 h-4 text-blue-400" />
                           Stellen suchen
                         </>
                       )}
