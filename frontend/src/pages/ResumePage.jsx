@@ -332,10 +332,62 @@ function UploadZone({ getRootProps, getInputProps, isDragActive, uploading }) {
   );
 }
 
+// ─── Checklist Component ─────────────────────────────────────────────────────
+
+function Checklist({ gamification }) {
+  const { tasks, completedTasks, toggleTask } = gamification || {};
+
+  if (!tasks?.length) return null;
+
+  return (
+    <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-lg bg-amber-500/12 flex items-center justify-center">
+          <Target className="w-3.5 h-3.5 text-amber-400" />
+        </div>
+        <span className="text-[11px] font-bold text-slate-300">Optimierungs-Tipps</span>
+      </div>
+
+      <div className="space-y-2">
+        {tasks?.map((task) => {
+          const isCompleted = completedTasks?.includes(task.id);
+          const TaskIcon = task.icon;
+          return (
+            <button
+              key={task.id}
+              onClick={() => toggleTask?.(task.id)}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-200 text-left ${
+                isCompleted
+                  ? "bg-emerald-500/10 border-emerald-500/30"
+                  : "bg-slate-800/30 border-slate-700/50 hover:border-amber-500/30 hover:bg-slate-800/50"
+              }`}
+            >
+              <div className={`flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+                isCompleted ? "bg-emerald-500/20" : "bg-slate-700/50"
+              }`}>
+                {isCompleted ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <TaskIcon className="w-3.5 h-3.5 text-slate-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[10px] font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
+                  {task.label}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
 function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) {
-  const { currentScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask } = gamification || {};
+  const { currentScore, potentialPoints, projectedScore } = gamification || {};
 
   if (!resume) {
     return (
@@ -377,9 +429,7 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
-                  <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#08090c] text-[18px] font-bold text-emerald-400 shadow-[0_0_20px_rgba(52,226,161,0.2)]"
-                    style={{ borderLeftColor: "#1a513e", borderTopColor: "#15382d" }}
-                  >
+                  <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#08090c] text-[18px] font-bold text-emerald-400">
                     {currentScore}%
                   </div>
                 </div>
@@ -415,61 +465,6 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
           </div>
         </div>
       </div>
-
-      {/* Interactive Checklist */}
-      {gamification && (
-        <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-amber-500/12 flex items-center justify-center">
-                <Target className="w-3.5 h-3.5 text-amber-400" />
-              </div>
-              <span className="text-[11px] font-bold text-slate-300">Optimierungs-Checkliste</span>
-            </div>
-            <span className="text-[10px] font-semibold text-slate-500">
-              {completedTasks?.length || 0}/{tasks?.length || 0} erledigt
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {tasks?.map((task) => {
-              const isCompleted = completedTasks?.includes(task.id);
-              const TaskIcon = task.icon;
-              return (
-                <button
-                  key={task.id}
-                  onClick={() => toggleTask?.(task.id)}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-200 text-left ${
-                    isCompleted
-                      ? "bg-emerald-500/10 border-emerald-500/30"
-                      : "bg-slate-800/30 border-slate-700/50 hover:border-amber-500/30 hover:bg-slate-800/50"
-                  }`}
-                >
-                  <div className={`flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
-                    isCompleted ? "bg-emerald-500/20" : "bg-slate-700/50"
-                  }`}>
-                    {isCompleted ? (
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <TaskIcon className="w-3.5 h-3.5 text-slate-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-[10px] font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
-                      {task.label}
-                    </p>
-                  </div>
-                  <span className={`flex-shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded ${
-                    isCompleted ? "text-emerald-400 bg-emerald-500/10" : "text-amber-400 bg-amber-500/10"
-                  }`}>
-                    +{task.points}%
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Radar + skills */}
       <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-5 flex flex-col gap-4 min-h-0 overflow-y-auto">
@@ -682,6 +677,9 @@ export default function ResumePage() {
                 ))}
               </ul>
             </div>
+
+            {/* Checklist - moved to left column */}
+            {selectedResume && <Checklist gamification={gamification} />}
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
