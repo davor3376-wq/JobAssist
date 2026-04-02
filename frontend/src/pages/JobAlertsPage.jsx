@@ -519,6 +519,7 @@ export default function JobAlertsPage() {
   });
 
   const handleRunNow = async (id) => {
+    if (runningId) return; // Guard against double-clicks
     setRunningId(id);
     try {
       await jobAlertsApi.runNow(id);
