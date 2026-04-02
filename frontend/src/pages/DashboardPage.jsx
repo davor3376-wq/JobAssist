@@ -55,10 +55,7 @@ export default function DashboardPage() {
             {/* Progress circle showing 63% - uses conic-gradient for accurate visual */}
           <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)]">
             <div
-              className="flex h-[130px] w-[130px] items-center justify-center rounded-full bg-[#090B0F] text-[28px] font-semibold text-[#52F2BA] shadow-[0_0_25px_rgba(52,226,161,0.18)] relative overflow-hidden"
-              style={{
-                background: `conic-gradient(#34E2A1 0deg, #34E2A1 ${63 * 3.6}deg, #1a3a2e ${63 * 3.6}deg, #1a3a2e 360deg)`
-              }}
+              className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[28px] font-semibold text-emerald-400 relative overflow-hidden"
             >
               <span className="relative z-10">63%</span>
             </div>
@@ -91,9 +88,9 @@ export default function DashboardPage() {
                 <div className="text-base font-semibold text-white">5</div>
                 <p className="text-[10px] text-slate-500">Top-Matches</p>
               </div>
-              <div className="rounded-xl border border-emerald-400/10 bg-[#0A0C12] px-3 py-2.5 text-center">
-                <div className="text-base font-semibold text-emerald-300">+8%</div>
-                <p className="text-[10px] text-slate-500">vs. Vorwoche</p>
+              <div className="rounded-xl border border-blue-400/10 bg-[#0A0C12] px-3 py-2.5 text-center">
+                <div className="text-base font-semibold text-blue-300">21</div>
+                <p className="text-[10px] text-slate-500">Analysiert</p>
               </div>
             </div>
           </div>
@@ -298,13 +295,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div onClick={() => navigate('/applications')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M9 3v5l3.5 2" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="9" cy="9" r="6.5" stroke="#A78BFA" strokeWidth="1.5" />
-                </svg>
-              </div>
+            <div onClick={() => navigate('/applications?status=interview')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white">Interview morgen vorbereiten</p>
                 <p className="mt-0.5 text-xs text-slate-400">1 Gespräch in 24 Stunden</p>
