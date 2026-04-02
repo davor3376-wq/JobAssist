@@ -325,6 +325,8 @@ export default function AIAssistantPage() {
     if (activeId === id) {
       setActiveId(null);
       setMessages([]);
+      setSimulationMode(false);
+      setAssessmentMode(false);
     }
   };
 
@@ -799,7 +801,7 @@ export default function AIAssistantPage() {
                       <div className={`px-4 py-3 overflow-hidden
                         ${msg.role === "user"
                           ? "bg-blue-500 text-white rounded-xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
-                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm text-sm leading-relaxed"
+                          : "bg-[#111827] border border-[#273244] shadow-sm text-slate-300 rounded-xl rounded-bl-sm text-sm leading-relaxed"
                         }`}
                       >
                         {msg.role === "user"
@@ -834,7 +836,7 @@ export default function AIAssistantPage() {
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="max-w-[80%] flex flex-col gap-1 items-start">
-                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden">
+                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-300 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden">
                         <MarkdownMessage text={streamingMsg.shown} />
                         <span className="inline-block w-0.5 h-3.5 bg-blue-400 animate-pulse ml-0.5 align-middle" />
                       </div>
