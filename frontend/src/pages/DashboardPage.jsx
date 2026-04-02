@@ -27,7 +27,6 @@ export default function DashboardPage() {
                 KI-gestützte Übersicht deiner Bewerbungsstärke
               </p>
             </div>
-          </div>
 
           <div className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-300">
             Auf Erfolgskurs
@@ -36,7 +35,6 @@ export default function DashboardPage() {
 
         <section className="col-span-12 bg-[#090B0F] p-6 md:col-span-3">
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            {/* Progress circle showing 63% - uses conic-gradient for accurate visual */}
           <div className="mx-auto flex h-[156px] w-[156px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.14),rgba(9,11,15,0.96)_64%)] shadow-[0_0_60px_rgba(16,185,129,0.3),0_0_120px_rgba(16,185,129,0.15)] animate-pulse">
             <div
               className="flex h-[130px] w-[130px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#090B0F] text-[32px] font-bold text-emerald-400 relative overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.4),inset_0_0_20px_rgba(16,185,129,0.1)]"
@@ -46,16 +44,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-            {/* Momentum indicators */}
             <div className="w-full space-y-2">
               <div className="flex items-center justify-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/8 px-3 py-1.5">
                 <TrendingUp className="h-3.5 w-3.5 text-blue-400" />
                 <span className="text-xs font-semibold text-blue-300">+2% seit gestern</span>
               </div>
               <p className="text-center text-xs text-slate-400">
-                <span className="text-emerald-400 font-medium">Noch 7%</span> bis "Sehr Gut"
+                <span className="text-emerald-400 font-medium">Noch 7%</span> bis Sehr Gut
               </p>
-              {/* Progress to next milestone */}
               <div className="mx-auto h-1.5 w-24 overflow-hidden rounded-full bg-[#1C2333]">
                 <div 
                   className="h-full rounded-full bg-gradient-to-r from-[#34E2A1] to-[#10B981]"
@@ -79,7 +75,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Top Widget: Profile Strength Score */}
             <div className="w-full rounded-xl border border-blue-400/20 bg-blue-500/5 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -109,7 +104,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* New Performance Widget */}
             <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold text-emerald-300">Performance Index</p>
@@ -128,7 +122,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bottom Widget: Next Milestone Preview */}
             <div className="w-full rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/15">
@@ -139,7 +132,7 @@ export default function DashboardPage() {
                 <p className="text-xs font-semibold text-violet-300">Nächster Meilenstein</p>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-white">"Experte"</span>
+                <span className="text-sm font-bold text-white">Experte</span>
                 <span className="text-[10px] text-slate-400">90 Pkt.</span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1C2333]">
@@ -160,7 +153,6 @@ export default function DashboardPage() {
                 Aktivitätsverlauf
               </h2>
               <div className="flex items-center gap-2">
-                {/* Daily Streak indicator */}
                 <div className="flex items-center gap-1.5 rounded-full border border-orange-400/20 bg-orange-400/10 px-2.5 py-1">
                   <Flame className="h-3.5 w-3.5 text-orange-400" />
                   <span className="text-[11px] font-bold text-orange-300">5 Tage</span>
@@ -171,7 +163,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Daily goal progress */}
             <div className="mt-3 rounded-xl border border-[#233250] bg-[#0A0C12] p-3">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] font-semibold text-slate-300">Tagesziel: 3 Analysen</p>
@@ -234,18 +225,14 @@ export default function DashboardPage() {
         </section>
 
         <section className="col-span-12 bg-[#090B0F] md:col-span-4">
-          {/* Visual Funnel - Application Journey */}
           <div className="flex h-full flex-col">
-            {/* Funnel header */}
             <div className="border-b border-white/10 px-6 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 Deine Bewerbungsreise
               </p>
             </div>
             
-            {/* Funnel steps */}
             <div className="flex-1 flex flex-col">
-              {/* Step 1: Applied */}
               <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center justify-between">
@@ -262,7 +249,6 @@ export default function DashboardPage() {
                 <p className="mt-2 text-xs text-slate-400">Erster Schritt getan</p>
               </div>
 
-              {/* Step 2: Response Rate */}
               <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center justify-between">
@@ -278,7 +264,6 @@ export default function DashboardPage() {
                 <p className="mt-2 text-xs text-slate-400">Aktiv verfolgt</p>
               </div>
 
-              {/* Step 3: Interviews */}
               <div className="group relative flex flex-1 flex-col justify-center border-b border-white/10 px-6 py-5 hover:bg-white/[0.02] transition-colors">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-violet-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center justify-between">
@@ -294,7 +279,6 @@ export default function DashboardPage() {
                 <p className="mt-2 text-xs text-slate-400">Aktive Gespräche</p>
               </div>
 
-              {/* Step 4: Remaining */}
               <div className="group relative flex flex-1 flex-col justify-center px-6 py-5 hover:bg-white/[0.02] transition-colors">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-slate-500 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center justify-between">
@@ -313,7 +297,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Weekly Goals & Achievements Widget */}
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
           <div className="rounded-xl border border-slate-700/50 bg-[#0A0C12] p-5">
             <div className="flex items-center justify-between mb-4">
@@ -326,7 +309,6 @@ export default function DashboardPage() {
               </span>
             </div>
             
-            {/* Achievement cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
@@ -365,7 +347,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Nächste Schritte section */}
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -377,7 +358,6 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-12 gap-3">
-            {/* Primary CTA - Enhanced visibility with glow and filled background */}
             <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 p-4 shadow-[0_0_30px_rgba(59,130,246,0.15)] md:col-span-4 cursor-pointer hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-shadow">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 shadow-md shadow-blue-500/30">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -389,7 +369,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-bold text-white">3 neue Matches heute</p>
                   <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEU</span>
                 </div>
-                <p className="mt-0.5 text-xs text-blue-200/80">Top-Matches &gt;80% Übereinstimmung – Jetzt bewerben!</p>
+                <p className="mt-0.5 text-xs text-blue-200/80">Top-Matches ueber 80% Uebereinstimmung</p>
               </div>
             </div>
 
