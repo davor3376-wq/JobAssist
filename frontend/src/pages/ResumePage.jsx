@@ -423,7 +423,7 @@ function Checklist({ gamification }) {
 
 // ─── Feedback Box Component ──────────────────────────────────────────────────
 
-function FeedbackBox({ gamification }) {
+function _FeedbackBox({ gamification }) {
   const { tasks = [], completedTasks = [], projectedScore: _projectedScore = 0, potentialPoints: _potentialPoints = 0 } = gamification || {};
   const total = tasks.length;
   const completed = completedTasks.length;
@@ -494,6 +494,19 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
   const { currentScore } = gamification || {};
   const goalReached = currentScore >= 85;
   const summary = useMemo(() => generateAISummary(skills), [skills]);
+  const [expandedCard, setExpandedCard] = useState(null);
+
+  const sorted = useMemo(() => [...skills].sort((a, b) => b.value - a.value), [skills]);
+  const strengths = sorted.slice(0, 3);
+  const potentials = sorted.slice(-2);
+
+  const growthRecs = useMemo(() => ({
+    tech: "Erweitere dein Tech-Stack um Cloud-Zertifizierungen (AWS/Azure) für +15% Match-Rate.",
+    exp: "Dokumentiere messbare Erfolge: '→ Umsatz +20%' statt 'Umsatz gesteigert'.",
+    edu: "Ein relevantes Zertifikat (z.B. Scrum Master) kann deinen Score um 8-12% steigern.",
+    soft: "Füge konkrete Beispiele für Teamführung und Konfliktlösung in deinen CV ein.",
+    lang: "Business-English auf C2-Niveau ist der #1 gefragte Soft Skill in DACH.",
+  }), []);
 
   if (!resume) {
     return (
@@ -509,94 +522,277 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
     );
   }
 
+  const scoreColor = goalReached ? "#10b981" : "#818cf8";
+  const circumference = 2 * Math.PI * 54;
+  const strokeDashoffset = circumference - (currentScore / 100) * circumference;
+
   return (
-    <div className="flex flex-col h-full gap-3">
+    <div className="grid grid-cols-12 gap-3">
 
-      {/* ── Combined Score + Target tile ─────────────────────────────── */}
-      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Brain className="w-3.5 h-3.5 text-blue-400/70" />
-            <span className="text-[8px] font-bold uppercase tracking-[0.12em] text-slate-500">Dokumenten-Analyse</span>
-          </div>
-          <p className="text-[9px] text-slate-600 truncate max-w-[180px]">{resume.filename}</p>
+      {/* ── 1. AI Executive Summary — Premium Insight ─────────────── */}
+      <div
+        className="col-span-12 rounded-2xl p-5"
+        style={{
+          background: "#080808",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="flex items-center gap-1.5 mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+            KI-Zusammenfassung
+          </span>
         </div>
+        <p className="text-[13px] leading-relaxed text-[#b0b0b8]">
+          Dein Profil zeigt eine{" "}
+          <span className="text-white font-semibold">starke Passung</span> im Bereich{" "}
+          <span style={{ color: summary.strength.color }} className="font-semibold">
+            {summary.strength.label}
+          </span>{" "}
+          ({summary.strength.value}%). Der größte Hebel liegt bei{" "}
+          <span style={{ color: summary.potential.color }} className="font-semibold">
+            {summary.potential.label}
+          </span>{" "}
+          — hier kannst du mit gezielten Optimierungen deinen Gesamtscore signifikant steigern.
+        </p>
+      </div>
 
-        <div className="mt-3 flex items-center gap-4">
-          {/* Score ring */}
+      {/* ── 2. Hero: Thin Neon Ring + Title + Glassmorphism CTA ──── */}
+      <div
+        className="col-span-12 rounded-2xl p-5 sm:p-6"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <div className="flex items-center gap-6">
+          {/* Thin neon score ring */}
           <div className="flex-shrink-0 relative">
-            <div
-              className="flex h-[56px] w-[56px] items-center justify-center rounded-full"
-              style={{
-                background: `conic-gradient(${goalReached ? "rgba(16,185,129,0.35)" : "rgba(99,102,241,0.3)"} ${currentScore * 3.6}deg, transparent ${currentScore * 3.6}deg)`,
-              }}
-            >
-              <div className={`flex h-[44px] w-[44px] items-center justify-center rounded-full border-[4px] bg-[#08090c] text-[15px] font-extrabold tabular-nums ${goalReached ? "border-emerald-500 text-emerald-400" : "border-indigo-500 text-indigo-400"}`}>
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <defs>
+                <filter id="scoreNeon" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#111114" strokeWidth="1.5" />
+              <circle
+                cx="60" cy="60" r="54" fill="none"
+                stroke={scoreColor} strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                transform="rotate(-90 60 60)"
+                filter="url(#scoreNeon)"
+                style={{ transition: "stroke-dashoffset 0.8s ease" }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[28px] font-semibold text-white leading-none tracking-tight">
                 {currentScore}
-              </div>
+              </span>
+              <span className="text-[9px] text-[#3a3a42] mt-0.5">%</span>
             </div>
           </div>
 
-          {/* Score label + goal status */}
+          {/* Title — clean typography, no boxes */}
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold text-slate-400">Gesamtscore</p>
-            <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+              Dokumenten-Analyse
+            </span>
+            <h2 className="text-[20px] font-semibold text-white leading-tight mt-1 truncate">
+              {resume.filename?.replace(/\.[^.]+$/, "")}
+            </h2>
+            <p className="text-[12px] text-[#3a3a42] mt-0.5">
+              Lebenslauf · {formatDate(resume.updated_at || resume.created_at)}
+            </p>
+            <div className="flex items-center gap-1.5 mt-2">
               {goalReached ? (
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <CheckCircle className="w-3 h-3 text-emerald-400" />
               ) : (
-                <Target className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                <Target className="w-3 h-3 text-[#505058]" />
               )}
-              <span className={`text-[9px] font-bold ${goalReached ? "text-emerald-400" : "text-slate-500"}`}>
+              <span className={`text-[10px] font-medium ${goalReached ? "text-emerald-400" : "text-[#505058]"}`}>
                 {goalReached ? "Ziel erreicht (85%)" : `Ziel: 85% · noch ${85 - currentScore}%`}
               </span>
             </div>
           </div>
 
-          {/* Feedback */}
-          <FeedbackBox gamification={gamification} />
+          {/* Glassmorphism CTA */}
+          <button
+            onClick={onImproveClick}
+            className="flex-shrink-0 group rounded-xl px-5 py-2.5 transition-all duration-200 hover:scale-[1.02]"
+            style={{
+              background: "linear-gradient(180deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.04) 100%)",
+              boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.06), 0 0 20px rgba(99,102,241,0.08)",
+              border: "1px solid rgba(99,102,241,0.15)",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <Edit3 className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[12px] font-medium text-[#c8c8d0]">Anschreiben erstellen</span>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* ── Radar (massiv) + AI Summary ──────────────────────────────── */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-4 flex flex-col min-h-0 overflow-y-auto">
-        {/* Radar chart – full width */}
-        <div className="flex items-center justify-center py-2">
-          <RadarChart skills={skills} size={480} />
-        </div>
-
-        {/* Smart AI Summary */}
-        <div className="mt-3 rounded-lg bg-[#0c0e14] border border-[#1a1d27] p-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Sparkles className="w-3 h-3 text-indigo-400" />
-            <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-indigo-400/80">KI-Analyse</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {summary.insights.map((insight) => (
-              <div key={insight.label} className="rounded-md bg-[#08090c] border border-[#171a21] px-3 py-2">
-                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Top {insight.label}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: insight.color }} />
-                  <span className="text-[10px] font-bold text-slate-300">{insight.text}</span>
-                  <span className="text-[9px] font-semibold tabular-nums ml-auto" style={{ color: insight.color }}>{insight.value}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Premium CTA ─────────────────────────────────────────────── */}
-      <button
-        onClick={onImproveClick}
-        className="w-full rounded-lg overflow-hidden flex-shrink-0 group transition-shadow hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-        style={{ background: "linear-gradient(135deg, #4338ca 0%, #6366f1 60%, #818cf8 100%)" }}
+      {/* ── 3. Eignungs-Analyse: ultra-fine 2px bars ─────────────── */}
+      <div
+        className="col-span-12 sm:col-span-7 rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
       >
-        <div className="px-4 py-2.5 flex items-center justify-center gap-2">
-          <Edit3 className="w-3.5 h-3.5 text-white/90 group-hover:scale-110 transition-transform" />
-          <span className="text-[11px] font-bold text-white">Jetzt Score verbessern</span>
-          <Sparkles className="w-3 h-3 text-white/60" />
+        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+          Eignungs-Analyse
+        </span>
+        <div className="mt-5 space-y-5">
+          {skills.map((s) => (
+            <div key={s.key}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-[#b0b0b8]">{s.label}</span>
+                <span className="text-[11px] font-medium text-white tabular-nums">{s.value}%</span>
+              </div>
+              <div className="h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${s.value}%`,
+                    background: `linear-gradient(90deg, ${s.color}40, ${s.color})`,
+                    boxShadow: `0 0 8px ${s.color}50`,
+                    transition: "width 0.8s ease",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
-      </button>
+      </div>
+
+      {/* ── Mini Radar: Soft vs. Hard Skills ─────────────────────── */}
+      <div
+        className="col-span-12 sm:col-span-5 rounded-2xl p-5 flex flex-col items-center justify-center"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058] self-start">
+          Skill-Radar
+        </span>
+        <div className="mt-2">
+          <RadarChart skills={skills} size={260} />
+        </div>
+      </div>
+
+      {/* ── 4. Stärken — frameless, green glowing dots ────────────── */}
+      <div
+        className="col-span-12 sm:col-span-6 rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+          Stärken
+        </span>
+        <div className="mt-5 space-y-4">
+          {strengths.map((s) => (
+            <div key={s.key} className="flex items-start gap-3">
+              <div
+                className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
+                style={{ background: "#10b981", boxShadow: "0 0 6px rgba(16,185,129,0.5)" }}
+              />
+              <div>
+                <span className="text-[12px] font-medium text-[#e0e0e8]">{s.label}</span>
+                <span className="text-[11px] text-[#505058] ml-2">{s.value}%</span>
+                <p className="text-[10px] text-[#3a3a42] mt-0.5">
+                  {s.keywords.slice(0, 4).map((k) => k.charAt(0).toUpperCase() + k.slice(1)).join(" · ")}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Wachstums-Potenziale — expandable stacked cards ───────── */}
+      <div
+        className="col-span-12 sm:col-span-6 rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+          Wachstums-Potenziale
+        </span>
+        <div className="mt-5 space-y-3">
+          {potentials.map((s) => {
+            const isExpanded = expandedCard === s.key;
+            return (
+              <button
+                key={s.key}
+                onClick={() => setExpandedCard(isExpanded ? null : s.key)}
+                className="w-full text-left rounded-xl p-3 transition-all duration-200"
+                style={{
+                  background: isExpanded
+                    ? "linear-gradient(135deg, rgba(251,191,36,0.05) 0%, rgba(251,191,36,0.01) 100%)"
+                    : "rgba(255,255,255,0.015)",
+                  boxShadow: isExpanded ? "inset 0 1px 0 0 rgba(255,255,255,0.04)" : "none",
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
+                    style={{ background: "#f59e0b", boxShadow: "0 0 6px rgba(245,158,11,0.5)" }}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-medium text-[#e0e0e8]">{s.label}</span>
+                      <span className="text-[11px] text-[#505058] tabular-nums">{s.value}%</span>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Sparkles className="w-3 h-3 text-amber-400/70" />
+                          <span className="text-[9px] font-medium tracking-[0.12em] uppercase text-amber-400/60">
+                            KI-Empfehlung
+                          </span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-[#808088]">
+                          {growthRecs[s.key] || "Gezielte Weiterbildung kann deinen Score in diesem Bereich deutlich steigern."}
+                        </p>
+                      </div>
+                    )}
+                    {!isExpanded && (
+                      <p className="text-[10px] text-[#3a3a42] mt-0.5">Klicke für KI-Empfehlung →</p>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+          {/* Missing skill tags */}
+          {potentials.map((s) => (
+            <div key={`missing-${s.key}`} className="flex flex-wrap gap-1.5 pl-5">
+              {s.missingKeywords?.slice(0, 3).map((kw) => (
+                <span
+                  key={kw}
+                  className="text-[9px] px-2 py-0.5 rounded-full text-[#505058]"
+                  style={{ background: "rgba(255,255,255,0.03)" }}
+                >
+                  + {kw}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -702,10 +898,10 @@ export default function ResumePage() {
         <ListSkeleton rows={3} />
       ) : (
         /* ── 2-column workspace ─────────────────────────────────────────────── */
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[300px_1fr] gap-4 flex-1">
+        <div className="grid grid-cols-12 gap-3 sm:gap-4 flex-1">
 
           {/* ── LEFT: Document List + Info ──────────────────────────────── */}
-          <div className="flex flex-col gap-3">
+          <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
             <UploadZone getRootProps={getRootProps} getInputProps={getInputProps} isDragActive={isDragActive} uploading={uploading} />
 
             {resumes.length === 0 ? (
@@ -760,7 +956,7 @@ export default function ResumePage() {
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
-          <div className="min-h-[500px]">
+          <div className="col-span-12 lg:col-span-9 min-h-[500px]">
             <DocumentIntelligence
               resume={selectedResume}
               skills={skills}
