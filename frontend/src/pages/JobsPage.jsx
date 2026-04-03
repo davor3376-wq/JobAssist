@@ -80,6 +80,21 @@ function CompactMatchRing({ score }) {
     </div>
   );
 }
+
+function MatchProgressBadge({ score }) {
+  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
+  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold border"
+      style={{ backgroundColor: `${color}18`, borderColor: `${color}40`, color }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: color }} />
+      {normalized != null ? `${normalized}%` : "—"}
+    </span>
+  );
+}
+
 import ViennaMap from "../components/ViennaMap";
 import CityMap from "../components/CityMap";
 import ResearchModal from "../components/ResearchModal";
