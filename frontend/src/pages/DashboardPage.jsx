@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [interviewData, setInterviewData] = useState({
+    hasInterview: false,
+    jobTitle: '',
+    hoursRemaining: 0
+  });
+
+  // Simulated fetch for interview data - replace with actual API call
+  useEffect(() => {
+    // Mock data - in real app, fetch from API
+    const mockInterview = {
+      hasInterview: false,
+      jobTitle: 'Software Engineer',
+      hoursRemaining: 18
+    };
+    setInterviewData(mockInterview);
+  }, []);
+
   const bars = [
     { day: 'Mo', value: 4, color: 'bg-white/[0.06]' },
     { day: 'Di', value: 2, color: 'bg-white/[0.06]' },
@@ -21,9 +38,9 @@ export default function DashboardPage() {
         <div className="col-span-12 flex items-center justify-between bg-[#090B0F] px-6 py-4">
           <div className="flex items-start gap-4">
               <h1 className="text-[15px] font-semibold leading-none text-white sm:text-[17px]">
-                Markt-Kompatibilität
+                JobAssist
               </h1>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-0.5 text-sm text-slate-400">
                 KI-gestützte Übersicht deiner Bewerbungsstärke
               </p>
             </div>
@@ -106,7 +123,7 @@ export default function DashboardPage() {
 
             <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-semibold text-emerald-300">Performance Index</p>
+                <p className="text-xs font-semibold text-emerald-300">Leistungsindex</p>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">TOP 15%</span>
               </div>
               <div className="flex items-end gap-2">
@@ -212,6 +229,7 @@ export default function DashboardPage() {
                         bar.active ? 'shadow-[0_8px_24px_rgba(79,140,255,0.22)]' : ''
                       }`}
                       style={{ height: `${Math.max((bar.value / maxVal) * 100, 8)}%` }}
+                      title={`${bar.value} Bewerbungen`}
                     />
                   </div>
                   <span className={`text-xs font-semibold ${bar.textColor ?? 'text-slate-500'}`}>
@@ -219,6 +237,25 @@ export default function DashboardPage() {
                   </span>
                 </div>
               ))}
+            </div>
+            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">
+              Aktivitätstrend (7 Tage)
+            </p>
+            <div className="rounded-xl border border-[#233250] bg-[#0A0C12] p-4">
+              <div className="h-24 flex items-end gap-1">
+                {[65, 45, 80, 55, 90, 70, 85].map((value, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-t-sm bg-gradient-to-t from-blue-600/30 to-blue-400/60 hover:from-blue-500/50 hover:to-blue-300/80 transition-all duration-300"
+                      style={{ height: `${value}%` }}
+                      title={`${value} Aktivitäten`}
+                    />
+                    <span className="text-[10px] text-slate-500">
+                      {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][index]}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           </div>
@@ -305,7 +342,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-slate-400 mt-1">Deine aktiven Herausforderungen</p>
               </div>
               <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
-                3/5 erledigt
+                3/3 erledigt
               </span>
             </div>
             
@@ -392,8 +429,16 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Interview morgen vorbereiten</p>
-                <p className="mt-0.5 text-xs text-slate-400">1 Gespräch in 24 Stunden</p>
+                <p className="text-sm font-semibold text-white">
+                  {interviewData.hasInterview 
+                    ? `${interviewData.jobTitle} Interview in ${interviewData.hoursRemaining} Stunden`
+                    : 'Bewirb dich für ein Interview'}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {interviewData.hasInterview 
+                    ? 'Bereite dich auf das Gespräch vor'
+                    : 'Suche passende Stellen und bewirb dich'}
+                </p>
               </div>
             </div>
           </div>
