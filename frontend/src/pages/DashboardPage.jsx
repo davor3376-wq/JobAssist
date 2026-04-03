@@ -301,7 +301,7 @@ export default function DashboardPage() {
 
         {/* ── LEFT COLUMN ──────────────────────────────────────── */}
         {/* P0: col-span-1 Mobile / md:col-span-9 Desktop           */}
-        <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5">
+        <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5 min-h-0">
 
           {/* Row 1 — Hero Metrics */}
           {/* shrink-0: Row 1 schrumpft nie — nur Aktivität gibt Platz ab */}
@@ -609,7 +609,7 @@ export default function DashboardPage() {
 
         {/* ── RIGHT SIDEBAR ─────────────────────────────────────── */}
         {/* P0: col-span-1 Mobile / md:col-span-3 Desktop            */}
-        <div className="col-span-1 md:col-span-3 flex flex-col gap-2.5">
+        <div className="col-span-1 md:col-span-3 flex flex-col gap-2.5 min-h-0">
 
           {/* Bewerbungsreise */}
           <Tile className="p-3.5">
