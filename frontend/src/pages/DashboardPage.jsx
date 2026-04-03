@@ -308,12 +308,12 @@ export default function DashboardPage() {
     { label: 'Analysiert',  value: '21',  barWidth: 100, color: C.textDim,  glow: 'rgba(85,85,101,0.5)'  },
     { label: 'Beworben',    value: '5/21', barWidth: 38,  color: C.indigo,   glow: C.indigoGlow, note: '24%' },
     { label: 'Rücklauf',    value: '24%',  barWidth: 22,  color: C.violet,   glow: C.violetGlow  },
-    { label: 'Interview',   value: '1',    barWidth: 9,   color: C.amber,    glow: 'rgba(245,158,11,0.35)', note: 'Offered' },
+    { label: 'Interview',   value: '1',    barWidth: 9,   color: C.amber,    glow: 'rgba(245,158,11,0.35)', note: 'Angebot' },
   ];
 
   return (
     <div
-      className="h-screen px-4 py-4 font-sans overflow-hidden"
+      className="h-screen px-4 py-4 font-sans overflow-hidden flex flex-col"
       style={{
         background: 'radial-gradient(ellipse at 18% 15%, #0d0d1a 0%, #090909 45%, #050505 100%)',
         fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
@@ -336,10 +336,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Main Grid ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-2.5 h-[calc(100vh-76px)]">
+      <div className="grid grid-cols-12 gap-2.5 flex-1 min-h-0">
 
         {/* ── LEFT COLUMN (9 cols) ─────────────────────────────── */}
-        <div className="col-span-9 flex flex-col gap-2.5">
+        <div className="col-span-9 flex flex-col gap-2.5 overflow-hidden">
 
           {/* Row 1 — Hero Metrics */}
           <div className="grid grid-cols-3 gap-2.5">
@@ -366,7 +366,7 @@ export default function DashboardPage() {
               </div>
               <div className="mt-2.5 grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px]" style={{ color: C.textDim }}>Top-Matches</span>
+                  <span className="text-[10px]" style={{ color: C.textDim }}>Top-Treffer</span>
                   <span
                     className="block text-[20px] font-semibold leading-none tabular-nums"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
@@ -439,7 +439,7 @@ export default function DashboardPage() {
                   style={{ background: C.emerald, boxShadow: `0 0 5px ${C.emeraldGlow}` }}
                 />
                 <span className="text-[10px] font-medium" style={{ color: C.textSub }}>
-                  Peer performance: <span style={{ color: C.emerald }}>Top 5%</span>
+                  Peer-Leistung: <span style={{ color: C.emerald }}>Top 5%</span>
                 </span>
               </div>
             </Tile>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-2">
                 {[
                   { label: '5 Analysen',   complete: true,  icon: Search   },
-                  { label: 'Top Matches',  complete: true,  icon: TrendingUp },
+                  { label: 'Top-Treffer',  complete: true,  icon: TrendingUp },
                   { label: '3 Bewerbungen', complete: false, icon: Sparkles },
                 ].map((goal) => (
                   <div
@@ -592,7 +592,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 {
-                  title: 'Matches',
+                  title: 'Treffer',
                   sub: '3 Jobs',
                   icon: Search,
                   glow: C.indigoSoft,
@@ -600,7 +600,7 @@ export default function DashboardPage() {
                   action: () => navigate('/jobs'),
                 },
                 {
-                  title: 'Boost',
+                  title: 'Stärken',
                   sub: '+12%',
                   icon: Sparkles,
                   glow: C.violetSoft,
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                 },
                 {
                   title: 'Interview',
-                  sub: 'Coaching',
+                  sub: 'Training',
                   icon: Mic,
                   glow: C.amberSoft,
                   iconColor: C.amber,
@@ -664,7 +664,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── RIGHT SIDEBAR (3 cols) ────────────────────────────── */}
-        <div className="col-span-3 flex flex-col gap-2.5">
+        <div className="col-span-3 flex flex-col gap-2.5 overflow-hidden">
 
           {/* Bewerbungsreise — Conversion Funnel Flow */}
           <Tile className="p-3.5">
