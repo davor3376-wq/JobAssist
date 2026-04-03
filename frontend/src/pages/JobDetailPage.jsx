@@ -12,7 +12,7 @@ import {
   ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X, TrendingUp,
   Copy, Check, ChevronDown, Download, SearchCheck,
   Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight, MoreHorizontal,
-  Users, Award, Heart, Cpu,
+  Users, Award, Heart, Cpu, Plus,
 } from "lucide-react";
 import { coverLetterApi, interviewApi, jobApi, researchApi, resumeApi } from "../services/api";
 import ResearchModal from "../components/ResearchModal";
