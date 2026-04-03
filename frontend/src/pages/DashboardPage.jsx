@@ -395,51 +395,62 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-12 gap-3">
-            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-blue-600/10 p-4 shadow-[0_0_30px_rgba(59,130,246,0.15)] md:col-span-4 cursor-pointer hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-shadow">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 shadow-md shadow-blue-500/30">
+            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-slate-700/50 bg-[#0A0C12]/80 p-4 md:col-span-4 cursor-pointer hover:bg-[#0A0C12] transition-colors group">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-700/50">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M9 2v14M2 9h14" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M9 9C11.2091 9 13 7.20914 13 5C13 2.79086 11.2091 1 9 1C6.79086 1 5 2.79086 5 5C5 7.20914 6.79086 9 9 9Z" stroke="#94A3B8" strokeWidth="1.5"/>
+                  <path d="M1 17V15C1 13.9391 1.42143 12.9217 2.17157 12.1716C2.92172 11.4214 3.93913 11 5 11H13C14.0609 11 15.0783 11.4214 15.8284 12.1716C16.5786 12.9217 17 13.9391 17 15V17" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-white">3 neue Matches heute</p>
-                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEU</span>
+                  <p className="text-sm font-bold text-white">Matches entdecken</p>
+                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold text-white">NEU</span>
                 </div>
-                <p className="mt-0.5 text-xs text-blue-200/80">Top-Matches ueber 80% Uebereinstimmung</p>
+                <p className="mt-0.5 text-xs text-slate-400">3 neue Stellen mit 80% Übereinstimmung</p>
               </div>
+              <svg className="h-5 w-5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </div>
 
-            <div onClick={() => navigate('/ai-assistant')} className="col-span-12 flex items-center gap-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-emerald-400/10 transition-colors">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-400/15">
+            <div onClick={() => navigate('/ai-assistant')} className="col-span-12 flex items-center gap-4 rounded-xl border border-slate-700/50 bg-[#0A0C12]/80 p-4 md:col-span-4 cursor-pointer hover:bg-[#0A0C12] transition-colors group">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-700/50">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M3 9.5L7 13.5L15 4.5" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M9 1V9M9 9L12 6M9 9L6 6M9 9V17M9 9L12 12M9 9L6 12" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">Profilboost aktivieren</p>
-                <p className="mt-0.5 text-xs text-slate-400">+12% Match-Chance heute noch</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-white">Profilboost jetzt aktivieren</p>
+                <p className="mt-0.5 text-xs text-slate-400">+12% Match-Chance für heute sichern</p>
               </div>
+              <svg className="h-5 w-5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </div>
 
-            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-violet-400/15 bg-violet-400/5 p-4 md:col-span-4 cursor-pointer hover:bg-violet-400/10 transition-colors">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-400/15">
+            <div onClick={() => navigate('/jobs')} className="col-span-12 flex items-center gap-4 rounded-xl border border-slate-700/50 bg-[#0A0C12]/80 p-4 md:col-span-4 cursor-pointer hover:bg-[#0A0C12] transition-colors group">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-700/50">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M9 2L2 7V16H6V11H12V16H16V7L9 2Z" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="9" cy="9" r="7" stroke="#94A3B8" strokeWidth="1.5"/>
+                  <path d="M9 5V9L12 11" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-white">
                   {interviewData.hasInterview 
-                    ? `${interviewData.jobTitle} Interview in ${interviewData.hoursRemaining} Stunden`
-                    : 'Bewirb dich für ein Interview'}
+                    ? `Interview in ${interviewData.hoursRemaining}h vorbereiten`
+                    : 'Interview-Vorbereitung starten'}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-400">
                   {interviewData.hasInterview 
-                    ? 'Bereite dich auf das Gespräch vor'
-                    : 'Suche passende Stellen und bewirb dich'}
+                    ? `${interviewData.jobTitle} - Gespräch vorbereiten`
+                    : 'Jetzt für passende Stellen bewerben'}
                 </p>
               </div>
+              <svg className="h-5 w-5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </div>
           </div>
         </section>
