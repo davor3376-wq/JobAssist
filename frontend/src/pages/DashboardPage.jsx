@@ -82,56 +82,27 @@ export default function DashboardPage() {
             </p>
 
             <div className="grid w-full grid-cols-2 gap-2">
-              <div className="rounded-xl border border-emerald-400/10 bg-[#0A0C12] px-3 py-2.5 text-center">
+              <div className="px-3 py-2.5 text-center">
                 <div className="text-base font-semibold text-white">5</div>
                 <p className="text-[10px] text-slate-500">Top-Matches</p>
               </div>
-              <div className="rounded-xl border border-blue-400/10 bg-[#0A0C12] px-3 py-2.5 text-center">
+              <div className="px-3 py-2.5 text-center">
                 <div className="text-base font-semibold text-blue-300">21</div>
                 <p className="text-[10px] text-slate-500">Analysiert</p>
               </div>
             </div>
 
-            <div className="w-full rounded-xl border border-blue-400/20 bg-blue-500/5 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15">
-                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-                      <path d="M9 10C11.2091 10 13 8.20914 13 6C13 3.79086 11.2091 2 9 2C6.79086 2 5 3.79086 5 6C5 8.20914 6.79086 10 9 10Z" stroke="#60A5FA" strokeWidth="1.5"/>
-                      <path d="M2 16C2 13.5 4 11 9 11C14 11 16 13.5 16 16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <p className="text-xs font-semibold text-blue-300">Profil-Stärke</p>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">94%</span>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Lebenslauf</span>
-                  <span className="text-emerald-400">✓</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Fähigkeiten</span>
-                  <span className="text-emerald-400">✓</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Präferenzen</span>
-                  <span className="text-amber-400">2/3</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+            <div className="w-full mt-2 rounded-xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-blue-500/5 p-5 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold text-emerald-300">Leistungsindex</p>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">TOP 15%</span>
               </div>
               <div className="flex items-end gap-2">
-                <span className="text-3xl font-bold text-white">87</span>
+                <span className="text-4xl font-bold text-white">87</span>
                 <span className="text-xs text-emerald-400 mb-1">↑ 12%</span>
               </div>
               <p className="text-[10px] text-slate-400 mt-2">Besser als 85% aller Bewerber</p>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#1C2333]">
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#1C2333]">
                 <div 
                   className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_10px_rgba(52,226,161,0.5)]"
                   style={{ width: '87%' }}
@@ -139,7 +110,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="w-full rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
+            <div className="w-full rounded-xl border border-violet-400/20 bg-violet-500/5 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/15">
                   <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
@@ -152,7 +123,7 @@ export default function DashboardPage() {
                 <span className="text-sm font-bold text-white">Experte</span>
                 <span className="text-[10px] text-slate-400">90 Pkt.</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1C2333]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[#1C2333]">
                 <div 
                   className="h-full rounded-full bg-gradient-to-r from-violet-400 to-violet-500"
                   style={{ width: '72%' }}
@@ -238,25 +209,6 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">
-              Aktivitätstrend (7 Tage)
-            </p>
-            <div className="rounded-xl border border-[#233250] bg-[#0A0C12] p-4">
-              <div className="h-24 flex items-end gap-1">
-                {[65, 45, 80, 55, 90, 70, 85].map((value, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-t-sm bg-gradient-to-t from-blue-600/30 to-blue-400/60 hover:from-blue-500/50 hover:to-blue-300/80 transition-all duration-300"
-                      style={{ height: `${value}%` }}
-                      title={`${value} Aktivitäten`}
-                    />
-                    <span className="text-[10px] text-slate-500">
-                      {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][index]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
           </div>
         </section>
@@ -329,6 +281,35 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">Noch nicht beworben</p>
+              </div>
+            </div>
+
+            <div className="w-full rounded-xl border border-blue-400/20 bg-blue-500/5 p-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15">
+                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 10C11.2091 10 13 8.20914 13 6C13 3.79086 11.2091 2 9 2C6.79086 2 5 3.79086 5 6C5 8.20914 6.79086 10 9 10Z" stroke="#60A5FA" strokeWidth="1.5"/>
+                      <path d="M2 16C2 13.5 4 11 9 11C14 11 16 13.5 16 16" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-xs font-semibold text-blue-300">Profil-Stärke</p>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">94%</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Lebenslauf</span>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Fähigkeiten</span>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Präferenzen</span>
+                  <span className="text-amber-400">2/3</span>
+                </div>
               </div>
             </div>
           </div>
