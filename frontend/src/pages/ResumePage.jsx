@@ -710,9 +710,6 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
               <div>
                 <span className="text-[12px] font-medium text-[#e0e0e8]">{s.label}</span>
                 <span className="text-[11px] text-[#505058] ml-2">{s.value}%</span>
-                <p className="text-[10px] text-[#3a3a42] mt-0.5">
-                  {s.keywords.slice(0, 4).map((k) => k.charAt(0).toUpperCase() + k.slice(1)).join(" · ")}
-                </p>
               </div>
             </div>
           ))}

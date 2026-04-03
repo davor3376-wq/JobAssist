@@ -58,9 +58,9 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
             onClick={onNavClick}
             className={({ isActive }) =>
               clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
                 isActive
-                  ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
+                  ? "bg-blue-500/15 text-blue-300"
                   : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
               )
             }
