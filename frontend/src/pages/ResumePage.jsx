@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Upload, FileText, Sparkles, Brain,
-  Clock, CheckCircle, X, Trophy, Target,
+  Clock, CheckCircle, X,
+  Target,
   TrendingUp,
   Edit3
 } from "lucide-react";
@@ -315,13 +317,13 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
           {/* Match Accuracy badge */}
           <div className="flex items-center gap-1.5 mt-2">
             {resume.parsed_status ? (
-              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border"
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold border"
                 style={{ backgroundColor: `${scoreColor}18`, borderColor: `${scoreColor}40`, color: scoreColor }}>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: scoreColor }} />
                 {score != null ? `Match ${score}%` : "Analysiert"}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-[#1C2333] px-2 py-0.5 text-[9px] font-bold text-slate-400">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-[#1C2333] px-2 py-0.5 text-[11px] font-bold text-slate-400">
                 Bereit
               </span>
             )}
@@ -425,72 +427,15 @@ function Checklist({ gamification }) {
   );
 }
 
-// ─── Feedback Box Component ──────────────────────────────────────────────────
+// ─── Growth recommendations (static) ─────────────────────────────────────────
 
-function _FeedbackBox({ gamification }) {
-  const { tasks = [], completedTasks = [], projectedScore: _projectedScore = 0, potentialPoints: _potentialPoints = 0 } = gamification || {};
-  const total = tasks.length;
-  const completed = completedTasks.length;
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  const messages = {
-    complete: {
-      icon: Trophy,
-      color: "emerald",
-      title: "Super!",
-      text: "Alle Optimierungen erledigt",
-    },
-    high: {
-      icon: TrendingUp,
-      color: "blue",
-      title: "Gut gemacht!",
-      text: `${completed}/${total} Aufgaben erledigt`,
-    },
-    medium: {
-      icon: Target,
-      color: "amber",
-      title: "Weiter so!",
-      text: "Aufgabe one to five",
-    },
-    low: {
-      icon: Sparkles,
-      color: "slate",
-      title: "Starte jetzt!",
-      text: "Aufgabe one to five",
-    },
-  };
-
-  const getStatus = () => {
-    if (completed === total && total > 0) return "complete";
-    if (progress >= 60) return "high";
-    if (progress >= 30) return "medium";
-    return "low";
-  };
-
-  const status = getStatus();
-  const { icon: Icon, color, title, text } = messages[status];
-
-  const colorClasses = {
-    emerald: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: "text-emerald-400", title: "text-emerald-300" },
-    blue: { bg: "bg-blue-500/10", border: "border-blue-500/20", icon: "text-blue-400", title: "text-blue-300" },
-    amber: { bg: "bg-amber-500/10", border: "border-amber-500/20", icon: "text-amber-400", title: "text-amber-300" },
-    slate: { bg: "bg-slate-500/10", border: "border-slate-500/20", icon: "text-slate-400", title: "text-slate-300" },
-  }[color];
-
-  return (
-    <div className={`flex-1 rounded-xl ${colorClasses.bg} border ${colorClasses.border} p-3`}>
-      <div className="flex items-center gap-2">
-        <div className={`w-7 h-7 rounded-lg ${colorClasses.bg} flex items-center justify-center`}>
-          <Icon className={`w-3.5 h-3.5 ${colorClasses.icon}`} />
-        </div>
-        <div>
-          <p className={`text-[11px] font-bold ${colorClasses.title}`}>{title}</p>
-          <p className="text-[10px] text-slate-400">{text}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+const GROWTH_RECS = {
+  tech: "Erweitere dein Tech-Stack um Cloud-Zertifizierungen (AWS/Azure) für +15% Match-Rate.",
+  exp: "Dokumentiere messbare Erfolge: '→ Umsatz +20%' statt 'Umsatz gesteigert'.",
+  edu: "Ein relevantes Zertifikat (z.B. Scrum Master) kann deinen Score um 8-12% steigern.",
+  soft: "Füge konkrete Beispiele für Teamführung und Konfliktlösung in deinen CV ein.",
+  lang: "Business-English auf C2-Niveau ist der #1 gefragte Soft Skill in DACH.",
+};
 
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
@@ -504,13 +449,6 @@ function DocumentIntelligence({ resume, skills, gamification }) {
   const strengths = sorted.slice(0, 3);
   const potentials = sorted.slice(-2);
 
-  const growthRecs = useMemo(() => ({
-    tech: "Erweitere dein Tech-Stack um Cloud-Zertifizierungen (AWS/Azure) für +15% Match-Rate.",
-    exp: "Dokumentiere messbare Erfolge: '→ Umsatz +20%' statt 'Umsatz gesteigert'.",
-    edu: "Ein relevantes Zertifikat (z.B. Scrum Master) kann deinen Score um 8-12% steigern.",
-    soft: "Füge konkrete Beispiele für Teamführung und Konfliktlösung in deinen CV ein.",
-    lang: "Business-English auf C2-Niveau ist der #1 gefragte Soft Skill in DACH.",
-  }), []);
 
   if (!resume) {
     return (
@@ -520,7 +458,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Kein Dokument ausgewählt</h3>
-          <p className="text-[10px] text-[#3a3a42] mt-1">Lade einen Lebenslauf hoch oder wähle ihn links aus</p>
+          <p className="text-[11px] text-[#3a3a42] mt-1">Lade einen Lebenslauf hoch oder wähle ihn links aus</p>
         </div>
       </div>
     );
@@ -534,7 +472,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
     <div className="grid grid-cols-12 gap-3">
 
       {/* ── 1. HERO: Large Neon Radar Chart — central visual element ── */}
-      <div className="col-span-12 rounded-2xl py-6 sm:py-8 flex flex-col items-center"
+      <div className="col-span-12 rounded-2xl py-4 sm:py-5 flex flex-col items-center"
         style={{
           background: "linear-gradient(180deg, #060608 0%, #020204 100%)",
           boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.03)",
@@ -542,7 +480,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
       >
         {/* Document title above radar */}
         <div className="text-center mb-4">
-          <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#3a3a42]">
+          <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#3a3a42]">
             Dokumenten-Analyse
           </span>
           <h2 className="text-[22px] font-semibold text-white leading-tight mt-1 truncate max-w-md">
@@ -553,8 +491,8 @@ function DocumentIntelligence({ resume, skills, gamification }) {
           </p>
         </div>
 
-        {/* Large Radar — P2: Container auf max-w-[380px] begrenzt */}
-        <div className="my-2 w-full max-w-[380px] mx-auto">
+        {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
+        <div className="my-2 w-full max-w-[380px] mx-auto hidden lg:block">
           <RadarChart skills={skills} size={380} />
         </div>
 
@@ -585,12 +523,12 @@ function DocumentIntelligence({ resume, skills, gamification }) {
             </svg>
             <div className="grid place-items-center" style={{ position: "absolute", inset: 0 }}>
               <span className="text-[20px] font-semibold text-white leading-none tracking-tight">
-                {currentScore}<span className="text-[10px] text-[#3a3a42]">%</span>
+                {currentScore}<span className="text-[11px] text-[#3a3a42]">%</span>
               </span>
             </div>
           </div>
           <div>
-            <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+            <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
               Gesamt-Score
             </span>
             <div className="flex items-center gap-1.5 mt-1">
@@ -599,7 +537,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
               ) : (
                 <Target className="w-3 h-3 text-[#505058]" />
               )}
-              <span className={`text-[10px] font-medium ${goalReached ? "text-emerald-400" : "text-[#505058]"}`}>
+              <span className={`text-[11px] font-medium ${goalReached ? "text-emerald-400" : "text-[#505058]"}`}>
                 {goalReached ? "Ziel erreicht (85%)" : `Ziel: 85% · noch ${85 - currentScore}%`}
               </span>
             </div>
@@ -611,7 +549,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
       <div className="col-span-12 px-1 py-4">
         <div className="flex items-center gap-1.5 mb-3">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+          <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
             KI-Zusammenfassung
           </span>
         </div>
@@ -631,7 +569,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
 
       {/* ── 3. Fachkenntnisse: ultra-thin 2px bars with end-glow ── */}
       <div className="col-span-12 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Fachkenntnisse
         </span>
         <div className="mt-5 space-y-5">
@@ -659,7 +597,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
 
       {/* ── 4. Stärken — frameless, no borders, glowing dots ──────── */}
       <div className="col-span-12 sm:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Stärken
         </span>
         <div className="mt-5 space-y-4">
@@ -680,7 +618,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
 
       {/* ── 5. Wachstums-Potenziale — interactive hover tiles ────── */}
       <div className="col-span-12 sm:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Wachstums-Potenziale
         </span>
         <div className="mt-5 space-y-3">
@@ -722,12 +660,12 @@ function DocumentIntelligence({ resume, skills, gamification }) {
                       <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                         <div className="flex items-center gap-1.5 mb-1">
                           <Sparkles className="w-3 h-3 text-amber-400/70" />
-                          <span className="text-[9px] font-medium tracking-[0.12em] uppercase text-amber-400/60">
+                          <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-amber-400/60">
                             KI-Empfehlung
                           </span>
                         </div>
-                        <p className="text-[10px] leading-relaxed text-[#808088]">
-                          {growthRecs[s.key] || "Gezielte Weiterbildung kann deinen Score in diesem Bereich deutlich steigern."}
+                        <p className="text-[11px] leading-relaxed text-[#808088]">
+                          {GROWTH_RECS[s.key] || "Gezielte Weiterbildung kann deinen Score in diesem Bereich deutlich steigern."}
                         </p>
                       </div>
                     </div>
@@ -742,8 +680,8 @@ function DocumentIntelligence({ resume, skills, gamification }) {
               {s.missingKeywords?.slice(0, 3).map((kw) => (
                 <span
                   key={kw}
-                  className="text-[9px] px-2 py-0.5 rounded-full text-[#505058]"
-                  style={{ background: "rgba(255,255,255,0.03)" }}
+                  className="text-[11px] px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.07)", color: "#8888A0", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   + {kw}
                 </span>
@@ -760,6 +698,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ResumePage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -833,8 +772,8 @@ export default function ResumePage() {
   const gamification = useGamification(skills);
 
   const handleImproveClick = useCallback(() => {
-    window.location.href = "/ai-assistant";
-  }, []);
+    navigate("/ai-assistant");
+  }, [navigate]);
 
   return (
     <div className="animate-slide-up flex flex-col gap-4" style={{ minHeight: "calc(100svh - 140px)" }}>
@@ -884,11 +823,11 @@ export default function ResumePage() {
             {resumes.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-[#171a21] bg-[#08090c]/40 p-4 text-center">
                 <FileText className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
-                <p className="text-[10px] font-semibold text-slate-400">Noch keine Dokumente</p>
+                <p className="text-xs font-semibold text-slate-400">Noch keine Dokumente</p>
               </div>
             ) : (
               <div className="space-y-1.5">
-                <span className="block text-[9px] font-medium tracking-[0.18em] uppercase text-[#3a3a42] px-1">
+                <span className="block text-[11px] font-medium tracking-[0.18em] uppercase text-[#3a3a42] px-1">
                   Dokumente
                 </span>
                 {resumes.map(resume => (
