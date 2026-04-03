@@ -3,95 +3,91 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { Briefcase, Search, MapPin, Zap, ExternalLink, ChevronDown, Sparkles, Building2, Clock, Check, SearchCheck, FileText, X, Copy, Bookmark, ArrowRight } from "lucide-react";
+import { Briefcase, Search, MapPin, ExternalLink, ChevronDown, Sparkles, Check, SearchCheck, FileText, X, Copy, Bookmark, ChevronRight } from "lucide-react";
 import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
 
-const SAVED_STATUS_CFG = {
-  bookmarked:   { label: "Gespeichert",  cls: "bg-slate-800/60 text-slate-300 border border-slate-700/60" },
-  applied:      { label: "Beworben",     cls: "bg-emerald-900/30 text-emerald-300 border border-emerald-500/20" },
-  interviewing: { label: "Gespräch",     cls: "bg-blue-500/10 text-blue-300 border border-blue-500/20" },
-  offered:      { label: "Angebot",      cls: "bg-[#2D2600] text-[#FFD700] border border-[#FFD700]/30", icon: "🏆" },
-  rejected:     { label: "Abgelehnt",    cls: "bg-red-900/30 text-red-400 border border-red-500/20" },
-};
-function StatusBadge({ status, timeAgo }) {
-  const cfg = SAVED_STATUS_CFG[status] || SAVED_STATUS_CFG.bookmarked;
+/**
+ * Premium tile wrapper — ultra-dark gradient with 1px inner glow at top.
+ * @param {object} props
+ * @param {React.ReactNode} props.children
+ * @param {string} [props.className]
+ */
+function Tile({ children, className = '' }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${cfg.cls}`}>
-      {cfg.icon && <span>{cfg.icon}</span>}
-      {cfg.label}
-      {timeAgo && <span className="opacity-70">· {timeAgo}</span>}
-    </span>
-  );
-}
-
-// Large Match Score Ring for Hero (80px)
-function HeroMatchRing({ score }) {
-  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
-  const radius = 36;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
-  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
-
-  return (
-    <div className="relative w-20 h-20 flex-shrink-0">
-      <svg viewBox="0 0 80 80" className="-rotate-90 w-20 h-20">
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-        <circle
-          cx="40" cy="40" r={radius} fill="none"
-          stroke={color} strokeWidth="4" strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-          className="transition-all duration-700"
-          style={{ filter: `drop-shadow(0 0 12px ${color}60)` }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-bold tabular-nums" style={{ color }}>
-          {normalized != null ? `${normalized}%` : "—"}
-        </span>
-      </div>
+    <div
+      className={`rounded-2xl p-5 sm:p-6 ${className}`}
+      style={{
+        background: 'linear-gradient(180deg, #080808 0%, #030303 100%)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04)',
+      }}
+    >
+      {children}
     </div>
   );
 }
 
-// Compact Match Score Ring for List (40px)
-function CompactMatchRing({ score }) {
-  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
-  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
-
-  return (
-    <div className="relative w-10 h-10 flex-shrink-0">
-      <svg viewBox="0 0 40 40" className="-rotate-90 w-10 h-10">
-        <circle cx="20" cy="20" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-        <circle
-          cx="20" cy="20" r={radius} fill="none"
-          stroke={color} strokeWidth="3" strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-          style={{ filter: `drop-shadow(0 0 6px ${color}50)` }}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold tabular-nums" style={{ color }}>
-        {normalized != null ? `${normalized}` : "—"}
-      </span>
-    </div>
-  );
-}
-
-function MatchProgressBadge({ score }) {
-  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
-  const color = normalized == null ? "#94a3b8" : normalized >= 60 ? "#10b981" : normalized >= 40 ? "#f59e0b" : "#ef4444";
+/**
+ * Small label in ALL-CAPS with wide tracking.
+ * @param {object} props
+ * @param {React.ReactNode} props.children
+ * @param {string} [props.className]
+ */
+function TileLabel({ children, className = '' }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold border"
-      style={{ backgroundColor: `${color}18`, borderColor: `${color}40`, color }}
+      className={`block text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058] ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: color }} />
-      {normalized != null ? `${normalized}%` : "—"}
+      {children}
     </span>
+  );
+}
+
+const SAVED_STATUS_CFG = {
+  bookmarked:   { label: "Gespeichert",  color: "#94a3b8" },
+  applied:      { label: "Beworben",     color: "#10b981" },
+  interviewing: { label: "Gespräch",     color: "#3b82f6" },
+  offered:      { label: "Angebot",      color: "#fbbf24" },
+  rejected:     { label: "Abgelehnt",    color: "#ef4444" },
+};
+function StatusBadge({ status }) {
+  const cfg = SAVED_STATUS_CFG[status] || SAVED_STATUS_CFG.bookmarked;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}40` }} />
+      <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#505058]">{cfg.label}</span>
+    </span>
+  );
+}
+
+/**
+ * Minimalist match-score ring (32px) — Apple Wallet style.
+ * @param {object} props
+ * @param {number|null} props.score
+ */
+function MiniMatchRing({ score }) {
+  const normalized = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
+  const radius = 12;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = normalized == null ? circumference * 0.35 : circumference - (normalized / 100) * circumference;
+  const color = normalized == null ? '#3a3a42' : normalized >= 60 ? '#10b981' : normalized >= 40 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="relative w-8 h-8 flex-shrink-0">
+      <svg viewBox="0 0 32 32" className="-rotate-90 w-8 h-8">
+        <circle cx="16" cy="16" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2.5" />
+        <circle
+          cx="16" cy="16" r={radius} fill="none"
+          stroke={color} strokeWidth="2.5" strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          className="transition-all duration-500"
+          style={{ filter: `drop-shadow(0 0 4px ${color}40)` }}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold tabular-nums" style={{ color }}>
+        {normalized != null ? normalized : '—'}
+      </span>
+    </div>
   );
 }
 
@@ -207,8 +203,8 @@ const CITY_DISTRICTS = {
 };
 
 export default function JobsPage() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [_searchParams] = useSearchParams();
+  const _navigate = useNavigate();
   const qc = useQueryClient();
   const [searchTab, setSearchTab] = useState("recommended");
   const [coverLetterModal, setCoverLetterModal] = useState(null); // { text, role, company }
@@ -235,7 +231,7 @@ const [savingJobId, setSavingJobId] = useState(null);
   // Tracks what was last submitted — drives the query key so cache is reused for identical searches
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
-  const { data: initData } = useQuery({ queryKey: ["init"] });
+  const { data: _initData } = useQuery({ queryKey: ["init"] });
   const { data: resumes = [] } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data), initialData: () => loadStored("resumes") || [] });
   const { data: savedJobs = [] } = useQuery({
     queryKey: ["jobs"],
@@ -491,18 +487,19 @@ const [savingJobId, setSavingJobId] = useState(null);
   });
 
   return (
-    <div className="min-h-screen bg-[#080808]" style={{ fontFamily: "Inter, Roboto, sans-serif" }}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between mb-6 animate-slide-up">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Stellen-Zentrale</h1>
-          <p className="mt-0.5 text-sm text-slate-400">Passende Stellen kuratieren, bewerten und für den nächsten Schritt vorbereiten.</p>
-        </div>
+    <div className="min-h-full bg-black px-4 sm:px-8 py-8 sm:py-10 font-sans">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-white leading-none">
+          Stellen-Zentrale
+        </h1>
+        <p className="mt-2 text-[11px] tracking-[0.18em] uppercase text-[#3a3a42]">
+          Kuratiert · Bewertet · Vorbereitet
+        </p>
       </div>
 
-      <div className="space-y-6 animate-slide-up">
-        {/* Saved jobs section */}
+      <div className="grid grid-cols-12 gap-3 sm:gap-4">
+        {/* === Saved Jobs === */}
         {savedJobs.length > 0 && (() => {
           const STATUS_FILTERS = [
             { key: "all", label: "Alle" },
@@ -517,554 +514,508 @@ const [savingJobId, setSavingJobId] = useState(null);
           const sorted = [...filtered].sort((a, b) => {
             if (savedSort === "score") return (b.match_score ?? -1) - (a.match_score ?? -1);
             if (savedSort === "status") return (a.status || "").localeCompare(b.status || "");
-            return 0; // date = insertion order
+            return 0;
           });
           const visible = sorted.slice(0, 10);
-
-          // Get counts for filter pills
           const statusCounts = STATUS_FILTERS.reduce((acc, f) => {
             acc[f.key] = f.key === "all" ? savedJobs.length : savedJobs.filter(j => j.status === f.key).length;
             return acc;
           }, {});
 
           return (
-            <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg animate-slide-up">
-              {/* Header + sort */}
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-white">Gespeicherte Stellen</h2>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400">
-                    {filtered.length}
-                  </span>
-                </div>
-                <select
-                  value={savedSort}
-                  onChange={e => setSavedSort(e.target.value)}
-                  className="text-xs px-3 py-1.5 border border-white/10 rounded-lg bg-white/5 text-slate-400 focus:outline-none focus:border-blue-500/30"
-                >
-                  <option value="score">Match ↓</option>
-                  <option value="status">Status</option>
-                  <option value="date">Datum</option>
-                </select>
-              </div>
-
-              {/* Status filter pills with counters - sticky on mobile */}
-              <div className="flex gap-2 flex-wrap mb-4 pb-2 sm:sticky sm:top-0 sm:z-10 sm:bg-[#0A0A0A]/95 sm:backdrop-blur-md sm:-mx-5 sm:px-5 sm:pt-2">
-                {STATUS_FILTERS.map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => setSavedFilter(f.key)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                      savedFilter === f.key
-                        ? "bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]"
-                        : "bg-white/5 border border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20"
-                    }`}
+            <div className="col-span-12">
+              <Tile>
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-baseline gap-3">
+                    <TileLabel>Gespeicherte Stellen</TileLabel>
+                    <span className="text-[22px] font-semibold text-white leading-none">{filtered.length}</span>
+                  </div>
+                  <select
+                    value={savedSort}
+                    onChange={e => setSavedSort(e.target.value)}
+                    className="text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-lg bg-transparent text-[#505058] focus:outline-none appearance-none cursor-pointer"
                   >
-                    {f.label}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                      savedFilter === f.key ? "bg-white/20" : "bg-white/10"
-                    }`}>
-                      {statusCounts[f.key]}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                    <option value="score">Match ↓</option>
+                    <option value="status">Status</option>
+                    <option value="date">Datum</option>
+                  </select>
+                </div>
 
-              {/* 2-column grid with glassmorphism cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {visible.map(job => {
-                  const cfg = SAVED_STATUS_CFG[job.status] || SAVED_STATUS_CFG.bookmarked;
-                  const score = job.match_score != null ? Math.round(job.match_score) : null;
-                  const scoreColor = score == null ? "#94a3b8" : score >= 60 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444";
-                  const jobTimeAgo = timeAgo(job.updated_at || job.created_at);
-                  
-                  return (
-                    <Link
-                      key={job.id}
-                      to={`/jobs/${job.id}`}
-                      className="group relative flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3 transition-all hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:bg-white/[0.07]"
+                {/* Minimal filter pills */}
+                <div className="flex gap-3 mb-5">
+                  {STATUS_FILTERS.map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setSavedFilter(f.key)}
+                      className="transition-colors"
                     >
-                      {/* Compact Score ring */}
-                      <div className="flex-shrink-0 relative w-10 h-10">
-                        <svg viewBox="0 0 40 40" className="-rotate-90 w-10 h-10">
-                          <circle cx="20" cy="20" r={16} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                          {score != null && (
-                            <circle cx="20" cy="20" r={16} fill="none"
-                              stroke={scoreColor} strokeWidth="3" strokeLinecap="round"
-                              strokeDasharray={2 * Math.PI * 16}
-                              strokeDashoffset={2 * Math.PI * 16 * (1 - score / 100)}
-                              style={{ filter: `drop-shadow(0 0 4px ${scoreColor}55)` }}
-                            />
-                          )}
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-extrabold tabular-nums" style={{ color: scoreColor }}>
-                          {score != null ? `${score}` : "—"}
-                        </span>
-                      </div>
-                      
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white truncate group-hover:text-blue-300 transition-colors">{job.role}</p>
-                        <p className="text-xs text-slate-500 truncate">{job.company}</p>
-                      </div>
-                      
-                      {/* Status badge with time for applied */}
-                      <div className="flex-shrink-0">
-                        <StatusBadge status={job.status} timeAgo={job.status === "applied" ? jobTimeAgo : null} />
-                      </div>
-                      
-                      {/* Hover quick-actions */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 transition-colors"
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Navigate to job */ }}
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+                      <span className={`text-[10px] font-medium tracking-[0.14em] uppercase transition-colors ${
+                        savedFilter === f.key ? 'text-white' : 'text-[#3a3a42] hover:text-[#505058]'
+                      }`}>
+                        {f.label}
+                        <span className="ml-1 text-[#3a3a42]">{statusCounts[f.key]}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
 
-              {sorted.length > 10 && (
-                <p className="text-center text-[11px] text-slate-500 mt-3">
-                  +{sorted.length - 10} weitere — filtere nach Status um sie zu sehen
-                </p>
-              )}
+                {/* Transaction-style list */}
+                <div className="space-y-0">
+                  {visible.map((job, idx) => {
+                    const score = job.match_score != null ? Math.round(job.match_score) : null;
+                    const jobTimeAgo = timeAgo(job.updated_at || job.created_at);
+
+                    return (
+                      <Link
+                        key={job.id}
+                        to={`/jobs/${job.id}`}
+                        className="group flex items-center gap-4 py-3.5 transition-colors hover:bg-white/[0.02]"
+                        style={idx > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
+                      >
+                        <MiniMatchRing score={score} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-semibold text-white truncate leading-tight">{job.role}</p>
+                          <p className="text-[11px] text-[#505058] truncate mt-0.5">{job.company}</p>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          {jobTimeAgo && (
+                            <span className="text-[10px] text-[#3a3a42] hidden sm:block">{jobTimeAgo}</span>
+                          )}
+                          <StatusBadge status={job.status} />
+                          <ChevronRight size={14} className="text-[#2a2a32] transition-colors group-hover:text-[#505058]" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {sorted.length > 10 && (
+                  <p className="text-center text-[10px] tracking-[0.14em] uppercase text-[#3a3a42] mt-4">
+                    +{sorted.length - 10} weitere
+                  </p>
+                )}
+              </Tile>
             </div>
           );
         })()}
 
-        {/* Search Section with Glassmorphism */}
-        <div className="rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-sm p-5 shadow-lg animate-slide-up">
-                {/* Tab Navigation */}
-                <div className="flex gap-1 rounded-xl bg-[#111827] p-1 mb-5">
-                  <button
-                    onClick={() => setSearchTab("recommended")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
-                      searchTab === "recommended" ? "bg-[#0D1117] text-[#2D5BFF]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    <Zap className="w-4 h-4 flex-shrink-0" />
-                    <span className="sm:hidden">Empfohlen</span>
-                    <span className="hidden sm:inline">Empfohlen (basierend auf Präferenzen)</span>
-                  </button>
-                  <button
-                    onClick={() => setSearchTab("custom")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
-                      searchTab === "custom" ? "bg-[#0D1117] text-[#2D5BFF]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    <Search className="w-4 h-4 flex-shrink-0" />
-                    Eigene Suche
-                  </button>
-                </div>
+        {/* === Search Section === */}
+        <div className="col-span-12 mt-1">
+          <Tile>
+            {/* Tab Navigation — minimalist underline style */}
+            <div className="flex gap-6 mb-6">
+              <button
+                onClick={() => setSearchTab("recommended")}
+                className="transition-colors pb-2"
+                style={searchTab === "recommended" ? { borderBottom: '2px solid #3B82F6' } : { borderBottom: '2px solid transparent' }}
+              >
+                <span className={`text-[11px] font-medium tracking-[0.14em] uppercase ${
+                  searchTab === "recommended" ? "text-white" : "text-[#3a3a42] hover:text-[#505058]"
+                }`}>
+                  Empfohlen
+                </span>
+              </button>
+              <button
+                onClick={() => setSearchTab("custom")}
+                className="transition-colors pb-2"
+                style={searchTab === "custom" ? { borderBottom: '2px solid #3B82F6' } : { borderBottom: '2px solid transparent' }}
+              >
+                <span className={`text-[11px] font-medium tracking-[0.14em] uppercase ${
+                  searchTab === "custom" ? "text-white" : "text-[#3a3a42] hover:text-[#505058]"
+                }`}>
+                  Eigene Suche
+                </span>
+              </button>
+            </div>
 
-                {/* Recommended Tab */}
-                {searchTab === "recommended" && (
-                  <div>
-                    <p className="text-sm text-slate-400 mb-4">
-                      Finde Stellen, die zu deinen gespeicherten Präferenzen und Fähigkeiten passen
-                    </p>
-                    <button
-                      onClick={handleRecommendedSearch}
-                      disabled={recommendedLoading}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white border border-white/10 bg-white/5 backdrop-blur-sm min-h-[44px] disabled:opacity-50 transition-all hover:bg-white/10 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
-                    >
-                      {recommendedLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Suche läuft…
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          Neue Chancen entdecken
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {/* Custom Search Tab */}
-                {searchTab === "custom" && (
-                  <form onSubmit={handleCustomSearch} className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Suchbegriffe</label>
-                      <input
-                        type="text"
-                        placeholder="z.B. Verkauf, Gastro, IT, Praktikum"
-                        value={customSearchParams.keywords}
-                        onChange={(e) =>
-                          setCustomSearchParams({
-                            ...customSearchParams,
-                            keywords: e.target.value,
-                          })
-                        }
-                        className="w-full appearance-none rounded-xl border border-[#2D3748] bg-[#1C2333] px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 min-h-[44px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ort</label>
-                      <input
-                        type="text"
-                        placeholder="z.B. Wien, Graz, Linz, Salzburg"
-                        value={customSearchParams.location}
-                        onChange={(e) =>
-                          setCustomSearchParams({
-                            ...customSearchParams,
-                            location: e.target.value,
-                          })
-                        }
-                        className="w-full appearance-none rounded-xl border border-[#2D3748] bg-[#1C2333] px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 min-h-[44px]"
-                      />
-                    </div>
-                    {/wien|vienna/i.test(customSearchParams.location) && (
-                      <ViennaMap
-                        value={customSearchParams.bezirk}
-                        onChange={(val) => setCustomSearchParams({ ...customSearchParams, bezirk: val })}
-                      />
+            {/* Recommended Tab */}
+            {searchTab === "recommended" && (
+              <div>
+                <p className="text-[11px] text-[#505058] mb-4">
+                  Basierend auf deinen Präferenzen und Fähigkeiten
+                </p>
+                <button
+                  onClick={handleRecommendedSearch}
+                  disabled={recommendedLoading}
+                  className="group flex items-center gap-3 rounded-xl py-3 px-4 transition-all duration-200 hover:bg-white/[0.02] disabled:opacity-50 w-full"
+                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(59,130,246,0.01) 100%)' }}
+                >
+                  <div className="grid place-items-center h-8 w-8 rounded-lg" style={{ background: 'rgba(59,130,246,0.14)' }}>
+                    {recommendedLoading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles size={15} className="text-blue-400" />
                     )}
-                    {customSearchParams.location && !(/wien|vienna/i.test(customSearchParams.location)) && (() => {
-                      const cityKey = customSearchParams.location.trim().toLowerCase();
-                      const MAP_CITIES = ["graz", "linz", "salzburg", "innsbruck"];
-                      if (MAP_CITIES.includes(cityKey)) {
-                        return (
-                          <CityMap
-                            cityKey={cityKey}
-                            selected={customSearchParams.bezirk}
-                            onSelect={(val) => setCustomSearchParams({ ...customSearchParams, bezirk: val || "" })}
-                          />
-                        );
-                      }
-                      if (CITY_DISTRICTS[cityKey]) {
-                        return (
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Bezirk</label>
-                            <select
-                              value={customSearchParams.bezirk}
-                              onChange={(e) => setCustomSearchParams({ ...customSearchParams, bezirk: e.target.value })}
-                              className="w-full px-4 py-2.5 border border-[#2D3748] bg-[#1C2333] text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="">Alle Bezirke</option>
-                              {CITY_DISTRICTS[cityKey].map((d) => (
-                                <option key={d.value} value={d.value}>{d.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Stellenart</label>
-                      <select
-                        value={customSearchParams.jobType}
-                        onChange={(e) =>
-                          setCustomSearchParams({
-                            ...customSearchParams,
-                            jobType: e.target.value,
-                          })
-                        }
-                        className="w-full appearance-none rounded-xl border border-[#2D3748] bg-[#1C2333] px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 min-h-[44px]"
-                      >
-                        <option value="">Alle Stellenarten</option>
-                        <option value="Vollzeit">Vollzeit</option>
-                        <option value="Teilzeit">Teilzeit</option>
-                        <option value="Praktikum">Praktikum</option>
-                        <option value="Samstagsjob">Samstagsjob</option>
-                        <option value="Ferialjob">Ferialjob</option>
-                        <option value="Geringfügig">Geringfügig</option>
-                        <option value="Freiberuflich">Freiberuflich</option>
-                        <option value="Lehre">Lehre</option>
-                      </select>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={customLoading || !customSearchParams.keywords}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white border border-white/10 bg-white/5 backdrop-blur-sm min-h-[44px] disabled:opacity-50 transition-all hover:bg-white/10 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
-                    >
-                      {customLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Suche läuft…
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-4 h-4 text-blue-400" />
-                          Stellen suchen
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-
-                {/* Search Results */}
-                {searchResults.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-[#1C2333]">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-white">
-                          Ergebnisse ({searchResults.length})
-                        </h3>
-                        {activeBezirk && (
-                          <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded-full">
-                            <MapPin className="w-3 h-3" />
-                            {activeBezirk}
-                            {rawSearchResults.length !== searchResults.length && (
-                              <span className="text-blue-500">
-                                ({rawSearchResults.length - searchResults.length} gefiltert)
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="text-xs px-2.5 py-1.5 border border-[#1C2333] rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-400 bg-[#1C2333]"
-                      >
-                        <option value="date">Neueste zuerst</option>
-                        <option value="title">Titel A–Z</option>
-                        <option value="company">Unternehmen A–Z</option>
-                        <option value="salary">Mit Gehalt zuerst</option>
-                      </select>
-                    </div>
-                    <div className="space-y-4">
-                      {searchResults.slice(0, visibleCount).map((result, index) => {
-                        const isExpanded = expandedJob === index;
-                        const analysis = jobAnalyses[index];
-                        return (
-                          <div
-                            key={`${result.source_id}-${index}`}
-                            className={`overflow-hidden rounded-xl border transition-all duration-200 ${
-                              isExpanded
-                                ? "border-[#3b82f6] bg-[#111827] shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                                : "border-[#1f2937] bg-[#111827] hover:border-[#3b82f6] hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                            }`}
-                          >
-                            {/* Card header — always visible */}
-                            <button
-                              className="w-full p-5 text-left hover:bg-[#111827] transition-colors"
-                              onClick={() => {
-                                const newExpanded = isExpanded ? null : index;
-                                if (newExpanded !== null && expandedJob !== null && expandedJob !== newExpanded) {
-                                  setJobAnalyses((prev) => { const next = { ...prev }; delete next[expandedJob]; return next; });
-                                }
-                                setExpandedJob(newExpanded);
-                              }}
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="font-bold text-white text-base leading-snug">{result.title || "Ohne Titel"}</h4>
-                                    {result.full_url && (
-                                      <a
-                                        href={result.full_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline flex-shrink-0"
-                                      >
-                                        <ExternalLink className="w-3 h-3" />
-                                        Stellenanzeige
-                                      </a>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1.5 mt-1">
-                                    <Building2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                                    <p className="text-sm font-medium text-slate-300">{result.company || "Unbekanntes Unternehmen"}</p>
-                                  </div>
-                                  <div className="flex flex-wrap gap-3 mt-2.5">
-                                    {result.location && (
-                                      <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-white/5 px-2 py-0.5 rounded-full">
-                                        <MapPin className="w-3 h-3" />{result.location}
-                                      </span>
-                                    )}
-                                    {result.salary && (
-                                      <span className="inline-flex items-center text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                        {result.salary}
-                                      </span>
-                                    )}
-                                    {result.updated && (
-                                      <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-white/5 px-2 py-0.5 rounded-full">
-                                        <Clock className="w-3 h-3" />{new Date(result.updated).toLocaleDateString("de-AT")}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex flex-shrink-0 flex-col items-end gap-3">
-                                  <MatchProgressBadge score={analysis?.match_score ?? analysis?.matching_score ?? analysis?.score ?? null} />
-                                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#334155] text-slate-400 transition-colors group-hover:border-blue-500/30 group-hover:text-blue-300">
-                                    <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                                  </span>
-                                </div>
-                              </div>
-                            </button>
-
-                            {/* Expanded detail panel */}
-                            {isExpanded && (
-                              <div className="space-y-4 border-t border-[#1f2937] bg-black/40 p-5">
-                                {/* Description */}
-                                {result.description && (
-                                  <div className="rounded-xl border border-[#1f2937] bg-[#0b1220] p-4">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Beschreibung</p>
-                                    <p className="text-sm text-slate-300 leading-relaxed">{result.description}</p>
-                                  </div>
-                                )}
-
-                                {/* Actions row */}
-                                <div className="flex flex-wrap gap-2">
-                                  {result.full_url && (
-                                    <a
-                                      href={result.full_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#1f2937] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px]"
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                      Stellenanzeige
-                                    </a>
-                                  )}
-                                  <button
-                                    onClick={() => handleSaveSearchResult(result)}
-                                    disabled={savingJobId === result.source_id}
-                                    aria-label={savedJobIds.has(result.source_id) ? "Gespeichert" : "Speichern"}
-                                    className="flex items-center justify-center rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-2 text-sm text-slate-300 transition-colors hover:border-blue-500/30 hover:text-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
-                                  >
-                                    {savingJobId === result.source_id ? (
-                                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                      <Bookmark className={`h-4 w-4 ${savedJobIds.has(result.source_id) ? "fill-[#3b82f6] text-[#3b82f6]" : ""}`} />
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => handleAnalyzeJob(result, index)}
-                                    disabled={analyzingJobId === index}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-colors disabled:opacity-50 min-h-[44px]"
-                                    style={{ backgroundColor: "#3b82f6" }}
-                                  >
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    {analyzingJobId === index ? "Analyse läuft…" : "Analyse aktualisieren (Passung datenbasiert bewerten)"}
-                                  </button>
-                                  <button
-                                    onClick={() => handleCoverLetter(result, index)}
-                                    disabled={analyzingJobId === `cl-${index}`}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-transparent border border-[#1f2937] text-slate-300 hover:border-blue-500/30 hover:text-[#3b82f6] transition-colors min-h-[44px] disabled:opacity-50"
-                                  >
-                                    {analyzingJobId === `cl-${index}` ? (
-                                      <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Entwurf läuft…</>
-                                    ) : (
-                                      <><FileText className="w-3.5 h-3.5" />Anschreiben erstellen (KI-basierten Entwurf generieren)</>
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => handleResearch(result)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-[#0b1220] border border-[#1f2937] text-emerald-300 hover:border-emerald-500/30 transition-colors min-h-[44px]"
-                                  >
-                                    <SearchCheck className="w-3.5 h-3.5" />
-                                    Unternehmensrecherche öffnen (Hintergrundwissen laden)
-                                  </button>
-                                </div>
-
-                                {/* AI Analysis */}
-                                {analysis && (
-                                  <div className="space-y-3 pt-2 border-t border-[#1C2333]">
-                                    <p className="text-xs font-semibold text-blue-300 uppercase tracking-wide flex items-center gap-1">
-                                      <Sparkles className="w-3 h-3" /> Stellen-Analyse
-                                    </p>
-
-                                    {analysis.what_to_expect && (
-                                      <div>
-                                        <p className="text-xs font-semibold text-slate-400 mb-1">Was dich erwartet</p>
-                                        <p className="text-sm text-slate-300">{analysis.what_to_expect}</p>
-                                      </div>
-                                    )}
-
-                                    {analysis.requirements?.length > 0 && (
-                                      <div>
-                                        <p className="text-xs font-semibold text-slate-400 mb-1">Anforderungen</p>
-                                        <ul className="space-y-1">
-                                          {analysis.requirements.map((r, i) => (
-                                            <li key={i} className="text-sm text-slate-300 flex gap-2">
-                                              <span className="text-blue-500 font-bold flex-shrink-0">•</span>{r}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-
-                                    {analysis.nice_to_have?.length > 0 && (
-                                      <div>
-                                        <p className="text-xs font-semibold text-slate-400 mb-1">Von Vorteil</p>
-                                        <ul className="space-y-1">
-                                          {analysis.nice_to_have.map((r, i) => (
-                                            <li key={i} className="text-sm text-slate-300 flex gap-2">
-                                              <span className="text-emerald-500 font-bold flex-shrink-0">+</span>{r}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-
-                                    {analysis.tips?.length > 0 && (
-                                      <div className="bg-amber-900/30 border border-amber-800/50 rounded-xl p-3">
-                                        <p className="text-xs font-semibold text-amber-400 mb-1">Bewerbungstipps</p>
-                                        <ul className="space-y-1">
-                                          {analysis.tips.map((t, i) => (
-                                            <li key={i} className="text-sm text-amber-300 flex gap-2">
-                                              <span className="flex-shrink-0">{i + 1}.</span>{t}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                      {visibleCount < searchResults.length && (
-                        <button
-                          type="button"
-                          onClick={() => setVisibleCount((c) => c + 5)}
-                          className="flex-1 py-2.5 rounded-xl border border-[#1C2333] text-sm font-semibold text-slate-400 hover:bg-white/5 hover:border-[#2D3748] transition-colors min-h-[44px]"
-                        >
-                          Mehr laden (Weitere Favoriten anzeigen)
-                        </button>
-                      )}
-                      {visibleCount > 5 && (
-                        <button
-                          type="button"
-                          onClick={() => setVisibleCount(5)}
-                          className="px-4 py-2.5 rounded-xl border border-[#1C2333] text-sm font-semibold text-slate-400 hover:bg-white/5 hover:border-[#2D3748] transition-colors min-h-[44px]"
-                        >
-                          Weniger anzeigen
-                        </button>
-                      )}
-                    </div>
                   </div>
-                )}
+                  <div className="text-left flex-1">
+                    <span className="text-[13px] font-medium text-[#e0e0e8]">
+                      {recommendedLoading ? "Suche läuft…" : "Neue Chancen entdecken"}
+                    </span>
+                  </div>
+                  <ChevronRight size={16} className="text-[#2a2a32] transition-colors group-hover:text-[#505058]" />
+                </button>
+              </div>
+            )}
 
-                {/* No Results */}
-                {!searchLoading &&
-                  searchResults.length === 0 &&
-                  (searchTab === "recommended" ? recommendedResults : customResults) !==
-                    undefined &&
-                  (searchTab === "custom" &&
-                    submittedCustomParams?.keywords) && (
-                    <div className="mt-6 p-6 rounded-xl bg-[#08090c] border border-[#171a21] shadow-sm text-center">
-                      <Briefcase className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-400">
-                        Keine Stellen zu deinen Suchkriterien gefunden
-                      </p>
-                    </div>
-                  )}
+            {/* Custom Search Tab */}
+            {searchTab === "custom" && (
+              <form onSubmit={handleCustomSearch} className="space-y-4">
+                <div className="space-y-1.5">
+                  <TileLabel>Suchbegriffe</TileLabel>
+                  <input
+                    type="text"
+                    placeholder="z.B. Verkauf, Gastro, IT, Praktikum"
+                    value={customSearchParams.keywords}
+                    onChange={(e) =>
+                      setCustomSearchParams({ ...customSearchParams, keywords: e.target.value })
+                    }
+                    className="w-full appearance-none rounded-xl bg-[#0c0c0e] px-4 py-2.5 text-[13px] text-white placeholder-[#3a3a42] focus:outline-none min-h-[44px]"
+                    style={{ boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)' }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <TileLabel>Ort</TileLabel>
+                  <input
+                    type="text"
+                    placeholder="z.B. Wien, Graz, Linz, Salzburg"
+                    value={customSearchParams.location}
+                    onChange={(e) =>
+                      setCustomSearchParams({ ...customSearchParams, location: e.target.value })
+                    }
+                    className="w-full appearance-none rounded-xl bg-[#0c0c0e] px-4 py-2.5 text-[13px] text-white placeholder-[#3a3a42] focus:outline-none min-h-[44px]"
+                    style={{ boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)' }}
+                  />
+                </div>
+                {/wien|vienna/i.test(customSearchParams.location) && (
+                  <ViennaMap
+                    value={customSearchParams.bezirk}
+                    onChange={(val) => setCustomSearchParams({ ...customSearchParams, bezirk: val })}
+                  />
+                )}
+                {customSearchParams.location && !(/wien|vienna/i.test(customSearchParams.location)) && (() => {
+                  const cityKey = customSearchParams.location.trim().toLowerCase();
+                  const MAP_CITIES = ["graz", "linz", "salzburg", "innsbruck"];
+                  if (MAP_CITIES.includes(cityKey)) {
+                    return (
+                      <CityMap
+                        cityKey={cityKey}
+                        selected={customSearchParams.bezirk}
+                        onSelect={(val) => setCustomSearchParams({ ...customSearchParams, bezirk: val || "" })}
+                      />
+                    );
+                  }
+                  if (CITY_DISTRICTS[cityKey]) {
+                    return (
+                      <div className="space-y-1.5">
+                        <TileLabel>Bezirk</TileLabel>
+                        <select
+                          value={customSearchParams.bezirk}
+                          onChange={(e) => setCustomSearchParams({ ...customSearchParams, bezirk: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-[#0c0c0e] text-[13px] text-white rounded-xl focus:outline-none appearance-none min-h-[44px]"
+                          style={{ boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)' }}
+                        >
+                          <option value="">Alle Bezirke</option>
+                          {CITY_DISTRICTS[cityKey].map((d) => (
+                            <option key={d.value} value={d.value}>{d.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+                <div className="space-y-1.5">
+                  <TileLabel>Stellenart</TileLabel>
+                  <select
+                    value={customSearchParams.jobType}
+                    onChange={(e) =>
+                      setCustomSearchParams({ ...customSearchParams, jobType: e.target.value })
+                    }
+                    className="w-full appearance-none rounded-xl bg-[#0c0c0e] px-4 py-2.5 text-[13px] text-white focus:outline-none min-h-[44px]"
+                    style={{ boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)' }}
+                  >
+                    <option value="">Alle Stellenarten</option>
+                    <option value="Vollzeit">Vollzeit</option>
+                    <option value="Teilzeit">Teilzeit</option>
+                    <option value="Praktikum">Praktikum</option>
+                    <option value="Samstagsjob">Samstagsjob</option>
+                    <option value="Ferialjob">Ferialjob</option>
+                    <option value="Geringfügig">Geringfügig</option>
+                    <option value="Freiberuflich">Freiberuflich</option>
+                    <option value="Lehre">Lehre</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={customLoading || !customSearchParams.keywords}
+                  className="group w-full flex items-center gap-3 rounded-xl py-3 px-4 transition-all duration-200 hover:bg-white/[0.02] disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(59,130,246,0.01) 100%)' }}
+                >
+                  <div className="grid place-items-center h-8 w-8 rounded-lg" style={{ background: 'rgba(59,130,246,0.14)' }}>
+                    {customLoading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Search size={15} className="text-blue-400" />
+                    )}
+                  </div>
+                  <span className="text-[13px] font-medium text-[#e0e0e8] flex-1 text-left">
+                    {customLoading ? "Suche läuft…" : "Stellen suchen"}
+                  </span>
+                  <ChevronRight size={16} className="text-[#2a2a32] transition-colors group-hover:text-[#505058]" />
+                </button>
+              </form>
+            )}
+          </Tile>
         </div>
+
+        {/* === Search Results === */}
+        {searchResults.length > 0 && (
+          <div className="col-span-12 mt-1">
+            <Tile>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-baseline gap-3">
+                  <TileLabel>Ergebnisse</TileLabel>
+                  <span className="text-[22px] font-semibold text-white leading-none">{searchResults.length}</span>
+                  {activeBezirk && (
+                    <span className="flex items-center gap-1 text-[10px] text-[#505058]">
+                      <MapPin size={10} /> {activeBezirk}
+                    </span>
+                  )}
+                </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-lg bg-transparent text-[#505058] focus:outline-none appearance-none cursor-pointer"
+                >
+                  <option value="date">Neueste</option>
+                  <option value="title">Titel</option>
+                  <option value="company">Firma</option>
+                  <option value="salary">Gehalt</option>
+                </select>
+              </div>
+
+              {/* Results list — transaction style */}
+              <div className="space-y-0">
+                {searchResults.slice(0, visibleCount).map((result, index) => {
+                  const isExpanded = expandedJob === index;
+                  const analysis = jobAnalyses[index];
+                  const matchScore = analysis?.match_score ?? analysis?.matching_score ?? analysis?.score ?? null;
+
+                  return (
+                    <div key={`${result.source_id}-${index}`}>
+                      {/* Collapsed row — always visible */}
+                      <button
+                        className={`w-full flex items-center gap-4 py-3.5 text-left transition-colors hover:bg-white/[0.02] ${
+                          isExpanded ? 'bg-white/[0.01]' : ''
+                        }`}
+                        style={index > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
+                        onClick={() => {
+                          const newExpanded = isExpanded ? null : index;
+                          if (newExpanded !== null && expandedJob !== null && expandedJob !== newExpanded) {
+                            setJobAnalyses((prev) => { const next = { ...prev }; delete next[expandedJob]; return next; });
+                          }
+                          setExpandedJob(newExpanded);
+                        }}
+                      >
+                        <MiniMatchRing score={matchScore} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-semibold text-white truncate leading-tight">
+                            {result.title || "Ohne Titel"}
+                          </p>
+                          <p className="text-[11px] text-[#505058] truncate mt-0.5">
+                            {result.company || "Unbekannt"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          {result.location && (
+                            <span className="text-[10px] text-[#3a3a42] hidden sm:block">{result.location}</span>
+                          )}
+                          {result.updated && (
+                            <span className="text-[10px] text-[#3a3a42] hidden sm:block tabular-nums">
+                              {new Date(result.updated).toLocaleDateString("de-AT")}
+                            </span>
+                          )}
+                          <ChevronDown size={14} className={`text-[#2a2a32] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      {/* Expanded detail panel */}
+                      {isExpanded && (
+                        <div
+                          className="pb-5 pt-2 pl-12 pr-2 space-y-4"
+                          style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}
+                        >
+                          {/* Description */}
+                          {result.description && (
+                            <div>
+                              <TileLabel className="mb-2">Beschreibung</TileLabel>
+                              <p className="text-[12px] text-[#808088] leading-relaxed">{result.description}</p>
+                            </div>
+                          )}
+
+                          {result.salary && (
+                            <div className="flex items-baseline gap-2">
+                              <TileLabel>Gehalt</TileLabel>
+                              <span className="text-[13px] font-medium text-emerald-400">{result.salary}</span>
+                            </div>
+                          )}
+
+                          {/* Flat action-links with subtle icons */}
+                          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
+                            {result.full_url && (
+                              <a
+                                href={result.full_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors"
+                              >
+                                <ExternalLink size={12} />
+                                Anzeige öffnen
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleSaveSearchResult(result)}
+                              disabled={savingJobId === result.source_id}
+                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors disabled:opacity-50"
+                            >
+                              {savingJobId === result.source_id ? (
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Bookmark size={12} className={savedJobIds.has(result.source_id) ? "fill-blue-400 text-blue-400" : ""} />
+                              )}
+                              {savedJobIds.has(result.source_id) ? "Gespeichert" : "Speichern"}
+                            </button>
+                            <button
+                              onClick={() => handleAnalyzeJob(result, index)}
+                              disabled={analyzingJobId === index}
+                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors disabled:opacity-50"
+                            >
+                              <Sparkles size={12} />
+                              {analyzingJobId === index ? "Analyse…" : "Analysieren"}
+                            </button>
+                            <button
+                              onClick={() => handleCoverLetter(result, index)}
+                              disabled={analyzingJobId === `cl-${index}`}
+                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors disabled:opacity-50"
+                            >
+                              {analyzingJobId === `cl-${index}` ? (
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <FileText size={12} />
+                              )}
+                              {analyzingJobId === `cl-${index}` ? "Entwurf…" : "Anschreiben"}
+                            </button>
+                            <button
+                              onClick={() => handleResearch(result)}
+                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-emerald-400 transition-colors"
+                            >
+                              <SearchCheck size={12} />
+                              Recherche
+                            </button>
+                          </div>
+
+                          {/* AI Analysis */}
+                          {analysis && (
+                            <div className="space-y-3 mt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles size={11} className="text-blue-400" />
+                                <TileLabel>Stellen-Analyse</TileLabel>
+                              </div>
+
+                              {analysis.what_to_expect && (
+                                <div>
+                                  <TileLabel className="mb-1">Was dich erwartet</TileLabel>
+                                  <p className="text-[12px] text-[#808088] leading-relaxed">{analysis.what_to_expect}</p>
+                                </div>
+                              )}
+
+                              {analysis.requirements?.length > 0 && (
+                                <div>
+                                  <TileLabel className="mb-1">Anforderungen</TileLabel>
+                                  <ul className="space-y-1">
+                                    {analysis.requirements.map((r, i) => (
+                                      <li key={i} className="text-[12px] text-[#808088] flex gap-2">
+                                        <span className="text-blue-500/60 flex-shrink-0">·</span>{r}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {analysis.nice_to_have?.length > 0 && (
+                                <div>
+                                  <TileLabel className="mb-1">Von Vorteil</TileLabel>
+                                  <ul className="space-y-1">
+                                    {analysis.nice_to_have.map((r, i) => (
+                                      <li key={i} className="text-[12px] text-[#808088] flex gap-2">
+                                        <span className="text-emerald-500/60 flex-shrink-0">+</span>{r}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {analysis.tips?.length > 0 && (
+                                <div className="rounded-xl p-3" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.04) 0%, rgba(251,191,36,0.01) 100%)' }}>
+                                  <TileLabel className="mb-1 !text-amber-500/70">Bewerbungstipps</TileLabel>
+                                  <ul className="space-y-1">
+                                    {analysis.tips.map((t, i) => (
+                                      <li key={i} className="text-[12px] text-amber-400/60 flex gap-2">
+                                        <span className="flex-shrink-0 text-amber-500/40">{i + 1}.</span>{t}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Load more / less — minimal text links */}
+              <div className="mt-4 flex gap-4 justify-center" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
+                {visibleCount < searchResults.length && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((c) => c + 5)}
+                    className="text-[11px] font-medium text-[#505058] hover:text-white transition-colors"
+                  >
+                    Mehr laden
+                  </button>
+                )}
+                {visibleCount > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(5)}
+                    className="text-[11px] font-medium text-[#3a3a42] hover:text-[#505058] transition-colors"
+                  >
+                    Weniger
+                  </button>
+                )}
+              </div>
+            </Tile>
+          </div>
+        )}
+
+        {/* No Results */}
+        {!searchLoading &&
+          searchResults.length === 0 &&
+          (searchTab === "recommended" ? recommendedResults : customResults) !==
+            undefined &&
+          (searchTab === "custom" &&
+            submittedCustomParams?.keywords) && (
+            <div className="col-span-12 mt-1">
+              <Tile className="text-center py-10">
+                <Briefcase size={20} className="text-[#3a3a42] mx-auto mb-3" />
+                <p className="text-[12px] text-[#505058]">Keine Stellen gefunden</p>
+              </Tile>
+            </div>
+          )}
       </div>
 
       {researchModal && (
@@ -1078,47 +1029,52 @@ const [savingJobId, setSavingJobId] = useState(null);
       )}
 
       {coverLetterModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#08090c] rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div
+            className="rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+            style={{
+              background: 'linear-gradient(180deg, #080808 0%, #030303 100%)',
+              boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 24px 48px -12px rgba(0,0,0,0.8)',
+            }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#1C2333]">
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#2D5BFF]/15 flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-[#2D5BFF]" />
+                <div className="grid place-items-center h-8 w-8 rounded-lg" style={{ background: 'rgba(59,130,246,0.14)' }}>
+                  <FileText size={15} className="text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Anschreiben</h3>
-                  <p className="text-xs text-slate-400">{coverLetterModal.role} · {coverLetterModal.company}</p>
+                  <TileLabel>Anschreiben</TileLabel>
+                  <p className="text-[13px] font-medium text-white mt-0.5">{coverLetterModal.role} · {coverLetterModal.company}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(coverLetterModal.text);
                     setCopiedCover(true);
                     setTimeout(() => setCopiedCover(false), 2000);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-[#1C2333] text-slate-400 hover:border-[#C7D2FE] hover:text-[#2D5BFF] transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors"
                 >
-                  {copiedCover ? <><Check className="w-3.5 h-3.5 text-emerald-500" />In Zwischenablage übernommen</> : <><Copy className="w-3.5 h-3.5" />text_kopieren (Den Text in die Zwischenablage übernehmen)</>}
+                  {copiedCover ? <><Check size={12} className="text-emerald-400" />Kopiert</> : <><Copy size={12} />Kopieren</>}
                 </button>
                 <button
                   onClick={() => setCoverLetterModal(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:bg-white/10 transition-colors"
+                  className="text-[#3a3a42] hover:text-[#505058] transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X size={16} />
                 </button>
               </div>
             </div>
             {/* Body */}
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              <pre className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">{coverLetterModal.text}</pre>
+              <pre className="text-[13px] text-[#808088] leading-relaxed whitespace-pre-wrap font-sans">{coverLetterModal.text}</pre>
             </div>
           </div>
         </div>,
         document.body
       )}
-    </div>
     </div>
   );
 }
