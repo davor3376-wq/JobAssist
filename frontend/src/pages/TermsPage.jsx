@@ -3,18 +3,18 @@ import { ArrowLeft } from "lucide-react";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-black text-slate-100">
       <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6">
-        <Link to="/" className="mb-8 inline-flex items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-gray-700">
+        <Link to="/" className="mb-8 inline-flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-100">
           <ArrowLeft className="h-4 w-4" /> Zurück
         </Link>
 
-        <h1 className="mb-2 text-3xl font-extrabold text-gray-900">Allgemeine Geschäftsbedingungen (AGB)</h1>
-        <p className="mb-10 text-sm text-gray-400">Stand: 23. März 2026</p>
+        <h1 className="mb-2 text-3xl font-extrabold text-slate-100">Allgemeine Geschäftsbedingungen (AGB)</h1>
+        <p className="mb-10 text-sm text-slate-400">Stand: 23. März 2026</p>
 
-        <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-gray-700">
+        <div className="prose prose-invert max-w-none space-y-8 text-[15px] leading-relaxed text-slate-300">
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">1. Geltungsbereich</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">1. Geltungsbereich</h2>
             <p>
               Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Plattform <strong>JobAssist</strong>
               {" "} (nachfolgend „Dienst"), betrieben von JobAssist (siehe{" "}
@@ -27,7 +27,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">2. Leistungsbeschreibung</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">2. Leistungsbeschreibung</h2>
             <p>JobAssist bietet KI-gestützte Werkzeuge zur Unterstützung bei der Jobsuche, darunter:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Analyse von Lebensläufen (CV-Analysen) mittels künstlicher Intelligenz</li>
@@ -42,7 +42,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">3. Preise und Zahlung</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">3. Preise und Zahlung</h2>
             <p>Der <strong>Basic-Plan</strong> ist kostenlos und bietet eingeschränkte Funktionen.</p>
             <p>
               Der <strong>Pro-Plan</strong> kostet <strong>€4,99 pro Monat</strong> und beinhaltet u.a. 15 Lebenslauf-Analysen,
@@ -59,9 +59,9 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">4. Widerrufsbelehrung (digitale Inhalte)</h2>
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="mb-2 font-semibold text-gray-900">Wichtiger Hinweis zum Widerrufsrecht:</p>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">4. Widerrufsbelehrung (digitale Inhalte)</h2>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="mb-2 font-semibold text-slate-100">Wichtiger Hinweis zum Widerrufsrecht:</p>
               <p>
                 Als Verbraucher hast du grundsätzlich ein <strong>14-tägiges Widerrufsrecht</strong> ab Vertragsabschluss
                 gemäß § 11 FAGG (Fern- und Auswärtsgeschäfte-Gesetz).
@@ -80,7 +80,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">5. Nutzungsbedingungen</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">5. Nutzungsbedingungen</h2>
             <ul className="list-disc space-y-1 pl-5">
               <li>Du musst mindestens 16 Jahre alt sein, um den Dienst zu nutzen.</li>
               <li>Jede Person darf nur ein Konto erstellen.</li>
@@ -91,7 +91,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">6. Verfügbarkeit und Haftung</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">6. Verfügbarkeit und Haftung</h2>
             <p>
               Wir bemühen uns, den Dienst rund um die Uhr verfügbar zu halten, können aber keine 100%ige Verfügbarkeit garantieren.
               Wartungsarbeiten und technische Störungen sind möglich.
@@ -103,7 +103,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">7. Kündigung</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">7. Kündigung</h2>
             <p>
               Du kannst dein Abonnement jederzeit über die Kontoeinstellungen oder das Stripe-Kundenportal kündigen.
               Die Kündigung wird zum Ende des laufenden Abrechnungszeitraums wirksam. Nach der Kündigung behältst du Zugang zu den Basic-Funktionen.
@@ -112,7 +112,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">8. Änderungen der AGB</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">8. Änderungen der AGB</h2>
             <p>
               Wir können diese AGB jederzeit anpassen. Wesentliche Änderungen werden dir per E-Mail mitgeteilt.
               Durch die weitere Nutzung des Dienstes nach Inkrafttreten der Änderungen stimmst du den neuen AGB zu.
@@ -120,7 +120,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-bold text-gray-900">9. Anwendbares Recht und Gerichtsstand</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-100">9. Anwendbares Recht und Gerichtsstand</h2>
             <p>
               Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist das sachlich zuständige Gericht in Österreich.
               Für Verbraucher gelten die zwingenden Bestimmungen des Konsumentenschutzgesetzes (KSchG).
