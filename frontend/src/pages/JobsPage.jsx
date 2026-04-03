@@ -234,13 +234,24 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
   const { data: _initData } = useQuery({ queryKey: ["init"] });
   const { data: resumes = [] } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data), initialData: () => loadStored("resumes") || [] });
-  const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj } = useQuery({
+  const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj, isFetching: _jobsFetching } = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then(r => {
-      saveStored("jobs", r.data);
-      return r.data;
-    }),
-    initialData: () => loadStored("jobs") || [],
+    queryFn: () => {
+      console.log("[JobsPage] Fetching saved jobs from API...");
+      return jobApi.list().then(r => {
+        console.log(`[JobsPage] API returned ${r.data?.length ?? 0} jobs`);
+        saveStored("jobs", r.data);
+        return r.data;
+      }).catch(err => {
+        console.error("[JobsPage] API error:", err.response?.status, err.message);
+        throw err;
+      });
+    },
+    initialData: () => {
+      const cached = loadStored("jobs");
+      console.log(`[JobsPage] localStorage cache: ${cached?.length ?? 0} jobs`);
+      return cached || [];
+    },
     retry: 2,
   });
   if (jobsError) console.error("[JobsPage] Failed to load saved jobs:", jobsErrorObj);
