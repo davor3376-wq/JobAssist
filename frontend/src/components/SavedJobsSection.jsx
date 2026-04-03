@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Check } from "lucide-react";
+import { ChevronRight, ExternalLink, FileText, Sparkles } from "lucide-react";
 
 /**
  * Status configuration for saved-job pipeline stages.
@@ -25,21 +25,44 @@ const FILTER_TABS = [
 ];
 
 /**
- * Glowing SVG ring showing the match-score percentage.
- * Uses a conic-like stroke-dasharray trick for a clean arc.
+ * 40x40 rounded logo placeholder showing company initial + accent color.
  * @param {object} props
- * @param {number|null} props.score - 0-100 match percentage
+ * @param {string} props.company
+ * @param {string} props.status
  */
-function ScoreRing({ score }) {
+function LogoField({ company, status }) {
+  const initial = (company || "?").charAt(0).toUpperCase();
+  const cfg = STATUS_CFG[status] || STATUS_CFG.bookmarked;
+  return (
+    <div
+      className="flex-shrink-0 w-10 h-10 rounded-[10px] flex items-center justify-center"
+      style={{
+        background: `${cfg.color}12`,
+        boxShadow: `inset 0 0 0 1px ${cfg.color}18`,
+      }}
+    >
+      <span className="text-[14px] font-semibold" style={{ color: cfg.color }}>
+        {initial}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Thin neon match-score ring (36px) — Apple Wallet style.
+ * @param {object} props
+ * @param {number|null} props.score
+ */
+function NeonMatchRing({ score }) {
   const normalized = Number.isFinite(score)
     ? Math.max(0, Math.min(100, Math.round(score)))
     : null;
-  const r = 18;
+  const r = 14;
   const circ = 2 * Math.PI * r;
   const offset =
-    normalized == null ? circ * 0.65 : circ - (normalized / 100) * circ;
+    normalized == null ? circ * 0.35 : circ - (normalized / 100) * circ;
 
-  const arcColor =
+  const color =
     normalized == null
       ? "#3a3a42"
       : normalized >= 70
@@ -48,90 +71,34 @@ function ScoreRing({ score }) {
           ? "#3b82f6"
           : "#f59e0b";
 
-  const glowColor =
-    normalized == null
-      ? "none"
-      : normalized >= 70
-        ? "drop-shadow(0 0 6px rgba(16,185,129,0.45))"
-        : normalized >= 50
-          ? "drop-shadow(0 0 6px rgba(59,130,246,0.45))"
-          : "drop-shadow(0 0 6px rgba(245,158,11,0.35))";
-
   return (
-    <div className="relative w-12 h-12 flex-shrink-0">
-      <svg viewBox="0 0 44 44" className="-rotate-90 w-12 h-12">
+    <div className="relative w-9 h-9 flex-shrink-0">
+      <svg viewBox="0 0 36 36" className="-rotate-90 w-9 h-9">
+        <defs>
+          <filter id={`nrGlow-${normalized}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <circle cx="18" cy="18" r={r} fill="none" stroke="#111114" strokeWidth="1.5" />
         <circle
-          cx="22"
-          cy="22"
-          r={r}
-          fill="none"
-          stroke="rgba(255,255,255,0.04)"
-          strokeWidth="3"
-        />
-        <circle
-          cx="22"
-          cy="22"
-          r={r}
-          fill="none"
-          stroke={arcColor}
-          strokeWidth="3"
+          cx="18" cy="18" r={r} fill="none"
+          stroke={color} strokeWidth="1.5"
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
           className="transition-all duration-700 ease-out"
-          style={{ filter: glowColor }}
+          filter={`url(#nrGlow-${normalized})`}
         />
       </svg>
       <span
-        className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums"
-        style={{ color: arcColor }}
+        className="absolute inset-0 flex items-center justify-center text-[9px] font-semibold tabular-nums"
+        style={{ color }}
       >
-        {normalized != null ? `${normalized}` : "—"}
-      </span>
-    </div>
-  );
-}
-
-/**
- * Tiny pulsing status indicator dot.
- * Blue pulse = "Neu" (bookmarked), Green check = "Bereit" (applied).
- * @param {object} props
- * @param {string} props.status
- */
-function StatusLight({ status }) {
-  if (status === "applied" || status === "interviewing" || status === "offered") {
-    return (
-      <div className="flex items-center gap-1.5">
-        <div
-          className="grid place-items-center h-4 w-4 rounded-full"
-          style={{ background: "rgba(16,185,129,0.12)" }}
-        >
-          <Check size={9} strokeWidth={3} color="#10b981" />
-        </div>
-        <span className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#3a3a42]">
-          {STATUS_CFG[status]?.label ?? "Bereit"}
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="relative flex h-2 w-2">
-        <span
-          className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
-          style={{ background: "#3b82f6" }}
-        />
-        <span
-          className="relative inline-flex h-2 w-2 rounded-full"
-          style={{
-            background: "#3b82f6",
-            boxShadow: "0 0 6px rgba(59,130,246,0.5)",
-          }}
-        />
-      </span>
-      <span className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#3a3a42]">
-        Neu
+        {normalized != null ? normalized : "—"}
       </span>
     </div>
   );
@@ -146,19 +113,19 @@ function timeAgo(dateStr) {
   if (!dateStr) return null;
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / 86400000);
-  if (days === 0) return "HEUTE";
-  if (days === 1) return "GESTERN";
-  return `VOR ${days}T`;
+  if (days === 0) return "Heute";
+  if (days === 1) return "Gestern";
+  return `Vor ${days}T`;
 }
 
 /**
- * Premium "Gespeicherte Stellen" section — curated career opportunities.
+ * Premium "Gespeicherte Stellen" section — row-based transaction list.
  *
- * Apple / Revolut design language:
- * - #000 background, cards with #080808→#030303 gradient, no border
- * - Glassmorphism filter bar
- * - Match-score ring, status lights, ALL-CAPS meta labels
- * - 12-col CSS Grid, mobile card-stack
+ * Apple Wallet / Revolut design language:
+ * - 72px rows, deep black, 1px gradient separators
+ * - 40x40 logo field, thin neon match ring
+ * - Glass hover with quick-action icons
+ * - 12-col CSS Grid
  *
  * @param {object} props
  * @param {Array} props.jobs - Array of saved job objects
@@ -224,7 +191,7 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
 
       {/* ─── Glassmorphism filter bar ─── */}
       <div
-        className="inline-flex gap-1 p-1 rounded-xl mb-8"
+        className="inline-flex gap-1 p-1 rounded-xl mb-6"
         style={{
           background: "rgba(255,255,255,0.03)",
           backdropFilter: "blur(12px)",
@@ -263,7 +230,6 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
               >
                 {counts[tab.key]}
               </span>
-              {/* Active indicator line */}
               {isActive && (
                 <span
                   className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full"
@@ -278,75 +244,106 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
         })}
       </div>
 
-      {/* ─── Cards grid: desktop = 3-col compact, mobile = stacked ─── */}
-      <div className="grid grid-cols-12 gap-3 sm:gap-4">
-        {visible.map((job) => {
+      {/* ─── Row-based list — transaction style ─── */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+          boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        {visible.map((job, i) => {
           const score =
             job.match_score != null ? Math.round(job.match_score) : null;
           const dateLabel = timeAgo(job.updated_at || job.created_at);
+          const statusCfg = STATUS_CFG[job.status] || STATUS_CFG.bookmarked;
 
           return (
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
-              className="col-span-12 sm:col-span-6 lg:col-span-4 group rounded-2xl p-5 transition-all duration-200 hover:scale-[1.01]"
+              className="group flex items-center gap-4 px-5 transition-all duration-200 hover:bg-[#080808]"
               style={{
-                background:
-                  "linear-gradient(180deg, #080808 0%, #030303 100%)",
-                boxShadow:
-                  "inset 0 1px 0 0 rgba(255,255,255,0.04), 0 2px 8px -2px rgba(0,0,0,0.4)",
+                height: "72px",
+                ...(i > 0
+                  ? {
+                      borderTop: "1px solid transparent",
+                      borderImage:
+                        "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.04) 80%, transparent 100%) 1",
+                    }
+                  : {}),
               }}
             >
-              {/* Top: status light + chevron */}
-              <div className="flex items-center justify-between mb-4">
-                <StatusLight status={job.status || "bookmarked"} />
-                <ChevronRight
-                  size={14}
-                  className="text-[#1a1a22] transition-colors group-hover:text-[#505058]"
-                />
-              </div>
+              {/* 40x40 Logo field */}
+              <LogoField company={job.company} status={job.status || "bookmarked"} />
 
-              {/* Middle: title + company alongside score ring */}
-              <div className="flex items-center gap-4">
-                <ScoreRing score={score} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-bold text-white truncate leading-tight">
-                    {job.role}
-                  </p>
-                  <p className="text-[12px] text-[#707078] truncate mt-1">
+              {/* Title + Company — full focus on title */}
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-white truncate leading-tight">
+                  {job.role}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[11px] text-[#505058] truncate">
                     {job.company}
-                  </p>
+                  </span>
+                  {/* Status dot */}
+                  <span
+                    className="flex-shrink-0 h-1 w-1 rounded-full"
+                    style={{
+                      background: statusCfg.color,
+                      boxShadow: `0 0 4px ${statusCfg.color}40`,
+                    }}
+                  />
+                  <span className="text-[9px] tracking-[0.14em] uppercase text-[#3a3a42] flex-shrink-0">
+                    {statusCfg.label}
+                  </span>
                 </div>
               </div>
 
-              {/* Bottom: meta labels */}
-              <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+              {/* Muted metadata — location + date */}
+              <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
                 {job.location && (
-                  <span className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#3a3a42]">
+                  <span className="text-[10px] text-[#3a3a42] truncate max-w-[100px]">
                     {job.location}
                   </span>
                 )}
                 {dateLabel && (
-                  <span className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#3a3a42]">
+                  <span className="text-[10px] text-[#2a2a32] tabular-nums">
                     {dateLabel}
                   </span>
                 )}
-                {score != null && (
-                  <span
-                    className="ml-auto text-[9px] font-semibold tracking-[0.14em] uppercase"
-                    style={{
-                      color:
-                        score >= 70
-                          ? "#10b981"
-                          : score >= 50
-                            ? "#3b82f6"
-                            : "#f59e0b",
-                    }}
-                  >
-                    {score}% MATCH
-                  </span>
-                )}
               </div>
+
+              {/* Quick-action icons — glass hover reveal */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+                <span
+                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                  title="Anzeige öffnen"
+                >
+                  <ExternalLink size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                </span>
+                <span
+                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                  title="Anschreiben"
+                >
+                  <FileText size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                </span>
+                <span
+                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                  title="Analysieren"
+                >
+                  <Sparkles size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                </span>
+              </div>
+
+              {/* Thin neon match ring — visual highlight */}
+              <NeonMatchRing score={score} />
+
+              {/* Chevron */}
+              <ChevronRight
+                size={14}
+                className="text-[#1a1a22] transition-colors group-hover:text-[#3a3a42] flex-shrink-0"
+              />
             </Link>
           );
         })}
