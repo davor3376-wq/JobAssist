@@ -135,7 +135,33 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
   const [activeTab, setActiveTab] = useState("all");
   const [sortBy, setSortBy] = useState("score");
 
-  if (!jobs.length) return null;
+  if (!jobs.length) {
+    return (
+      <section className={`col-span-12 ${className}`}>
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <span className="block text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+              Kuratierte Auswahl
+            </span>
+            <h2 className="mt-1 text-[22px] sm:text-[26px] font-semibold text-white tracking-tight leading-none">
+              Gespeicherte Stellen
+            </h2>
+          </div>
+        </div>
+        <div
+          className="rounded-2xl p-8 text-center"
+          style={{
+            background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+            boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+          }}
+        >
+          <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
+          <p className="text-[13px] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
+          <p className="text-[10px] text-[#3a3a42] mt-1">Suche unten nach Jobs und speichere deine Favoriten</p>
+        </div>
+      </section>
+    );
+  }
 
   /* --- Filtering --- */
   const tabFilter = (job) => {

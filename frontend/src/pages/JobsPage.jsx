@@ -234,11 +234,16 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
   const { data: _initData } = useQuery({ queryKey: ["init"] });
   const { data: resumes = [] } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data), initialData: () => loadStored("resumes") || [] });
-  const { data: savedJobs = [] } = useQuery({
+  const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj } = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => jobApi.list().then(r => r.data),
+    queryFn: () => jobApi.list().then(r => {
+      saveStored("jobs", r.data);
+      return r.data;
+    }),
     initialData: () => loadStored("jobs") || [],
+    retry: 2,
   });
+  if (jobsError) console.error("[JobsPage] Failed to load saved jobs:", jobsErrorObj);
   const resumeId = resumes[0]?.id;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
 
