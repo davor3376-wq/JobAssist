@@ -161,9 +161,9 @@ function CircularGauge({ progress = 80, size = 76 }) {
 // ─── Activity Chart — Heart-Rate Needle Style ──────────────────────────────────
 function ActivityChart({ data }) {
   const W = 300;
-  const H = 56;
-  const padT = 8;
-  const padB = 4;
+  const H = 100;
+  const padT = 12;
+  const padB = 6;
   const avail = H - padT - padB;
   const max = 3;
   const n = data.length;
@@ -187,9 +187,9 @@ function ActivityChart({ data }) {
     <svg
       viewBox={`0 0 ${W} ${H}`}
       width="100%"
-      height={H}
+      height="100%"
       preserveAspectRatio="none"
-      style={{ overflow: 'visible' }}
+      style={{ overflow: 'visible', display: 'block' }}
     >
       <defs>
         <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -471,7 +471,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Row 2 — Aktivität (Heart-Rate Chart) */}
-          <Tile className="flex-1 min-h-0 p-3.5">
+          <Tile className="flex-1 min-h-0 p-3.5 flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -520,11 +520,12 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Chart + day labels */}
-            <div className="flex-1">
+            {/* Chart fills remaining tile height */}
+            <div className="flex-1 min-h-0">
               <ActivityChart data={dailyActivity} />
-              {/* Day labels */}
-              <div className="flex justify-between mt-1.5 px-0.5">
+            </div>
+            {/* Day labels */}
+            <div className="flex justify-between mt-2 px-0.5">
                 {dailyActivity.map((d) => (
                   <div key={d.day} className="flex flex-col items-center gap-0.5">
                     <span className="text-[9px] font-medium" style={{ color: C.textDim }}>
@@ -538,7 +539,6 @@ export default function DashboardPage() {
                     )}
                   </div>
                 ))}
-              </div>
             </div>
           </Tile>
 
