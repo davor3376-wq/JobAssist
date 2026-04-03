@@ -335,14 +335,14 @@ export default function DashboardPage() {
         </section>
 
         <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
-          <div className="rounded-xl border border-slate-700/50 bg-[#0A0C12] p-5">
+          <div className="rounded-xl border border-[#233250] bg-[#0A0C12] p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">Wochenziele & Erfolge</h3>
                 <p className="text-xs text-slate-400 mt-1">Deine aktiven Herausforderungen</p>
               </div>
-              <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
-                3/3 erledigt
+              <span className="rounded-full border border-slate-500/20 bg-slate-500/10 px-3 py-1 text-xs font-semibold text-slate-400">
+                2 von 3 Zielen erreicht
               </span>
             </div>
             
@@ -358,33 +358,33 @@ export default function DashboardPage() {
                   <p className="text-xs text-emerald-400">Abgeschlossen</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 bg-blue-400/5 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20">
+              <div className="flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" stroke="#34D399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">Top-Bewerber</p>
-                  <p className="text-xs text-blue-400">In der Top 20%</p>
+                  <p className="text-xs text-emerald-400">Aktiviert</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-violet-400/20 bg-violet-400/5 p-4 opacity-60">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-600/20 bg-slate-600/5 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-600/20">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 6V14M6 10H14" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M10 6V14M6 10H14" stroke="#64748B" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">3 Bewerbungen</p>
-                  <p className="text-xs text-violet-400">Noch 2 offen</p>
+                  <p className="text-sm font-semibold text-slate-300">3 Bewerbungen</p>
+                  <p className="text-xs text-slate-500">Noch 2 offen</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="col-span-12 bg-[#090B0F] p-5 md:p-6">
+        <section className="col-span-12 bg-[#090B0F] p-5 md:p-6 mt-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
               Nächste Schritte
