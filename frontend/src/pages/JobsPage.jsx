@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { Briefcase, Search, MapPin, ExternalLink, ChevronDown, Sparkles, Check, SearchCheck, FileText, X, Copy, Bookmark, ChevronRight } from "lucide-react";
 import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
+import SavedJobsSection from "../components/SavedJobsSection";
 
 /**
  * Premium tile wrapper — ultra-dark gradient with 1px inner glow at top.
@@ -49,7 +50,7 @@ const SAVED_STATUS_CFG = {
   offered:      { label: "Angebot",      color: "#fbbf24" },
   rejected:     { label: "Abgelehnt",    color: "#ef4444" },
 };
-function StatusBadge({ status }) {
+function _StatusBadge({ status }) {
   const cfg = SAVED_STATUS_CFG[status] || SAVED_STATUS_CFG.bookmarked;
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -220,8 +221,8 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [researchLoading, setResearchLoading] = useState(false);
   const [sortBy, setSortBy] = useState("date");
   const [visibleCount, setVisibleCount] = useState(5);
-  const [savedFilter, setSavedFilter] = useState("all");
-  const [savedSort, setSavedSort] = useState("score");
+  const [_savedFilter, _setSavedFilter] = useState("all");
+  const [_savedSort, _setSavedSort] = useState("score");
   const [customSearchParams, setCustomSearchParams] = useState({
     keywords: "",
     location: "",
@@ -404,7 +405,7 @@ const [savingJobId, setSavingJobId] = useState(null);
   };
 
   // Time ago formatter
-  const timeAgo = (date) => {
+  const _timeAgo = (date) => {
     if (!date) return null;
     const diff = Date.now() - new Date(date).getTime();
     const days = Math.floor(diff / 86400000);
@@ -499,106 +500,8 @@ const [savingJobId, setSavingJobId] = useState(null);
       </div>
 
       <div className="grid grid-cols-12 gap-3 sm:gap-4">
-        {/* === Saved Jobs === */}
-        {savedJobs.length > 0 && (() => {
-          const STATUS_FILTERS = [
-            { key: "all", label: "Alle" },
-            { key: "bookmarked", label: "Gespeichert" },
-            { key: "applied", label: "Beworben" },
-            { key: "interviewing", label: "Gespräch" },
-            { key: "offered", label: "Angebot" },
-            { key: "rejected", label: "Abgelehnt" },
-          ].filter(f => f.key === "all" || savedJobs.some(j => j.status === f.key));
-
-          const filtered = savedFilter === "all" ? savedJobs : savedJobs.filter(j => j.status === savedFilter);
-          const sorted = [...filtered].sort((a, b) => {
-            if (savedSort === "score") return (b.match_score ?? -1) - (a.match_score ?? -1);
-            if (savedSort === "status") return (a.status || "").localeCompare(b.status || "");
-            return 0;
-          });
-          const visible = sorted.slice(0, 10);
-          const statusCounts = STATUS_FILTERS.reduce((acc, f) => {
-            acc[f.key] = f.key === "all" ? savedJobs.length : savedJobs.filter(j => j.status === f.key).length;
-            return acc;
-          }, {});
-
-          return (
-            <div className="col-span-12">
-              <Tile>
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-baseline gap-3">
-                    <TileLabel>Gespeicherte Stellen</TileLabel>
-                    <span className="text-[22px] font-semibold text-white leading-none">{filtered.length}</span>
-                  </div>
-                  <select
-                    value={savedSort}
-                    onChange={e => setSavedSort(e.target.value)}
-                    className="text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-lg bg-transparent text-[#505058] focus:outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="score">Match ↓</option>
-                    <option value="status">Status</option>
-                    <option value="date">Datum</option>
-                  </select>
-                </div>
-
-                {/* Minimal filter pills */}
-                <div className="flex gap-3 mb-5">
-                  {STATUS_FILTERS.map(f => (
-                    <button
-                      key={f.key}
-                      onClick={() => setSavedFilter(f.key)}
-                      className="transition-colors"
-                    >
-                      <span className={`text-[10px] font-medium tracking-[0.14em] uppercase transition-colors ${
-                        savedFilter === f.key ? 'text-white' : 'text-[#3a3a42] hover:text-[#505058]'
-                      }`}>
-                        {f.label}
-                        <span className="ml-1 text-[#3a3a42]">{statusCounts[f.key]}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Transaction-style list */}
-                <div className="space-y-0">
-                  {visible.map((job, idx) => {
-                    const score = job.match_score != null ? Math.round(job.match_score) : null;
-                    const jobTimeAgo = timeAgo(job.updated_at || job.created_at);
-
-                    return (
-                      <Link
-                        key={job.id}
-                        to={`/jobs/${job.id}`}
-                        className="group flex items-center gap-4 py-3.5 transition-colors hover:bg-white/[0.02]"
-                        style={idx > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
-                      >
-                        <MiniMatchRing score={score} />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold text-white truncate leading-tight">{job.role}</p>
-                          <p className="text-[11px] text-[#505058] truncate mt-0.5">{job.company}</p>
-                        </div>
-                        <div className="flex items-center gap-4 flex-shrink-0">
-                          {jobTimeAgo && (
-                            <span className="text-[10px] text-[#3a3a42] hidden sm:block">{jobTimeAgo}</span>
-                          )}
-                          <StatusBadge status={job.status} />
-                          <ChevronRight size={14} className="text-[#2a2a32] transition-colors group-hover:text-[#505058]" />
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                {sorted.length > 10 && (
-                  <p className="text-center text-[10px] tracking-[0.14em] uppercase text-[#3a3a42] mt-4">
-                    +{sorted.length - 10} weitere
-                  </p>
-                )}
-              </Tile>
-            </div>
-          );
-        })()}
+        {/* === Saved Jobs — Premium curated section === */}
+        <SavedJobsSection jobs={savedJobs} />
 
         {/* === Search Section === */}
         <div className="col-span-12 mt-1">
