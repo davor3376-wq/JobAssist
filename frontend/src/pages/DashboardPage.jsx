@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { jobApi, resumeApi } from '../services/api';
 import {
   Search,
   Sparkles,
@@ -253,21 +255,69 @@ function FunnelStage({ label, value, barWidth, color, glow, note, isLast }) {
 export default function DashboardPage() {
   const navigate = useNavigate();
 
-  const dailyActivity = [
-    { day: 'Mo', val: 1, max: 3, label: '1 Job' },
-    { day: 'Di', val: 2, max: 3, label: '2 Jobs' },
-    { day: 'Mi', val: 0, max: 3, label: '—' },
-    { day: 'Do', val: 3, max: 3, label: '3 Jobs' },
-    { day: 'Fr', val: 2, max: 3, label: '2 Jobs' },
-    { day: 'Sa', val: 1, max: 3, label: '1 Job' },
-    { day: 'So', val: 0, max: 3, label: '—' },
+  const { data: jobs = [] } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobApi.list().then(r => r.data),
+  });
+  const { data: resumes = [] } = useQuery({
+    queryKey: ['resumes'],
+    queryFn: () => resumeApi.list().then(r => r.data),
+  });
+
+  // Derived stats
+  const analyzed      = jobs.filter(j => j.match_score != null).length;
+  const total         = jobs.length;
+  const appliedStatuses = ['applied', 'interviewing', 'offered', 'rejected'];
+  const appliedCount  = jobs.filter(j => appliedStatuses.includes(j.status)).length;
+  const interviewingCount = jobs.filter(j => ['interviewing', 'offered'].includes(j.status)).length;
+  const topMatches    = jobs.filter(j => j.match_score != null && j.match_score >= 70).length;
+  const hasResume     = resumes.length > 0;
+
+  // Current-week activity from real job created_at
+  const today = new Date();
+  const dow = today.getDay(); // 0=Sun
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  monday.setHours(0, 0, 0, 0);
+  const dailyActivity = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day, i) => {
+    const from = new Date(monday); from.setDate(monday.getDate() + i);
+    const to   = new Date(from);  to.setDate(from.getDate() + 1);
+    const count = jobs.filter(j => {
+      if (!j.created_at) return false;
+      const d = new Date(j.created_at);
+      return d >= from && d < to;
+    }).length;
+    return { day, val: Math.min(count, 3), max: 3, label: count > 0 ? `${count} Job${count !== 1 ? 's' : ''}` : '—' };
+  });
+  const weekTotal  = dailyActivity.reduce((s, d) => s + d.val, 0);
+  const todayIdx   = dow === 0 ? 6 : dow - 1;
+  const todayCount = dailyActivity[todayIdx]?.val ?? 0;
+  const dailyGoalFilled = Math.min(todayCount, 3);
+
+  // Funnel — fully computed
+  const applyRate     = total > 0 ? Math.round((appliedCount / total) * 100) : 0;
+  const returnRate    = appliedCount > 0 ? Math.round((interviewingCount / appliedCount) * 100) : 0;
+  const interviewPct  = total > 0 ? Math.round((interviewingCount / total) * 100) : 0;
+  const funnelStages = [
+    { label: 'Analysiert', value: String(analyzed || total), barWidth: 100, color: C.textDim, glow: 'rgba(136,136,160,0.5)' },
+    { label: 'Beworben',   value: `${appliedCount}/${analyzed || total}`, barWidth: applyRate, color: C.indigo, glow: C.indigoGlow, note: applyRate > 0 ? `${applyRate}%` : undefined },
+    { label: 'Rücklauf',   value: appliedCount > 0 ? `${returnRate}%` : '—', barWidth: returnRate, color: C.violet, glow: C.violetGlow },
+    { label: 'Interview',  value: String(interviewingCount), barWidth: interviewPct, color: C.amber, glow: 'rgba(245,158,11,0.35)', note: interviewingCount > 0 ? 'Aktiv' : undefined },
   ];
 
-  const funnelStages = [
-    { label: 'Analysiert',  value: '21',  barWidth: 100, color: C.textDim,  glow: 'rgba(136,136,160,0.5)' },
-    { label: 'Beworben',    value: '5/21', barWidth: 38,  color: C.indigo,   glow: C.indigoGlow, note: '24%' },
-    { label: 'Rücklauf',    value: '24%',  barWidth: 22,  color: C.violet,   glow: C.violetGlow  },
-    { label: 'Interview',   value: '1',    barWidth: 9,   color: C.amber,    glow: 'rgba(245,158,11,0.35)', note: 'Angebot' },
+  // Profile strength — Lebenslauf from real resumes
+  const profileItems = [
+    { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
+    { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
+    { label: 'Präferenzen', complete: false,           icon: Zap,      sub: '2 / 3' },
+  ];
+  const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
+
+  // Weekly goals — dynamic
+  const weeklyGoals = [
+    { label: `${analyzed} Analysen`,     complete: analyzed >= 5,      icon: Search     },
+    { label: 'Top-Treffer',              complete: topMatches > 0,     icon: TrendingUp },
+    { label: `${appliedCount} Bewerbungen`, complete: appliedCount >= 3, icon: Sparkles },
   ];
 
   return (
@@ -334,7 +384,7 @@ export default function DashboardPage() {
                     className="block text-[20px] font-semibold leading-none tabular-nums"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
                   >
-                    5
+                    {topMatches}
                   </span>
                 </div>
                 <div>
@@ -343,7 +393,7 @@ export default function DashboardPage() {
                     className="block text-[20px] font-semibold leading-none tabular-nums"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
                   >
-                    21
+                    {analyzed || total}
                   </span>
                 </div>
               </div>
@@ -436,19 +486,19 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2 text-xs" style={{ color: C.textDim }}>
                   <span>
                     Woche:{' '}
-                    <b className="font-semibold" style={{ color: C.textPrimary }}>21</b>
+                    <b className="font-semibold" style={{ color: C.textPrimary }}>{weekTotal}</b>
                   </span>
                   <span style={{ color: C.textDeep }}>·</span>
                   <span>
                     Heute:{' '}
-                    <b className="font-semibold" style={{ color: C.textPrimary }}>2</b>
+                    <b className="font-semibold" style={{ color: C.textPrimary }}>{todayCount}</b>
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">
                 <span className="text-xs" style={{ color: C.textDim }}>Tagesziel</span>
                 <span className="text-[12px] font-semibold tabular-nums" style={{ color: C.textPrimary }}>
-                  2/3
+                  {dailyGoalFilled}/3
                 </span>
                 <div
                   className="w-16 h-[3px] rounded-full overflow-hidden"
@@ -457,7 +507,7 @@ export default function DashboardPage() {
                   <div
                     className="h-full rounded-full"
                     style={{
-                      width: '66%',
+                      width: `${Math.round((dailyGoalFilled / 3) * 100)}%`,
                       background: `linear-gradient(90deg, ${C.indigo}, ${C.indigoMid})`,
                       boxShadow: `0 0 8px ${C.indigoGlow}`,
                     }}
@@ -494,11 +544,7 @@ export default function DashboardPage() {
             <Tile className="p-3.5">
               <Label className="mb-2.5">Wochenziele</Label>
               <div className="flex flex-col gap-2">
-                {[
-                  { label: '5 Analysen',    complete: true,  icon: Search     },
-                  { label: 'Top-Treffer',   complete: true,  icon: TrendingUp },
-                  { label: '3 Bewerbungen', complete: false, icon: Sparkles   },
-                ].map((goal) => (
+                {weeklyGoals.map((goal) => (
                   <div
                     key={goal.label}
                     className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 min-h-[44px]"
@@ -547,7 +593,7 @@ export default function DashboardPage() {
                 },
                 {
                   title: 'Stärken',
-                  sub: '+12%',
+                  sub: 'KI-Tipps',
                   icon: Sparkles,
                   glow: C.violetSoft,
                   iconColor: C.violet,
@@ -652,7 +698,7 @@ export default function DashboardPage() {
                 className="text-[22px] font-semibold tabular-nums leading-none"
                 style={{ color: C.textPrimary, letterSpacing: '-0.03em' }}
               >
-                94
+                {profileStrength}
                 <span className="text-[13px] font-medium ml-0.5" style={{ color: C.textDim }}>%</span>
               </span>
             </div>
@@ -663,18 +709,14 @@ export default function DashboardPage() {
               <div
                 className="h-full rounded-full"
                 style={{
-                  width: '94%',
+                  width: `${profileStrength}%`,
                   background: `linear-gradient(90deg, ${C.indigo}, ${C.emerald})`,
                   boxShadow: `0 0 8px ${C.indigoGlow}`,
                 }}
               />
             </div>
             <div className="space-y-2">
-              {[
-                { label: 'Lebenslauf',   complete: true,  icon: FileText, sub: null    },
-                { label: 'Fähigkeiten',  complete: true,  icon: Star,     sub: null    },
-                { label: 'Präferenzen',  complete: false, icon: Zap,      sub: '2 / 3' },
-              ].map((item) => (
+              {profileItems.map((item) => (
                 <div
                   key={item.label}
                   className="flex items-center justify-between rounded-xl px-2.5 min-h-[44px]"
