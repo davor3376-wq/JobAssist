@@ -167,8 +167,6 @@ function ActivityChart({ data }) {
     return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
   }, '');
 
-  const areaPath = `${linePath} L ${W} ${H} L 0 ${H} Z`;
-
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
@@ -178,11 +176,6 @@ function ActivityChart({ data }) {
       style={{ overflow: 'visible', display: 'block' }}
     >
       <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={C.indigo} stopOpacity="0.28" />
-          <stop offset="75%"  stopColor={C.indigo} stopOpacity="0.04" />
-          <stop offset="100%" stopColor={C.indigo} stopOpacity="0" />
-        </linearGradient>
         <filter id="lineGlow" x="-20%" y="-100%" width="140%" height="300%">
           <feGaussianBlur stdDeviation="2" result="blur" />
           <feMerge>
@@ -191,7 +184,7 @@ function ActivityChart({ data }) {
           </feMerge>
         </filter>
       </defs>
-      <path d={areaPath} fill="url(#areaGrad)" />
+      {/* Area-Fill entfernt — repräsentierte keine echten Fortschrittsdaten */}
       <path d={linePath} fill="none" stroke={C.indigo} strokeWidth="1.4" filter="url(#lineGlow)" />
       {pts.map((p, i) =>
         data[i].val > 0 ? (
@@ -311,8 +304,8 @@ export default function DashboardPage() {
         <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5">
 
           {/* Row 1 — Hero Metrics */}
-          {/* P0: grid-cols-1 sm:grid-cols-3 — kein Squashing       */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* shrink-0: Row 1 schrumpft nie — nur Aktivität gibt Platz ab */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 shrink-0">
 
             {/* Markt-Score */}
             <Tile className="p-3.5">
@@ -494,8 +487,8 @@ export default function DashboardPage() {
           </Tile>
 
           {/* Row 3 — Wochenziele + Quick Actions */}
-          {/* P0: grid-cols-1 sm:grid-cols-2                          */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* shrink-0: Row 3 schrumpft nie — bleibt immer sichtbar  */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 shrink-0">
 
             {/* Wochenziele */}
             <Tile className="p-3.5">
