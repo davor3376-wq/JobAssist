@@ -13,33 +13,28 @@ import {
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
-  // Primary focus — Electric Indigo
   indigo:     '#5B4FE8',
   indigoMid:  '#7B72F0',
   indigoSoft: 'rgba(91,79,232,0.12)',
   indigoGlow: 'rgba(91,79,232,0.30)',
 
-  // Growth — Understated Mint/Emerald
   emerald:     '#2DD4BF',
   emeraldSoft: 'rgba(45,212,191,0.09)',
   emeraldGlow: 'rgba(45,212,191,0.22)',
 
-  // Milestone — Soft Violet
   violet:     '#8B5CF6',
   violetSoft: 'rgba(139,92,246,0.10)',
   violetGlow: 'rgba(139,92,246,0.28)',
 
-  // Warm accent — Amber
   amber:     '#F59E0B',
   amberSoft: 'rgba(245,158,11,0.09)',
 
-  // Text hierarchy
   textPrimary: '#EEEEF5',
   textSub:     '#AAAAAA',
-  textDim:     '#555565',
+  // P2: Kontrast-Fix — war #555565 (2.8:1), jetzt #8888A0 (~4.6:1)
+  textDim:     '#8888A0',
   textDeep:    '#2E2E3A',
 
-  // Glass system
   glass:       'rgba(255,255,255,0.027)',
   glassBorder: 'rgba(255,255,255,0.062)',
   glassEdge:   'rgba(255,255,255,0.10)',
@@ -72,11 +67,11 @@ function Tile({ children, className = '', style = {} }) {
   );
 }
 
-// ─── Label ─────────────────────────────────────────────────────────────────────
+// ─── Label — P0: text-[11px] statt 10px ───────────────────────────────────────
 function Label({ children, className = '' }) {
   return (
     <span
-      className={`block text-[10px] font-semibold tracking-[0.2em] uppercase ${className}`}
+      className={`block text-[11px] font-semibold tracking-[0.18em] uppercase ${className}`}
       style={{ color: C.textDim }}
     >
       {children}
@@ -130,14 +125,7 @@ function CircularGauge({ progress = 80, size = 76 }) {
             <stop offset="100%" stopColor={C.indigoMid} />
           </linearGradient>
         </defs>
-        {/* Track */}
-        <circle
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke={C.textDeep}
-          strokeWidth="2.5"
-        />
-        {/* Glow arc */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.textDeep} strokeWidth="2.5" />
         <circle
           cx={cx} cy={cy} r={r}
           fill="none"
@@ -150,7 +138,6 @@ function CircularGauge({ progress = 80, size = 76 }) {
           filter="url(#gaugeGlow)"
         />
       </svg>
-      {/* Center icon */}
       <div className="relative z-10 flex flex-col items-center justify-center">
         <Award size={18} strokeWidth={1.5} style={{ color: C.violet, filter: `drop-shadow(0 0 6px ${C.violetGlow})` }} />
       </div>
@@ -158,7 +145,7 @@ function CircularGauge({ progress = 80, size = 76 }) {
   );
 }
 
-// ─── Activity Chart — Heart-Rate Needle Style ──────────────────────────────────
+// ─── Activity Chart ────────────────────────────────────────────────────────────
 function ActivityChart({ data }) {
   const W = 300;
   const H = 100;
@@ -173,7 +160,6 @@ function ActivityChart({ data }) {
     y: parseFloat((H - padB - (d.val / max) * avail).toFixed(2)),
   }));
 
-  // Smooth cubic bezier path
   const linePath = pts.reduce((acc, p, i) => {
     if (i === 0) return `M ${p.x} ${p.y}`;
     const prev = pts[i - 1];
@@ -205,20 +191,8 @@ function ActivityChart({ data }) {
           </feMerge>
         </filter>
       </defs>
-
-      {/* Soft area fill */}
       <path d={areaPath} fill="url(#areaGrad)" />
-
-      {/* Needle line */}
-      <path
-        d={linePath}
-        fill="none"
-        stroke={C.indigo}
-        strokeWidth="1.4"
-        filter="url(#lineGlow)"
-      />
-
-      {/* Data point dots */}
+      <path d={linePath} fill="none" stroke={C.indigo} strokeWidth="1.4" filter="url(#lineGlow)" />
       {pts.map((p, i) =>
         data[i].val > 0 ? (
           <circle
@@ -235,40 +209,34 @@ function ActivityChart({ data }) {
   );
 }
 
-// ─── Funnel Stage ──────────────────────────────────────────────────────────────
+// ─── Funnel Stage — P0: label text-xs (war text-[10px]) ───────────────────────
 function FunnelStage({ label, value, barWidth, color, glow, note, isLast }) {
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-2.5">
-        {/* Node dot */}
         <div
           className="flex-shrink-0 w-2 h-2 rounded-full"
           style={{ background: color, boxShadow: `0 0 8px ${glow}` }}
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: C.textDim }}>
+            {/* P0: text-xs statt text-[10px] */}
+            <span className="text-xs tracking-[0.08em] uppercase" style={{ color: C.textDim }}>
               {label}
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span
-                className="text-[15px] font-semibold leading-none tabular-nums"
-                style={{ color: C.textPrimary }}
-              >
+              <span className="text-[15px] font-semibold leading-none tabular-nums" style={{ color: C.textPrimary }}>
                 {value}
               </span>
               {note && (
-                <span className="text-[9px]" style={{ color: glow }}>
+                // P0: text-[11px] statt text-[9px]
+                <span className="text-[11px]" style={{ color: glow }}>
                   {note}
                 </span>
               )}
             </div>
           </div>
-          {/* Conversion bar */}
-          <div
-            className="h-[3px] rounded-full overflow-hidden"
-            style={{ background: C.textDeep }}
-          >
+          <div className="h-[3px] rounded-full overflow-hidden" style={{ background: C.textDeep }}>
             <div
               className="h-full rounded-full"
               style={{
@@ -281,8 +249,6 @@ function FunnelStage({ label, value, barWidth, color, glow, note, isLast }) {
           </div>
         </div>
       </div>
-
-      {/* Connector line */}
       {!isLast && (
         <div className="ml-[3.5px] w-[1px] h-3 mt-0.5" style={{ background: C.textDeep }} />
       )}
@@ -305,7 +271,7 @@ export default function DashboardPage() {
   ];
 
   const funnelStages = [
-    { label: 'Analysiert',  value: '21',  barWidth: 100, color: C.textDim,  glow: 'rgba(85,85,101,0.5)'  },
+    { label: 'Analysiert',  value: '21',  barWidth: 100, color: C.textDim,  glow: 'rgba(136,136,160,0.5)' },
     { label: 'Beworben',    value: '5/21', barWidth: 38,  color: C.indigo,   glow: C.indigoGlow, note: '24%' },
     { label: 'Rücklauf',    value: '24%',  barWidth: 22,  color: C.violet,   glow: C.violetGlow  },
     { label: 'Interview',   value: '1',    barWidth: 9,   color: C.amber,    glow: 'rgba(245,158,11,0.35)', note: 'Angebot' },
@@ -320,7 +286,7 @@ export default function DashboardPage() {
       }}
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="mb-3.5">
+      <div className="mb-3.5 flex-shrink-0">
         <h1
           className="text-[22px] font-semibold tracking-tight leading-none"
           style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
@@ -328,7 +294,7 @@ export default function DashboardPage() {
           JobAssist
         </h1>
         <p
-          className="mt-1 text-[10px] font-medium tracking-[0.2em] uppercase"
+          className="mt-1 text-[11px] font-medium tracking-[0.18em] uppercase"
           style={{ color: C.textDim }}
         >
           Bewerbungsübersicht
@@ -336,13 +302,17 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Main Grid ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-2.5 flex-1 min-h-0">
+      {/* P0: grid-cols-1 auf Mobile, md:grid-cols-12 auf Desktop   */}
+      {/* overflow-y-auto auf Mobile erlaubt Scrollen im Grid       */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
-        {/* ── LEFT COLUMN (9 cols) ─────────────────────────────── */}
-        <div className="col-span-9 flex flex-col gap-2.5 overflow-hidden">
+        {/* ── LEFT COLUMN ──────────────────────────────────────── */}
+        {/* P0: col-span-1 Mobile / md:col-span-9 Desktop           */}
+        <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5">
 
           {/* Row 1 — Hero Metrics */}
-          <div className="grid grid-cols-3 gap-2.5">
+          {/* P0: grid-cols-1 sm:grid-cols-3 — kein Squashing       */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 
             {/* Markt-Score */}
             <Tile className="p-3.5">
@@ -356,7 +326,6 @@ export default function DashboardPage() {
                 </span>
                 <span className="text-[16px] mb-0.5" style={{ color: C.textDeep }}>%</span>
               </div>
-              {/* Trend pill */}
               <div className="mt-1.5 flex items-center gap-1.5">
                 <div
                   className="h-[2px] w-5 rounded-full"
@@ -366,7 +335,8 @@ export default function DashboardPage() {
               </div>
               <div className="mt-2.5 grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px]" style={{ color: C.textDim }}>Top-Treffer</span>
+                  {/* P0: text-xs statt text-[10px] */}
+                  <span className="text-xs" style={{ color: C.textDim }}>Top-Treffer</span>
                   <span
                     className="block text-[20px] font-semibold leading-none tabular-nums"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
@@ -375,7 +345,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px]" style={{ color: C.textDim }}>Analysiert</span>
+                  <span className="text-xs" style={{ color: C.textDim }}>Analysiert</span>
                   <span
                     className="block text-[20px] font-semibold leading-none tabular-nums"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
@@ -386,7 +356,7 @@ export default function DashboardPage() {
               </div>
             </Tile>
 
-            {/* Leistungsindex — Dual-State */}
+            {/* Leistungsindex */}
             <Tile className="p-3.5">
               <Label>Leistungsindex</Label>
               <div className="mt-2 flex items-baseline gap-2">
@@ -398,15 +368,11 @@ export default function DashboardPage() {
                 </span>
                 <span className="text-[11px] font-semibold" style={{ color: C.emerald }}>↑12%</span>
               </div>
-
-              {/* Dual-state bar: background glow = trend baseline, fill = current */}
               <div className="mt-2.5 relative">
-                {/* Trend baseline glow track */}
                 <div
                   className="h-[3px] w-full rounded-full overflow-hidden"
                   style={{ background: C.textDeep }}
                 >
-                  {/* Soft prior-state glow (75% = before +12%) */}
                   <div
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{
@@ -415,7 +381,6 @@ export default function DashboardPage() {
                       boxShadow: `0 0 10px ${C.emeraldGlow}`,
                     }}
                   />
-                  {/* Current value fill */}
                   <div
                     className="h-full rounded-full relative"
                     style={{
@@ -426,25 +391,23 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-
               <div className="mt-1 flex justify-between">
                 <span className="text-[9px]" style={{ color: C.textDeep }}>0</span>
                 <span className="text-[9px]" style={{ color: C.textDeep }}>100</span>
               </div>
-
-              {/* Micro-copy */}
               <div className="mt-2 flex items-center gap-1.5">
                 <div
                   className="w-1 h-1 rounded-full"
                   style={{ background: C.emerald, boxShadow: `0 0 5px ${C.emeraldGlow}` }}
                 />
-                <span className="text-[10px] font-medium" style={{ color: C.textSub }}>
+                {/* P0: text-xs statt text-[10px] */}
+                <span className="text-xs font-medium" style={{ color: C.textSub }}>
                   Peer-Leistung: <span style={{ color: C.emerald }}>Top 5%</span>
                 </span>
               </div>
             </Tile>
 
-            {/* Meilenstein — Circular Gauge */}
+            {/* Meilenstein */}
             <Tile className="p-3.5">
               <Label>Meilenstein</Label>
               <div className="mt-2 flex items-center gap-3">
@@ -456,7 +419,7 @@ export default function DashboardPage() {
                   >
                     Experte
                   </div>
-                  <div className="mt-0.5 text-[10px]" style={{ color: C.textDim }}>
+                  <div className="mt-0.5 text-xs" style={{ color: C.textDim }}>
                     72 / 90 Punkte
                   </div>
                   <div
@@ -470,38 +433,28 @@ export default function DashboardPage() {
             </Tile>
           </div>
 
-          {/* Row 2 — Aktivität (Heart-Rate Chart) */}
-          <Tile className="flex-1 min-h-0 p-3.5 flex flex-col">
-            {/* Header */}
+          {/* Row 2 — Aktivität                                              */}
+          {/* P0: min-h-[200px] auf Mobile (kein flex-1 ohne fixe Höhe)     */}
+          <Tile className="min-h-[200px] md:flex-1 md:min-h-0 p-3.5 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <Label>Aktivität</Label>
-                <div className="flex items-center gap-2 text-[10px]" style={{ color: C.textDim }}>
+                {/* P0: text-xs statt text-[10px] */}
+                <div className="flex items-center gap-2 text-xs" style={{ color: C.textDim }}>
                   <span>
                     Woche:{' '}
-                    <b className="font-semibold" style={{ color: C.textPrimary }}>
-                      21
-                    </b>
+                    <b className="font-semibold" style={{ color: C.textPrimary }}>21</b>
                   </span>
                   <span style={{ color: C.textDeep }}>·</span>
                   <span>
                     Heute:{' '}
-                    <b className="font-semibold" style={{ color: C.textPrimary }}>
-                      2
-                    </b>
+                    <b className="font-semibold" style={{ color: C.textPrimary }}>2</b>
                   </span>
                 </div>
               </div>
-
-              {/* Tagesziel inline */}
               <div className="flex items-center gap-2.5">
-                <span className="text-[10px]" style={{ color: C.textDim }}>
-                  Tagesziel
-                </span>
-                <span
-                  className="text-[12px] font-semibold tabular-nums"
-                  style={{ color: C.textPrimary }}
-                >
+                <span className="text-xs" style={{ color: C.textDim }}>Tagesziel</span>
+                <span className="text-[12px] font-semibold tabular-nums" style={{ color: C.textPrimary }}>
                   2/3
                 </span>
                 <div
@@ -519,44 +472,43 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
-            {/* Chart fills remaining tile height */}
             <div className="flex-1 min-h-0">
               <ActivityChart data={dailyActivity} />
             </div>
-            {/* Day labels */}
             <div className="flex justify-between mt-2 px-0.5">
-                {dailyActivity.map((d) => (
-                  <div key={d.day} className="flex flex-col items-center gap-0.5">
-                    <span className="text-[9px] font-medium" style={{ color: C.textDim }}>
-                      {d.day}
-                    </span>
-                    {d.val > 0 && (
-                      <div
-                        className="w-1 h-1 rounded-full"
-                        style={{ background: C.indigo, opacity: 0.5 }}
-                      />
-                    )}
-                  </div>
-                ))}
+              {dailyActivity.map((d) => (
+                <div key={d.day} className="flex flex-col items-center gap-0.5">
+                  {/* P0: text-[11px] statt text-[9px] */}
+                  <span className="text-[11px] font-medium" style={{ color: C.textDim }}>
+                    {d.day}
+                  </span>
+                  {d.val > 0 && (
+                    <div
+                      className="w-1 h-1 rounded-full"
+                      style={{ background: C.indigo, opacity: 0.5 }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </Tile>
 
           {/* Row 3 — Wochenziele + Quick Actions */}
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* P0: grid-cols-1 sm:grid-cols-2                          */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 
             {/* Wochenziele */}
             <Tile className="p-3.5">
               <Label className="mb-2.5">Wochenziele</Label>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: '5 Analysen',   complete: true,  icon: Search   },
-                  { label: 'Top-Treffer',  complete: true,  icon: TrendingUp },
-                  { label: '3 Bewerbungen', complete: false, icon: Sparkles },
+                  { label: '5 Analysen',    complete: true,  icon: Search     },
+                  { label: 'Top-Treffer',   complete: true,  icon: TrendingUp },
+                  { label: '3 Bewerbungen', complete: false, icon: Sparkles   },
                 ].map((goal) => (
                   <div
                     key={goal.label}
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2"
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 min-h-[44px]"
                     style={{
                       background: goal.complete
                         ? `linear-gradient(135deg, ${C.emeraldSoft} 0%, transparent 100%)`
@@ -568,8 +520,8 @@ export default function DashboardPage() {
                       icon={goal.complete ? CheckCircle2 : goal.icon}
                       glowColor={goal.complete ? C.emeraldSoft : C.indigoSoft}
                       iconColor={goal.complete ? C.emerald : C.textDim}
-                      size={26}
-                      iconSize={12}
+                      size={28}
+                      iconSize={13}
                     />
                     <span
                       className="text-[11px] font-medium"
@@ -588,7 +540,8 @@ export default function DashboardPage() {
               </div>
             </Tile>
 
-            {/* Quick Actions — Premium Engraved */}
+            {/* Quick Actions                                                   */}
+            {/* P1: min-h-[72px] für Fitts's Law, active: statt onMouseEnter  */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 {
@@ -620,7 +573,7 @@ export default function DashboardPage() {
                   key={item.title}
                   type="button"
                   onClick={item.action}
-                  className="group rounded-2xl p-3 text-left transition-all duration-300"
+                  className="group rounded-2xl p-3 text-left transition-all duration-300 min-h-[72px] active:scale-95 active:opacity-80"
                   style={{
                     background: C.glass,
                     border: `1px solid ${C.glassBorder}`,
@@ -646,13 +599,11 @@ export default function DashboardPage() {
                       iconSize={14}
                     />
                     <div className="text-center">
-                      <div
-                        className="text-[11px] font-semibold"
-                        style={{ color: C.textPrimary }}
-                      >
+                      <div className="text-[11px] font-semibold" style={{ color: C.textPrimary }}>
                         {item.title}
                       </div>
-                      <div className="text-[9px] mt-0.5" style={{ color: C.textDim }}>
+                      {/* P0: text-[11px] statt text-[9px] */}
+                      <div className="text-[11px] mt-0.5" style={{ color: C.textDim }}>
                         {item.sub}
                       </div>
                     </div>
@@ -663,10 +614,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── RIGHT SIDEBAR (3 cols) ────────────────────────────── */}
-        <div className="col-span-3 flex flex-col gap-2.5 overflow-hidden">
+        {/* ── RIGHT SIDEBAR ─────────────────────────────────────── */}
+        {/* P0: col-span-1 Mobile / md:col-span-3 Desktop            */}
+        <div className="col-span-1 md:col-span-3 flex flex-col gap-2.5">
 
-          {/* Bewerbungsreise — Conversion Funnel Flow */}
+          {/* Bewerbungsreise */}
           <Tile className="p-3.5">
             <Label className="mb-3">Bewerbungsreise</Label>
             <div className="flex flex-col">
@@ -678,8 +630,6 @@ export default function DashboardPage() {
                 />
               ))}
             </div>
-
-            {/* Summary callout */}
             <div
               className="mt-3.5 rounded-xl px-3 py-2.5 flex items-center gap-2"
               style={{
@@ -691,7 +641,8 @@ export default function DashboardPage() {
                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                 style={{ background: C.indigo, boxShadow: `0 0 8px ${C.indigoGlow}` }}
               />
-              <span className="text-[10px]" style={{ color: C.textSub }}>
+              {/* P0: text-xs statt text-[10px] */}
+              <span className="text-xs" style={{ color: C.textSub }}>
                 Conversion:{' '}
                 <span className="font-semibold" style={{ color: C.indigoMid }}>
                   4.8% → Interview
@@ -700,7 +651,7 @@ export default function DashboardPage() {
             </div>
           </Tile>
 
-          {/* Profil-Stärke — Ultra-Clean Sidebar */}
+          {/* Profil-Stärke */}
           <Tile className="flex-1 p-3.5">
             <div className="flex items-center justify-between mb-3">
               <Label>Profil-Stärke</Label>
@@ -709,13 +660,9 @@ export default function DashboardPage() {
                 style={{ color: C.textPrimary, letterSpacing: '-0.03em' }}
               >
                 94
-                <span className="text-[13px] font-medium ml-0.5" style={{ color: C.textDim }}>
-                  %
-                </span>
+                <span className="text-[13px] font-medium ml-0.5" style={{ color: C.textDim }}>%</span>
               </span>
             </div>
-
-            {/* Strength bar */}
             <div
               className="h-[2px] w-full rounded-full mb-3.5 overflow-hidden"
               style={{ background: C.textDeep }}
@@ -729,24 +676,24 @@ export default function DashboardPage() {
                 }}
               />
             </div>
-
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {[
-                { label: 'Lebenslauf',  complete: true,  icon: FileText, sub: null     },
-                { label: 'Fähigkeiten', complete: true,  icon: Star,     sub: null     },
-                { label: 'Präferenzen', complete: false, icon: Zap,      sub: '2 / 3' },
+                { label: 'Lebenslauf',   complete: true,  icon: FileText, sub: null    },
+                { label: 'Fähigkeiten',  complete: true,  icon: Star,     sub: null    },
+                { label: 'Präferenzen',  complete: false, icon: Zap,      sub: '2 / 3' },
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center justify-between rounded-xl px-2.5 py-2"
+                  className="flex items-center justify-between rounded-xl px-2.5 min-h-[44px]"
                   style={{
                     background: item.complete ? C.emeraldSoft : C.glassInner,
                     border: `1px solid ${item.complete ? 'rgba(45,212,191,0.10)' : C.glassBorder}`,
                   }}
                 >
                   <div className="flex items-center gap-2">
+                    {/* P1: size={16} statt size={12} für bessere Erkennbarkeit */}
                     <item.icon
-                      size={12}
+                      size={16}
                       strokeWidth={1.7}
                       style={{ color: item.complete ? C.emerald : C.textDim }}
                     />
@@ -759,13 +706,13 @@ export default function DashboardPage() {
                   </div>
                   {item.complete ? (
                     <CheckCircle2
-                      size={13}
+                      size={15}
                       strokeWidth={2}
                       style={{ color: C.emerald, filter: `drop-shadow(0 0 4px ${C.emeraldGlow})` }}
                     />
                   ) : (
                     <span
-                      className="text-[10px] font-semibold tabular-nums"
+                      className="text-[11px] font-semibold tabular-nums"
                       style={{ color: C.textDim }}
                     >
                       {item.sub}

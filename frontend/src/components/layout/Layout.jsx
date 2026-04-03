@@ -272,7 +272,8 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className={`max-w-7xl mx-auto px-4 py-5 text-slate-100 md:px-8 md:py-8 ${animClass}`}>
+          {/* P3: pb-16 md:pb-0 — Platz für die mobile Bottom-Nav */}
+          <div className={`max-w-7xl mx-auto px-4 py-5 pb-20 text-slate-100 md:px-8 md:py-8 md:pb-8 ${animClass}`}>
             <VerificationBanner me={me} />
             <Suspense fallback={<PageLoader />}>
               <Outlet />
@@ -288,6 +289,41 @@ export default function Layout() {
           </footer>
         </main>
       </div>
+
+      {/* ── P3: Mobile Bottom Navigation ─────────────────────────────────── */}
+      {/* Ersetzt Hamburger für die 4 Hauptrouten — 1 Tap statt 2 Klicks    */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#171a21]"
+        style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+      >
+        <div className="flex">
+          {[
+            { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard'  },
+            { to: '/resume',       icon: FileText,         label: 'Lebenslauf' },
+            { to: '/jobs',         icon: Briefcase,        label: 'Jobs'       },
+            { to: '/ai-assistant', icon: Wand2,            label: 'KI'         },
+          ].map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center justify-center py-2.5 gap-1 min-h-[56px] transition-colors ${
+                  isActive ? 'text-blue-400' : 'text-slate-500'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isActive ? 'bg-blue-500/20' : ''}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-medium leading-none">{label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

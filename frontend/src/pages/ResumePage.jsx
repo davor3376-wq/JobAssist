@@ -174,7 +174,8 @@ function RadarChart({ skills, size = 520 }) {
   });
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+    /* P2: w-full h-auto macht den Radar-SVG responsiv — kein Overflow auf Mobile */
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible w-full h-auto max-w-full">
       <defs>
         <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#a855f7" stopOpacity="0.25" />
@@ -306,8 +307,9 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
           </p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <Clock className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
-            <span className="text-[9px] text-slate-400">{formatDate(resume.updated_at || resume.created_at)}</span>
-            {size && <span className="text-[9px] text-slate-300">· {size}</span>}
+            {/* P0: text-[11px] statt text-[9px] */}
+            <span className="text-[11px] text-slate-400">{formatDate(resume.updated_at || resume.created_at)}</span>
+            {size && <span className="text-[11px] text-slate-300">· {size}</span>}
           </div>
 
           {/* Match Accuracy badge */}
@@ -361,7 +363,7 @@ function UploadZone({ getRootProps, getInputProps, isDragActive, uploading }) {
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-300">{isDragActive ? "Hier ablegen!" : "Lebenslauf hochladen"}</p>
-            <p className="text-[9px] text-slate-400 mt-0.5">PDF oder TXT · Max. 5 MB</p>
+            <p className="text-xs text-slate-400 mt-0.5">PDF oder TXT · Max. 5 MB</p>
           </div>
         </div>
       )}
@@ -393,7 +395,8 @@ function Checklist({ gamification }) {
             <button
               key={task.id}
               onClick={() => toggleTask?.(task.id)}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-200 text-left ${
+              /* P1: min-h-[44px] für Fitts's Law Touch-Target */
+              className={`w-full flex items-center gap-3 p-3 min-h-[44px] rounded-lg border transition-all duration-200 text-left ${
                 isCompleted
                   ? "bg-emerald-500/10 border-emerald-500/30"
                   : "bg-slate-800/30 border-slate-700/50 hover:border-amber-500/30 hover:bg-slate-800/50"
@@ -409,7 +412,8 @@ function Checklist({ gamification }) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-[10px] font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
+                {/* P0: text-xs statt text-[10px] */}
+              <p className={`text-xs font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
                   {task.label}
                 </p>
               </div>
@@ -549,8 +553,8 @@ function DocumentIntelligence({ resume, skills, gamification }) {
           </p>
         </div>
 
-        {/* Large Radar */}
-        <div className="my-2">
+        {/* Large Radar — P2: Container auf max-w-[380px] begrenzt */}
+        <div className="my-2 w-full max-w-[380px] mx-auto">
           <RadarChart skills={skills} size={380} />
         </div>
 
@@ -852,7 +856,8 @@ export default function ResumePage() {
         <div className="grid grid-cols-12 gap-3 sm:gap-4 flex-1">
 
           {/* ── LEFT: Slim Sidebar ─────────────────────────────────────── */}
-          <div className="col-span-12 lg:col-span-2 flex flex-col gap-3 lg:max-h-[calc(100vh-180px)] lg:overflow-y-auto lg:pr-1">
+          {/* P2: lg:col-span-3 statt 2 — Checklist-Text trunciert nicht mehr */}
+          <div className="col-span-12 lg:col-span-3 flex flex-col gap-3 lg:max-h-[calc(100vh-180px)] lg:overflow-y-auto lg:pr-1">
 
             {/* Elegant AI Cover Letter CTA */}
             <button
@@ -905,7 +910,8 @@ export default function ResumePage() {
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
-          <div className="col-span-12 lg:col-span-10 min-h-[500px]">
+          {/* P2: lg:col-span-9 gibt der rechten Seite mehr Platz */}
+          <div className="col-span-12 lg:col-span-9 min-h-[500px]">
             <DocumentIntelligence
               resume={selectedResume}
               skills={skills}
