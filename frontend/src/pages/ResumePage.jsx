@@ -141,12 +141,28 @@ function useGamification(skills) {
   return { avgScore, currentScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask };
 }
 
+// ─── AI Summary Generator ─────────────────────────────────────────────────────
+
+function generateAISummary(skills) {
+  const sorted = [...skills].sort((a, b) => b.value - a.value);
+  const topStrength = sorted[0];
+  const topPotential = sorted[sorted.length - 1];
+  return {
+    strength: topStrength,
+    potential: topPotential,
+    insights: [
+      { label: "Stärke", text: topStrength.label, value: topStrength.value, color: topStrength.color },
+      { label: "Potenzial", text: topPotential.label, value: topPotential.value, color: topPotential.color },
+    ],
+  };
+}
+
 // ─── Radar Chart ──────────────────────────────────────────────────────────────
 
-function RadarChart({ skills, size = 220 }) {
+function RadarChart({ skills, size = 520 }) {
   const N = skills.length;
   const cx = size / 2, cy = size / 2;
-  const maxR = size * 0.34;
+  const maxR = size * 0.36;
   const angles = skills.map((_, i) => -Math.PI / 2 + (i / N) * 2 * Math.PI);
 
   const polyPts = (level) =>
@@ -157,72 +173,99 @@ function RadarChart({ skills, size = 220 }) {
     return [cx + r * Math.cos(angles[i]), cy + r * Math.sin(angles[i])];
   });
 
-  // Labels removed per design feedback
-
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
       <defs>
         <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#a855f7" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#a855f7" stopOpacity="0.08" />
+          <stop offset="0%" stopColor="#a855f7" stopOpacity="0.25" />
+          <stop offset="50%" stopColor="#6366f1" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.04" />
         </radialGradient>
         <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="50%" stopColor="#6366f1" />
           <stop offset="100%" stopColor="#38bdf8" />
         </linearGradient>
+        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
-      {/* Grid rings - dark mode */}
+      {/* Grid rings – hauchzart */}
       {[0.25, 0.5, 0.75, 1].map(level => (
-        <polygon key={level} points={polyPts(level)} fill="none" stroke="#334155" strokeWidth={level === 1 ? 1.5 : 1} strokeOpacity={0.6} />
+        <polygon key={level} points={polyPts(level)} fill="none" stroke="#1e293b" strokeWidth={level === 1 ? 0.8 : 0.4} strokeOpacity={0.5} />
       ))}
 
-      {/* Axis spokes - dark mode */}
+      {/* Axis spokes – ultra thin */}
       {angles.map((a, i) => (
-        <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)} stroke="#334155" strokeWidth="1" strokeOpacity={0.5} />
+        <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)} stroke="#1e293b" strokeWidth="0.4" strokeOpacity={0.4} />
       ))}
 
-      {/* Data fill */}
+      {/* Data fill – neon glassmorphism */}
       <polygon
         points={dataPts.map(p => p.join(",")).join(" ")}
         fill="url(#radarGrad)"
         stroke="url(#radarStroke)"
-        strokeWidth="2.5"
+        strokeWidth="1.2"
         strokeLinejoin="round"
+        filter="url(#neonGlow)"
+        style={{ backdropFilter: "blur(12px)" }}
       />
 
-      {/* Data dots only — labels moved outside SVG */}
+      {/* Data dots – minimal glowing */}
       {dataPts.map((p, i) => (
-        <g key={i}>
-          <circle cx={p[0]} cy={p[1]} r="6" fill="none" stroke={skills[i].color} strokeWidth="2" opacity="0.4" />
-          <circle cx={p[0]} cy={p[1]} r="4" fill="#0f172a" stroke={skills[i].color} strokeWidth="2" />
-          <circle cx={p[0]} cy={p[1]} r="2" fill={skills[i].color} />
+        <g key={i} filter="url(#dotGlow)">
+          <circle cx={p[0]} cy={p[1]} r="3" fill="#0f172a" stroke={skills[i].color} strokeWidth="1" />
+          <circle cx={p[0]} cy={p[1]} r="1.5" fill={skills[i].color} opacity="0.9" />
         </g>
       ))}
 
-      {/* Labels positioned outside the pentagon at fixed radius */}
+      {/* Labels – pushed far outside */}
       {skills.map((s, i) => {
-        const labelR = maxR + 14;
+        const labelR = maxR + 32;
         const lx = cx + labelR * Math.cos(angles[i]);
         const ly = cy + labelR * Math.sin(angles[i]);
-        // Determine text anchor based on position
         const isRight = Math.cos(angles[i]) > 0.1;
         const isLeft = Math.cos(angles[i]) < -0.1;
         const textAnchor = isRight ? "start" : isLeft ? "end" : "middle";
-        const offsetX = isRight ? 8 : isLeft ? -8 : 0;
+        const offsetX = isRight ? 10 : isLeft ? -10 : 0;
         return (
-          <text
-            key={`label-${i}`}
-            x={lx + offsetX}
-            y={ly}
-            fill={s.color}
-            fontSize="11"
-            fontWeight="600"
-            textAnchor={textAnchor}
-            dominantBaseline="middle"
-          >
-            {s.label}
-          </text>
+          <g key={`label-${i}`}>
+            <text
+              x={lx + offsetX}
+              y={ly - 6}
+              fill={s.color}
+              fontSize="10"
+              fontWeight="700"
+              textAnchor={textAnchor}
+              dominantBaseline="middle"
+              opacity="0.9"
+            >
+              {s.label}
+            </text>
+            <text
+              x={lx + offsetX}
+              y={ly + 8}
+              fill="#94a3b8"
+              fontSize="9"
+              fontWeight="500"
+              textAnchor={textAnchor}
+              dominantBaseline="middle"
+            >
+              {s.value}%
+            </text>
+          </g>
         );
       })}
     </svg>
@@ -381,7 +424,7 @@ function Checklist({ gamification }) {
 // ─── Feedback Box Component ──────────────────────────────────────────────────
 
 function FeedbackBox({ gamification }) {
-  const { tasks = [], completedTasks = [], projectedScore = 0, potentialPoints = 0 } = gamification || {};
+  const { tasks = [], completedTasks = [], projectedScore: _projectedScore = 0, potentialPoints: _potentialPoints = 0 } = gamification || {};
   const total = tasks.length;
   const completed = completedTasks.length;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -449,6 +492,8 @@ function FeedbackBox({ gamification }) {
 
 function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) {
   const { currentScore } = gamification || {};
+  const goalReached = currentScore >= 85;
+  const summary = useMemo(() => generateAISummary(skills), [skills]);
 
   if (!resume) {
     return (
@@ -458,112 +503,98 @@ function DocumentIntelligence({ resume, skills, gamification, onImproveClick }) 
         </div>
         <div>
           <h3 className="text-sm font-bold text-white">Kein Dokument ausgewählt</h3>
-          <p className="text-xs text-slate-400 mt-1">Lade einen Lebenslauf hoch oder wähle ihn links aus</p>
+          <p className="text-[10px] text-slate-500 mt-1">Lade einen Lebenslauf hoch oder wähle ihn links aus</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Panel header with Gamified Score */}
-      <div className="rounded-xl bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#08090c_0%,#000000_100%)] p-5 text-white relative overflow-hidden flex-shrink-0 border border-[#171a21]">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 60%)" }} />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-blue-500/12 flex items-center justify-center">
-                <Brain className="w-3.5 h-3.5 text-blue-300" />
+    <div className="flex flex-col h-full gap-3">
+
+      {/* ── Combined Score + Target tile ─────────────────────────────── */}
+      <div className="rounded-xl bg-[#08090c] border border-[#171a21] p-4 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-3.5 h-3.5 text-blue-400/70" />
+            <span className="text-[8px] font-bold uppercase tracking-[0.12em] text-slate-500">Dokumenten-Analyse</span>
+          </div>
+          <p className="text-[9px] text-slate-600 truncate max-w-[180px]">{resume.filename}</p>
+        </div>
+
+        <div className="mt-3 flex items-center gap-4">
+          {/* Score ring */}
+          <div className="flex-shrink-0 relative">
+            <div
+              className="flex h-[56px] w-[56px] items-center justify-center rounded-full"
+              style={{
+                background: `conic-gradient(${goalReached ? "rgba(16,185,129,0.35)" : "rgba(99,102,241,0.3)"} ${currentScore * 3.6}deg, transparent ${currentScore * 3.6}deg)`,
+              }}
+            >
+              <div className={`flex h-[44px] w-[44px] items-center justify-center rounded-full border-[4px] bg-[#08090c] text-[15px] font-extrabold tabular-nums ${goalReached ? "border-emerald-500 text-emerald-400" : "border-indigo-500 text-indigo-400"}`}>
+                {currentScore}
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-blue-300">Dokumenten-Analyse</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5">
-              <Trophy className="w-3 h-3 text-emerald-400" />
-              <span className="text-[9px] font-semibold text-emerald-400">Ziel: 85%</span>
             </div>
           </div>
 
-          <h2 className="text-sm font-bold text-white truncate">{resume.filename}</h2>
-
-          {/* Gamified Score Display with Feedback Box */}
-          <div className="mt-4 flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                {/* Progress ring using conic-gradient */}
-                <div 
-                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full"
-                  style={{ 
-                    background: `conic-gradient(rgba(16,185,129,0.3) ${currentScore * 3.6}deg, transparent ${currentScore * 3.6}deg)`,
-                  }}
-                >
-                  <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border-[6px] border-emerald-500 bg-[#08090c] text-[18px] font-bold text-emerald-400">
-                    {currentScore}%
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400">Aktueller Score</p>
-              </div>
+          {/* Score label + goal status */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-slate-400">Gesamtscore</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {goalReached ? (
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              ) : (
+                <Target className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+              )}
+              <span className={`text-[9px] font-bold ${goalReached ? "text-emerald-400" : "text-slate-500"}`}>
+                {goalReached ? "Ziel erreicht (85%)" : `Ziel: 85% · noch ${85 - currentScore}%`}
+              </span>
             </div>
-
-            {/* Feedback Box based on checklist completion */}
-            <FeedbackBox gamification={gamification} />
           </div>
+
+          {/* Feedback */}
+          <FeedbackBox gamification={gamification} />
         </div>
       </div>
 
-      {/* Radar + skills */}
-      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] shadow-card p-5 flex flex-col gap-4 min-h-0 overflow-y-auto">
-        {/* Radar chart */}
-        <div className="flex items-center justify-center">
-          <RadarChart skills={skills} size={220} />
+      {/* ── Radar (massiv) + AI Summary ──────────────────────────────── */}
+      <div className="flex-1 rounded-xl bg-[#08090c] border border-[#171a21] p-4 flex flex-col min-h-0 overflow-y-auto">
+        {/* Radar chart – full width */}
+        <div className="flex items-center justify-center py-2">
+          <RadarChart skills={skills} size={480} />
         </div>
 
-        {/* Skill bars with better contrast */}
-        <div className="space-y-2.5">
-          {[...skills].sort((a, b) => b.value - a.value).map((s) => (
-            <div key={s.key}>
-              <div className="flex items-center justify-between mb-1">
+        {/* Smart AI Summary */}
+        <div className="mt-3 rounded-lg bg-[#0c0e14] border border-[#1a1d27] p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Sparkles className="w-3 h-3 text-indigo-400" />
+            <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-indigo-400/80">KI-Analyse</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {summary.insights.map((insight) => (
+              <div key={insight.label} className="rounded-md bg-[#08090c] border border-[#171a21] px-3 py-2">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Top {insight.label}</p>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                  <span className="text-[11px] font-semibold text-slate-400">{s.label}</span>
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: insight.color }} />
+                  <span className="text-[10px] font-bold text-slate-300">{insight.text}</span>
+                  <span className="text-[9px] font-semibold tabular-nums ml-auto" style={{ color: insight.color }}>{insight.value}%</span>
                 </div>
-                <span className="text-[11px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${s.value}%`, backgroundColor: s.color }}
-                />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Focus CTA - Single prominent button */}
+      {/* ── Premium CTA ─────────────────────────────────────────────── */}
       <button
         onClick={onImproveClick}
-        className="w-full rounded-xl overflow-hidden flex-shrink-0 group"
-        style={{ background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%)" }}
+        className="w-full rounded-lg overflow-hidden flex-shrink-0 group transition-shadow hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+        style={{ background: "linear-gradient(135deg, #4338ca 0%, #6366f1 60%, #818cf8 100%)" }}
       >
-        <div className="p-4 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-[#3b82f6]/10 to-transparent" />
-          <div className="relative z-10 flex items-center justify-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Edit3 className="w-4 h-4 text-white" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-extrabold text-white leading-none">Jetzt Score verbessern</p>
-                <p className="text-[10px] text-blue-100 mt-1">In den Bearbeitungsmodus wechseln</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 bg-white/20 group-hover:bg-white/30 transition-colors rounded-lg px-3 py-2">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-              <span className="text-[11px] font-bold text-white">Starten</span>
-            </div>
-          </div>
+        <div className="px-4 py-2.5 flex items-center justify-center gap-2">
+          <Edit3 className="w-3.5 h-3.5 text-white/90 group-hover:scale-110 transition-transform" />
+          <span className="text-[11px] font-bold text-white">Jetzt Score verbessern</span>
+          <Sparkles className="w-3 h-3 text-white/60" />
         </div>
       </button>
     </div>

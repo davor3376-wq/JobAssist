@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
@@ -64,9 +65,19 @@ function GlowIcon({ icon: Icon, glowColor = 'rgba(52,211,153,0.2)', iconColor = 
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [hoveredPt, setHoveredPt] = useState(null);
 
-  // Chart data
-  const chartData = [20, 45, 30, 60, 85, 55, 70];
+  // Chart data with saved-job labels per day
+  const chartEntries = [
+    { value: 20, jobs: ['Frontend Dev — SAP'] },
+    { value: 45, jobs: ['UX Designer — BMW', 'React Dev — Siemens'] },
+    { value: 30, jobs: ['Fullstack — Zalando'] },
+    { value: 60, jobs: ['Product Manager — N26', 'Backend — Celonis', 'Data Eng — FlixBus'] },
+    { value: 85, jobs: ['Senior Dev — Personio', 'Tech Lead — Scalable'] },
+    { value: 55, jobs: ['DevOps — CHECK24', 'React — Trade Republic'] },
+    { value: 70, jobs: ['Architect — Delivery Hero', 'Lead — SumUp'] },
+  ];
+  const chartData = chartEntries.map((e) => e.value);
   const maxVal = Math.max(...chartData);
   const minVal = Math.min(...chartData);
   const chartW = 400;
@@ -265,27 +276,70 @@ export default function DashboardPage() {
                   filter="url(#glowLine)"
                 />
 
-                {/* Dot markers */}
+                {/* Dot markers — interactive */}
                 {pts.map((p, i) => (
-                  <circle
-                    key={i}
-                    cx={p.x}
-                    cy={p.y}
-                    r="2.5"
-                    fill="#3B82F6"
-                    stroke="#080808"
-                    strokeWidth="1"
-                  />
+                  <g key={i}>
+                    {/* Larger invisible hit target */}
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r="12"
+                      fill="transparent"
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={() => setHoveredPt(i)}
+                      onMouseLeave={() => setHoveredPt(null)}
+                    />
+                    {/* Visible dot */}
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={hoveredPt === i ? 4 : 2.5}
+                      fill="#3B82F6"
+                      stroke={hoveredPt === i ? '#60A5FA' : '#080808'}
+                      strokeWidth={hoveredPt === i ? 1.5 : 1}
+                      style={{ transition: 'r 0.15s, stroke 0.15s' }}
+                    />
+                  </g>
                 ))}
               </svg>
             </div>
 
-            {/* Weekday labels */}
-            <div className="flex justify-between mt-2 px-0.5">
-              {weekDays.map((d) => (
-                <span key={d} className="text-[9px] text-[#3a3a42]">{d}</span>
+            {/* Tooltip overlay */}
+            <div className="grid grid-cols-7 mt-2 px-0.5" style={{ minHeight: 28 }}>
+              {weekDays.map((d, i) => (
+                <div key={d} className="flex flex-col items-center">
+                  <span className={`text-[9px] ${hoveredPt === i ? 'text-blue-400' : 'text-[#3a3a42]'}`}>{d}</span>
+                </div>
               ))}
             </div>
+
+            {/* Saved-job tooltip card */}
+            {hoveredPt !== null && (
+              <div
+                className="mt-2 rounded-xl p-3"
+                style={{
+                  background: 'linear-gradient(180deg, #0c0c10 0%, #060608 100%)',
+                  boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 4px 16px -4px rgba(0,0,0,0.6)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] tracking-[0.14em] uppercase text-[#505058]">
+                    {weekDays[hoveredPt]} — Gespeicherte Jobs
+                  </span>
+                  <span className="text-[11px] font-medium text-blue-400">
+                    {chartEntries[hoveredPt].jobs.length}
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {chartEntries[hoveredPt].jobs.map((job) => (
+                    <div key={job} className="flex items-center gap-2">
+                      <div className="h-1 w-1 rounded-full bg-blue-500" style={{ boxShadow: '0 0 4px rgba(59,130,246,0.5)' }} />
+                      <span className="text-[11px] text-[#b0b0b8]">{job}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </Tile>
         </div>
 
@@ -423,7 +477,7 @@ export default function DashboardPage() {
                 icon: Mic,
                 glow: 'rgba(251,191,36,0.12)',
                 iconColor: '#FBBF24',
-                action: () => navigate('/jobs'),
+                action: () => navigate('/ai-assistant'),
               },
             ].map((item) => (
               <button
