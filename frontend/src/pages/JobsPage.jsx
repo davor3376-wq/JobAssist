@@ -252,6 +252,8 @@ const [savingJobId, setSavingJobId] = useState(null);
       console.log(`[JobsPage] localStorage cache: ${cached?.length ?? 0} jobs`);
       return cached || [];
     },
+    initialDataUpdatedAt: 0,
+    staleTime: 0,
     retry: 2,
   });
   if (jobsError) console.error("[JobsPage] Failed to load saved jobs:", jobsErrorObj);

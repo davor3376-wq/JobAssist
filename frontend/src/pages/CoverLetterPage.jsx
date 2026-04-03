@@ -66,7 +66,8 @@ export default function CoverLetterPage() {
       return r.data;
     }),
     initialData: () => loadStored("jobs"),
-    staleTime: 1000 * 60 * 2,
+    initialDataUpdatedAt: 0,
+    staleTime: 0,
   });
 
   useEffect(() => {
