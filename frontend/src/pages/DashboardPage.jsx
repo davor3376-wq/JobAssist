@@ -169,29 +169,29 @@ export default function DashboardPage() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
                 Aktivitätsverlauf
               </h2>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-full border border-orange-400/20 bg-orange-400/10 px-2.5 py-1">
-                  <Flame className="h-3.5 w-3.5 text-orange-400" />
-                  <span className="text-[11px] font-bold text-orange-300">5 Tage</span>
-                </div>
-                <div className="rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1.5 text-xs font-semibold text-emerald-300">
-                  +2 heute
-                </div>
-              </div>
             </div>
 
-            <div className="mt-3 rounded-xl border border-[#233250] bg-[#0A0C12] p-3">
-              <div className="flex items-center justify-between mb-2">
+            <div className="mt-3 rounded-xl border border-[#233250] bg-[#0A0C12] p-4">
+              <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-semibold text-slate-300">Tagesziel: 3 Analysen</p>
-                <span className="text-[11px] font-bold text-blue-400">2/3</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 rounded-full border border-orange-400/20 bg-orange-400/10 px-2.5 py-1">
+                    <Flame className="h-3.5 w-3.5 text-orange-400" />
+                    <span className="text-[11px] font-bold text-orange-300">5 Tage</span>
+                  </div>
+                  <div className="rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                    +2 heute
+                  </div>
+                  <span className="text-[11px] font-bold text-blue-400 font-mono">2/3</span>
+                </div>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-[#1C2333]">
                 <div 
-                  className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#60A5FA]"
+                  className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#60A5FA] shadow-[0_0_8px_#3B82F6]"
                   style={{ width: '66%' }}
                 />
               </div>
-              <p className="mt-1.5 text-[10px] text-slate-500">Noch 1 Analyse für deine Belohnung</p>
+              <p className="mt-3 text-[10px] text-[#A1A1AA]">Noch 1 Analyse für deine Belohnung</p>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
