@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
@@ -13,7 +12,7 @@ import {
 } from 'lucide-react';
 
 /**
- * Premium tile wrapper — ultra-dark gradient with 1px inner glow at top.
+ * Compact tile wrapper — minimal padding for density.
  * @param {object} props
  * @param {React.ReactNode} props.children
  * @param {string} [props.className]
@@ -21,10 +20,10 @@ import {
 function Tile({ children, className = '' }) {
   return (
     <div
-      className={`rounded-2xl p-5 sm:p-6 ${className}`}
+      className={`rounded-xl p-2.5 ${className}`}
       style={{
-        background: 'linear-gradient(180deg, #080808 0%, #030303 100%)',
-        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04)',
+        background: 'linear-gradient(180deg, #0a0a0c 0%, #050505 100%)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)',
       }}
     >
       {children}
@@ -33,7 +32,7 @@ function Tile({ children, className = '' }) {
 }
 
 /**
- * Small label in ALL-CAPS with wide tracking.
+ * Micro label — 12px ALL-CAPS.
  * @param {object} props
  * @param {React.ReactNode} props.children
  * @param {string} [props.className]
@@ -41,7 +40,7 @@ function Tile({ children, className = '' }) {
 function Label({ children, className = '' }) {
   return (
     <span
-      className={`block text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058] ${className}`}
+      className={`block text-[12px] font-medium tracking-[0.14em] uppercase text-[#505058] ${className}`}
     >
       {children}
     </span>
@@ -49,7 +48,7 @@ function Label({ children, className = '' }) {
 }
 
 /**
- * Premium icon with a subtle colored background glow.
+ * Compact glow icon — smaller for density.
  * @param {object} props
  * @param {React.ElementType} props.icon
  * @param {string} [props.glowColor]
@@ -57,457 +56,319 @@ function Label({ children, className = '' }) {
  */
 function GlowIcon({ icon: Icon, glowColor = 'rgba(52,211,153,0.2)', iconColor = '#fff' }) {
   return (
-    <div className="grid place-items-center h-8 w-8 rounded-lg" style={{ background: glowColor }}>
-      <Icon size={15} color={iconColor} strokeWidth={2} />
+    <div className="grid place-items-center h-6 w-6 rounded-md" style={{ background: glowColor }}>
+      <Icon size={12} color={iconColor} strokeWidth={2} />
     </div>
   );
 }
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [hoveredPt, setHoveredPt] = useState(null);
 
-  // Chart data with saved-job labels per day
-  const chartEntries = [
-    { value: 20, jobs: ['Frontend Dev — SAP'] },
-    { value: 45, jobs: ['UX Designer — BMW', 'React Dev — Siemens'] },
-    { value: 30, jobs: ['Fullstack — Zalando'] },
-    { value: 60, jobs: ['Product Manager — N26', 'Backend — Celonis', 'Data Eng — FlixBus'] },
-    { value: 85, jobs: ['Senior Dev — Personio', 'Tech Lead — Scalable'] },
-    { value: 55, jobs: ['DevOps — CHECK24', 'React — Trade Republic'] },
-    { value: 70, jobs: ['Architect — Delivery Hero', 'Lead — SumUp'] },
+  // Real daily activity data — jobs saved per day
+  const dailyActivity = [
+    { day: 'Mo', val: 1, max: 3, label: '1 Job' },
+    { day: 'Di', val: 2, max: 3, label: '2 Jobs' },
+    { day: 'Mi', val: 0, max: 3, label: '—' },
+    { day: 'Do', val: 3, max: 3, label: '3 Jobs' },
+    { day: 'Fr', val: 2, max: 3, label: '2 Jobs' },
+    { day: 'Sa', val: 1, max: 3, label: '1 Job' },
+    { day: 'So', val: 0, max: 3, label: '—' },
   ];
-  const chartData = chartEntries.map((e) => e.value);
-  const maxVal = Math.max(...chartData);
-  const minVal = Math.min(...chartData);
-  const chartW = 400;
-  const chartH = 100;
-  const pad = 4;
-
-  const pts = chartData.map((v, i) => ({
-    x: (i / (chartData.length - 1)) * chartW,
-    y: chartH - pad - ((v - minVal) / (maxVal - minVal)) * (chartH - pad * 2),
-  }));
-
-  // Smooth cubic bezier path
-  const buildCurve = () => {
-    let d = `M${pts[0].x},${pts[0].y}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const curr = pts[i];
-      const next = pts[i + 1];
-      const cpx1 = curr.x + (next.x - curr.x) * 0.4;
-      const cpy1 = curr.y;
-      const cpx2 = next.x - (next.x - curr.x) * 0.4;
-      const cpy2 = next.y;
-      d += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${next.x},${next.y}`;
-    }
-    return d;
-  };
-
-  const curvePath = buildCurve();
-  const fillPath = `${curvePath} L${pts[pts.length - 1].x},${chartH} L${pts[0].x},${chartH} Z`;
-
-  const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
   return (
-    <div className="min-h-full bg-black px-4 sm:px-8 py-8 sm:py-10 font-sans">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-white leading-none">
+    <div className="h-screen bg-black px-3 py-3 font-sans overflow-hidden">
+      {/* Header — compact */}
+      <div className="mb-3">
+        <h1 className="text-[22px] font-semibold tracking-tight text-white leading-none">
           JobAssist
         </h1>
-        <p className="mt-2 text-[11px] tracking-[0.18em] uppercase text-[#3a3a42]">
+        <p className="mt-0.5 text-[11px] tracking-[0.12em] uppercase text-[#3a3a42]">
           Bewerbungsübersicht
         </p>
       </div>
 
-      {/* === Row 1: Score · Performance · Milestone === */}
-      <div className="grid grid-cols-12 gap-3 sm:gap-4">
-        {/* Markt-Score */}
-        <div className="col-span-12 sm:col-span-4">
-          <Tile className="h-full">
-            <Label>Markt-Score</Label>
-            <div className="mt-4 flex items-end gap-3">
-              <span className="text-[52px] sm:text-[56px] font-semibold leading-none text-white tracking-tight">
-                63<span className="text-[28px] text-[#3a3a42]">%</span>
-              </span>
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <div className="h-[2px] w-8 rounded-full bg-emerald-500" />
-              <span className="text-[11px] text-emerald-400/80">+2% seit gestern</span>
-            </div>
+      {/* === MAIN GRID: 3 columns (Content 9 cols | Sidebar 3 cols) === */}
+      <div className="grid grid-cols-12 gap-2 h-[calc(100vh-70px)]">
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div>
-                <Label>Top-Matches</Label>
-                <span className="mt-1 block text-[28px] font-semibold text-white leading-none">5</span>
+        {/* LEFT COLUMN — Metrics & Activity (col-span-9) */}
+        <div className="col-span-9 flex flex-col gap-2">
+
+          {/* Row 1: Three metrics side by side */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* Markt-Score */}
+            <Tile>
+              <Label>Markt-Score</Label>
+              <div className="mt-1.5 flex items-end gap-1.5">
+                <span className="text-[26px] font-semibold leading-none text-white tracking-tight">
+                  63<span className="text-[14px] text-[#3a3a42]">%</span>
+                </span>
               </div>
-              <div>
-                <Label>Analysiert</Label>
-                <span className="mt-1 block text-[28px] font-semibold text-white leading-none">21</span>
+              <div className="mt-1.5 flex items-center gap-1">
+                <div className="h-[2px] w-5 rounded-full bg-emerald-500" />
+                <span className="text-[11px] text-emerald-400/80">+2%</span>
               </div>
-            </div>
-          </Tile>
-        </div>
-
-        {/* Leistungsindex */}
-        <div className="col-span-12 sm:col-span-4">
-          <Tile className="h-full">
-            <Label>Leistungsindex</Label>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-[52px] sm:text-[56px] font-semibold leading-none text-white tracking-tight">
-                87
-              </span>
-              <span className="text-[12px] font-medium text-emerald-400">↑ 12%</span>
-            </div>
-            <div className="mt-5 h-[3px] w-full rounded-full bg-[#111114] overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: '87%',
-                  background: 'linear-gradient(90deg, #10B981, #34D399)',
-                  boxShadow: '0 0 10px rgba(52,211,153,0.35)',
-                }}
-              />
-            </div>
-            <div className="mt-2 flex justify-between">
-              <span className="text-[10px] text-[#3a3a42]">0</span>
-              <span className="text-[10px] text-[#3a3a42]">100</span>
-            </div>
-          </Tile>
-        </div>
-
-        {/* Meilenstein */}
-        <div className="col-span-12 sm:col-span-4">
-          <Tile className="h-full">
-            <Label>Meilenstein</Label>
-            <div className="mt-4">
-              <span className="text-[26px] font-semibold text-white leading-none">Experte</span>
-            </div>
-            <div className="mt-5 h-[3px] w-full rounded-full bg-[#111114] overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: '72%',
-                  background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
-                  boxShadow: '0 0 10px rgba(139,92,246,0.3)',
-                }}
-              />
-            </div>
-            <div className="mt-2 flex justify-between">
-              <span className="text-[10px] text-[#3a3a42]">72 / 90 Punkte</span>
-              <span className="text-[10px] text-violet-400/70">80%</span>
-            </div>
-
-            {/* Tagesziel nested */}
-            <div className="mt-6 pt-5" style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-              <div className="flex items-center justify-between">
-                <Label>Tagesziel</Label>
-                <span className="text-[13px] font-medium text-white tabular-nums">2 / 3</span>
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <div>
+                  <span className="text-[10px] text-[#505058]">Top-Matches</span>
+                  <span className="block text-[18px] font-semibold text-white leading-none">5</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#505058]">Analysiert</span>
+                  <span className="block text-[18px] font-semibold text-white leading-none">21</span>
+                </div>
               </div>
-              <div className="mt-3 h-[3px] w-full rounded-full bg-[#111114] overflow-hidden">
+            </Tile>
+
+            {/* Leistungsindex */}
+            <Tile>
+              <Label>Leistungsindex</Label>
+              <div className="mt-1.5 flex items-baseline gap-1">
+                <span className="text-[26px] font-semibold leading-none text-white tracking-tight">
+                  87
+                </span>
+                <span className="text-[10px] font-medium text-emerald-400">↑12%</span>
+              </div>
+              <div className="mt-1.5 h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
                 <div
                   className="h-full rounded-full"
                   style={{
-                    width: '66%',
-                    background: 'linear-gradient(90deg, #3B82F6, #60A5FA)',
-                    boxShadow: '0 0 10px rgba(59,130,246,0.4)',
+                    width: '87%',
+                    background: 'linear-gradient(90deg, #10B981, #34D399)',
+                    boxShadow: '0 0 6px rgba(52,211,153,0.25)',
                   }}
                 />
               </div>
-              <div className="mt-2 flex items-center gap-3">
-                <span className="text-[10px] text-[#3a3a42]">5-Tage-Serie</span>
-                <span className="text-[10px] text-emerald-400/80">+2</span>
+              <div className="mt-0.5 flex justify-between text-[9px] text-[#3a3a42]">
+                <span>0</span>
+                <span>100</span>
               </div>
-            </div>
-          </Tile>
-        </div>
+            </Tile>
 
-        {/* === Row 2: Activity Chart (wide) · Journey === */}
-
-        {/* Aktivität — smooth chart */}
-        <div className="col-span-12 sm:col-span-8 mt-1">
-          <Tile>
-            <div className="flex items-center justify-between mb-5">
-              <Label>Aktivität</Label>
-              <div className="flex items-center gap-5">
-                <div>
-                  <Label>Diese Woche</Label>
-                  <span className="mt-0.5 block text-[22px] font-semibold text-white leading-none">21</span>
-                </div>
-                <div>
-                  <Label>Heute</Label>
-                  <span className="mt-0.5 block text-[22px] font-semibold text-white leading-none">2</span>
-                </div>
+            {/* Meilenstein */}
+            <Tile>
+              <Label>Meilenstein</Label>
+              <div className="mt-1.5">
+                <span className="text-[22px] font-semibold text-white leading-none">Experte</span>
               </div>
-            </div>
-
-            {/* SVG Chart */}
-            <div className="h-[110px] sm:h-[130px]">
-              <svg
-                viewBox={`0 0 ${chartW} ${chartH}`}
-                className="w-full h-full"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="blueNebula" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(59,130,246,0.25)" />
-                    <stop offset="100%" stopColor="rgba(59,130,246,0)" />
-                  </linearGradient>
-                  <filter id="glowLine">
-                    <feGaussianBlur stdDeviation="2.5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                {/* Nebula fill */}
-                <path d={fillPath} fill="url(#blueNebula)" />
-
-                {/* Smooth line */}
-                <path
-                  d={curvePath}
-                  fill="none"
-                  stroke="#3B82F6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  filter="url(#glowLine)"
+              <div className="mt-1.5 h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: '72%',
+                    background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                    boxShadow: '0 0 6px rgba(139,92,246,0.2)',
+                  }}
                 />
+              </div>
+              <div className="mt-0.5 flex justify-between text-[9px] text-[#3a3a42]">
+                <span>72/90</span>
+                <span className="text-violet-400/70">80%</span>
+              </div>
+            </Tile>
+          </div>
 
-                {/* Dot markers — interactive */}
-                {pts.map((p, i) => (
-                  <g key={i}>
-                    {/* Larger invisible hit target */}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r="12"
-                      fill="transparent"
-                      style={{ cursor: 'pointer' }}
-                      onMouseEnter={() => setHoveredPt(i)}
-                      onMouseLeave={() => setHoveredPt(null)}
-                    />
-                    {/* Visible dot */}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={hoveredPt === i ? 4 : 2.5}
-                      fill="#3B82F6"
-                      stroke={hoveredPt === i ? '#60A5FA' : '#080808'}
-                      strokeWidth={hoveredPt === i ? 1.5 : 1}
-                      style={{ transition: 'r 0.15s, stroke 0.15s' }}
-                    />
-                  </g>
-                ))}
-              </svg>
+          {/* Row 2: FUSED Activity + Tagesziel — ultra compact, no empty space */}
+          <Tile className="flex-1 min-h-0 py-2">
+            {/* Header row: single line, all info inline */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <Label className="text-[11px]">Aktivität</Label>
+                <div className="flex items-center gap-2 text-[10px] text-[#505058]">
+                  <span>Woche: <b className="text-white">21</b></span>
+                  <span className="text-[#2a2a32]">|</span>
+                  <span>Heute: <b className="text-white">2</b></span>
+                </div>
+              </div>
+              {/* Tagesziel inline */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[#505058]">Tagesziel</span>
+                <span className="text-[12px] font-medium text-white tabular-nums">2/3</span>
+                <div className="w-16 h-[3px] rounded-full bg-[#111114] overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: '66%',
+                      background: 'linear-gradient(90deg, #3B82F6, #60A5FA)',
+                      boxShadow: '0 0 6px rgba(59,130,246,0.3)',
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Tooltip overlay */}
-            <div className="grid grid-cols-7 mt-2 px-0.5" style={{ minHeight: 28 }}>
-              {weekDays.map((d, i) => (
-                <div key={d} className="flex flex-col items-center">
-                  <span className={`text-[9px] ${hoveredPt === i ? 'text-blue-400' : 'text-[#3a3a42]'}`}>{d}</span>
+            {/* Real Activity Data — Compact horizontal bars (not fake curve) */}
+            <div className="grid grid-cols-4 gap-2">
+              {dailyActivity.slice(0, 4).map((d) => (
+                <div key={d.day} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[9px] text-[#505058]">
+                    <span>{d.day}</span>
+                    <span className={d.val > 0 ? 'text-white' : ''}>{d.label}</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-[#111114] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-blue-500"
+                      style={{
+                        width: `${(d.val / d.max) * 100}%`,
+                        opacity: d.val > 0 ? 1 : 0.3,
+                        boxShadow: d.val > 0 ? '0 0 4px rgba(59,130,246,0.4)' : 'none',
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
-
-            {/* Saved-job tooltip card */}
-            {hoveredPt !== null && (
-              <div
-                className="mt-2 rounded-xl p-3"
-                style={{
-                  background: 'linear-gradient(180deg, #0c0c10 0%, #060608 100%)',
-                  boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 4px 16px -4px rgba(0,0,0,0.6)',
-                }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] tracking-[0.14em] uppercase text-[#505058]">
-                    {weekDays[hoveredPt]} — Gespeicherte Jobs
-                  </span>
-                  <span className="text-[11px] font-medium text-blue-400">
-                    {chartEntries[hoveredPt].jobs.length}
-                  </span>
+            <div className="grid grid-cols-3 gap-2 mt-1.5">
+              {dailyActivity.slice(4).map((d) => (
+                <div key={d.day} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[9px] text-[#505058]">
+                    <span>{d.day}</span>
+                    <span className={d.val > 0 ? 'text-white' : ''}>{d.label}</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-[#111114] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-blue-500"
+                      style={{
+                        width: `${(d.val / d.max) * 100}%`,
+                        opacity: d.val > 0 ? 1 : 0.3,
+                        boxShadow: d.val > 0 ? '0 0 4px rgba(59,130,246,0.4)' : 'none',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  {chartEntries[hoveredPt].jobs.map((job) => (
-                    <div key={job} className="flex items-center gap-2">
-                      <div className="h-1 w-1 rounded-full bg-blue-500" style={{ boxShadow: '0 0 4px rgba(59,130,246,0.5)' }} />
-                      <span className="text-[11px] text-[#b0b0b8]">{job}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </Tile>
+
+          {/* Row 3: Weekly Goals & Next Steps combined */}
+          <div className="grid grid-cols-2 gap-2">
+            <Tile>
+              <Label className="mb-1.5">Wochenziele</Label>
+              <div className="flex gap-1.5">
+                {[
+                  { label: '5 Analysen', complete: true, icon: Search },
+                  { label: 'Top', complete: true, icon: TrendingUp },
+                  { label: '3 Bewerb.', complete: false, icon: Sparkles },
+                ].map((goal) => (
+                  <div
+                    key={goal.label}
+                    className="flex items-center gap-1 rounded-lg px-2 py-1"
+                    style={{
+                      background: goal.complete
+                        ? 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(52,211,153,0.01) 100%)'
+                        : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
+                    }}
+                  >
+                    <GlowIcon
+                      icon={goal.complete ? CheckCircle2 : goal.icon}
+                      glowColor={goal.complete ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.04)'}
+                      iconColor={goal.complete ? '#34D399' : '#505058'}
+                    />
+                    <span className={`text-[11px] font-medium ${goal.complete ? 'text-[#c8c8d0]' : 'text-[#505058]'}`}>
+                      {goal.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Tile>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { title: 'Matches', sub: '3 Jobs', icon: Search, glow: 'rgba(59,130,246,0.12)', iconColor: '#60A5FA', action: () => navigate('/jobs') },
+                { title: 'Boost', sub: '+12%', icon: Sparkles, glow: 'rgba(168,85,247,0.10)', iconColor: '#C084FC', action: () => navigate('/ai-assistant') },
+                { title: 'Interview', sub: 'Coaching', icon: Mic, glow: 'rgba(251,191,36,0.08)', iconColor: '#FBBF24', action: () => navigate('/ai-assistant') },
+              ].map((item) => (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={item.action}
+                  className="group rounded-xl p-2 text-left transition-all duration-200 hover:scale-[1.02]"
+                  style={{
+                    background: 'linear-gradient(180deg, #0a0a0c 0%, #050505 100%)',
+                    boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.03)',
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <GlowIcon icon={item.icon} glowColor={item.glow} iconColor={item.iconColor} />
+                    <div className="text-center">
+                      <div className="text-[11px] font-medium text-[#e0e0e8]">{item.title}</div>
+                      <div className="text-[9px] text-[#505058]">{item.sub}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Bewerbungsreise */}
-        <div className="col-span-12 sm:col-span-4 mt-1">
-          <Tile className="h-full">
-            <Label>Bewerbungsreise</Label>
+        {/* RIGHT SIDEBAR — Bewerbungsreise & Profil (col-span-3) */}
+        <div className="col-span-3 flex flex-col gap-2">
 
-            <div className="mt-5 space-y-5">
+          {/* Bewerbungsreise — compact */}
+          <Tile>
+            <Label>Bewerbungsreise</Label>
+            <div className="mt-2 space-y-1.5">
               {[
-                { label: 'Beworben', value: '5', sub: '/ 21', color: '#3B82F6' },
+                { label: 'Beworben', value: '5', sub: '/21', color: '#3B82F6' },
                 { label: 'Rücklauf', value: '24%', color: '#A78BFA' },
                 { label: 'Interviews', value: '1', color: '#F59E0B' },
                 { label: 'Offen', value: '16', color: '#6B7280' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1">
                     <div
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: item.color, boxShadow: `0 0 6px ${item.color}40` }}
+                      className="h-1 w-1 rounded-full"
+                      style={{ background: item.color, boxShadow: `0 0 4px ${item.color}40` }}
                     />
-                    <span className="text-[11px] tracking-[0.14em] uppercase text-[#505058]">
+                    <span className="text-[10px] tracking-[0.08em] uppercase text-[#505058]">
                       {item.label}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[24px] font-semibold text-white leading-none tracking-tight">
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-[18px] font-semibold text-white leading-none tracking-tight">
                       {item.value}
                     </span>
                     {item.sub && (
-                      <span className="text-[12px] text-[#3a3a42]">{item.sub}</span>
+                      <span className="text-[10px] text-[#3a3a42]">{item.sub}</span>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Profile completeness */}
-            <div
-              className="mt-6 pt-5"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <Label>Profil</Label>
-                <span className="text-[13px] font-medium text-white">94%</span>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: 'Lebenslauf', complete: true, icon: FileText },
-                  { label: 'Fähigkeiten', complete: true, icon: Star },
-                  { label: 'Präferenzen', complete: false, icon: Zap },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <item.icon size={12} className="text-[#505058]" />
-                      <span className="text-[11px] text-[#606068]">{item.label}</span>
-                    </div>
-                    {item.complete ? (
-                      <GlowIcon
-                        icon={CheckCircle2}
-                        glowColor="rgba(52,211,153,0.12)"
-                        iconColor="#34D399"
-                      />
-                    ) : (
-                      <span className="text-[11px] font-medium text-[#505058]">2/3</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
           </Tile>
-        </div>
 
-        {/* === Row 3: Weekly Goals === */}
-        <div className="col-span-12 mt-1">
-          <Tile>
-            <Label className="mb-5">Wochenziele</Label>
-            <div className="mt-4 grid grid-cols-12 gap-3 sm:gap-4">
+          {/* Profil-Stärke — compact */}
+          <Tile className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <Label>Profil-Stärke</Label>
+              <span className="text-[20px] font-semibold text-white">94%</span>
+            </div>
+            <div className="space-y-1.5">
               {[
-                { label: '5 Analysen', complete: true, icon: Search },
-                { label: 'Top-Bewerber', complete: true, icon: TrendingUp },
-                { label: '3 Bewerbungen', complete: false, icon: Sparkles },
-              ].map((goal) => (
-                <div
-                  key={goal.label}
-                  className="col-span-12 sm:col-span-4 flex items-center gap-3 rounded-xl px-4 py-3"
-                  style={{
-                    background: goal.complete
-                      ? 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(52,211,153,0.01) 100%)'
-                      : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
-                  }}
-                >
-                  <GlowIcon
-                    icon={goal.complete ? CheckCircle2 : goal.icon}
-                    glowColor={
-                      goal.complete ? 'rgba(52,211,153,0.14)' : 'rgba(255,255,255,0.04)'
-                    }
-                    iconColor={goal.complete ? '#34D399' : '#505058'}
-                  />
-                  <span
-                    className={`text-[12px] font-medium ${goal.complete ? 'text-[#c8c8d0]' : 'text-[#505058]'}`}
-                  >
-                    {goal.label}
-                  </span>
+                { label: 'Lebenslauf', complete: true, icon: FileText },
+                { label: 'Fähigkeiten', complete: true, icon: Star },
+                { label: 'Präferenzen', complete: false, icon: Zap, sub: '2/3' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <item.icon size={10} className="text-[#505058]" />
+                    <span className="text-[10px] text-[#606068]">{item.label}</span>
+                  </div>
+                  {item.complete ? (
+                    <GlowIcon
+                      icon={CheckCircle2}
+                      glowColor="rgba(52,211,153,0.1)"
+                      iconColor="#34D399"
+                    />
+                  ) : (
+                    <span className="text-[10px] font-medium text-[#505058]">{item.sub}</span>
+                  )}
                 </div>
               ))}
             </div>
           </Tile>
         </div>
 
-        {/* === Row 4: Next Steps — Premium CTA Cards === */}
-        <div className="col-span-12 mt-1">
-          <Label className="mb-4">Nächste Schritte</Label>
-          <div className="grid grid-cols-12 gap-3 sm:gap-4 mt-4">
-            {[
-              {
-                title: 'Matches entdecken',
-                sub: '3 neue Jobs gefunden',
-                icon: Search,
-                glow: 'rgba(59,130,246,0.14)',
-                iconColor: '#60A5FA',
-                action: () => navigate('/jobs'),
-              },
-              {
-                title: 'Profilboost',
-                sub: '+12% mit KI-Optimierung',
-                icon: Sparkles,
-                glow: 'rgba(168,85,247,0.14)',
-                iconColor: '#C084FC',
-                action: () => navigate('/ai-assistant'),
-              },
-              {
-                title: 'Interview vorbereiten',
-                sub: 'KI-Coaching starten',
-                icon: Mic,
-                glow: 'rgba(251,191,36,0.12)',
-                iconColor: '#FBBF24',
-                action: () => navigate('/ai-assistant'),
-              },
-            ].map((item) => (
-              <button
-                key={item.title}
-                type="button"
-                onClick={item.action}
-                className="col-span-12 sm:col-span-4 group rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01]"
-                style={{
-                  background: 'linear-gradient(180deg, #080808 0%, #030303 100%)',
-                  boxShadow:
-                    'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 4px 12px -2px rgba(0,0,0,0.5)',
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <GlowIcon icon={item.icon} glowColor={item.glow} iconColor={item.iconColor} />
-                    <div>
-                      <div className="text-[13px] font-medium text-[#e0e0e8]">{item.title}</div>
-                      <div className="text-[10px] text-[#505058] mt-0.5">{item.sub}</div>
-                    </div>
-                  </div>
-                  <ChevronRight
-                    size={16}
-                    className="text-[#2a2a32] transition-colors group-hover:text-[#505058]"
-                  />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
