@@ -95,9 +95,9 @@ const CURRENCIES = ["EUR"];
 const LANGUAGES = [{ code: "de", label: "Deutsch" }];
 
 const INPUT_CLS =
-  "w-full rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-0 min-h-[44px]";
+  "w-full rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-0 h-10";
 const LABEL_CLS =
-  "block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2";
+  "block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -273,7 +273,7 @@ export default function SettingsPage() {
   if (profileLoading || preferencesLoading) {
     return (
       <div className="animate-slide-up">
-        <div className="mb-6">
+        <div className="mb-3">
           <div className="h-7 w-48 rounded-xl bg-[#111827] animate-pulse mb-2" />
           <div className="h-4 w-64 rounded-xl bg-[#111827] animate-pulse" />
         </div>
@@ -284,52 +284,52 @@ export default function SettingsPage() {
 
   return (
     <div className="animate-slide-up">
-      <div className="mb-6">
+      <div className="mb-3">
         <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none">
           Einstellungen
         </h1>
-        <p className="text-sm text-slate-400 mt-1">Profil & Jobpräferenzen konfigurieren</p>
+        <p className="text-sm text-slate-400 mt-0.5">Profil & Jobpräferenzen konfigurieren</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-3 items-start">
 
           {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
-          <div className="space-y-4">
+          <div className="space-y-2.5">
 
             {/* Profilfoto */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
+              <div className="mb-2 flex items-center gap-2">
                 <User className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Profilfoto</h2>
               </div>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <div className="relative flex-shrink-0">
                   {avatar ? (
                     <img
                       src={avatar}
                       alt="Profil"
-                      className="h-20 w-20 rounded-2xl object-cover ring-2 ring-blue-500/30"
+                      className="h-16 w-16 rounded-2xl object-cover ring-2 ring-blue-500/30"
                     />
                   ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 ring-2 ring-blue-500/20">
-                      <User className="h-8 w-8 text-white" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 ring-2 ring-blue-500/20">
+                      <User className="h-7 w-7 text-white" />
                     </div>
                   )}
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-xl bg-[#3b82f6] text-white shadow-md transition-colors hover:bg-blue-500"
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-xl bg-[#3b82f6] text-white shadow-md transition-colors hover:bg-blue-500"
                     title="Foto ändern"
                   >
-                    <Camera className="h-3.5 w-3.5" />
+                    <Camera className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                    className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-1.5 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
                   >
                     {avatar ? "Foto ändern" : "Foto hochladen"}
                   </button>
@@ -340,9 +340,9 @@ export default function SettingsPage() {
                         setAvatar(null);
                         if (fileInputRef.current) fileInputRef.current.value = "";
                       }}
-                      className="flex items-center gap-1.5 text-sm text-red-400 transition-colors hover:text-red-300"
+                      className="flex items-center gap-1 text-sm text-red-400 transition-colors hover:text-red-300"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3 w-3" />
                       Foto entfernen
                     </button>
                   )}
@@ -359,15 +359,15 @@ export default function SettingsPage() {
             </div>
 
             {/* Basis-Konfiguration */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5">
-              <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
+              <div className="mb-2 flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <div>
                   <h2 className="font-semibold text-white">Basis-Konfiguration</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Sprache, Währung & Marktstandort</p>
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 <Controller
                   name="language"
                   control={control}
@@ -436,11 +436,11 @@ export default function SettingsPage() {
           </div>
 
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
-          <div className="space-y-4">
+          <div className="space-y-2.5 flex flex-col">
 
             {/* Jobsuche — Orte + Gehalt combined */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3 space-y-2.5">
+              <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Jobsuche</h2>
               </div>
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                   </div>
                 )}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Controller
                   name="salary_min"
                   control={control}
@@ -489,8 +489,8 @@ export default function SettingsPage() {
             </div>
 
             {/* Stellenarten + Erfahrung + Branchen combined */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-5 space-y-5">
-              <div className="flex items-center gap-3">
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3 space-y-3">
+              <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Präferenzen</h2>
               </div>
@@ -522,7 +522,7 @@ export default function SettingsPage() {
                 render={({ field }) => (
                   <div>
                     <label className={LABEL_CLS}>Stellenarten</label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1">
                       {JOB_TYPES.map((type) => (
                         <button
                           key={type}
@@ -533,7 +533,7 @@ export default function SettingsPage() {
                               : [...(field.value || []), type];
                             field.onChange(next);
                           }}
-                          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
+                          className={`rounded-lg px-2 py-0.5 text-xs font-semibold transition-all ${
                             field.value?.includes(type)
                               ? "bg-[#3b82f6] text-white"
                               : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
@@ -554,7 +554,7 @@ export default function SettingsPage() {
                 render={({ field }) => (
                   <div>
                     <label className={LABEL_CLS}>Branchen</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="flex flex-wrap gap-1">
                       {INDUSTRIES.map((industry) => (
                         <button
                           key={industry}
@@ -565,7 +565,7 @@ export default function SettingsPage() {
                               : [...(field.value || []), industry];
                             field.onChange(next);
                           }}
-                          className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all text-center ${
+                          className={`rounded-lg px-2 py-0.5 text-xs font-semibold transition-all ${
                             field.value?.includes(industry)
                               ? "bg-[#3b82f6] text-white"
                               : "bg-[#0b1220] text-slate-400 border border-[#1f2937] hover:border-blue-500/30 hover:text-slate-200"
@@ -581,7 +581,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Umzugsbereitschaft */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] px-5 py-4">
+            <div className="rounded-xl border border-[#1f2937] bg-[#111827] px-3 py-2.5">
               <Controller
                 name="is_open_to_relocation"
                 control={control}
@@ -611,11 +611,11 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Save */}
+            {/* Save — sticky bottom */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-3.5 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors min-h-[44px] shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+              className="sticky bottom-4 z-10 w-full flex items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors h-10 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
               <Save className="h-4 w-4" />
               {isSubmitting
@@ -654,12 +654,12 @@ function DeleteAccountSection() {
   };
 
   return (
-    <div className="rounded-xl border border-red-900/40 bg-[#0f0808] p-5">
-      <div className="mb-4 flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
+    <div className="border-t border-[#1f2937] pt-3">
+      <div className="mb-2 flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
         <div>
-          <h2 className="font-semibold text-red-400">Gefahrenzone</h2>
-          <p className="mt-0.5 text-xs text-slate-400">
+          <h2 className="font-semibold text-slate-400">Gefahrenzone</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
             Alle Daten, Profile, Lebensläufe und Jobs werden permanent gelöscht.
           </p>
         </div>
@@ -668,33 +668,33 @@ function DeleteAccountSection() {
       {!showConfirm ? (
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex items-center gap-2 rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-950/60"
+          className="flex items-center gap-2 rounded-xl bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-600"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
           Konto löschen
         </button>
       ) : (
-        <div className="space-y-4 rounded-xl border border-red-900/60 bg-red-950/30 p-4">
+        <div className="space-y-3 rounded-xl border border-red-900/60 bg-red-950/30 p-3">
           <p className="text-sm font-semibold text-red-300">
             Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.
           </p>
           <div>
-            <label className="block text-xs font-bold text-red-400/80 uppercase tracking-widest mb-2">
+            <label className="block text-xs font-bold text-red-400/80 uppercase tracking-widest mb-1">
               Passwort zur Bestätigung
             </label>
             <input
               type="password"
-              className="w-full rounded-xl border border-red-900/60 bg-[#0b0606] px-4 py-3 text-sm text-white placeholder-red-900 focus:outline-none focus:border-red-500/50 min-h-[44px]"
+              className="w-full rounded-xl border border-red-900/60 bg-[#0b0606] px-3 py-2 text-sm text-white placeholder-red-900 focus:outline-none focus:border-red-500/50 h-10"
               placeholder="Aktuelles Passwort eingeben"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+              className="rounded-xl bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
             >
               {deleting ? "Wird gelöscht…" : "Unwiderruflich löschen"}
             </button>
@@ -703,7 +703,7 @@ function DeleteAccountSection() {
                 setShowConfirm(false);
                 setPassword("");
               }}
-              className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-white"
+              className="rounded-xl border border-[#1f2937] bg-[#0b1220] px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-white"
             >
               Abbrechen
             </button>
