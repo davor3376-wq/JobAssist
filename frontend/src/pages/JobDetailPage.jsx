@@ -409,7 +409,6 @@ export default function JobDetailPage() {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [questionsMinimized, setQuestionsMinimized] = useState(false);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
-  const [toolsOpen, setToolsOpen] = useState(false);
   const [hidePersonal, setHidePersonal] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [researchData, setResearchData] = useState(null);
@@ -546,7 +545,6 @@ export default function JobDetailPage() {
   const isPrimInterview = job.status === "applied" || job.status === "interviewing";
 
   const handleResearch = async () => {
-    setToolsOpen(false);
     if (job.research_data) { setResearchData(parseJson(job.research_data)); setResearchOpen(true); return; }
     setResearchData(null); setResearchOpen(true); setResearchLoading(true);
     try {
@@ -688,67 +686,6 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Weitere Werkzeuge */}
-            <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
-              <div className="relative">
-                <button
-                  onClick={() => setToolsOpen(v => !v)}
-                  className="min-h-[36px] w-full flex items-center justify-center gap-2 rounded-xl border border-[#334155] px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-blue-300"
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                  Weitere Werkzeuge
-                </button>
-                {toolsOpen && (
-                  <div className="absolute left-0 right-0 z-20 mt-1 space-y-1 rounded-xl border border-[#1e293b] bg-[#030712] p-2 shadow-lg shadow-black/40">
-                    <button
-                      disabled={!resumeId || matchMutation.isPending}
-                      onClick={() => { matchMutation.mutate(); setToolsOpen(false); }}
-                      className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                    >
-                      {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0 text-blue-400" />}
-                      Eignungs-Analyse starten
-                    </button>
-                    {isPrimInterview && (
-                      <button
-                        disabled={!resumeId || coverLetterMutation.isPending}
-                        onClick={() => { job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate(); setToolsOpen(false); }}
-                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                      >
-                        <FileText className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                        {job.cover_letter ? "Anschreiben öffnen" : "Anschreiben erstellen"}
-                      </button>
-                    )}
-                    {isPrimCover && job.interview_qa && (
-                      <button
-                        onClick={() => { setActiveTab("interview"); setToolsOpen(false); }}
-                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-violet-500/10 hover:text-violet-300 transition-colors"
-                      >
-                        <MessageSquare className="h-4 w-4 text-violet-400 flex-shrink-0" />
-                        Gesprächsvorbereitung ansehen
-                      </button>
-                    )}
-                    {isPrimCover && !job.interview_qa && (
-                      <button
-                        disabled={!resumeId || interviewMutation.isPending}
-                        onClick={() => { interviewMutation.mutate(); setToolsOpen(false); }}
-                        className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-violet-500/10 hover:text-violet-300 transition-colors disabled:opacity-40"
-                      >
-                        <MessageSquare className="h-4 w-4 text-violet-400 flex-shrink-0" />
-                        Gesprächsvorbereitung erstellen
-                      </button>
-                    )}
-                    <button
-                      disabled={!job?.company}
-                      onClick={handleResearch}
-                      className="min-h-[44px] w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-40"
-                    >
-                      <SearchCheck className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                      {job?.research_data ? "Unternehmensrecherche öffnen" : "Unternehmensrecherche starten"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Deadline / Notes metadata - always editable */}
             <div className="space-y-3 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
@@ -818,6 +755,103 @@ export default function JobDetailPage() {
 
           {/* ── RIGHT: scrollable content ─────────────────────────────────── */}
           <div className="min-w-0">
+
+            {/* ── Secondary Action Grid 3×3 ──────────────────────────────────── */}
+            <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4 mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Aktionen</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "8px" }}>
+
+                {/* 1 – Match Analysis */}
+                <button
+                  disabled={!resumeId || matchMutation.isPending}
+                  onClick={() => matchMutation.mutate()}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0" />}
+                  Eignungs-Analyse
+                </button>
+
+                {/* 2 – Create Cover Letter */}
+                <button
+                  disabled={!resumeId || coverLetterMutation.isPending || !!job.cover_letter}
+                  onClick={() => coverLetterMutation.mutate()}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  {coverLetterMutation.isPending ? <LoadingSpinner /> : <FileText className="h-4 w-4 flex-shrink-0" />}
+                  Anschreiben erstellen
+                </button>
+
+                {/* 3 – View Cover Letter */}
+                <button
+                  disabled={!job.cover_letter}
+                  onClick={() => setCoverLetterModalOpen(true)}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  <BookOpen className="h-4 w-4 flex-shrink-0" />
+                  Anschreiben ansehen
+                </button>
+
+                {/* 4 – Create Interview Prep */}
+                <button
+                  disabled={!resumeId || interviewMutation.isPending || !!job.interview_qa}
+                  onClick={() => interviewMutation.mutate()}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  {interviewMutation.isPending ? <LoadingSpinner /> : <MessageSquare className="h-4 w-4 flex-shrink-0" />}
+                  Gespräch erstellen
+                </button>
+
+                {/* 5 – View Interview Prep */}
+                <button
+                  disabled={!job.interview_qa}
+                  onClick={() => setActiveTab("interview")}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                  Gespräch ansehen
+                </button>
+
+                {/* 6 – Company Research */}
+                <button
+                  disabled={!job?.company}
+                  onClick={handleResearch}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  <SearchCheck className="h-4 w-4 flex-shrink-0" />
+                  {job?.research_data ? "Recherche ansehen" : "Recherche starten"}
+                </button>
+
+                {/* 7 – Open Job Posting */}
+                <button
+                  disabled={!job.url}
+                  onClick={() => window.open(job.url, "_blank", "noopener,noreferrer")}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                  Stellenanzeige öffnen
+                </button>
+
+                {/* 8 – Manage Resume */}
+                <button
+                  onClick={() => navigate("/resume")}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100"
+                >
+                  <FileText className="h-4 w-4 flex-shrink-0" />
+                  Lebenslauf verwalten
+                </button>
+
+                {/* 9 – Delete Job */}
+                <button
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate()}
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                >
+                  {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4 flex-shrink-0" />}
+                  Stelle löschen
+                </button>
+
+              </div>
+            </div>
 
             {/* Tabs */}
             <div className="flex gap-1 overflow-x-auto rounded-2xl border border-[#1e293b] bg-[#0f172a] p-1 mb-4">
