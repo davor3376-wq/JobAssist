@@ -324,7 +324,7 @@ export default function DashboardPage() {
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
-    { label: 'Präferenzen', complete: prefsSet >= 2,  icon: Zap,      sub: `${prefsSet} / 3`, alwaysShowSub: true },
+    { label: 'Präferenzen', complete: prefsSet >= 1,  icon: Zap,      sub: `${prefsSet} / 3`, alwaysShowSub: true },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
@@ -346,6 +346,9 @@ export default function DashboardPage() {
     (appliedCount >= 3 ? 25 : appliedCount * 8) +
     (interviewingCount > 0 ? 20 : 0)
   ));
+  const meilensteinLabel = leistungsIndex >= 80 ? 'Meister' : leistungsIndex >= 55 ? 'Experte' : leistungsIndex >= 30 ? 'Fortgeschritten' : 'Einsteiger';
+  const meilensteinMax = leistungsIndex >= 80 ? 100 : leistungsIndex >= 55 ? 90 : leistungsIndex >= 30 ? 60 : 30;
+  const meilensteinPct = Math.round((leistungsIndex / meilensteinMax) * 100);
 
   // Weekly goals — dynamic
   const weeklyGoals = [
@@ -489,25 +492,25 @@ export default function DashboardPage() {
             <Tile className="p-3 flex flex-col">
               <Label>Meilenstein</Label>
               <div className="mt-2 flex items-center gap-2 flex-1">
-                <CircularGauge progress={80} size={58} />
+                <CircularGauge progress={meilensteinPct} size={58} />
                 <div className="flex-1 min-w-0">
                   <div
                     className="text-[15px] font-semibold leading-tight truncate"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
                   >
-                    Experte
+                    {meilensteinLabel}
                   </div>
                   <div className="mt-1 text-[11px]" style={{ color: C.textDim }}>
-                    72 / 90 Punkte
+                    {leistungsIndex} / {meilensteinMax} Punkte
                   </div>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <div className="flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: C.textDeep }}>
                       <div
                         className="h-full rounded-full"
-                        style={{ width: '80%', background: `linear-gradient(90deg, ${C.violet}, ${C.indigoMid})`, boxShadow: `0 0 6px ${C.violetGlow}` }}
+                        style={{ width: `${meilensteinPct}%`, background: `linear-gradient(90deg, ${C.violet}, ${C.indigoMid})`, boxShadow: `0 0 6px ${C.violetGlow}` }}
                       />
                     </div>
-                    <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: C.violet }}>80%</span>
+                    <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: C.violet }}>{meilensteinPct}%</span>
                   </div>
                 </div>
               </div>
