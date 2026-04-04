@@ -503,7 +503,7 @@ const [savingJobId, setSavingJobId] = useState(null);
   const handleRefreshJobs = () => qc.invalidateQueries({ queryKey: ["jobs"] });
 
   return (
-    <div className="min-h-full px-4 sm:px-8 py-8 sm:py-10 font-sans bg-white/[0.02] backdrop-blur-sm">
+    <div className="min-h-full px-4 sm:px-8 py-8 sm:py-10 font-sans">
       <div className="max-w-[1200px] mx-auto">
       {/* Header */}
       <div className="mb-10">

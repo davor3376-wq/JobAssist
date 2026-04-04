@@ -282,11 +282,6 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
       {/* ── Sticky section header + filter bar ── */}
       <div
         className="sticky top-0 z-10 pb-4"
-        style={{
-          background: "rgba(0,0,0,0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-        }}
       >
         <div className="flex items-end justify-between pt-4 mb-4">
           <div>
