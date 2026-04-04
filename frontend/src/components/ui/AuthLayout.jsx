@@ -10,7 +10,7 @@ export default function AuthLayout({ children }) {
   return (
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-brand-600 via-brand-700 to-purple-800 relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 via-blue-800 to-[#08090c] relative overflow-hidden">
         {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-1/3 translate-y-1/3" />
@@ -48,13 +48,13 @@ export default function AuthLayout({ children }) {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 sm:p-8 bg-white min-h-screen">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 sm:p-8 bg-[#08090c] min-h-screen">
         {/* Mobile-only logo */}
         <div className="lg:hidden flex items-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shadow-lg">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
             <Sparkles className="w-4.5 h-4.5 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900">JobAssist AI</span>
+          <span className="text-xl font-bold text-slate-100">JobAssist AI</span>
         </div>
         <div className="w-full max-w-md">
           {children}

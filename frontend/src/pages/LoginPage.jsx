@@ -46,8 +46,8 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <div className="mb-6 sm:mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Willkommen zurück</h2>
-        <p className="text-gray-500 text-sm sm:text-base">
+        <h2 className="text-2xl font-bold text-slate-100 mb-1">Willkommen zurück</h2>
+        <p className="text-slate-400 text-sm sm:text-base">
           Melde dich bei deinem JobAssist-Konto an
         </p>
       </div>
@@ -89,7 +89,7 @@ export default function LoginPage() {
           <div className="text-right mt-1">
             <Link
               to="/forgot-password"
-              className="text-xs text-brand-600 hover:text-brand-700 transition-colors"
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
             >
               Passwort vergessen?
             </Link>
@@ -123,21 +123,21 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="text-sm text-center text-gray-500 mt-6">
+      <p className="text-sm text-center text-slate-400 mt-6">
         Noch kein Konto?{" "}
-        <Link to="/register" className="text-brand-600 font-semibold hover:text-brand-700 transition-colors">
+        <Link to="/register" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors">
           Jetzt registrieren
         </Link>
       </p>
 
-      <div className="flex justify-center gap-4 mt-6 text-xs text-gray-400">
-        <Link to="/terms" className="hover:text-gray-600 transition-colors">
+      <div className="flex justify-center gap-4 mt-6 text-xs text-slate-500">
+        <Link to="/terms" className="hover:text-slate-300 transition-colors">
           AGB
         </Link>
-        <Link to="/privacy" className="hover:text-gray-600 transition-colors">
+        <Link to="/privacy" className="hover:text-slate-300 transition-colors">
           Datenschutz
         </Link>
-        <Link to="/impressum" className="hover:text-gray-600 transition-colors">
+        <Link to="/impressum" className="hover:text-slate-300 transition-colors">
           Impressum
         </Link>
       </div>
