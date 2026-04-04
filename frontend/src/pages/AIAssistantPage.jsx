@@ -255,6 +255,7 @@ export default function AIAssistantPage() {
   const [activeTray, setActiveTray] = useState(null); // "wand" | null
   const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
   const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -529,7 +530,7 @@ export default function AIAssistantPage() {
     <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
-      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-all duration-300 ${verlaufCollapsed ? "w-0 border-0" : "w-60"}`}>
+      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-[width,border-width] duration-300 ease-in-out ${verlaufCollapsed ? "w-0 border-r-0" : "w-60"}`}>
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
           {!verlaufCollapsed && (
             <div className="flex items-center gap-2">
@@ -641,7 +642,7 @@ export default function AIAssistantPage() {
         {messages.length === 0 ? (
 
           /* ── Empty state ─────────────────────────────────────────────────── */
-          <div className="flex flex-col gap-4 max-w-2xl mx-auto py-2">
+          <div className="flex flex-col gap-4 max-w-[800px] mx-auto py-2">
 
             {/* Hero card — "Dein nächster Schritt" */}
             <div
@@ -682,7 +683,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="[&:hover>button]:opacity-50 grid grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
@@ -836,10 +837,41 @@ export default function AIAssistantPage() {
           className="flex items-end gap-2 max-w-5xl mx-auto rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 py-2 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" }}
         >
+          {/* Mobile: single + menu (< sm) */}
+          <div className="relative flex-shrink-0 flex sm:hidden">
+            <button
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${mobileMenuOpen ? "bg-white/[0.08] text-slate-200" : "text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"}`}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            {mobileMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMobileMenuOpen(false)} />
+                <div className="absolute bottom-full left-0 mb-2 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.08] bg-[#060b14]/98 backdrop-blur-xl shadow-xl p-1.5 min-w-[150px]">
+                  <button
+                    onClick={() => { setActionDrawerOpen(true); setMobileMenuOpen(false); }}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-white/[0.06] transition-colors text-left"
+                  >
+                    <Plus className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    Aktionen
+                  </button>
+                  <button
+                    onClick={() => { setActiveTray((v) => v === "wand" ? null : "wand"); setMobileMenuOpen(false); }}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${activeTray === "wand" ? "text-blue-300 bg-blue-500/10" : "text-slate-200 hover:bg-white/[0.06]"}`}
+                  >
+                    <Wand2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    Vorschläge
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          {/* Desktop: separate buttons (≥ sm) */}
           <button
             onClick={() => setActionDrawerOpen(true)}
             title="Aktionen"
-            className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"
+            className="hidden sm:flex flex-shrink-0 h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -856,7 +888,7 @@ export default function AIAssistantPage() {
           <button
             onClick={() => setActiveTray((v) => v === "wand" ? null : "wand")}
             title="Vorschläge"
-            className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${activeTray === "wand" ? "bg-blue-500/15 text-blue-300" : "text-slate-500 hover:bg-white/[0.06] hover:text-blue-300"}`}
+            className={`hidden sm:flex flex-shrink-0 h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${activeTray === "wand" ? "bg-blue-500/15 text-blue-300" : "text-slate-500 hover:bg-white/[0.06] hover:text-blue-300"}`}
           >
             <Wand2 className="h-4 w-4" />
           </button>

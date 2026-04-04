@@ -54,6 +54,16 @@ function mergeGroqScores(analysisData) {
   });
 }
 
+function buildSkillSummary(skills) {
+  if (!skills?.length) return null;
+  const sorted = [...skills].sort((a, b) => b.value - a.value);
+  const top = sorted[0];
+  const bottom = sorted[sorted.length - 1];
+  const mid = sorted.slice(1, -1);
+  const midText = mid.length ? ` ${mid.map(s => s.label).join(", ")} liegen im mittleren Bereich.` : "";
+  return `Der stärkste Bereich ist ${top.label} (${top.value}%).${midText} Entwicklungspotenzial besteht vor allem bei ${bottom.label} (${bottom.value}%) — gezielte Verbesserungen hier steigern deinen Gesamtscore am stärksten.`;
+}
+
 // ─── Gamification: Score Goal System ────────────────────────────────────────
 
 function useGamification(skills) {
@@ -701,7 +711,7 @@ export default function ResumePage() {
               skills={skills}
               gamification={gamification}
               isAnalyzing={isAnalyzing}
-              groqSummary={analysisData?.summary}
+              groqSummary={analysisData ? buildSkillSummary(skills) : null}
             />
           </div>
 
