@@ -429,13 +429,10 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Danger Zone */}
-            <DeleteAccountSection />
-
           </div>
 
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
-          <div className="space-y-2.5 flex flex-col">
+          <div className="space-y-2.5 flex flex-col lg:row-span-2">
 
             {/* Jobsuche — Orte + Gehalt combined */}
             <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3 space-y-2.5">
@@ -622,6 +619,10 @@ export default function SettingsPage() {
                 : "Einstellungen speichern"}
             </button>
           </div>
+
+          {/* Danger Zone — bottom on mobile, left col row 2 on desktop */}
+          <DeleteAccountSection />
+
         </div>
 
       </form>
