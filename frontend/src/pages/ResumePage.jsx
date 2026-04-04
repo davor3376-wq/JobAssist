@@ -439,15 +439,18 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
 
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
         <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible relative">
-          <RadarChart skills={skills} size={280} />
-          <p className="text-center text-[9px] text-[#3a3a42] mt-1 tracking-wide">KI-Schätzung · Werte können abweichen</p>
-          {isAnalyzing && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: "rgba(6,6,8,0.55)" }}>
-              <svg className="animate-spin w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none">
+          {isAnalyzing ? (
+            <div className="flex items-center justify-center" style={{ width: 280, height: 280 }}>
+              <svg className="animate-spin w-8 h-8 text-indigo-400" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             </div>
+          ) : (
+            <>
+              <RadarChart skills={skills} size={280} />
+              <p className="text-center text-[9px] text-[#3a3a42] mt-1 tracking-wide">KI-Schätzung · Werte können abweichen</p>
+            </>
           )}
         </div>
 
