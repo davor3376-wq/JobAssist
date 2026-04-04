@@ -45,17 +45,15 @@ function loadStoredJobs() {
 
 const SUGGESTIONS = [
   { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-indigo-400", cardBorder: "border-indigo-500/25", cardBg: "bg-indigo-500/[0.09] hover:bg-indigo-500/[0.16]", textCls: "text-indigo-300", arrowCls: "text-indigo-500/40 group-hover:text-indigo-400" },
+    iconCls: "text-indigo-400", cardBorder: "border-indigo-500/25", cardBg: "bg-indigo-500/[0.09] hover:bg-indigo-500/[0.16]", textCls: "text-indigo-300", arrowCls: "text-indigo-500/40 group-hover:text-indigo-400", glow: "0 0 18px rgba(99,102,241,0.18)" },
   { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich.",
-    iconCls: "text-violet-400", cardBorder: "border-violet-500/25", cardBg: "bg-violet-500/[0.09] hover:bg-violet-500/[0.16]", textCls: "text-violet-300", arrowCls: "text-violet-500/40 group-hover:text-violet-400" },
+    iconCls: "text-violet-400", cardBorder: "border-violet-500/25", cardBg: "bg-violet-500/[0.09] hover:bg-violet-500/[0.16]", textCls: "text-violet-300", arrowCls: "text-violet-500/40 group-hover:text-violet-400", glow: "0 0 18px rgba(139,92,246,0.18)" },
   { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?",
-    iconCls: "text-cyan-400",   cardBorder: "border-cyan-500/25",   cardBg: "bg-cyan-500/[0.09] hover:bg-cyan-500/[0.16]",   textCls: "text-cyan-300",   arrowCls: "text-cyan-500/40 group-hover:text-cyan-400" },
+    iconCls: "text-cyan-400",   cardBorder: "border-cyan-500/25",   cardBg: "bg-cyan-500/[0.09] hover:bg-cyan-500/[0.16]",   textCls: "text-cyan-300",   arrowCls: "text-cyan-500/40 group-hover:text-cyan-400",   glow: "0 0 18px rgba(6,182,212,0.18)" },
   { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
-    iconCls: "text-emerald-400",cardBorder: "border-emerald-500/25",cardBg: "bg-emerald-500/[0.09] hover:bg-emerald-500/[0.16]",textCls: "text-emerald-300",arrowCls: "text-emerald-500/40 group-hover:text-emerald-400" },
+    iconCls: "text-emerald-400",cardBorder: "border-emerald-500/25",cardBg: "bg-emerald-500/[0.09] hover:bg-emerald-500/[0.16]",textCls: "text-emerald-300",arrowCls: "text-emerald-500/40 group-hover:text-emerald-400", glow: "0 0 18px rgba(16,185,129,0.18)" },
   { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?",
-    iconCls: "text-amber-400",  cardBorder: "border-amber-500/25",  cardBg: "bg-amber-500/[0.09] hover:bg-amber-500/[0.16]",  textCls: "text-amber-300",  arrowCls: "text-amber-500/40 group-hover:text-amber-400" },
-  { icon: Sparkles,      label: "Anschreiben",            sub: "Überzeugend formulieren",             prompt: "Hilf mir bei einem überzeugenden Anschreiben. generate_document (Erstellt dein Dokument).",
-    iconCls: "text-pink-400",   cardBorder: "border-pink-500/25",   cardBg: "bg-pink-500/[0.09] hover:bg-pink-500/[0.16]",   textCls: "text-pink-300",   arrowCls: "text-pink-500/40 group-hover:text-pink-400" },
+    iconCls: "text-amber-400",  cardBorder: "border-amber-500/25",  cardBg: "bg-amber-500/[0.09] hover:bg-amber-500/[0.16]",  textCls: "text-amber-300",  arrowCls: "text-amber-500/40 group-hover:text-amber-400",  glow: "0 0 18px rgba(245,158,11,0.18)" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -535,7 +533,7 @@ export default function AIAssistantPage() {
     <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
-      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-all duration-300 ${verlaufCollapsed ? "w-10" : "w-60"}`}>
+      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-all duration-300 ${verlaufCollapsed ? "w-0 border-0" : "w-60"}`}>
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
           {!verlaufCollapsed && (
             <div className="flex items-center gap-2">
@@ -597,6 +595,15 @@ export default function AIAssistantPage() {
         >
           <MessageSquare className="w-4 h-4" />
         </button>
+        {verlaufCollapsed && (
+          <button
+            onClick={() => setVerlaufCollapsed(false)}
+            title="Verlauf anzeigen"
+            className="hidden md:flex flex-shrink-0 p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all"
+          >
+            <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+          </button>
+        )}
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div
@@ -902,6 +909,7 @@ export default function AIAssistantPage() {
               <button
                 onClick={() => { startSimulation(); setActionDrawerOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] hover:bg-indigo-500/[0.14] text-left transition-all group"
+                style={{ boxShadow: "0 0 18px rgba(99,102,241,0.18)" }}
               >
                 <MessageSquare className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                 <div className="min-w-0">
@@ -914,6 +922,7 @@ export default function AIAssistantPage() {
             <button
               onClick={() => { setAssessmentDisclaimerOpen(true); setActionDrawerOpen(false); }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] hover:bg-emerald-500/[0.14] text-left transition-all group"
+              style={{ boxShadow: "0 0 18px rgba(16,185,129,0.18)" }}
             >
               <ClipboardList className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               <div className="min-w-0">
@@ -934,6 +943,7 @@ export default function AIAssistantPage() {
                   }}
                   disabled={chatAtLimit}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all group disabled:opacity-40 ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`}`}
+                  style={!locked ? { boxShadow: s.glow } : undefined}
                 >
                   {locked
                     ? <Lock className="w-4 h-4 text-slate-600 flex-shrink-0" />
