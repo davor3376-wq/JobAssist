@@ -319,7 +319,7 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
   const currentIdx = STATUS_STEPS.findIndex(s => s.key === status);
   const active = currentIdx >= 0 ? currentIdx : 0;
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 w-full">
       <div className="flex items-center gap-0 w-full">
         {STATUS_STEPS.map((step, i) => {
           const done = i < active;
@@ -332,7 +332,7 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
                 className="flex flex-col items-center flex-shrink-0 group disabled:cursor-default"
               >
                 <div
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-[20ms] ${
                     !done && !current ? "bg-[#1e293b] group-hover:bg-slate-600" : ""
                   } ${!current ? "group-hover:ring-2 group-hover:ring-blue-500/30" : ""}`}
                   style={done || current ? { backgroundColor: PRIMARY } : undefined}
@@ -344,7 +344,7 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
                 </span>
               </button>
               {i < STATUS_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-500 ${
+                <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-[20ms] ${
                   i < active ? "" : "bg-[#1e293b]"
                 }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
               )}
@@ -645,7 +645,7 @@ export default function JobDetailPage() {
 
             {/* Bewerbungsfortschritt stepper */}
             {job.status !== "rejected" && (
-              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-5 py-4">
+              <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] px-4 py-4 w-full">
                 <StatusProgressBar
                   status={job.status}
                   onStatusChange={(s) => statusMutation.mutate(s)}
@@ -759,7 +759,7 @@ export default function JobDetailPage() {
                       setEditingDeadline(!editingDeadline);
                       if (!editingDeadline) setEditedDeadline(job.deadline || "");
                     }}
-                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors duration-[20ms]"
                   >
                     {editingDeadline ? "Speichern" : "Bearbeiten"}
                   </button>
@@ -789,7 +789,7 @@ export default function JobDetailPage() {
                       setEditingNotes(!editingNotes);
                       if (!editingNotes) setEditedNotes(job.notes || "");
                     }}
-                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors duration-[20ms]"
                   >
                     {editingNotes ? "Speichern" : "Bearbeiten"}
                   </button>
