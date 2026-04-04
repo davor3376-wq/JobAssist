@@ -59,7 +59,8 @@
       "Bash(curl:*)",
       "Bash(claude mcp:*)",
       "Bash(npx -y vibe-annotations-server)",
-      "Bash(npx -y vibe-annotations-server start)"
+      "Bash(npx -y vibe-annotations-server start)",
+      "Bash(cygpath -w /tmp/sse3.txt)"
     ],
     "ask": []
   },
