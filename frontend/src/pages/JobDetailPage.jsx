@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   ArrowLeft, Trash2, Zap, FileText, MessageSquare, Mail, X, TrendingUp,
-  Copy, Check, ChevronDown, Download, SearchCheck,
+  Copy, Check, ChevronDown, ChevronUp, Download, SearchCheck,
   Info, BookOpen, ExternalLink, Shield, Sparkles, ChevronRight, MoreHorizontal,
   Users, Award, Heart, Cpu, Plus,
 } from "lucide-react";
@@ -407,6 +407,7 @@ export default function JobDetailPage() {
   const [personalNotes, setPersonalNotes] = useState({});
   const [activeFilter, setActiveFilter] = useState(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [questionsMinimized, setQuestionsMinimized] = useState(false);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [hidePersonal, setHidePersonal] = useState(false);
@@ -978,6 +979,15 @@ export default function JobDetailPage() {
                     ))}
                   </div>
 
+                  {/* Minimize toggle */}
+                  <button
+                    onClick={() => setQuestionsMinimized(v => !v)}
+                    className="flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
+                    title={questionsMinimized ? "Fragen einblenden" : "Fragen ausblenden"}
+                  >
+                    {questionsMinimized ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  </button>
+
                   {/* Three-dot menu — PDF / DOCX */}
                   <div className="relative flex-shrink-0">
                     <button
@@ -1018,7 +1028,7 @@ export default function JobDetailPage() {
                 </div>
 
                 {/* Accordion question cards */}
-                {interviewQA.map((item, index) => {
+                {!questionsMinimized && interviewQA.map((item, index) => {
                   const type = TYPE_MAP[item.type] || TYPE_MAP[(item.type || "").toLowerCase()] || item.type;
                   if (activeFilter && type !== activeFilter) return null;
                   const isExpanded = expandedQuestion === index;
