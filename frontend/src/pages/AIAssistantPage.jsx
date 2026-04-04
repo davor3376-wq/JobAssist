@@ -45,17 +45,17 @@ function loadStoredJobs() {
 
 const SUGGESTIONS = [
   { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-indigo-200", cardBorder: "border-indigo-400/70", cardBg: "bg-indigo-500/[0.32] hover:bg-indigo-500/[0.45]", textCls: "text-indigo-100", arrowCls: "text-indigo-300 group-hover:text-indigo-200", glow: "0 0 28px rgba(99,102,241,0.6), inset 0 1px 0 rgba(165,180,252,0.15)" },
+    iconCls: "text-indigo-300", cardBorder: "border-indigo-400/90", cardBg: "bg-indigo-500/[0.55] hover:bg-indigo-500/[0.70]", textCls: "text-indigo-100", arrowCls: "text-indigo-300 group-hover:text-white", glow: "0 0 36px rgba(99,102,241,0.8), inset 0 1px 0 rgba(165,180,252,0.25)" },
   { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich.",
-    iconCls: "text-violet-200", cardBorder: "border-violet-400/70", cardBg: "bg-violet-500/[0.32] hover:bg-violet-500/[0.45]", textCls: "text-violet-100", arrowCls: "text-violet-300 group-hover:text-violet-200", glow: "0 0 28px rgba(139,92,246,0.6), inset 0 1px 0 rgba(196,181,253,0.15)" },
+    iconCls: "text-violet-300", cardBorder: "border-violet-400/90", cardBg: "bg-violet-500/[0.55] hover:bg-violet-500/[0.70]", textCls: "text-violet-100", arrowCls: "text-violet-300 group-hover:text-white", glow: "0 0 36px rgba(139,92,246,0.8), inset 0 1px 0 rgba(196,181,253,0.25)" },
   { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?",
-    iconCls: "text-cyan-200",   cardBorder: "border-cyan-400/70",   cardBg: "bg-cyan-500/[0.32] hover:bg-cyan-500/[0.45]",   textCls: "text-cyan-100",   arrowCls: "text-cyan-300 group-hover:text-cyan-200",   glow: "0 0 28px rgba(6,182,212,0.6), inset 0 1px 0 rgba(103,232,249,0.15)" },
+    iconCls: "text-cyan-300",   cardBorder: "border-cyan-400/90",   cardBg: "bg-cyan-500/[0.55] hover:bg-cyan-500/[0.70]",   textCls: "text-cyan-100",   arrowCls: "text-cyan-300 group-hover:text-white",   glow: "0 0 36px rgba(6,182,212,0.8), inset 0 1px 0 rgba(103,232,249,0.25)" },
   { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
-    iconCls: "text-emerald-200",cardBorder: "border-emerald-400/70",cardBg: "bg-emerald-500/[0.32] hover:bg-emerald-500/[0.45]",textCls: "text-emerald-100",arrowCls: "text-emerald-300 group-hover:text-emerald-200", glow: "0 0 28px rgba(16,185,129,0.6), inset 0 1px 0 rgba(110,231,183,0.15)" },
+    iconCls: "text-emerald-300",cardBorder: "border-emerald-400/90",cardBg: "bg-emerald-500/[0.55] hover:bg-emerald-500/[0.70]",textCls: "text-emerald-100",arrowCls: "text-emerald-300 group-hover:text-white", glow: "0 0 36px rgba(16,185,129,0.8), inset 0 1px 0 rgba(110,231,183,0.25)" },
   { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?",
-    iconCls: "text-amber-200",  cardBorder: "border-amber-400/70",  cardBg: "bg-amber-500/[0.32] hover:bg-amber-500/[0.45]",  textCls: "text-amber-100",  arrowCls: "text-amber-300 group-hover:text-amber-200",  glow: "0 0 28px rgba(245,158,11,0.6), inset 0 1px 0 rgba(252,211,77,0.15)" },
+    iconCls: "text-amber-300",  cardBorder: "border-amber-400/90",  cardBg: "bg-amber-500/[0.55] hover:bg-amber-500/[0.70]",  textCls: "text-amber-100",  arrowCls: "text-amber-300 group-hover:text-white",  glow: "0 0 36px rgba(245,158,11,0.8), inset 0 1px 0 rgba(252,211,77,0.25)" },
   { icon: Wand2,         label: "Anschreiben erstellen",  sub: "Überzeugend und individuell",         prompt: "Erstelle ein überzeugendes Anschreiben für meine Bewerbung. generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-fuchsia-200",cardBorder: "border-fuchsia-400/70",cardBg: "bg-fuchsia-500/[0.32] hover:bg-fuchsia-500/[0.45]",textCls: "text-fuchsia-100",arrowCls: "text-fuchsia-300 group-hover:text-fuchsia-200", glow: "0 0 28px rgba(217,70,239,0.6), inset 0 1px 0 rgba(240,171,252,0.15)" },
+    iconCls: "text-fuchsia-300",cardBorder: "border-fuchsia-400/90",cardBg: "bg-fuchsia-500/[0.55] hover:bg-fuchsia-500/[0.70]",textCls: "text-fuchsia-100",arrowCls: "text-fuchsia-300 group-hover:text-white", glow: "0 0 36px rgba(217,70,239,0.8), inset 0 1px 0 rgba(240,171,252,0.25)" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -696,10 +696,11 @@ export default function AIAssistantPage() {
                     key={s.label}
                     onClick={() => {
                       if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                      handleSend(s.prompt);
+                      setInput(s.prompt);
+                      setTimeout(() => inputRef.current?.focus(), 0);
                     }}
                     disabled={chatAtLimit}
-                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all disabled:opacity-40 ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`}`}
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all disabled:opacity-40 cursor-pointer ${locked ? "border-white/[0.06] bg-white/[0.02] cursor-not-allowed" : `${s.cardBorder} ${s.cardBg}`}`}
                     style={!locked ? { boxShadow: s.glow } : undefined}
                   >
                     {locked
@@ -969,11 +970,12 @@ export default function AIAssistantPage() {
                   key={s.label}
                   onClick={() => {
                     if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                    handleSend(s.prompt);
+                    setInput(s.prompt);
                     setActionDrawerOpen(false);
+                    setTimeout(() => inputRef.current?.focus(), 0);
                   }}
                   disabled={chatAtLimit}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all group disabled:opacity-40 ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all group disabled:opacity-40 cursor-pointer ${locked ? "border-white/[0.06] bg-white/[0.02] cursor-not-allowed" : `${s.cardBorder} ${s.cardBg}`}`}
                   style={!locked ? { boxShadow: s.glow } : undefined}
                 >
                   {locked
