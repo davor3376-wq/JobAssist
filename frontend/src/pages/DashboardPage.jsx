@@ -327,8 +327,10 @@ export default function DashboardPage() {
     (profile?.desired_locations?.length > 0),
     (profile?.job_types?.length > 0),
     (!!profile?.experience_level),
+    (profile?.salary_min != null || profile?.salary_max != null),
+    (profile?.industries?.length > 0),
   ].filter(Boolean).length;
-  const prefsSub = `${prefsSet}/3`;
+  const prefsSub = `${prefsSet}/5`;
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
