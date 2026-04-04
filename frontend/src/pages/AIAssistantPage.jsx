@@ -258,7 +258,8 @@ export default function AIAssistantPage() {
   const [assessmentMode, setAssessmentMode] = useState(false);
   const [historySearch,  setHistorySearch]  = useState("");
   const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
-  const [activeTray, setActiveTray] = useState(null); // "plus" | "wand" | null
+  const [activeTray, setActiveTray] = useState(null); // "wand" | null
+  const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
   const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -588,7 +589,7 @@ export default function AIAssistantPage() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="flex-shrink-0 flex items-center gap-3 px-4 md:px-5 py-2.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
+      <header className="flex-shrink-0 flex items-center gap-2 px-3 md:px-5 py-1.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           title="Gesprächsverlauf"
@@ -599,15 +600,17 @@ export default function AIAssistantPage() {
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div
-            className="w-7 h-7 flex-shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center"
-            style={{ boxShadow: "0 0 18px rgba(99,102,241,0.45)" }}
+            className="w-6 h-6 flex-shrink-0 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center"
+            style={{ boxShadow: "0 0 12px rgba(99,102,241,0.4)" }}
           >
-            <Bot className="w-3.5 h-3.5 text-white" />
+            <Bot className="w-3 h-3 text-white" />
           </div>
-          <span className="text-sm font-bold text-white hidden sm:block">KI-Assistent</span>
-          <span className="hidden lg:block text-xs text-slate-500 truncate max-w-xs ml-0.5">
-            · {activeConversation?.title || (activeId ? "Gespräch" : "Neues Gespräch")}
-          </span>
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-white">KI-Assistent</span>
+            <p className="text-[10px] text-slate-500 truncate leading-none mt-0.5">
+              {activeConversation?.title || "Neues Gespräch"}
+            </p>
+          </div>
         </div>
 
         {uploadedResumes.length > 0 && (
@@ -616,11 +619,10 @@ export default function AIAssistantPage() {
 
         <button
           onClick={handleNewChat}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-semibold transition-all"
-          style={{ boxShadow: "0 0 14px rgba(99,102,241,0.35)" }}
+          title="Neues Gespräch"
+          className="flex-shrink-0 p-1.5 rounded-xl text-slate-400 hover:bg-indigo-500/20 hover:text-indigo-300 transition-all"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Neu</span>
+          <Plus className="w-4 h-4" />
         </button>
       </header>
 
@@ -676,57 +678,6 @@ export default function AIAssistantPage() {
               </div>
             </div>
 
-            {/* Starter action grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {!chatAtLimit && (
-                <button
-                  onClick={startSimulation}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] hover:bg-indigo-500/[0.14] text-left transition-all group"
-                  style={{ boxShadow: "0 2px 12px rgba(99,102,241,0.07)" }}
-                >
-                  <MessageSquare className="w-4 h-4 text-indigo-400 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-indigo-300">Interview-Simulation</p>
-                    <p className="text-xs text-slate-600 mt-0.5">Realitätsnahe Übung</p>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-indigo-500/40 ml-auto group-hover:text-indigo-400 transition-colors flex-shrink-0" />
-                </button>
-              )}
-              <button
-                onClick={() => setAssessmentDisclaimerOpen(true)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] hover:bg-emerald-500/[0.14] text-left transition-all group"
-                style={{ boxShadow: "0 2px 12px rgba(16,185,129,0.07)" }}
-              >
-                <ClipboardList className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-emerald-300">Stärkenanalyse</p>
-                  <p className="text-xs text-slate-600 mt-0.5">Potenziale erkennen</p>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-emerald-500/40 ml-auto group-hover:text-emerald-400 transition-colors flex-shrink-0" />
-              </button>
-              {SUGGESTIONS.map((s) => {
-                const locked = s.requiresResume && uploadedResumes.length === 0;
-                return (
-                  <button
-                    key={s.label}
-                    onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
-                    disabled={chatAtLimit}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`} text-left transition-all group disabled:opacity-40`}
-                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}
-                  >
-                    {locked
-                      ? <Lock className="w-4 h-4 text-slate-600 flex-shrink-0" />
-                      : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls}`} />
-                    }
-                    <div className="min-w-0">
-                      <p className={`text-sm font-semibold ${locked ? "text-slate-500" : s.textCls} transition-colors`}>{s.label}</p>
-                      <p className="text-xs text-slate-600 mt-0.5 truncate">{s.sub}</p>
-                    </div>
-                    {!locked && <ArrowRight className={`w-3.5 h-3.5 ml-auto flex-shrink-0 transition-colors ${s.arrowCls}`} />}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
         ) : (
@@ -826,42 +777,6 @@ export default function AIAssistantPage() {
         </div>
       )}
 
-      {/* ── Plus menu tray — Missions + Quick Actions as chips ───────────────── */}
-      {activeTray === "plus" && (
-        <div className="flex-shrink-0 px-3 pb-2 pt-2.5 border-t border-white/[0.05] bg-black/80 backdrop-blur-2xl">
-          <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto [&::-webkit-scrollbar]:hidden">
-            {!chatAtLimit && (
-              <button
-                onClick={() => { startSimulation(); setActiveTray(null); }}
-                className="flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 transition-colors whitespace-nowrap"
-              >
-                <MessageSquare className="w-3 h-3" /> Interview-Simulation
-              </button>
-            )}
-            <button
-              onClick={() => { setAssessmentDisclaimerOpen(true); setActiveTray(null); }}
-              className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors whitespace-nowrap"
-            >
-              <ClipboardList className="w-3 h-3" /> Stärkenanalyse
-            </button>
-            {SUGGESTIONS.map((s) => {
-              const locked = s.requiresResume && uploadedResumes.length === 0;
-              return (
-                <button
-                  key={s.label}
-                  onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); setActiveTray(null); }}
-                  disabled={chatAtLimit}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap disabled:opacity-40 ${locked ? "border-white/[0.05] bg-transparent text-slate-600" : "border-white/[0.08] bg-white/[0.03] text-slate-300 hover:bg-white/[0.07] hover:text-white"}`}
-                >
-                  {locked ? <Lock className="w-3 h-3" /> : <s.icon className={`w-3 h-3 ${s.iconCls.split(" ")[0]}`} />}
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* ── Wand context suggestions ─────────────────────────────────────────── */}
       {activeTray === "wand" && (
         <div className="flex-shrink-0 px-3 pb-2 pt-2 border-t border-white/[0.04] bg-black/60 backdrop-blur-xl">
@@ -886,9 +801,9 @@ export default function AIAssistantPage() {
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" }}
         >
           <button
-            onClick={() => setActiveTray((v) => v === "plus" ? null : "plus")}
+            onClick={() => setActionDrawerOpen(true)}
             title="Aktionen"
-            className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${activeTray === "plus" ? "bg-indigo-500/20 text-indigo-300" : "text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"}`}
+            className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -957,6 +872,83 @@ export default function AIAssistantPage() {
           </div>
         </aside>
         <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+      </div>
+    )}
+
+    {/* ── Action BottomSheet Drawer ──────────────────────────────────────────── */}
+    {actionDrawerOpen && (
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        onClick={() => setActionDrawerOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        <div
+          className="relative rounded-t-2xl border-t border-white/[0.08] bg-[#060b14]/98 backdrop-blur-2xl shadow-2xl animate-slide-up"
+          style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.6)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-white/[0.12]" />
+          </div>
+          <div className="flex items-center justify-between px-4 pb-2">
+            <span className="text-sm font-bold text-white">Aktionen</span>
+            <button onClick={() => setActionDrawerOpen(false)} className="p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="px-3 pb-6 space-y-1.5 overflow-y-auto max-h-[60vh]">
+            {!chatAtLimit && (
+              <button
+                onClick={() => { startSimulation(); setActionDrawerOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] hover:bg-indigo-500/[0.14] text-left transition-all group"
+              >
+                <MessageSquare className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-indigo-300">Interview-Simulation</p>
+                  <p className="text-xs text-slate-600 mt-0.5">Realitätsnahe Übung</p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-indigo-500/40 ml-auto flex-shrink-0 group-hover:text-indigo-400 transition-colors" />
+              </button>
+            )}
+            <button
+              onClick={() => { setAssessmentDisclaimerOpen(true); setActionDrawerOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] hover:bg-emerald-500/[0.14] text-left transition-all group"
+            >
+              <ClipboardList className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-emerald-300">Stärkenanalyse</p>
+                <p className="text-xs text-slate-600 mt-0.5">Potenziale erkennen</p>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-500/40 ml-auto flex-shrink-0 group-hover:text-emerald-400 transition-colors" />
+            </button>
+            {SUGGESTIONS.map((s) => {
+              const locked = s.requiresResume && uploadedResumes.length === 0;
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => {
+                    if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
+                    handleSend(s.prompt);
+                    setActionDrawerOpen(false);
+                  }}
+                  disabled={chatAtLimit}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all group disabled:opacity-40 ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`}`}
+                >
+                  {locked
+                    ? <Lock className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls}`} />
+                  }
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold ${locked ? "text-slate-500" : s.textCls}`}>{s.label}</p>
+                    <p className="text-xs text-slate-600 mt-0.5 truncate">{s.sub}</p>
+                  </div>
+                  {!locked && <ArrowRight className={`w-3.5 h-3.5 ml-auto flex-shrink-0 transition-colors ${s.arrowCls}`} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     )}
 
