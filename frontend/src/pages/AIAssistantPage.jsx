@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
-  ClipboardList, Search, ChevronDown, Shield, X,
+  ClipboardList, Search, ChevronDown, ChevronUp, Shield, X,
   Wand2, Zap, ArrowRight,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
@@ -259,6 +259,7 @@ export default function AIAssistantPage() {
   const [historySearch,  setHistorySearch]  = useState("");
   const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
   const [activeTray, setActiveTray] = useState(null); // "plus" | "wand" | null
+  const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -533,34 +534,54 @@ export default function AIAssistantPage() {
     <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
-      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden">
+      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-all duration-300 ${verlaufCollapsed ? "w-10" : "w-60"}`}>
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
-          <div className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-xs font-bold text-slate-200">Verlauf</span>
+          {!verlaufCollapsed && (
+            <div className="flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-bold text-slate-200">Verlauf</span>
+            </div>
+          )}
+          <div className={`flex items-center gap-1 ${verlaufCollapsed ? "mx-auto" : ""}`}>
+            {!verlaufCollapsed && (
+              <button onClick={handleNewChat} title="Neues Gespräch" className="p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all">
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={() => setVerlaufCollapsed((v) => !v)}
+              title={verlaufCollapsed ? "Verlauf anzeigen" : "Verlauf ausblenden"}
+              className="p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all"
+            >
+              {verlaufCollapsed
+                ? <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                : <ChevronUp className="w-3.5 h-3.5 -rotate-90" />
+              }
+            </button>
           </div>
-          <button onClick={handleNewChat} title="Neues Gespräch" className="p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all">
-            <Plus className="w-3.5 h-3.5" />
-          </button>
         </div>
-        {conversations.length > 0 && (
-          <div className="flex-shrink-0 flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] rounded-xl mx-3 mt-2 px-3 py-1.5">
-            <Search className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-            <input
-              type="text"
-              value={historySearch}
-              onChange={(e) => setHistorySearch(e.target.value)}
-              placeholder="Gespräche suchen…"
-              className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none min-w-0"
-            />
-          </div>
+        {!verlaufCollapsed && (
+          <>
+            {conversations.length > 0 && (
+              <div className="flex-shrink-0 flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] rounded-xl mx-3 mt-2 px-3 py-1.5">
+                <Search className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  placeholder="Gespräche suchen…"
+                  className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none min-w-0"
+                />
+              </div>
+            )}
+            <div className="flex-1 overflow-y-auto px-2 py-2 mt-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
+              {conversations.length === 0
+                ? <p className="px-3 py-6 text-center text-xs text-slate-600">Noch keine Gespräche</p>
+                : renderConvList()
+              }
+            </div>
+          </>
         )}
-        <div className="flex-1 overflow-y-auto px-2 py-2 mt-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
-          {conversations.length === 0
-            ? <p className="px-3 py-6 text-center text-xs text-slate-600">Noch keine Gespräche</p>
-            : renderConvList()
-          }
-        </div>
       </aside>
 
       {/* ── Main column ────────────────────────────────────────────────────── */}
