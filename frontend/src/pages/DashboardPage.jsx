@@ -353,7 +353,7 @@ export default function DashboardPage() {
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,    icon: FileText, sub: null                                          },
     { label: 'Fähigkeiten', complete: analyzed > 0, icon: Star,     sub: null                                          },
-    { label: 'Job-Alert',   complete: hasJobAlert,  icon: Zap,      sub: `${hasJobAlert ? 1 : 0}/1`, alwaysShowSub: true },
+    { label: 'Job-Alert',   complete: hasJobAlert,  icon: Zap,      sub: null },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
