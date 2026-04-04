@@ -763,7 +763,7 @@ export default function DashboardPage() {
                 <span className="text-[11px]" style={{ color: C.textSub }}>Konversionsrate</span>
               </div>
               <div className="flex items-center gap-1.5 pl-3">
-                <span className="text-[15px] font-semibold tabular-nums leading-none" style={{ color: C.indigoMid }}>4,8%</span>
+                <span className="text-[15px] font-semibold tabular-nums leading-none" style={{ color: C.indigoMid }}>{returnRate > 0 ? `${returnRate}%` : '—'}</span>
                 <span className="text-[11px]" style={{ color: C.textDim }}>→ Interview</span>
               </div>
             </div>

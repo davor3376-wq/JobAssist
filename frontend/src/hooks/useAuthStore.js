@@ -7,7 +7,7 @@ const ls = {
 };
 
 function clearUserCache() {
-  const staticKeys = ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research", "resume_optimization_tasks"];
+  const staticKeys = ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "dashboard_resumes", "dashboard_job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research", "resume_optimization_tasks"];
   for (const k of staticKeys) localStorage.removeItem(k);
   // Clear dynamic resume_analysis_* keys
   const dynamicKeys = Object.keys(localStorage).filter(k => k.startsWith("resume_analysis_"));
