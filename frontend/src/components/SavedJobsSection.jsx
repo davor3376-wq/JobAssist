@@ -172,7 +172,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
     if (activeTab === "all") return true;
     if (activeTab === "bookmarked") return !job.status || job.status === "bookmarked";
     if (activeTab === "applied")
-      return ["applied", "interviewing", "offered"].includes(job.status);
+      return job.status === "applied";
     return job.status === activeTab;
   };
   const filtered = jobs.filter(tabFilter);
@@ -192,7 +192,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
   const counts = {
     all:          jobs.length,
     bookmarked:   jobs.filter((j) => !j.status || j.status === "bookmarked").length,
-    applied:      jobs.filter((j) => ["applied", "interviewing", "offered"].includes(j.status)).length,
+    applied:      jobs.filter((j) => j.status === "applied").length,
     interviewing: jobs.filter((j) => j.status === "interviewing").length,
     offered:      jobs.filter((j) => j.status === "offered").length,
   };
@@ -317,6 +317,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
         </div>
 
         {/* Filter tabs */}
+        <div className="overflow-x-auto -mx-1 px-1 pb-0.5 no-scrollbar">
         <div
           className="inline-flex gap-1 p-1 rounded-xl"
           style={{
@@ -369,6 +370,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
               </button>
             );
           })}
+        </div>
         </div>
       </div>
 

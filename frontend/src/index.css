@@ -124,6 +124,9 @@ body.page-blur-transition #root {
   background-clip: padding-box;
 }
 
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 @keyframes pageBlurOut {
   0% {
     opacity: 1;
