@@ -11,9 +11,11 @@ const STATUS_CFG = {
 };
 
 const FILTER_TABS = [
-  { key: "all",        label: "Alle" },
-  { key: "bookmarked", label: "Gespeichert" },
-  { key: "applied",    label: "Beworben" },
+  { key: "all",          label: "Alle" },
+  { key: "bookmarked",   label: "Gespeichert" },
+  { key: "applied",      label: "Beworben" },
+  { key: "interviewing", label: "Gespräch" },
+  { key: "offered",      label: "Angebot" },
 ];
 
 const PULL_THRESHOLD = 60;
