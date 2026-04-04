@@ -329,7 +329,7 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
               <button
                 onClick={() => !current && !isPending && onStatusChange?.(step.key)}
                 disabled={current || isPending}
-                className="flex flex-col items-center flex-shrink-0 group disabled:cursor-default"
+                className="flex flex-col items-center flex-1 w-full group disabled:cursor-default"
               >
                 <div
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-[20ms] ${
@@ -952,41 +952,44 @@ export default function JobDetailPage() {
 
                 {/* Toolbar: clickable filter tags + three-dot download menu */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      onClick={() => setActiveFilter(null)}
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                        activeFilter === null
-                          ? "border-white/20 bg-white/10 text-white"
-                          : "border-[#1e293b] bg-transparent text-slate-500 hover:text-white"
-                      }`}
-                    >
-                      Alle
-                    </button>
-                    {[...new Set(interviewQA.map(item => {
-                      const t = item.type || "";
-                      return TYPE_MAP[t] || TYPE_MAP[t.toLowerCase()] || t;
-                    }).filter(Boolean))].map(tag => (
+                  {!questionsMinimized && (
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
-                        key={tag}
-                        onClick={() => setActiveFilter(prev => prev === tag ? null : tag)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-bold transition-all ${
-                          TAG_COLORS[tag] || "bg-[#1e293b] text-slate-300"
-                        } ${activeFilter === tag ? "ring-2 ring-current ring-offset-1 ring-offset-[#030712]" : "opacity-60 hover:opacity-100"}`}
+                        onClick={() => setActiveFilter(null)}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                          activeFilter === null
+                            ? "border-white/20 bg-white/10 text-white"
+                            : "border-[#1e293b] bg-transparent text-slate-500 hover:text-white"
+                        }`}
                       >
-                        {tag}
+                        Alle
                       </button>
-                    ))}
-                  </div>
+                      {[...new Set(interviewQA.map(item => {
+                        const t = item.type || "";
+                        return TYPE_MAP[t] || TYPE_MAP[t.toLowerCase()] || t;
+                      }).filter(Boolean))].map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => setActiveFilter(prev => prev === tag ? null : tag)}
+                          className={`rounded-full px-2.5 py-1 text-xs font-bold transition-all ${
+                            TAG_COLORS[tag] || "bg-[#1e293b] text-slate-300"
+                          } ${activeFilter === tag ? "ring-2 ring-current ring-offset-1 ring-offset-[#030712]" : "opacity-60 hover:opacity-100"}`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Minimize toggle */}
-                  <button
-                    onClick={() => setQuestionsMinimized(v => !v)}
-                    className="flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
-                    title={questionsMinimized ? "Fragen einblenden" : "Fragen ausblenden"}
-                  >
-                    {questionsMinimized ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-                  </button>
+                  {/* Minimize toggle + Three-dot menu grouped */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+                    <button
+                      onClick={() => setQuestionsMinimized(v => !v)}
+                      className="flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
+                      title={questionsMinimized ? "Fragen einblenden" : "Fragen ausblenden"}
+                    >
+                      {questionsMinimized ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                    </button>
 
                   {/* Three-dot menu — PDF / DOCX */}
                   <div className="relative flex-shrink-0">
@@ -1024,6 +1027,7 @@ export default function JobDetailPage() {
                         </div>
                       </>
                     )}
+                  </div>
                   </div>
                 </div>
 
