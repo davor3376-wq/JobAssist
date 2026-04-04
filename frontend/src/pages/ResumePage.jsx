@@ -465,7 +465,7 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
         </div>
 
         {/* Score ring + goal below radar */}
-        <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-4 mt-4 border border-white/10 rounded-xl px-3 py-2 bg-white/5">
           <div className="flex-shrink-0 relative">
             <svg width="72" height="72" viewBox="0 0 120 120">
               <defs>
@@ -513,8 +513,8 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
         </div>
       </div>
 
-      {/* ── 2. AI Executive Summary — borderless ─────────────────── */}
-      <div className="col-span-12 px-1 py-4">
+      {/* ── 2. AI Executive Summary ─────────────────── */}
+      <div className="col-span-12 px-3 py-4 border border-white/10 rounded-xl bg-white/5">
         <div className="flex items-center gap-1.5 mb-3">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
