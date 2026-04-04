@@ -462,7 +462,15 @@ export default function JobDetailPage() {
 
   const matchMutation = useMutation({
     mutationFn: () => jobApi.match(Number(jobId), resumeId),
-    onSuccess: (res) => { updateJobCaches(res.data); invalidateJobs(); toast.success("Eignungs-Analyse erstellt!"); },
+    onSuccess: (res) => {
+      if (res.data.match_score == null) {
+        toast.error("Analyse fehlgeschlagen – bitte erneut versuchen.");
+        return;
+      }
+      updateJobCaches(res.data);
+      invalidateJobs();
+      toast.success("Eignungs-Analyse erstellt!");
+    },
     onError: (err) => toast.error(getApiErrorMessage(err, "Analyse fehlgeschlagen")),
   });
   const coverLetterMutation = useMutation({
