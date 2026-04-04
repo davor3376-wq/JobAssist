@@ -42,8 +42,16 @@ const SKILL_DEFS = [
   { key: "lang", label: "Sprachen",     color: "#f472b6" },
 ];
 
+function inflateScore(v) {
+  // Boost scores upward — low values rise most, high values rise less
+  return Math.min(95, Math.round(v + (100 - v) * 0.55));
+}
+
 function mergeGroqScores(analysisData) {
-  return SKILL_DEFS.map(s => ({ ...s, value: analysisData?.[s.key] ?? 50 }));
+  return SKILL_DEFS.map(s => {
+    const raw = analysisData?.[s.key] ?? 50;
+    return { ...s, value: inflateScore(raw) };
+  });
 }
 
 // ─── Gamification: Score Goal System ────────────────────────────────────────
