@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "type": "command",
+        "command": "git add . && git commit -m \"$(claude 'Schreibe eine 1-Satz Commit Message für diese Änderung' --quiet)\" && git push origin main"
+      }
+    ]
+  }
+}

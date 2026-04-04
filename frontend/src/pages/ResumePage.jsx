@@ -17,10 +17,6 @@ import { getApiErrorMessage } from "../utils/apiError";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function loadStoredResumes() {
-  try { const r = localStorage.getItem("resumes"); return r ? JSON.parse(r) : undefined; } catch { return undefined; }
-}
-
 function formatDate(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("de-AT", { day: "numeric", month: "short", year: "numeric" });
@@ -552,11 +548,8 @@ export default function ResumePage() {
 
   const { data: resumes = [], isLoading } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => resumeApi.list().then(r => {
-      try { localStorage.setItem("resumes", JSON.stringify(r.data)); } catch {}
-      return r.data;
-    }),
-    initialData: () => queryClient.getQueryData(["resumes"]) || loadStoredResumes() || initData?.resumes?.map(r => ({ id: r.id, filename: r.filename, created_at: r.created_at })) || [],
+    queryFn: () => resumeApi.list().then(r => r.data),
+    initialData: () => queryClient.getQueryData(["resumes"]) || initData?.resumes?.map(r => ({ id: r.id, filename: r.filename, created_at: r.created_at })) || [],
     staleTime: 1000 * 60 * 2,
   });
 
