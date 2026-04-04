@@ -45,15 +45,17 @@ function loadStoredJobs() {
 
 const SUGGESTIONS = [
   { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-indigo-400", cardBorder: "border-indigo-500/25", cardBg: "bg-indigo-500/[0.09] hover:bg-indigo-500/[0.16]", textCls: "text-indigo-300", arrowCls: "text-indigo-500/40 group-hover:text-indigo-400", glow: "0 0 18px rgba(99,102,241,0.18)" },
+    iconCls: "text-indigo-300", cardBorder: "border-indigo-400/40", cardBg: "bg-indigo-500/[0.18] hover:bg-indigo-500/[0.28]", textCls: "text-indigo-200", arrowCls: "text-indigo-400/60 group-hover:text-indigo-300", glow: "0 0 24px rgba(99,102,241,0.45), inset 0 1px 0 rgba(165,180,252,0.08)" },
   { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich.",
-    iconCls: "text-violet-400", cardBorder: "border-violet-500/25", cardBg: "bg-violet-500/[0.09] hover:bg-violet-500/[0.16]", textCls: "text-violet-300", arrowCls: "text-violet-500/40 group-hover:text-violet-400", glow: "0 0 18px rgba(139,92,246,0.18)" },
+    iconCls: "text-violet-300", cardBorder: "border-violet-400/40", cardBg: "bg-violet-500/[0.18] hover:bg-violet-500/[0.28]", textCls: "text-violet-200", arrowCls: "text-violet-400/60 group-hover:text-violet-300", glow: "0 0 24px rgba(139,92,246,0.45), inset 0 1px 0 rgba(196,181,253,0.08)" },
   { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?",
-    iconCls: "text-cyan-400",   cardBorder: "border-cyan-500/25",   cardBg: "bg-cyan-500/[0.09] hover:bg-cyan-500/[0.16]",   textCls: "text-cyan-300",   arrowCls: "text-cyan-500/40 group-hover:text-cyan-400",   glow: "0 0 18px rgba(6,182,212,0.18)" },
+    iconCls: "text-cyan-300",   cardBorder: "border-cyan-400/40",   cardBg: "bg-cyan-500/[0.18] hover:bg-cyan-500/[0.28]",   textCls: "text-cyan-200",   arrowCls: "text-cyan-400/60 group-hover:text-cyan-300",   glow: "0 0 24px rgba(6,182,212,0.45), inset 0 1px 0 rgba(103,232,249,0.08)" },
   { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
-    iconCls: "text-emerald-400",cardBorder: "border-emerald-500/25",cardBg: "bg-emerald-500/[0.09] hover:bg-emerald-500/[0.16]",textCls: "text-emerald-300",arrowCls: "text-emerald-500/40 group-hover:text-emerald-400", glow: "0 0 18px rgba(16,185,129,0.18)" },
+    iconCls: "text-emerald-300",cardBorder: "border-emerald-400/40",cardBg: "bg-emerald-500/[0.18] hover:bg-emerald-500/[0.28]",textCls: "text-emerald-200",arrowCls: "text-emerald-400/60 group-hover:text-emerald-300", glow: "0 0 24px rgba(16,185,129,0.45), inset 0 1px 0 rgba(110,231,183,0.08)" },
   { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?",
-    iconCls: "text-amber-400",  cardBorder: "border-amber-500/25",  cardBg: "bg-amber-500/[0.09] hover:bg-amber-500/[0.16]",  textCls: "text-amber-300",  arrowCls: "text-amber-500/40 group-hover:text-amber-400",  glow: "0 0 18px rgba(245,158,11,0.18)" },
+    iconCls: "text-amber-300",  cardBorder: "border-amber-400/40",  cardBg: "bg-amber-500/[0.18] hover:bg-amber-500/[0.28]",  textCls: "text-amber-200",  arrowCls: "text-amber-400/60 group-hover:text-amber-300",  glow: "0 0 24px rgba(245,158,11,0.45), inset 0 1px 0 rgba(252,211,77,0.08)" },
+  { icon: Wand2,         label: "Anschreiben erstellen",  sub: "Überzeugend und individuell",         prompt: "Erstelle ein überzeugendes Anschreiben für meine Bewerbung. generate_document (Erstellt dein Dokument).", requiresResume: true,
+    iconCls: "text-fuchsia-300",cardBorder: "border-fuchsia-400/40",cardBg: "bg-fuchsia-500/[0.18] hover:bg-fuchsia-500/[0.28]",textCls: "text-fuchsia-200",arrowCls: "text-fuchsia-400/60 group-hover:text-fuchsia-300", glow: "0 0 24px rgba(217,70,239,0.45), inset 0 1px 0 rgba(240,171,252,0.08)" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -686,7 +688,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
@@ -694,7 +696,8 @@ export default function AIAssistantPage() {
                     key={s.label}
                     onClick={() => {
                       if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                      handleSend(s.prompt);
+                      setInput(s.prompt);
+                      inputRef.current?.focus();
                     }}
                     disabled={chatAtLimit}
                     className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all disabled:opacity-40 ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`}`}
@@ -712,6 +715,14 @@ export default function AIAssistantPage() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* EU AI Act notice */}
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+              <Shield className="w-3 h-3 text-slate-500 flex-shrink-0" />
+              <p className="text-xs text-slate-500">
+                <strong className="text-slate-400">KI-Transparenz</strong> · Dieses System arbeitet KI-gestützt. Hinweis gemäß Art. 50 EU AI Act.
+              </p>
             </div>
 
           </div>
@@ -802,7 +813,7 @@ export default function AIAssistantPage() {
 
       {/* ── EU AI Act micro-disclaimer ───────────────────────────────────────── */}
       {!disclaimerDismissed && (
-        <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm px-3 py-1.5">
+        <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm px-3 py-1.5 overflow-hidden">
           <Shield className="w-3 h-3 text-slate-500 flex-shrink-0" />
           <p className="flex-1 text-xs text-slate-500 whitespace-nowrap overflow-hidden">
             <strong className="text-slate-400">KI-Transparenz</strong> · Dieses System arbeitet KI-gestützt. Hinweis gemäß Art. 50 EU AI Act.
