@@ -485,7 +485,7 @@ export default function DashboardPage() {
 
           {/* Row 2 — Aktivität                                              */}
           {/* P0: min-h-[200px] auf Mobile (kein flex-1 ohne fixe Höhe)     */}
-          <Tile className="min-h-[200px] md:flex-1 md:min-h-0 p-3.5 flex flex-col overflow-hidden">
+          <Tile className="min-h-[200px] md:flex-1 md:min-h-[180px] p-3.5 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <Label>Aktivität</Label>
