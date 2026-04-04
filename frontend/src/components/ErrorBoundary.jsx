@@ -4,6 +4,11 @@ export default class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
 
   static getDerivedStateFromError(error) {
+    // Stale chunk after a new deploy — hard reload to fetch fresh bundle
+    if (error?.message?.includes("Failed to fetch dynamically imported module")) {
+      window.location.reload();
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
