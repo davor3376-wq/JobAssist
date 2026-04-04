@@ -403,6 +403,10 @@ export default function JobDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
+  const [completedQuestions, setCompletedQuestions] = useState(() => new Set());
+  const [personalNotes, setPersonalNotes] = useState({});
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [hidePersonal, setHidePersonal] = useState(false);
@@ -835,6 +839,25 @@ export default function JobDetailPage() {
               ))}
             </div>
 
+            {/* ── Interview: sticky progress sub-header ────────────────────── */}
+            {activeTab === "interview" && interviewQA && (
+              <div className="sticky top-0 z-10 mb-4 flex items-center justify-between overflow-hidden rounded-xl border border-[#1e293b] bg-[#030712]/95 px-4 py-2.5 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5 text-violet-400" />
+                  <span className="text-xs font-bold text-slate-300">Interview Prep</span>
+                </div>
+                <span className="text-xs text-slate-400">
+                  <span className="font-bold" style={{ color: PRIMARY }}>{completedQuestions.size}</span>/{interviewQA.length} Abgeschlossen
+                </span>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1e293b]">
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{ width: `${interviewQA.length ? (completedQuestions.size / interviewQA.length) * 100 : 0}%`, backgroundColor: PRIMARY }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* ── Overview tab ─────────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="space-y-4">
@@ -925,42 +948,138 @@ export default function JobDetailPage() {
             {activeTab === "interview" && interviewQA && (
               <div className="space-y-3">
                 <AIDisclosureBanner feature="interview" />
-                <div className="flex justify-end gap-2">
-                  <DownloadBtn kind="PDF" variant="red" onClick={() =>
-                    printHtml("Gesprächsvorbereitung", `<h1>${escapeHtml(job.role || "Stelle")}</h1><p>${escapeHtml(job.company || "")}</p>${interviewQA.map((item, i) =>
-                      `<div style="margin-bottom:24px;"><b>F${i+1}: ${escapeHtml(item.question)}</b><p>${escapeHtml(item.answer)}</p>${item.tip ? `<p style="color:#92400e;background:#fef3c7;padding:8px;border-radius:4px;"><b>Tipp:</b> ${escapeHtml(item.tip)}</p>` : ""}</div>`
-                    ).join("<hr>")}`)
-                  } />
-                  <DownloadBtn kind="DOCX" variant="blue" onClick={() =>
-                    downloadDoc(interviewQA.map((item, i) => `F${i+1}: ${item.question}\n\nAntwort:\n${item.answer}${item.tip ? `\n\nTipp: ${item.tip}` : ""}`).join("\n\n----\n\n"), `Gespräch_${job.company || "Bewerbung"}.doc`)
-                  } />
+
+                {/* Toolbar: clickable filter tags + three-dot download menu */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      onClick={() => setActiveFilter(null)}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                        activeFilter === null
+                          ? "border-white/20 bg-white/10 text-white"
+                          : "border-[#1e293b] bg-transparent text-slate-500 hover:text-white"
+                      }`}
+                    >
+                      Alle
+                    </button>
+                    {[...new Set(interviewQA.map(item => {
+                      const t = item.type || "";
+                      return TYPE_MAP[t] || TYPE_MAP[t.toLowerCase()] || t;
+                    }).filter(Boolean))].map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => setActiveFilter(prev => prev === tag ? null : tag)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-bold transition-all ${
+                          TAG_COLORS[tag] || "bg-[#1e293b] text-slate-300"
+                        } ${activeFilter === tag ? "ring-2 ring-current ring-offset-1 ring-offset-[#030712]" : "opacity-60 hover:opacity-100"}`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Three-dot menu — PDF / DOCX */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={() => setMoreMenuOpen(v => !v)}
+                      className="flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
+                      title="Mehr Optionen"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </button>
+                    {moreMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setMoreMenuOpen(false)} />
+                        <div className="absolute right-0 z-20 mt-1 min-w-[150px] rounded-xl border border-[#1e293b] bg-[#030712] p-1.5 shadow-lg shadow-black/40">
+                          <button
+                            onClick={() => {
+                              setMoreMenuOpen(false);
+                              printHtml("Gesprächsvorbereitung", `<h1>${escapeHtml(job.role || "Stelle")}</h1><p>${escapeHtml(job.company || "")}</p>${interviewQA.map((item, i) =>
+                                `<div style="margin-bottom:24px;"><b>F${i+1}: ${escapeHtml(item.question)}</b><p>${escapeHtml(item.answer)}</p>${item.tip ? `<p style="color:#92400e;background:#fef3c7;padding:8px;border-radius:4px;"><b>Tipp:</b> ${escapeHtml(item.tip)}</p>` : ""}</div>`
+                              ).join("<hr>")}`)
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                          >
+                            <Download className="h-3.5 w-3.5" /> PDF
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMoreMenuOpen(false);
+                              downloadDoc(interviewQA.map((item, i) => `F${i+1}: ${item.question}\n\nAntwort:\n${item.answer}${item.tip ? `\n\nTipp: ${item.tip}` : ""}`).join("\n\n----\n\n"), `Gespräch_${job.company || "Bewerbung"}.doc`);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-500/10"
+                          >
+                            <Download className="h-3.5 w-3.5" /> DOCX
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* Accordion question cards */}
                 {interviewQA.map((item, index) => {
                   const type = TYPE_MAP[item.type] || TYPE_MAP[(item.type || "").toLowerCase()] || item.type;
+                  if (activeFilter && type !== activeFilter) return null;
+                  const isExpanded = expandedQuestion === index;
+                  const isDone = completedQuestions.has(index);
                   return (
                     <div
                       key={index}
                       className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
-                        expandedQuestion === index ? "border-[#1e293b] bg-[#0f172a] shadow-md shadow-black/30" : "border-[#1e293b] bg-[#030712]"
-                      }`}
+                        isExpanded ? "border-[#1e293b] bg-[#0f172a] shadow-md shadow-black/30" : "border-[#1e293b] bg-[#030712]"
+                      } ${isDone ? "opacity-55" : ""}`}
                     >
                       <button
-                        onClick={() => setExpandedQuestion(expandedQuestion === index ? null : index)}
-                        className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left min-h-[44px]"
+                        onClick={() => setExpandedQuestion(isExpanded ? null : index)}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left min-h-[44px]"
                       >
+                        {/* Completion checkbox */}
+                        <span
+                          role="checkbox"
+                          aria-checked={isDone}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCompletedQuestions(prev => {
+                              const next = new Set(prev);
+                              next.has(index) ? next.delete(index) : next.add(index);
+                              return next;
+                            });
+                          }}
+                          className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-colors ${
+                            isDone ? "border-emerald-500 bg-emerald-500" : "border-[#334155] hover:border-emerald-500/50"
+                          }`}
+                        >
+                          {isDone && <Check className="h-2.5 w-2.5 text-white" />}
+                        </span>
+
+                        {/* ID + truncated question + tag */}
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-start gap-3 mb-2">
+                          <div className="flex items-center gap-2 mb-1">
                             <span className="flex-shrink-0 text-xs font-bold text-slate-500">F{index + 1}</span>
-                            <p className="text-sm font-semibold text-slate-100 leading-snug">{item.question}</p>
+                            <p className="truncate text-sm font-semibold text-slate-100 leading-snug">{item.question}</p>
                           </div>
-                          <span className={`ml-7 text-xs font-bold px-2.5 py-1 rounded-full ${TAG_COLORS[type] || "bg-[#1e293b] text-slate-300"}`}>{type}</span>
+                          <span
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveFilter(prev => prev === type ? null : type);
+                            }}
+                            className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-bold transition-all ${
+                              TAG_COLORS[type] || "bg-[#1e293b] text-slate-300"
+                            } ${activeFilter === type ? "ring-1 ring-current" : "opacity-80 hover:opacity-100"}`}
+                          >
+                            {type}
+                          </span>
                         </div>
-                        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform ${expandedQuestion === index ? "rotate-180" : ""}`} />
+
+                        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                       </button>
-                      {expandedQuestion === index && (
+
+                      {isExpanded && (
                         <div className="space-y-3 border-t border-[#1e293b] bg-[#0f172a] px-5 py-4">
                           <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Antwort</p>
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Vorgeschlagene Antwort</p>
                             <p className="text-sm leading-relaxed text-slate-300">{item.answer}</p>
                           </div>
                           {item.tip && (
@@ -969,6 +1088,17 @@ export default function JobDetailPage() {
                               <p className="text-sm text-amber-200">{item.tip}</p>
                             </div>
                           )}
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Persönliche Notizen</p>
+                            <textarea
+                              value={personalNotes[index] || ""}
+                              onChange={(e) => setPersonalNotes(prev => ({ ...prev, [index]: e.target.value }))}
+                              onClick={(e) => e.stopPropagation()}
+                              placeholder="Eigene Notizen, Beispiele, Stichworte…"
+                              rows={3}
+                              className="w-full resize-y rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500/30 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#1e293b] [&::-webkit-scrollbar-thumb]:rounded-full"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
