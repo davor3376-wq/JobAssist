@@ -16,6 +16,7 @@ const FILTER_TABS = [
   { key: "applied",      label: "Beworben" },
   { key: "interviewing", label: "Gespräch" },
   { key: "offered",      label: "Angebot" },
+  { key: "rejected",     label: "Abgelehnt" },
 ];
 
 const PULL_THRESHOLD = 60;
@@ -171,8 +172,6 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
   const tabFilter = (job) => {
     if (activeTab === "all") return true;
     if (activeTab === "bookmarked") return !job.status || job.status === "bookmarked";
-    if (activeTab === "applied")
-      return job.status === "applied";
     return job.status === activeTab;
   };
   const filtered = jobs.filter(tabFilter);
@@ -195,6 +194,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
     applied:      jobs.filter((j) => j.status === "applied").length,
     interviewing: jobs.filter((j) => j.status === "interviewing").length,
     offered:      jobs.filter((j) => j.status === "offered").length,
+    rejected:     jobs.filter((j) => j.status === "rejected").length,
   };
 
   // IntersectionObserver — auto-load next page when sentinel scrolls into view
@@ -332,7 +332,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className="relative px-4 py-2 rounded-lg transition-all duration-200 min-h-[44px]"
+                className="relative px-2.5 sm:px-4 py-2 rounded-lg transition-all duration-200 min-h-[44px] whitespace-nowrap"
                 style={
                   isActive
                     ? {

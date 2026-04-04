@@ -257,7 +257,6 @@ export default function AIAssistantPage() {
   const [verlaufCollapsed, setVerlaufCollapsed] = useState(() => loadHistory().length === 0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewState, setViewState] = useState("discovery"); // "discovery" | "exiting-discovery" | "conversation"
-  const [heroSticky, setHeroSticky] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -277,11 +276,6 @@ export default function AIAssistantPage() {
     staleTime: 1000 * 60 * 2,
   });
 
-  useEffect(() => {
-    const onScroll = () => setHeroSticky(window.scrollY > 100);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -733,7 +727,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="[&:hover>button]:opacity-50 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-2 gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
