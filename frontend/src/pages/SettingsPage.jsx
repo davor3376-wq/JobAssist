@@ -211,7 +211,7 @@ export default function SettingsPage() {
         const raw = localStorage.getItem("init");
         if (raw) {
           const parsed = JSON.parse(raw);
-          localStorage.setItem("init", JSON.stringify({ ...parsed, profile: { ...(parsed.profile || {}), avatar: newAvatar } }));
+          localStorage.setItem("init", JSON.stringify({ ...parsed, profile: { ...(parsed.profile || {}), ...profilePayload, avatar: newAvatar } }));
         }
       } catch {}
 

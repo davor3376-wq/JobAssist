@@ -497,17 +497,21 @@ export default function JobDetailPage() {
     onMutate: (status) => {
       // Optimistic update — instant UI change
       const prev = queryClient.getQueryData(["jobs", jobId]);
+      const prevList = queryClient.getQueryData(["jobs"]);
       const optimistic = { ...(prev || job || {}), status };
       queryClient.setQueryData(["jobs", jobId], optimistic);
       queryClient.setQueryData(["jobs", Number(jobId)], optimistic);
       queryClient.setQueryData(["jobs"], (old = []) => old.map(e => String(e.id) === String(jobId) ? optimistic : e));
-      return { prev };
+      return { prev, prevList };
     },
     onSuccess: (res) => { updateJobCaches(res.data); },
     onError: (err, _status, ctx) => {
       if (ctx?.prev) {
         queryClient.setQueryData(["jobs", jobId], ctx.prev);
         queryClient.setQueryData(["jobs", Number(jobId)], ctx.prev);
+      }
+      if (ctx?.prevList) {
+        queryClient.setQueryData(["jobs"], ctx.prevList);
       }
       toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden"));
     },
