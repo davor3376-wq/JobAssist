@@ -70,14 +70,14 @@ const TYPE_MAP = {
   sales: "Vertrieb", customer: "Kundenorientierung", service: "Kundenorientierung",
 };
 const TAG_COLORS = {
-  Fachlich: "bg-blue-100 text-blue-700", Verhalten: "bg-violet-100 text-violet-700",
-  Situativ: "bg-amber-100 text-amber-700", Motivation: "bg-emerald-100 text-emerald-700",
-  Kompetenz: "bg-rose-100 text-rose-700", Kultur: "bg-teal-100 text-teal-700",
-  Führung: "bg-indigo-100 text-indigo-700", Problemlösung: "bg-orange-100 text-orange-700",
-  Kreativität: "bg-pink-100 text-pink-700", Kommunikation: "bg-cyan-100 text-cyan-700",
-  Teamarbeit: "bg-lime-100 text-lime-700", Anpassung: "bg-sky-100 text-sky-700",
-  Stressresistenz: "bg-red-100 text-red-700", Zeitmanagement: "bg-yellow-100 text-yellow-700",
-  Vertrieb: "bg-green-100 text-green-700", Kundenorientierung: "bg-purple-100 text-purple-700",
+  Fachlich: "bg-blue-500/10 text-blue-400 border border-blue-500/20", Verhalten: "bg-violet-500/10 text-violet-400 border border-violet-500/20",
+  Situativ: "bg-amber-500/10 text-amber-400 border border-amber-500/20", Motivation: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  Kompetenz: "bg-rose-500/10 text-rose-400 border border-rose-500/20", Kultur: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+  Führung: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20", Problemlösung: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+  Kreativität: "bg-pink-500/10 text-pink-400 border border-pink-500/20", Kommunikation: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
+  Teamarbeit: "bg-lime-500/10 text-lime-400 border border-lime-500/20", Anpassung: "bg-sky-500/10 text-sky-400 border border-sky-500/20",
+  Stressresistenz: "bg-red-500/10 text-red-400 border border-red-500/20", Zeitmanagement: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  Vertrieb: "bg-green-500/10 text-green-400 border border-green-500/20", Kundenorientierung: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
 };
 
 // ─── EU AI Act: Qualifikations-Check ─────────────────────────────────────────
