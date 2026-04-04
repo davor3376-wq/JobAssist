@@ -32,57 +32,18 @@ function formatSize(bytes) {
   return kb < 1024 ? `${Math.round(kb)} KB` : `${(kb / 1024).toFixed(1)} MB`;
 }
 
-// ─── Skill extraction from raw_text ──────────────────────────────────────────
+// ─── Skill definitions (colors/labels — values come from Groq) ───────────────
 
 const SKILL_DEFS = [
-  {
-    key: "tech",
-    label: "Tech Skills",
-    color: "#a855f7",
-    keywords: ["python","java","javascript","typescript","sql","excel","software","system","data","api","react","node","html","css","php","c++","c#","aws","azure","docker","git"],
-    missingKeywords: ["Kubernetes", "Terraform", "GraphQL", "Redis", "MongoDB"],
-  },
-  {
-    key: "exp",
-    label: "Erfahrung",
-    color: "#38bdf8",
-    keywords: ["jahre","years","erfahrung","experience","projekt","project","team","managed","led","developed","koordiniert","verantwortlich","geleitet","aufgebaut"],
-    missingKeywords: ["5+ Jahre", "Team-Lead", "Agile", "Scrum", "Stakeholder"],
-  },
-  {
-    key: "edu",
-    label: "Ausbildung",
-    color: "#34d399",
-    keywords: ["bachelor","master","mba","phd","studium","universität","university","abschluss","degree","zertifikat","certificate","fh","hochschule","htl","berufsschule"],
-    missingKeywords: ["Zertifizierung", "Weiterbildung", "Bootcamp", "Online-Kurs"],
-  },
-  {
-    key: "soft",
-    label: "Soft Skills",
-    color: "#fbbf24",
-    keywords: ["kommunikation","communication","teamwork","leadership","führung","präsentation","analytisch","problem","lösungsorientiert","selbstständig","kreativ","motiviert"],
-    missingKeywords: ["Konfliktlösung", "Verhandlung", "Mentoring", "Remote-Arbeit"],
-  },
-  {
-    key: "lang",
-    label: "Sprachen",
-    color: "#f472b6",
-    keywords: ["deutsch","englisch","english","french","spanisch","italian","language","sprache","c1","c2","b2","b1","native","muttersprache","fließend","fluent"],
-    missingKeywords: ["Business English", "C2-Niveau", "Mehrsprachig"],
-  },
+  { key: "tech", label: "Tech Skills",  color: "#a855f7" },
+  { key: "exp",  label: "Erfahrung",    color: "#38bdf8" },
+  { key: "edu",  label: "Ausbildung",   color: "#34d399" },
+  { key: "soft", label: "Soft Skills",  color: "#fbbf24" },
+  { key: "lang", label: "Sprachen",     color: "#f472b6" },
 ];
 
-function extractSkillScores(resume) {
-  const text = (resume?.raw_text || "").toLowerCase();
-  if (!text || text.length < 50) {
-    const seed = Math.abs(resume?.id ?? 1);
-    return SKILL_DEFS.map((s, i) => ({ ...s, value: 45 + ((seed * (7 + i * 4)) % 50) }));
-  }
-  return SKILL_DEFS.map(s => {
-    const matches = s.keywords.filter(kw => text.includes(kw)).length;
-    const value = Math.min(97, Math.round(28 + (matches / s.keywords.length) * 68));
-    return { ...s, value };
-  });
+function mergeGroqScores(analysisData) {
+  return SKILL_DEFS.map(s => ({ ...s, value: analysisData?.[s.key] ?? 50 }));
 }
 
 // ─── Gamification: Score Goal System ────────────────────────────────────────
@@ -439,7 +400,7 @@ const GROWTH_RECS = {
 
 // ─── Document Intelligence (center) ──────────────────────────────────────────
 
-function DocumentIntelligence({ resume, skills, gamification }) {
+function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqSummary }) {
   const { currentScore } = gamification || {};
   const goalReached = currentScore >= 85;
   const summary = useMemo(() => generateAISummary(skills), [skills]);
@@ -486,8 +447,16 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
 
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
-        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible">
+        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible relative">
           <RadarChart skills={skills} size={280} />
+          {isAnalyzing && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: "rgba(6,6,8,0.55)" }}>
+              <svg className="animate-spin w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            </div>
+          )}
         </div>
 
         {/* Score ring + goal below radar */}
@@ -547,18 +516,33 @@ function DocumentIntelligence({ resume, skills, gamification }) {
             KI-Zusammenfassung
           </span>
         </div>
-        <p className="text-[13px] leading-relaxed text-[#b0b0b8]">
-          Dein Profil zeigt eine{" "}
-          <span className="text-white font-semibold">starke Passung</span> im Bereich{" "}
-          <span style={{ color: summary.strength.color }} className="font-semibold">
-            {summary.strength.label}
-          </span>{" "}
-          ({summary.strength.value}%). Der größte Hebel liegt bei{" "}
-          <span style={{ color: summary.potential.color }} className="font-semibold">
-            {summary.potential.label}
-          </span>{" "}
-          — hier kannst du mit gezielten Optimierungen deinen Gesamtscore signifikant steigern.
-        </p>
+        {isAnalyzing ? (
+          <div className="flex items-center gap-2 text-[13px] text-[#505058]">
+            <svg className="animate-spin w-3.5 h-3.5 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+            <span>Groq analysiert deinen Lebenslauf…</span>
+          </div>
+        ) : groqSummary ? (
+          <p className="text-[13px] leading-relaxed text-[#b0b0b8]">{groqSummary}</p>
+        ) : (
+          <p className="text-[13px] leading-relaxed text-[#b0b0b8]">
+            Dein Profil zeigt eine{" "}
+            <span className="text-white font-semibold">
+              {summary.strength.value >= 75 ? "starke" : summary.strength.value >= 55 ? "solide" : "ausbaufähige"}
+            </span>{" "}
+            Passung im Bereich{" "}
+            <span style={{ color: summary.strength.color }} className="font-semibold">
+              {summary.strength.label}
+            </span>{" "}
+            ({summary.strength.value}%). Der größte Hebel liegt bei{" "}
+            <span style={{ color: summary.potential.color }} className="font-semibold">
+              {summary.potential.label}
+            </span>{" "}
+            — hier kannst du deinen Gesamtscore signifikant steigern.
+          </p>
+        )}
       </div>
 
 
@@ -642,7 +626,16 @@ export default function ResumePage() {
   })();
 
   const selectedResume = resumes.find(r => r.id === selectedId) || null;
-  const skills = extractSkillScores(selectedResume);
+
+  const { data: analysisData, isFetching: isAnalyzing } = useQuery({
+    queryKey: ["resume-analysis", selectedId],
+    queryFn: () => resumeApi.analyze(selectedId).then(r => r.data),
+    enabled: !!selectedId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  const skills = mergeGroqScores(analysisData);
   const gamification = useGamification(skills);
 
   const handleImproveClick = useCallback(() => {
@@ -735,11 +728,13 @@ export default function ResumePage() {
               resume={selectedResume}
               skills={skills}
               gamification={gamification}
+              isAnalyzing={isAnalyzing}
+              groqSummary={analysisData?.summary}
             />
           </div>
 
           {/* ── RIGHT: Optimierungs-Tipps Sidebar ──────────────────────────── */}
-          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start">
+          <div className="col-span-12 lg:col-span-3">
             {selectedResume && <Checklist gamification={gamification} />}
           </div>
         </div>

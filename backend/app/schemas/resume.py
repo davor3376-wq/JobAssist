@@ -14,3 +14,12 @@ class ResumeOut(BaseModel):
 class ResumeAnalysis(BaseModel):
     resume_id: int
     parsed_json: Optional[str]
+
+
+class ResumeSkillAnalysis(BaseModel):
+    tech: int
+    exp: int
+    edu: int
+    soft: int
+    lang: int
+    summary: str

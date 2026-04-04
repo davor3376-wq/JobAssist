@@ -424,6 +424,60 @@ Gib exakt dieses JSON zurück:
         }
 
 
+def analyze_resume_skills(raw_text: str, parsed_json: dict = None) -> dict:
+    """Analyze resume and return per-category skill scores (0–100) + German summary."""
+    system = (
+        "Du bist ein erfahrener Karriere-Analyst. "
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON — kein Markdown, keine Erklärungen. "
+        "Alle Texte auf Deutsch."
+    )
+    skills_hint = ""
+    if parsed_json and parsed_json.get("skills"):
+        skills_hint = f"\nExtrahierte Skills: {', '.join(parsed_json['skills'][:20])}"
+
+    prompt = f"""Analysiere diesen Lebenslauf und bewerte ihn in 5 Kategorien auf einer Skala von 0–100.{skills_hint}
+
+Kategorien:
+- tech: Technische Fähigkeiten, Software, Tools, Programmiersprachen
+- exp: Berufserfahrung, Projektumfang, Führung, Verantwortung
+- edu: Ausbildung, Abschlüsse, Zertifikate, Weiterbildung
+- soft: Soft Skills, Kommunikation, Teamarbeit, Leadership
+- lang: Sprachkenntnisse (Anzahl und Niveau der Sprachen)
+
+Bewertungsrichtlinien:
+- 0–30: Keine oder kaum Hinweise
+- 31–55: Grundlegende Kenntnisse vorhanden
+- 56–75: Gute Kenntnisse erkennbar
+- 76–90: Starke Qualifikation
+- 91–100: Experten-Niveau
+
+Gib exakt dieses JSON zurück:
+{{
+  "tech": <0-100>,
+  "exp": <0-100>,
+  "edu": <0-100>,
+  "soft": <0-100>,
+  "lang": <0-100>,
+  "summary": "<1-2 prägnante Sätze auf Deutsch: nenne den stärksten Bereich mit Score, dann den größten Hebel für Verbesserung>"
+}}
+
+Lebenslauf:
+\"\"\"
+{raw_text[:3000]}
+\"\"\"
+"""
+    result = _call_groq(prompt, system=system, max_tokens=512, temperature=0.2)
+    try:
+        data = json.loads(_strip_code_fences(result))
+        for key in ("tech", "exp", "edu", "soft", "lang"):
+            data[key] = max(0, min(100, int(data.get(key, 50))))
+        if "summary" not in data:
+            data["summary"] = ""
+        return data
+    except (json.JSONDecodeError, ValueError):
+        return {"tech": 50, "exp": 50, "edu": 50, "soft": 50, "lang": 50, "summary": "Analyse konnte nicht durchgeführt werden."}
+
+
 def generate_interview_prep(
     resume_text: str,
     job_description: str,

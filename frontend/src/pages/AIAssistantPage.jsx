@@ -44,12 +44,18 @@ function loadStoredJobs() {
 // ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText,      iconCls: "text-blue-400 bg-blue-500/12",  label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true },
-  { icon: Briefcase,     iconCls: "text-blue-400 bg-blue-500/12",  label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich." },
-  { icon: GraduationCap, iconCls: "text-blue-400 bg-blue-500/12",  label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?" },
-  { icon: Euro,          iconCls: "text-emerald-400 bg-emerald-500/12",label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",     prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?" },
-  { icon: Lightbulb,     iconCls: "text-amber-400 bg-amber-500/12",    label: "Gesprächsvorbereitung",   sub: "Souverän auftreten",           prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?" },
-  { icon: Sparkles,      iconCls: "text-blue-400 bg-blue-500/12",  label: "Anschreiben",   sub: "Überzeugend formulieren",          prompt: "Hilf mir bei einem überzeugenden Anschreiben. generate_document (Erstellt dein Dokument)." },
+  { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Analysiere meinen Lebenslauf und nenne mir Optimierungsschritte. generate_document (Erstellt dein Dokument).", requiresResume: true,
+    iconCls: "text-indigo-400", cardBorder: "border-indigo-500/25", cardBg: "bg-indigo-500/[0.09] hover:bg-indigo-500/[0.16]", textCls: "text-indigo-300", arrowCls: "text-indigo-500/40 group-hover:text-indigo-400" },
+  { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Gib mir die wichtigsten Schritte für eine starke Bewerbung in Österreich.",
+    iconCls: "text-violet-400", cardBorder: "border-violet-500/25", cardBg: "bg-violet-500/[0.09] hover:bg-violet-500/[0.16]", textCls: "text-violet-300", arrowCls: "text-violet-500/40 group-hover:text-violet-400" },
+  { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie finde ich ein gutes Praktikum in Österreich als Student?",
+    iconCls: "text-cyan-400",   cardBorder: "border-cyan-500/25",   cardBg: "bg-cyan-500/[0.09] hover:bg-cyan-500/[0.16]",   textCls: "text-cyan-300",   arrowCls: "text-cyan-500/40 group-hover:text-cyan-400" },
+  { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
+    iconCls: "text-emerald-400",cardBorder: "border-emerald-500/25",cardBg: "bg-emerald-500/[0.09] hover:bg-emerald-500/[0.16]",textCls: "text-emerald-300",arrowCls: "text-emerald-500/40 group-hover:text-emerald-400" },
+  { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch in Österreich vor?",
+    iconCls: "text-amber-400",  cardBorder: "border-amber-500/25",  cardBg: "bg-amber-500/[0.09] hover:bg-amber-500/[0.16]",  textCls: "text-amber-300",  arrowCls: "text-amber-500/40 group-hover:text-amber-400" },
+  { icon: Sparkles,      label: "Anschreiben",            sub: "Überzeugend formulieren",             prompt: "Hilf mir bei einem überzeugenden Anschreiben. generate_document (Erstellt dein Dokument).",
+    iconCls: "text-pink-400",   cardBorder: "border-pink-500/25",   cardBg: "bg-pink-500/[0.09] hover:bg-pink-500/[0.16]",   textCls: "text-pink-300",   arrowCls: "text-pink-500/40 group-hover:text-pink-400" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -523,15 +529,49 @@ export default function AIAssistantPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-    {/* Full-height single-column container */}
-    <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex flex-col animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
+    {/* Full-height container */}
+    <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
+
+      {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
+      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden">
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs font-bold text-slate-200">Verlauf</span>
+          </div>
+          <button onClick={handleNewChat} title="Neues Gespräch" className="p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all">
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        {conversations.length > 0 && (
+          <div className="flex-shrink-0 flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] rounded-xl mx-3 mt-2 px-3 py-1.5">
+            <Search className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+            <input
+              type="text"
+              value={historySearch}
+              onChange={(e) => setHistorySearch(e.target.value)}
+              placeholder="Gespräche suchen…"
+              className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none min-w-0"
+            />
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto px-2 py-2 mt-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
+          {conversations.length === 0
+            ? <p className="px-3 py-6 text-center text-xs text-slate-600">Noch keine Gespräche</p>
+            : renderConvList()
+          }
+        </div>
+      </aside>
+
+      {/* ── Main column ────────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="flex-shrink-0 flex items-center gap-3 px-4 md:px-5 py-2.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl">
+      <header className="flex-shrink-0 flex items-center gap-3 px-4 md:px-5 py-2.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           title="Gesprächsverlauf"
-          className="flex-shrink-0 p-1.5 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 transition-all"
+          className="flex-shrink-0 md:hidden p-1.5 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 transition-all"
         >
           <MessageSquare className="w-4 h-4" />
         </button>
@@ -643,23 +683,25 @@ export default function AIAssistantPage() {
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 text-emerald-500/40 ml-auto group-hover:text-emerald-400 transition-colors flex-shrink-0" />
               </button>
-              {SUGGESTIONS.slice(0, 4).map((s) => {
+              {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
                   <button
                     key={s.label}
                     onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
                     disabled={chatAtLimit}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] text-left transition-all group disabled:opacity-40"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${locked ? "border-white/[0.06] bg-white/[0.02]" : `${s.cardBorder} ${s.cardBg}`} text-left transition-all group disabled:opacity-40`}
+                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}
                   >
                     {locked
                       ? <Lock className="w-4 h-4 text-slate-600 flex-shrink-0" />
-                      : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls.split(" ")[0]}`} />
+                      : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls}`} />
                     }
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">{s.label}</p>
+                      <p className={`text-sm font-semibold ${locked ? "text-slate-500" : s.textCls} transition-colors`}>{s.label}</p>
                       <p className="text-xs text-slate-600 mt-0.5 truncate">{s.sub}</p>
                     </div>
+                    {!locked && <ArrowRight className={`w-3.5 h-3.5 ml-auto flex-shrink-0 transition-colors ${s.arrowCls}`} />}
                   </button>
                 );
               })}
@@ -817,7 +859,7 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-3 pb-4 pt-2.5 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
+      <div className="flex-shrink-0 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div
           className="flex items-end gap-2 max-w-3xl mx-auto rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 py-2 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" }}
@@ -858,9 +900,10 @@ export default function AIAssistantPage() {
         </div>
       </div>
 
-    </div>
+      </div>{/* end main column */}
+    </div>{/* end outer container */}
 
-    {/* ── History drawer (universal) ──────────────────────────────────────────── */}
+    {/* ── History drawer (mobile only) ───────────────────────────────────────── */}
     {sidebarOpen && (
       <div className="fixed inset-0 z-40 flex">
         <aside className="w-72 flex flex-col bg-[#050810]/95 backdrop-blur-2xl border-r border-white/[0.06] overflow-hidden shadow-2xl shadow-black/60">

@@ -9,9 +9,10 @@ from app.core.security import get_current_user
 from app.core.usage import require_usage
 from app.models.user import User
 from app.models.resume import Resume
-from app.schemas.resume import ResumeOut, ResumeAnalysis
+import asyncio
+from app.schemas.resume import ResumeOut, ResumeAnalysis, ResumeSkillAnalysis
 from app.services.resume_parser import extract_resume_text
-from app.services.claude_service import parse_resume
+from app.services.claude_service import parse_resume, analyze_resume_skills
 
 router = APIRouter()
 
@@ -87,6 +88,31 @@ async def get_resume(
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     return ResumeAnalysis(resume_id=resume.id, parsed_json=resume.parsed_json)
+
+
+@router.post("/{resume_id}/analyze", response_model=ResumeSkillAnalysis)
+@limiter.limit("10/minute")
+async def analyze_resume(
+    request: Request,
+    resume_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Resume).where(Resume.id == resume_id, Resume.user_id == current_user.id)
+    )
+    resume = result.scalar_one_or_none()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    parsed = {}
+    try:
+        parsed = json.loads(resume.parsed_json or "{}")
+    except json.JSONDecodeError:
+        pass
+
+    analysis = await asyncio.to_thread(analyze_resume_skills, resume.raw_text, parsed)
+    return analysis
 
 
 @router.delete("/{resume_id}", status_code=204)

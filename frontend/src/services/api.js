@@ -212,6 +212,7 @@ export const resumeApi = {
   list: () => api.get("/resume/"),
   get: (id) => api.get(`/resume/${id}`),
   delete: (id) => api.delete(`/resume/${id}`),
+  analyze: (id) => api.post(`/resume/${id}/analyze`),
 };
 
 // --- Jobs ---
