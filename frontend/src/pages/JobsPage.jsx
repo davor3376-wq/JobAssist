@@ -486,21 +486,42 @@ const [savingJobId, setSavingJobId] = useState(null);
     return 0;
   });
 
+  // IntersectionObserver for search results infinite scroll
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel || visibleCount >= searchResults.length) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisibleCount((c) => c + 5);
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, searchResults.length]);
+
+  const handleRefreshJobs = () => qc.invalidateQueries({ queryKey: ["jobs"] });
+
   return (
     <div className="min-h-full px-4 sm:px-8 py-8 sm:py-10 font-sans">
+      <div className="max-w-[1200px] mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-white leading-none">
+        <h1 className="text-[1.75rem] sm:text-[2rem] font-semibold tracking-tight text-white leading-none">
           Stellen-Zentrale
         </h1>
-        <p className="mt-2 text-[11px] tracking-[0.18em] uppercase text-[#3a3a42]">
+        <p className="mt-2 text-[0.6875rem] tracking-[0.18em] uppercase text-[#3a3a42]">
           Kuratiert · Bewertet · Vorbereitet
         </p>
       </div>
 
       <div className="grid grid-cols-12 gap-3 sm:gap-4">
         {/* === Saved Jobs — Premium curated section === */}
-        <SavedJobsSection jobs={savedJobs} />
+        <SavedJobsSection
+          jobs={savedJobs}
+          loading={jobsFetching}
+          onRefresh={handleRefreshJobs}
+        />
 
         {/* === Search Section === */}
         <div className="col-span-12 mt-1">
@@ -670,6 +691,28 @@ const [savingJobId, setSavingJobId] = useState(null);
             )}
           </Tile>
         </div>
+
+        {/* === Search Results skeleton while loading === */}
+        {searchLoading && searchResults.length === 0 && (
+          <div className="col-span-12 mt-1">
+            <Tile>
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 py-3.5 animate-pulse"
+                  style={i > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
+                >
+                  <div className="w-8 h-8 rounded-full bg-white/[0.05] flex-shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-3 bg-white/[0.07] rounded-md w-3/5" />
+                    <div className="h-2.5 bg-white/[0.04] rounded-md w-2/5" />
+                  </div>
+                  <div className="w-3.5 h-3.5 bg-white/[0.03] rounded flex-shrink-0" />
+                </div>
+              ))}
+            </Tile>
+          </div>
+        )}
 
         {/* === Search Results === */}
         {searchResults.length > 0 && (
@@ -859,27 +902,22 @@ const [savingJobId, setSavingJobId] = useState(null);
                 })}
               </div>
 
-              {/* Load more / less — minimal text links */}
-              <div className="mt-4 flex gap-4 justify-center" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
-                {visibleCount < searchResults.length && (
-                  <button
-                    type="button"
-                    onClick={() => setVisibleCount((c) => c + 5)}
-                    className="text-[11px] font-medium text-[#505058] hover:text-white transition-colors"
-                  >
-                    Mehr laden
-                  </button>
-                )}
-                {visibleCount > 5 && (
+              {/* Infinite scroll sentinel */}
+              {visibleCount < searchResults.length && (
+                <div ref={loadMoreSentinelRef} className="h-4" />
+              )}
+              {/* Collapse — only shown when user has expanded beyond default */}
+              {visibleCount > 5 && (
+                <div className="mt-4 flex justify-center" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
                   <button
                     type="button"
                     onClick={() => setVisibleCount(5)}
-                    className="text-[11px] font-medium text-[#3a3a42] hover:text-[#505058] transition-colors"
+                    className="text-[0.6875rem] font-medium text-[#3a3a42] hover:text-[#505058] transition-colors"
                   >
                     Weniger
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </Tile>
           </div>
         )}
@@ -899,6 +937,7 @@ const [savingJobId, setSavingJobId] = useState(null);
             </div>
           )}
       </div>
+      </div>{/* max-w-[1200px] */}
 
       {researchModal && (
         <ResearchModal
