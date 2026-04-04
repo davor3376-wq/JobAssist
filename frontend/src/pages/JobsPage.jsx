@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { Briefcase, Search, MapPin, ExternalLink, ChevronDown, Sparkles, Check, SearchCheck, FileText, X, Copy, Bookmark, ChevronRight } from "lucide-react";
-import { jobApi, aiAssistantApi, coverLetterApi, researchApi, resumeApi } from "../services/api";
+import { Briefcase, Search, MapPin, ExternalLink, ChevronDown, Sparkles, SearchCheck, Bookmark, ChevronRight } from "lucide-react";
+import { jobApi, aiAssistantApi, researchApi } from "../services/api";
 import SavedJobsSection from "../components/SavedJobsSection";
 
 /**
@@ -208,8 +207,7 @@ export default function JobsPage() {
   const _navigate = useNavigate();
   const qc = useQueryClient();
   const [searchTab, setSearchTab] = useState("recommended");
-  const [coverLetterModal, setCoverLetterModal] = useState(null); // { text, role, company }
-  const [copiedCover, setCopiedCover] = useState(false);
+
 const [savingJobId, setSavingJobId] = useState(null);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [expandedJob, setExpandedJob] = useState(null);
@@ -233,7 +231,7 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
   const { data: _initData } = useQuery({ queryKey: ["init"] });
-  const { data: resumes = [] } = useQuery({ queryKey: ["resumes"], queryFn: () => resumeApi.list().then(r => r.data), initialData: () => loadStored("resumes") || [] });
+
   const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj, isFetching: _jobsFetching } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => {
@@ -257,7 +255,6 @@ const [savingJobId, setSavingJobId] = useState(null);
     retry: 2,
   });
   if (jobsError) console.error("[JobsPage] Failed to load saved jobs:", jobsErrorObj);
-  const resumeId = resumes[0]?.id;
   const { guardedRun: guardSearch } = useUsageGuard("job_search");
 
   // Recommended search (based on preferences)
@@ -345,36 +342,6 @@ const [savingJobId, setSavingJobId] = useState(null);
       description: result.description || `${result.title} bei ${result.company} in ${result.location}`,
       url: result.full_url || null,
     });
-  };
-
-  const handleCoverLetter = async (result, index) => {
-    if (!resumeId) { toast("Bitte zuerst einen Lebenslauf hochladen.", { icon: "📄" }); return; }
-    setAnalyzingJobId(`cl-${index}`);
-    try {
-      // Save job first, then generate cover letter
-      let savedJob = null;
-      try {
-        const saveRes = await jobApi.create({
-          company: result.company, role: result.title,
-          description: result.description || `${result.title} bei ${result.company}`,
-          url: result.full_url || null,
-        });
-        savedJob = saveRes.data;
-        qc.invalidateQueries({ queryKey: ["jobs"] });
-      } catch {}
-      if (savedJob?.id) {
-        const clRes = await coverLetterApi.generate(savedJob.id, resumeId);
-        const text = clRes.data?.cover_letter || clRes.data;
-        setCoverLetterModal({ text: typeof text === "string" ? text : JSON.stringify(text), role: result.title, company: result.company });
-        setSavedJobIds((prev) => new Set([...prev, result.source_id]));
-      } else {
-        toast.error("Die Stelle konnte nicht sicher hinterlegt werden");
-      }
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Anschreiben konnte nicht erstellt werden"));
-    } finally {
-      setAnalyzingJobId(null);
-    }
   };
 
   const handleAnalyzeJob = async (result, idx) => {
@@ -506,7 +473,7 @@ const [savingJobId, setSavingJobId] = useState(null);
   });
 
   return (
-    <div className="min-h-full bg-black px-4 sm:px-8 py-8 sm:py-10 font-sans">
+    <div className="min-h-full px-4 sm:px-8 py-8 sm:py-10 font-sans">
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-white leading-none">
@@ -929,53 +896,6 @@ const [savingJobId, setSavingJobId] = useState(null);
         />
       )}
 
-      {coverLetterModal && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div
-            className="rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col"
-            style={{
-              background: 'linear-gradient(180deg, #080808 0%, #030303 100%)',
-              boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04), 0 24px 48px -12px rgba(0,0,0,0.8)',
-            }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-              <div className="flex items-center gap-3">
-                <div className="grid place-items-center h-8 w-8 rounded-lg" style={{ background: 'rgba(59,130,246,0.14)' }}>
-                  <FileText size={15} className="text-blue-400" />
-                </div>
-                <div>
-                  <TileLabel>Anschreiben</TileLabel>
-                  <p className="text-[13px] font-medium text-white mt-0.5">{coverLetterModal.role} · {coverLetterModal.company}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(coverLetterModal.text);
-                    setCopiedCover(true);
-                    setTimeout(() => setCopiedCover(false), 2000);
-                  }}
-                  className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors"
-                >
-                  {copiedCover ? <><Check size={12} className="text-emerald-400" />Kopiert</> : <><Copy size={12} />Kopieren</>}
-                </button>
-                <button
-                  onClick={() => setCoverLetterModal(null)}
-                  className="text-[#3a3a42] hover:text-[#505058] transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              <pre className="text-[13px] text-[#808088] leading-relaxed whitespace-pre-wrap font-sans">{coverLetterModal.text}</pre>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
