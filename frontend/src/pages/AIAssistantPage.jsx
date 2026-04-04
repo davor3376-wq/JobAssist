@@ -547,7 +547,7 @@ export default function AIAssistantPage() {
   return (
     <>
     {/* Full-height container */}
-    <div className="flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative">
+    <div className="flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-transparent relative">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
       <aside className={`hidden lg:flex sticky top-0 self-start h-screen flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-[width,border-width] duration-300 ease-in-out ${verlaufCollapsed ? "w-0 border-r-0" : "w-60"}`}>
