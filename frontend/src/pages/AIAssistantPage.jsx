@@ -44,18 +44,12 @@ function loadStoredJobs() {
 // ─── Schnell-Aktionen ─────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
-  { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Wie kann ich meinen Lebenslauf verbessern? generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-indigo-50", cardBorder: "border-indigo-200", cardBg: "bg-indigo-400 hover:bg-indigo-300", textCls: "text-white", arrowCls: "text-indigo-100 group-hover:text-white", glow: "0 0 40px rgba(129,140,248,0.9), inset 0 1px 0 rgba(199,210,254,0.4)" },
-  { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Wie entwickle ich eine starke Bewerbungsstrategie?",
-    iconCls: "text-violet-50", cardBorder: "border-violet-200", cardBg: "bg-violet-400 hover:bg-violet-300", textCls: "text-white", arrowCls: "text-violet-100 group-hover:text-white", glow: "0 0 40px rgba(167,139,250,0.9), inset 0 1px 0 rgba(221,214,254,0.4)" },
-  { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie kann ich als Student ein gutes Praktikum finden?",
-    iconCls: "text-cyan-50",   cardBorder: "border-cyan-200",   cardBg: "bg-cyan-500 hover:bg-cyan-400",   textCls: "text-white",   arrowCls: "text-cyan-100 group-hover:text-white",   glow: "0 0 40px rgba(34,211,238,0.9), inset 0 1px 0 rgba(165,243,252,0.4)" },
-  { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was für ein Gehalt kann ich als Berufseinsteiger in Österreich erwarten?",
-    iconCls: "text-emerald-50",cardBorder: "border-emerald-200",cardBg: "bg-emerald-500 hover:bg-emerald-400",textCls: "text-white",arrowCls: "text-emerald-100 group-hover:text-white", glow: "0 0 40px rgba(52,211,153,0.9), inset 0 1px 0 rgba(167,243,208,0.4)" },
-  { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch vor?",
-    iconCls: "text-amber-50",  cardBorder: "border-amber-200",  cardBg: "bg-amber-500 hover:bg-amber-400",  textCls: "text-white",  arrowCls: "text-amber-100 group-hover:text-white",  glow: "0 0 40px rgba(251,191,36,0.9), inset 0 1px 0 rgba(253,230,138,0.4)" },
-  { icon: Wand2,         label: "Anschreiben erstellen",  sub: "Überzeugend und individuell",         prompt: "Kannst du mir ein überzeugendes Anschreiben erstellen? generate_document (Erstellt dein Dokument).", requiresResume: true,
-    iconCls: "text-fuchsia-50",cardBorder: "border-fuchsia-200",cardBg: "bg-fuchsia-500 hover:bg-fuchsia-400",textCls: "text-white",arrowCls: "text-fuchsia-100 group-hover:text-white", glow: "0 0 40px rgba(232,121,249,0.9), inset 0 1px 0 rgba(245,208,254,0.4)" },
+  { icon: FileText,      label: "Lebenslauf verbessern",  sub: "Stärken und Entwicklungspotenzial erkennen",  prompt: "Wie kann ich meinen Lebenslauf verbessern? generate_document (Erstellt dein Dokument).", requiresResume: true, iconCls: "text-indigo-300" },
+  { icon: Briefcase,     label: "Bewerbungsstrategie",    sub: "Gezielt und wirksam bewerben",       prompt: "Wie entwickle ich eine starke Bewerbungsstrategie?", iconCls: "text-violet-300" },
+  { icon: GraduationCap, label: "Praktikum finden",       sub: "Als Student gezielt starten",         prompt: "Wie kann ich als Student ein gutes Praktikum finden?", iconCls: "text-cyan-300" },
+  { icon: Euro,          label: "Gehaltsauskunft",        sub: "Marktübliche Gehälter kennen",        prompt: "Was für ein Gehalt kann ich als Berufseinsteiger in Österreich erwarten?", iconCls: "text-emerald-300" },
+  { icon: Lightbulb,     label: "Gesprächsvorbereitung",  sub: "Souverän auftreten",                  prompt: "Wie bereite ich mich am besten auf ein Vorstellungsgespräch vor?", iconCls: "text-amber-300" },
+  { icon: Wand2,         label: "Anschreiben erstellen",  sub: "Überzeugend und individuell",         prompt: "Kannst du mir ein überzeugendes Anschreiben erstellen? generate_document (Erstellt dein Dokument).", requiresResume: true, iconCls: "text-fuchsia-300" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -688,7 +682,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-2 lg:grid-cols-3 gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
@@ -696,21 +690,25 @@ export default function AIAssistantPage() {
                     key={s.label}
                     onClick={() => {
                       if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                      handleSend(s.prompt);
+                      setInput(s.prompt);
+                      inputRef.current?.focus();
                     }}
-                    disabled={chatAtLimit}
-                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all disabled:opacity-40 cursor-pointer ${locked ? "border-white/[0.06] bg-white/[0.02] cursor-not-allowed" : `${s.cardBorder} ${s.cardBg}`}`}
-                    style={!locked ? { boxShadow: s.glow } : undefined}
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm hover:!opacity-100 ${
+                      locked
+                        ? "border-white/[0.06] bg-white/[0.03] cursor-not-allowed opacity-40"
+                        : "border-indigo-500/20 bg-slate-900/60 hover:bg-indigo-950/70 hover:border-indigo-400/50 cursor-pointer hover:shadow-[0_4px_24px_rgba(99,102,241,0.18),inset_0_1px_0_rgba(99,102,241,0.12)]"
+                    }`}
+                    style={!locked ? { boxShadow: "0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)" } : undefined}
                   >
                     {locked
                       ? <Lock className="w-4 h-4 text-slate-600 flex-shrink-0" />
                       : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls}`} />
                     }
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold ${locked ? "text-slate-500" : s.textCls}`}>{s.label}</p>
+                      <p className={`text-sm font-semibold ${locked ? "text-slate-500" : "text-slate-100"}`}>{s.label}</p>
                       <p className="text-xs text-slate-400 mt-0.5 truncate">{s.sub}</p>
                     </div>
-                    {!locked && <ArrowRight className={`w-3.5 h-3.5 flex-shrink-0 self-center ml-auto transition-colors ${s.arrowCls}`} />}
+                    {!locked && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 self-center ml-auto text-indigo-400/50 group-hover:text-indigo-300 transition-colors" />}
                   </button>
                 );
               })}

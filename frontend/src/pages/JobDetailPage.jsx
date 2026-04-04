@@ -509,7 +509,11 @@ export default function JobDetailPage() {
   });
 
   const updateJobMetaMutation = useMutation({
-    mutationFn: (data) => jobApi.update(jobId, data),
+    mutationFn: (data) => {
+      if ("deadline" in data) return jobApi.updateDeadline(jobId, data.deadline);
+      if ("notes" in data) return jobApi.updateNotes(jobId, data.notes);
+      return Promise.reject(new Error("Unknown field"));
+    },
     onSuccess: (res) => { updateJobCaches(res.data); toast.success("Aktualisiert"); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Aktualisierung fehlgeschlagen")),
   });

@@ -286,7 +286,7 @@ export default function DashboardPage() {
   const appliedStatuses = ['applied', 'interviewing', 'offered', 'rejected'];
   const appliedCount  = jobs.filter(j => appliedStatuses.includes(j.status)).length;
   const interviewingCount = jobs.filter(j => ['interviewing', 'offered'].includes(j.status)).length;
-  const pendingCount = total - appliedCount;
+  const pendingCount = (analyzed || total) - appliedCount;
   const topMatches    = jobs.filter(j => j.match_score != null && j.match_score >= 70).length;
   const hasResume     = resumes.length > 0;
 
