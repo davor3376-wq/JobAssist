@@ -182,16 +182,34 @@ function ActivityChart({ data }) {
         <clipPath id="chartClip">
           <rect x="0" y="0" width={W} height={H} />
         </clipPath>
+        {/* Outer glow: stdDeviation halved (2→1) + gamma falloff for non-linear fade */}
         <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feGaussianBlur stdDeviation="1" result="blur" />
+          <feComponentTransfer in="blur" result="blurFast">
+            <feFuncA type="gamma" amplitude="1" exponent="2.5" offset="0" />
+          </feComponentTransfer>
           <feMerge>
-            <feMergeNode in="blur" />
+            <feMergeNode in="blurFast" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        {/* Node glow: wider spread than line glow for "hub" effect */}
+        <filter id="nodeGlow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.2" result="blur" />
+          <feComponentTransfer in="blur" result="blurFast">
+            <feFuncA type="gamma" amplitude="1" exponent="2" offset="0" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="blurFast" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
       </defs>
       <g clipPath="url(#chartClip)">
+        {/* Base glow stroke */}
         <path d={linePath} fill="none" stroke={C.indigo} strokeWidth="1.4" filter="url(#lineGlow)" />
+        {/* Filament: 1px bright center-stroke on top */}
+        <path d={linePath} fill="none" stroke="#D1C4FF" strokeWidth="1" opacity="0.85" />
         {pts.map((p, i) =>
           data[i].val > 0 ? (
             <circle
@@ -199,8 +217,8 @@ function ActivityChart({ data }) {
               cx={p.x}
               cy={p.y}
               r="2.8"
-              fill={C.indigoMid}
-              style={{ filter: `drop-shadow(0 0 5px ${C.indigo})` }}
+              fill="#D1C4FF"
+              filter="url(#nodeGlow)"
             />
           ) : null
         )}
