@@ -269,7 +269,7 @@ export default function DashboardPage() {
   });
   const { data: profile } = useQuery({
     queryKey: ['profile'],
-    queryFn: () => settingsApi.getPreferences().then(r => r.data),
+    queryFn: () => settingsApi.getProfile().then(r => r.data),
     staleTime: 1000 * 60 * 3,
     initialData: () => { try { const r = localStorage.getItem('profile'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden" style={{ clipPath: 'inset(0)' }}>
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
