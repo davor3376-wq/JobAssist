@@ -603,30 +603,6 @@ export default function JobDetailPage() {
                 </div>
               )}
 
-              {/* Primary CTA */}
-              {isPrimInterview ? (
-                <button
-                  disabled={!resumeId || interviewMutation.isPending}
-                  onClick={() => interviewMutation.mutate()}
-                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)] flex items-center justify-center gap-2 mb-4"
-                  style={{ backgroundColor: "#3b82f6" }}
-                >
-                  {interviewMutation.isPending
-                    ? <><LoadingSpinner /><span>Wird erstellt…</span></>
-                    : <><MessageSquare className="h-4 w-4" /><span>Gesprächsvorbereitung</span></>}
-                </button>
-              ) : (
-                <button
-                  disabled={!resumeId || coverLetterMutation.isPending}
-                  onClick={() => job.cover_letter ? setCoverLetterModalOpen(true) : coverLetterMutation.mutate()}
-                  className="min-h-[48px] w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 shadow-[0_0_20px_rgba(59,130,246,0.25)] flex items-center justify-center gap-2 mb-4"
-                  style={{ backgroundColor: "#3b82f6" }}
-                >
-                  {coverLetterMutation.isPending
-                    ? <><LoadingSpinner /><span>Wird erstellt…</span></>
-                    : <><FileText className="h-4 w-4" /><span>{job.cover_letter ? "Anschreiben ansehen" : "Anschreiben erstellen"}</span></>}
-                </button>
-              )}
 
               {/* Status pill + URL */}
               <div className="flex flex-wrap items-center gap-2">
