@@ -33,7 +33,7 @@ function LogoField({ company, status, url }) {
     if (!domain && company) {
       domain = company.toLowerCase().replace(/\s+(gmbh|ag|inc|ltd|llc|corp|se|kg|kg|mbh|co\.?)$/i, "").replace(/[^a-z0-9]/g, "") + ".com";
     }
-    return domain ? `https://logo.clearbit.com/${domain}?size=512` : null;
+    return domain ? `https://www.google.com/s2/favicons?sz=128&domain_url=https://${domain}` : null;
   })();
 
   return (
