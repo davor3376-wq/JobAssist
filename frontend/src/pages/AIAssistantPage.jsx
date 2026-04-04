@@ -873,10 +873,10 @@ export default function AIAssistantPage() {
 
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
-        <div className={`${viewState !== "conversation" ? "max-w-[800px]" : verlaufCollapsed ? "" : "max-w-5xl"} mx-auto`}>
+        <div className="max-w-[900px] mx-auto">
         <div
-          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
-          style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)", minHeight: "56px" }}
+          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all duration-200 focus-within:border-indigo-500/60 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] focus-within:shadow-[0_0_0_2px_rgba(99,102,241,0.25),0_0_20px_rgba(99,102,241,0.15),0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]"
+          style={{ minHeight: "56px" }}
         >
           {/* Icons inside field — left side */}
           <div className="flex items-end gap-0.5 flex-shrink-0 pb-0.5">
@@ -935,16 +935,17 @@ export default function AIAssistantPage() {
             onKeyDown={handleKeyDown}
             placeholder="Schreib direkt oder wähle eine Aktion…"
             rows={1}
-            className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[1rem] sm:text-[0.875rem] leading-relaxed max-h-40 text-slate-200 placeholder:text-slate-600 py-0.5"
-            style={{ minHeight: "1.75rem" }}
+            onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'; }}
+            className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[1rem] sm:text-[0.875rem] leading-relaxed overflow-y-auto text-slate-200 placeholder:text-slate-400 py-0.5 transition-[height] duration-150 ease-out"
+            style={{ minHeight: "1.75rem", maxHeight: "200px" }}
           />
           {/* Send */}
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isStreaming || !!streamingMsg}
             title="Senden"
-            className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-all hover:bg-indigo-500 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed mb-0.5"
-            style={{ boxShadow: "0 0 16px rgba(99,102,241,0.4)" }}
+            className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-all duration-200 hover:bg-indigo-500 active:scale-95 disabled:opacity-20 disabled:scale-90 disabled:cursor-not-allowed mb-0.5"
+            style={{ boxShadow: (!input.trim() || isStreaming || !!streamingMsg) ? 'none' : '0 0 20px rgba(99,102,241,0.55)' }}
           >
             <Send className="h-4 w-4" />
           </button>
