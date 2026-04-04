@@ -261,7 +261,6 @@ function FunnelStage({ label, value, barWidth, color, glow, note, isLast }) {
                 width: `${barWidth}%`,
                 background: color,
                 boxShadow: `0 0 8px ${glow}`,
-                transition: 'width 0.6s ease',
               }}
             />
           </div>
@@ -301,7 +300,9 @@ export default function DashboardPage() {
     queryKey: ['jobAlerts'],
     queryFn: () => jobAlertsApi.list().then(r => r.data),
     staleTime: 1000 * 60 * 5,
+    initialData: () => { try { const r = localStorage.getItem('dashboard_job_alerts'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
+  useEffect(() => { try { localStorage.setItem('dashboard_job_alerts', JSON.stringify(jobAlerts)); } catch {} }, [jobAlerts]);
 
   // Derived stats
   const analyzed      = jobs.filter(j => j.match_score != null).length;
