@@ -272,7 +272,7 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
 
       {/* ─── Row-based list — transaction style ─── */}
       <div
-        className="rounded-2xl overflow-hidden"
+        className="rounded-2xl overflow-hidden max-h-[520px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full"
         style={{
           background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
           boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",

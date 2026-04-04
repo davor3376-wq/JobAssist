@@ -489,8 +489,23 @@ export default function JobDetailPage() {
 
   const statusMutation = useMutation({
     mutationFn: (status) => jobApi.updateStatus(jobId, status),
-    onSuccess: (res) => { updateJobCaches(res.data); toast.success("Status aktualisiert"); },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden")),
+    onMutate: (status) => {
+      // Optimistic update — instant UI change
+      const prev = queryClient.getQueryData(["jobs", jobId]);
+      const optimistic = { ...(prev || job || {}), status };
+      queryClient.setQueryData(["jobs", jobId], optimistic);
+      queryClient.setQueryData(["jobs", Number(jobId)], optimistic);
+      queryClient.setQueryData(["jobs"], (old = []) => old.map(e => String(e.id) === String(jobId) ? optimistic : e));
+      return { prev };
+    },
+    onSuccess: (res) => { updateJobCaches(res.data); },
+    onError: (err, _status, ctx) => {
+      if (ctx?.prev) {
+        queryClient.setQueryData(["jobs", jobId], ctx.prev);
+        queryClient.setQueryData(["jobs", Number(jobId)], ctx.prev);
+      }
+      toast.error(getApiErrorMessage(err, "Status konnte nicht aktualisiert werden"));
+    },
   });
 
   const updateJobMetaMutation = useMutation({
@@ -733,86 +748,69 @@ export default function JobDetailPage() {
               </div>
             </div>
 
-            {/* Deadline / Notes metadata - with edit option */}
+            {/* Deadline / Notes metadata - always editable */}
             <div className="space-y-3 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4">
-              {(job.deadline || editingDeadline) && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
-                    <button
-                      onClick={() => setEditingDeadline(!editingDeadline)}
-                      className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
-                    >
-                      {editingDeadline ? "Speichern" : "Bearbeiten"}
-                    </button>
-                  </div>
-                  {editingDeadline ? (
-                    <input
-                      type="date"
-                      value={editedDeadline || job.deadline || ""}
-                      onChange={(e) => setEditedDeadline(e.target.value)}
-                      onBlur={() => {
-                        if (editedDeadline !== job.deadline) {
-                          updateJobMetaMutation.mutate({ deadline: editedDeadline || null });
-                        }
-                        setEditingDeadline(false);
-                      }}
-                      className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30"
-                    />
-                  ) : (
-                    <p className="text-sm text-slate-200">
-                      {job.deadline ? new Date(job.deadline).toLocaleDateString("de-AT") : "Keine Frist"}
-                    </p>
-                  )}
-                </div>
-              )}
-              {(job.notes || editingNotes) && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Notizen</p>
-                    <button
-                      onClick={() => {
-                        if (editingNotes && editedNotes !== job.notes) {
-                          updateJobMetaMutation.mutate({ notes: editedNotes || null });
-                        }
-                        setEditingNotes(!editingNotes);
-                      }}
-                      className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
-                    >
-                      {editingNotes ? "Speichern" : "Bearbeiten"}
-                    </button>
-                  </div>
-                  {editingNotes ? (
-                    <textarea
-                      value={editedNotes || job.notes || ""}
-                      onChange={(e) => setEditedNotes(e.target.value)}
-                      rows={3}
-                      className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30 resize-y"
-                      placeholder="Notizen hinzufügen..."
-                    />
-                  ) : (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-                      {job.notes || "Keine Notizen"}
-                    </p>
-                  )}
-                </div>
-              )}
-              {!job.deadline && !job.notes && (
-                <div className="space-y-2">
+              {/* Frist */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Frist</p>
                   <button
-                    onClick={() => { setEditingDeadline(true); setEditedDeadline(""); }}
-                    className="w-full flex items-center gap-2 rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-300 hover:border-blue-500/30 hover:text-blue-300 transition-colors"
+                    onClick={() => {
+                      if (editingDeadline && editedDeadline !== null && editedDeadline !== job.deadline) {
+                        updateJobMetaMutation.mutate({ deadline: editedDeadline || null });
+                      }
+                      setEditingDeadline(!editingDeadline);
+                      if (!editingDeadline) setEditedDeadline(job.deadline || "");
+                    }}
+                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
                   >
-                    <Plus className="w-4 h-4" /> Frist hinzufügen
-                  </button>
-                  <button
-                    onClick={() => { setEditingNotes(true); setEditedNotes(""); }}
-                    className="w-full flex items-center gap-2 rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-300 hover:border-blue-500/30 hover:text-blue-300 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" /> Notizen hinzufügen
+                    {editingDeadline ? "Speichern" : "Bearbeiten"}
                   </button>
                 </div>
-              )}
+                {editingDeadline ? (
+                  <input
+                    type="date"
+                    value={editedDeadline ?? job.deadline ?? ""}
+                    onChange={(e) => setEditedDeadline(e.target.value)}
+                    className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30"
+                  />
+                ) : (
+                  <p className="text-sm text-slate-400">
+                    {job.deadline ? new Date(job.deadline).toLocaleDateString("de-AT") : "—"}
+                  </p>
+                )}
+              </div>
+              {/* Notizen */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Notizen</p>
+                  <button
+                    onClick={() => {
+                      if (editingNotes && editedNotes !== null && editedNotes !== job.notes) {
+                        updateJobMetaMutation.mutate({ notes: editedNotes || null });
+                      }
+                      setEditingNotes(!editingNotes);
+                      if (!editingNotes) setEditedNotes(job.notes || "");
+                    }}
+                    className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    {editingNotes ? "Speichern" : "Bearbeiten"}
+                  </button>
+                </div>
+                {editingNotes ? (
+                  <textarea
+                    value={editedNotes ?? job.notes ?? ""}
+                    onChange={(e) => setEditedNotes(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-xl border border-[#243041] bg-[#030712] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500/30 resize-y"
+                    placeholder="Notizen hinzufügen..."
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-400">
+                    {job.notes || "—"}
+                  </p>
+                )}
+              </div>
             </div>
           </aside>
 

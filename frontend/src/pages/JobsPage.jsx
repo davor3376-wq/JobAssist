@@ -816,18 +816,6 @@ const [savingJobId, setSavingJobId] = useState(null);
                               {analyzingJobId === index ? "Analyse…" : "Analysieren"}
                             </button>
                             <button
-                              onClick={() => handleCoverLetter(result, index)}
-                              disabled={analyzingJobId === `cl-${index}`}
-                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors disabled:opacity-50"
-                            >
-                              {analyzingJobId === `cl-${index}` ? (
-                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <FileText size={12} />
-                              )}
-                              {analyzingJobId === `cl-${index}` ? "Entwurf…" : "Anschreiben"}
-                            </button>
-                            <button
                               onClick={() => handleResearch(result)}
                               className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-emerald-400 transition-colors"
                             >

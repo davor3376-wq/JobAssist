@@ -285,7 +285,7 @@ function FileCard({ resume, selected, onSelect, onDelete, matchScore, deleteLoad
   return (
     <button
       onClick={() => onSelect(resume.id)}
-      className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border group relative overflow-hidden ${
+      className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border group relative overflow-hidden focus:outline-none ${
         selected
           ? "bg-[#08090c] border-blue-500/30 shadow-[0_4px_24px_rgba(59,130,246,0.14)]"
           : "bg-[#08090c]/60 border-[#171a21] hover:bg-[#08090c] hover:border-blue-500/30 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
@@ -674,20 +674,6 @@ function DocumentIntelligence({ resume, skills, gamification }) {
               </div>
             );
           })}
-          {/* Missing skill tags */}
-          {potentials.map((s) => (
-            <div key={`missing-${s.key}`} className="flex flex-wrap gap-1.5 pl-5">
-              {s.missingKeywords?.slice(0, 3).map((kw) => (
-                <span
-                  key={kw}
-                  className="text-[11px] px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(255,255,255,0.07)", color: "#8888A0", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  + {kw}
-                </span>
-              ))}
-            </div>
-          ))}
         </div>
       </div>
 

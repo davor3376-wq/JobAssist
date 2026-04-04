@@ -46,35 +46,35 @@ export default function PrivacyPage() {
               <li>Zeitpunkt des letzten Logins</li>
             </ul>
 
-            <h3 className="text-base font-semibold text-gray-800 mt-4 mb-2">d) Zahlungsdaten</h3>
+            <h3 className="text-base font-semibold text-white mt-4 mb-2">d) Zahlungsdaten</h3>
             <p>
               Zahlungsinformationen (Kreditkarte, IBAN) werden <strong>ausschließlich von Stripe</strong> verarbeitet und gespeichert. Wir haben keinen Zugriff auf deine vollständigen Zahlungsdaten. Wir speichern lediglich die Stripe-Kunden-ID und den Abonnementstatus.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">3. Zweck und Rechtsgrundlage der Verarbeitung</h2>
+          <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-white mb-3">3. Zweck und Rechtsgrundlage der Verarbeitung</h2>
             <table className="w-full text-sm border-collapse mt-2">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 font-semibold text-gray-900">Zweck</th>
-                  <th className="text-left py-2 font-semibold text-gray-900">Rechtsgrundlage</th>
+                <tr className="border-b border-[#1e293b]">
+                  <th className="text-left py-2 pr-4 font-semibold text-white">Zweck</th>
+                  <th className="text-left py-2 font-semibold text-white">Rechtsgrundlage</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600">
-                <tr className="border-b border-gray-100">
+              <tbody className="text-slate-300">
+                <tr className="border-b border-[#1e293b]">
                   <td className="py-2 pr-4">Bereitstellung des Dienstes</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</td>
                 </tr>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-[#1e293b]">
                   <td className="py-2 pr-4">KI-Analyse deines Lebenslaufs</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</td>
                 </tr>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-[#1e293b]">
                   <td className="py-2 pr-4">Zahlungsabwicklung über Stripe</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</td>
                 </tr>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-[#1e293b]">
                   <td className="py-2 pr-4">Job-Alert E-Mails</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)</td>
                 </tr>
@@ -86,9 +86,9 @@ export default function PrivacyPage() {
             </table>
           </section>
 
-          <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">4. KI-Verarbeitung (Lebenslauf-Analyse)</h2>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-white mb-3">4. KI-Verarbeitung (Lebenslauf-Analyse)</h2>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
               <p>
                 Wenn du einen Lebenslauf hochlädst oder ein Anschreiben generierst, werden die Inhalte an einen KI-Dienst (API) übermittelt, um die Analyse oder Textgenerierung durchzuführen. Die Übermittlung erfolgt verschlüsselt (TLS).
               </p>
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">5. Datenspeicherung</h2>
+            <h2 className="text-lg font-bold text-white mb-3">5. Datenspeicherung</h2>
             <p>
               Deine Daten werden in einer <strong>Neon-Datenbank</strong> (PostgreSQL) gespeichert. Die Server befinden sich in der EU. Die Verbindung zur Datenbank ist verschlüsselt.
             </p>
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">6. Auftragsverarbeiter (Drittanbieter)</h2>
+            <h2 className="text-lg font-bold text-white mb-3">6. Auftragsverarbeiter (Drittanbieter)</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Stripe</strong> (Stripe, Inc.) — Zahlungsabwicklung. <a href="https://stripe.com/at/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Datenschutz von Stripe</a></li>
               <li><strong>Neon</strong> (Neon, Inc.) — Datenbank-Hosting (PostgreSQL, EU-Server)</li>
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">7. Deine Rechte (DSGVO)</h2>
+            <h2 className="text-lg font-bold text-white mb-3">7. Deine Rechte (DSGVO)</h2>
             <p>Du hast jederzeit das Recht auf:</p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li><strong>Auskunft</strong> — Welche Daten wir über dich gespeichert haben (Art. 15 DSGVO)</li>
@@ -133,33 +133,33 @@ export default function PrivacyPage() {
               <li><strong>Widerspruch</strong> — Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
             </ul>
             <p className="mt-2">
-              Zur Ausübung deiner Rechte schreibe an <strong>jobassistsupport@gmail.com</strong>. Wir antworten innerhalb von 30 Tagen.
+              Zur Ausübung deiner Rechte schreibe an <strong>info@jobassist.tech</strong>. Wir antworten innerhalb von 30 Tagen.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">8. Datenlöschung und Aufbewahrung</h2>
+            <h2 className="text-lg font-bold text-white mb-3">8. Datenlöschung und Aufbewahrung</h2>
             <p>
               Bei Löschung deines Kontos werden alle personenbezogenen Daten (Profil, Lebensläufe, Anschreiben, Stellenangebote) innerhalb von 30 Tagen gelöscht. Rechnungsdaten werden gemäß der gesetzlichen Aufbewahrungspflicht (7 Jahre, BAO) aufbewahrt.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">9. Cookies und lokale Speicherung</h2>
+            <h2 className="text-lg font-bold text-white mb-3">9. Cookies und lokale Speicherung</h2>
             <p>
               JobAssist verwendet <strong>keine Tracking-Cookies</strong> und keine Werbe-Tracker. Wir verwenden ausschließlich technisch notwendige Speicherung (localStorage) für die Anmeldesitzung und das Zwischenspeichern von UI-Daten zur Beschleunigung der Anwendung.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">10. Beschwerderecht</h2>
+            <h2 className="text-lg font-bold text-white mb-3">10. Beschwerderecht</h2>
             <p>
               Du hast das Recht, eine Beschwerde bei der zuständigen Datenschutzbehörde einzureichen:
             </p>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-slate-400">
               Österreichische Datenschutzbehörde<br />
               Barichgasse 40–42, 1030 Wien<br />
-              <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">www.dsb.gv.at</a>
+              <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">www.dsb.gv.at</a>
             </p>
           </section>
         </div>

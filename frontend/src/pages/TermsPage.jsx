@@ -74,7 +74,7 @@ export default function TermsPage() {
               <p className="mt-2">
                 Wurde der Dienst noch nicht genutzt (keine KI-Analyse, kein Anschreiben generiert, kein KI-Chat), kannst du
                 innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Der Widerruf ist per E-Mail an{" "}
-                <strong>jobassistsupport@gmail.com</strong> zu richten.
+                <strong>info@jobassist.tech</strong> zu richten.
               </p>
             </div>
           </section>

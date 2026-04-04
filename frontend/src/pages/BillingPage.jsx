@@ -217,12 +217,14 @@ function UsageRow({ feature, used, limit }) {
     ? "linear-gradient(90deg,#93c5fd,#3b82f6)"
     : "linear-gradient(90deg,#60a5fa,#3b82f6)";
 
-  // Soft, neutral badges — no aggressive red labels
-  const badgeText = unlimited ? "Unbegrenzt" : isAtLimit ? "Voll" : isWarn ? "Fast voll" : `${Math.round(pct)}%`;
+  // Soft, neutral badges — color + label reflect usage level
+  const badgeText = unlimited ? "Unbegrenzt" : isAtLimit ? "Voll" : isWarn ? "Fast voll" : pct < 60 ? "Optimal" : `${Math.round(pct)}%`;
   const badgeCls  = isAtLimit
     ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
     : isWarn
     ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
+    : pct < 60
+    ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
     : "bg-[#111827] text-slate-300 border border-[#1C2333]";
 
   const shortName = label.split(" (")[0];

@@ -40,27 +40,27 @@ export default function useUsageGuard(feature) {
     if (atLimit) {
       toast(
         (t) => (
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl bg-[#0D1117] border border-[#1C2333] p-5 shadow-2xl shadow-black/60">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
-                <AlertCircle className="h-5 w-5 text-red-500" />
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle className="h-5 w-5 text-amber-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-base">Limit erreicht</p>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="font-bold text-white text-base">Limit erreicht</p>
+                <p className="mt-1 text-sm text-slate-400">
                   Du hast {used}/{limit} {label} {periodLabel} verbraucht.
                   Upgrade auf Pro oder Max für mehr Kapazität.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => { toast.dismiss(t.id); navigate("/pricing"); }}
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 transition-colors"
                   >
                     Upgrade <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => toast.dismiss(t.id)}
-                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="rounded-xl border border-[#1C2333] px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors"
                   >
                     Schließen
                   </button>

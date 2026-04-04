@@ -300,7 +300,7 @@ export default function DashboardPage() {
   const interviewPct  = total > 0 ? Math.round((interviewingCount / total) * 100) : 0;
   const funnelStages = [
     { label: 'Analysiert', value: String(analyzed || total), barWidth: 100, color: C.textDim, glow: 'rgba(136,136,160,0.5)' },
-    { label: 'Beworben',   value: `${appliedCount}/${analyzed || total}`, barWidth: applyRate, color: C.indigo, glow: C.indigoGlow, note: applyRate > 0 ? `${applyRate}%` : undefined },
+    { label: 'Beworben',   value: `${appliedCount}/${analyzed || total}`, barWidth: applyRate, color: C.indigo, glow: C.indigoGlow },
     { label: 'Rücklauf',   value: appliedCount > 0 ? `${returnRate}%` : '—', barWidth: returnRate, color: C.violet, glow: C.violetGlow },
     { label: 'Interview',  value: String(interviewingCount), barWidth: interviewPct, color: C.amber, glow: 'rgba(245,158,11,0.35)', note: interviewingCount > 0 ? 'Aktiv' : undefined },
   ];
@@ -445,7 +445,7 @@ export default function DashboardPage() {
                 />
                 {/* P0: text-xs statt text-[10px] */}
                 <span className="text-xs font-medium" style={{ color: C.textSub }}>
-                  Peer-Leistung: <span style={{ color: C.emerald }}>Top 5%</span>
+                  Vergleichswert: <span style={{ color: C.emerald }}>Top 5%</span>
                 </span>
               </div>
             </Tile>
@@ -515,7 +515,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0" style={{ minHeight: '60px' }}>
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
@@ -682,9 +682,9 @@ export default function DashboardPage() {
               />
               {/* P0: text-xs statt text-[10px] */}
               <span className="text-xs" style={{ color: C.textSub }}>
-                Conversion:{' '}
+                Konversionsrate:{' '}
                 <span className="font-semibold" style={{ color: C.indigoMid }}>
-                  4.8% → Interview
+                  4,8% → Interview
                 </span>
               </span>
             </div>

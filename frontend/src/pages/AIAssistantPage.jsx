@@ -119,7 +119,7 @@ function MarkdownMessage({ text }) {
         <ol key={key} className="my-2 space-y-1.5 pl-1">
           {listItems.map((item, j) => (
             <li key={j} className="flex items-start gap-2.5 text-sm leading-relaxed">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center mt-0.5">{olStart + j}</span>
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold flex items-center justify-center mt-0.5">{olStart + j}</span>
               <span>{renderInline(item)}</span>
             </li>
           ))}
@@ -133,16 +133,16 @@ function MarkdownMessage({ text }) {
   lines.forEach((line, i) => {
     if (/^###\s/.test(line)) {
       flushList(`fl${i}`);
-      elements.push(<h3 key={i} className="text-sm font-extrabold text-slate-900 mt-3 mb-0.5 tracking-tight">{renderInline(line.slice(4))}</h3>);
+      elements.push(<h3 key={i} className="text-sm font-extrabold text-slate-100 mt-3 mb-0.5 tracking-tight">{renderInline(line.slice(4))}</h3>);
     } else if (/^##\s/.test(line)) {
       flushList(`fl${i}`);
-      elements.push(<h2 key={i} className="text-base font-extrabold text-slate-900 mt-4 mb-1 tracking-tight">{renderInline(line.slice(3))}</h2>);
+      elements.push(<h2 key={i} className="text-base font-extrabold text-slate-100 mt-4 mb-1 tracking-tight">{renderInline(line.slice(3))}</h2>);
     } else if (/^#\s/.test(line)) {
       flushList(`fl${i}`);
-      elements.push(<h1 key={i} className="text-lg font-extrabold text-slate-900 mt-4 mb-1 tracking-tight">{renderInline(line.slice(2))}</h1>);
+      elements.push(<h1 key={i} className="text-lg font-extrabold text-slate-100 mt-4 mb-1 tracking-tight">{renderInline(line.slice(2))}</h1>);
     } else if (/^---+$/.test(line.trim())) {
       flushList(`fl${i}`);
-      elements.push(<hr key={i} className="my-3 border-slate-200" />);
+      elements.push(<hr key={i} className="my-3 border-[#273244]" />);
     } else if (/^[-*]\s/.test(line)) {
       if (listType !== "ul") { flushList(`fl${i}`); listType = "ul"; }
       listItems.push(line.slice(2));
@@ -158,7 +158,7 @@ function MarkdownMessage({ text }) {
       elements.push(<div key={i} className="h-2" />);
     } else {
       flushList(`fl${i}`);
-      elements.push(<p key={i} className="text-sm leading-relaxed font-medium text-slate-800">{renderInline(line)}</p>);
+      elements.push(<p key={i} className="text-sm leading-relaxed font-medium text-slate-200">{renderInline(line)}</p>);
     }
   });
   flushList("end");
@@ -189,7 +189,7 @@ export default function AIAssistantPage() {
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
-  const { guardedRun } = useUsageGuard("ai_chat");
+  const { guardedRun, atLimit: chatAtLimit } = useUsageGuard("ai_chat");
   const [streamingMsg, setStreamingMsg] = useState(null); // { full, shown }
   const [assessmentDisclaimerOpen, setAssessmentDisclaimerOpen] = useState(false);
   const streamingTextRef = useRef("");
@@ -663,8 +663,8 @@ export default function AIAssistantPage() {
                 {/* Feature mission cards — 12-col grid for mobile */}
                 <div className="grid grid-cols-12 gap-3">
 
-                  {/* Interview Simulation */}
-                  <button
+                  {/* Interview Simulation — hidden when limit reached */}
+                  {!chatAtLimit && <button
                     onClick={startSimulation}
                     className="col-span-12 sm:col-span-6 group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-3 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.12)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30"
                   >
@@ -702,7 +702,7 @@ export default function AIAssistantPage() {
                         Starten
                       </div>
                     </div>
-                  </button>
+                  </button>}
 
                   {/* Stärkenanalyse */}
                   <button
