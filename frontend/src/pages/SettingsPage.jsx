@@ -429,10 +429,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Danger Zone - moves to bottom on mobile */}
-            <div className="order-last lg:order-none">
-              <DeleteAccountSection />
-            </div>
           </div>
 
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
@@ -596,7 +592,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => field.onChange(!field.value)}
-                      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors overflow-hidden ${
+                      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors overflow-hidden [transform:translateZ(0)] ${
                         field.value ? "bg-[#3b82f6]" : "bg-[#1f2937]"
                       }`}
                     >
@@ -623,6 +619,11 @@ export default function SettingsPage() {
                 : "Einstellungen speichern"}
             </button>
           </div>
+        </div>
+
+        {/* Danger Zone — always last (below all content on mobile) */}
+        <div className="lg:w-[320px] mt-2.5">
+          <DeleteAccountSection />
         </div>
       </form>
     </div>
