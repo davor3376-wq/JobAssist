@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { jobApi, resumeApi } from '../services/api';
+import { jobApi, resumeApi, settingsApi } from '../services/api';
 import {
   Search,
   Sparkles,
@@ -269,6 +269,7 @@ export default function DashboardPage() {
   });
   const { data: profile } = useQuery({
     queryKey: ['profile'],
+    queryFn: () => settingsApi.getPreferences().then(r => r.data),
     staleTime: 1000 * 60 * 3,
     initialData: () => { try { const r = localStorage.getItem('profile'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
@@ -323,7 +324,7 @@ export default function DashboardPage() {
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
-    { label: 'Präferenzen', complete: prefsSet >= 2,  icon: Zap,      sub: `${prefsSet} / 3` },
+    { label: 'Präferenzen', complete: prefsSet >= 2,  icon: Zap,      sub: `${prefsSet} / 3`, alwaysShowSub: true },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
@@ -331,7 +332,14 @@ export default function DashboardPage() {
   const avgMatchScore = analyzed > 0
     ? Math.round(jobs.filter(j => j.match_score != null).reduce((s, j) => s + j.match_score, 0) / analyzed)
     : 0;
-  const marketScore = total === 0 ? 0 : Math.min(99, Math.round(avgMatchScore * 0.6 + applyRate * 0.4));
+  const marketScore = analyzed === 0 ? 0 : avgMatchScore;
+  const prevMarketScore = analyzed > 1
+    ? Math.round(jobs.filter(j => j.match_score != null).slice(0, -1).reduce((s, j) => s + j.match_score, 0) / (analyzed - 1))
+    : 0;
+  const marketDelta = analyzed > 1 ? marketScore - prevMarketScore : 0;
+  const leistungsDelta = weekTotal >= 3
+    ? Math.min(15, Math.round(weekTotal * 2.5))
+    : -(3 - Math.min(weekTotal, 3)) * 4;
   const leistungsIndex = Math.min(99, Math.round(
     (analyzed >= 5 ? 35 : analyzed * 7) +
     (topMatches > 0 ? 20 : 0) +
@@ -394,13 +402,17 @@ export default function DashboardPage() {
                 </span>
                 <span className="text-[14px] mb-0.5" style={{ color: C.textDeep }}>%</span>
               </div>
-              <div className="mt-1 flex items-center gap-1.5">
-                <div
-                  className="h-[2px] w-5 rounded-full"
-                  style={{ background: C.emerald, boxShadow: `0 0 6px ${C.emeraldGlow}` }}
-                />
-                <span className="text-[11px] font-medium" style={{ color: C.emerald }}>+2%</span>
-              </div>
+              {analyzed > 1 && (
+                <div className="mt-1 flex items-center gap-1.5">
+                  <div
+                    className="h-[2px] w-5 rounded-full"
+                    style={{ background: marketDelta >= 0 ? C.emerald : C.amber, boxShadow: `0 0 6px ${marketDelta >= 0 ? C.emeraldGlow : 'rgba(245,158,11,0.35)'}` }}
+                  />
+                  <span className="text-[11px] font-medium" style={{ color: marketDelta >= 0 ? C.emerald : C.amber }}>
+                    {marketDelta >= 0 ? '+' : ''}{marketDelta}%
+                  </span>
+                </div>
+              )}
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-xs" style={{ color: C.textDim }}>Top-Treffer</span>
@@ -433,7 +445,7 @@ export default function DashboardPage() {
                 >
                   {leistungsIndex}
                 </span>
-                <span className="text-[11px] font-semibold" style={{ color: leistungsIndex >= 50 ? C.emerald : C.amber }}>{leistungsIndex >= 50 ? '↑' : '↓'}{leistungsIndex}%</span>
+                <span className="text-[11px] font-semibold" style={{ color: leistungsDelta >= 0 ? C.emerald : C.amber }}>{leistungsDelta >= 0 ? '↑' : '↓'}{Math.abs(leistungsDelta)}%</span>
               </div>
               <div className="mt-2 relative">
                 <div
@@ -504,7 +516,7 @@ export default function DashboardPage() {
 
           {/* Row 2 — Aktivität                                              */}
           {/* P0: min-h-[200px] auf Mobile (kein flex-1 ohne fixe Höhe)     */}
-          <Tile className="h-[165px] p-3 flex flex-col overflow-hidden">
+          <Tile className="h-[210px] p-3 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <Label>Aktivität</Label>
@@ -541,7 +553,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: '55px' }}>
+            <div className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: '100px' }}>
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
@@ -765,20 +777,23 @@ export default function DashboardPage() {
                       {item.label}
                     </span>
                   </div>
-                  {item.complete ? (
-                    <CheckCircle2
-                      size={15}
-                      strokeWidth={2}
-                      style={{ color: C.emerald, filter: `drop-shadow(0 0 4px ${C.emeraldGlow})` }}
-                    />
-                  ) : (
-                    <span
-                      className="text-[11px] font-semibold tabular-nums"
-                      style={{ color: C.textDim }}
-                    >
-                      {item.sub}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {item.sub && (item.alwaysShowSub || !item.complete) && (
+                      <span
+                        className="text-[11px] font-semibold tabular-nums"
+                        style={{ color: item.complete ? C.emerald : C.textDim }}
+                      >
+                        {item.sub}
+                      </span>
+                    )}
+                    {item.complete && (
+                      <CheckCircle2
+                        size={15}
+                        strokeWidth={2}
+                        style={{ color: C.emerald, filter: `drop-shadow(0 0 4px ${C.emeraldGlow})` }}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
