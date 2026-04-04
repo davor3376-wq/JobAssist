@@ -22,7 +22,7 @@ const PLANS = [
     price: "Gratis",
     period: "",
     iconCls: "from-slate-400 to-slate-500",
-    borderCls: "border-slate-200",
+    borderCls: "border-slate-700",
     badgeCls: "",
     btnCls: "border border-slate-200 text-slate-500 cursor-default bg-slate-50",
     Icon: Star,

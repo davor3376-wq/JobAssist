@@ -394,7 +394,7 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="flex flex-col gap-2.5"
+      className="animate-slide-up flex flex-col gap-2.5"
       style={{
         background: 'radial-gradient(ellipse at 18% 15%, rgba(13,13,26,0.72) 0%, rgba(9,9,9,0.60) 45%, rgba(5,5,5,0.50) 100%)',
         fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
