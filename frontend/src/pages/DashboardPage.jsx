@@ -288,6 +288,7 @@ export default function DashboardPage() {
   const appliedStatuses = ['applied', 'interviewing', 'offered', 'rejected'];
   const appliedCount  = jobs.filter(j => appliedStatuses.includes(j.status)).length;
   const interviewingCount = jobs.filter(j => ['interviewing', 'offered'].includes(j.status)).length;
+  const pendingCount = total - appliedCount;
   const topMatches    = jobs.filter(j => j.match_score != null && j.match_score >= 70).length;
   const hasResume     = resumes.length > 0;
 
@@ -510,7 +511,7 @@ export default function DashboardPage() {
                     {appliedCount} beworben
                   </div>
                   <div className="mt-1 text-[11px]" style={{ color: C.textDim }}>
-                    {interviewingCount > 0 ? `${interviewingCount} Interview${interviewingCount !== 1 ? 's' : ''}` : 'Noch kein Interview'}
+                    {pendingCount > 0 ? `${pendingCount} noch zu bewerben` : 'Alle beworben'}
                   </div>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <div className="flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: C.textDeep }}>
