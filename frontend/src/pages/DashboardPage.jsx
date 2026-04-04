@@ -784,7 +784,7 @@ export default function DashboardPage() {
                     {item.sub && (item.alwaysShowSub || !item.complete) && (
                       <span
                         className="text-[11px] font-semibold tabular-nums"
-                        style={{ color: item.complete ? C.emerald : C.textDim }}
+                        style={{ color: item.alwaysShowSub ? C.emerald : (item.complete ? C.emerald : C.textDim) }}
                       >
                         {item.sub}
                       </span>

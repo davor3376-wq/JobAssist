@@ -39,7 +39,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
     <div className="flex flex-col h-full">
       <div className="px-6 py-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
