@@ -283,27 +283,9 @@ export default function AIAssistantPage() {
 
   useEffect(() => {
     if (streamingMsg) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
     }
   }, [streamingMsg?.shown]);
-
-  useEffect(() => {
-    if (!streamingMsg) return;
-    if (!streamingMsg.full) return;
-    if (streamingMsg.shown.length >= streamingMsg.full.length) {
-      setMessages((prev) => [...prev, { role: "assistant", content: streamingMsg.full }]);
-      setStreamingMsg(null);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setStreamingMsg((prev) => {
-        if (!prev) return null;
-        return { ...prev, shown: prev.full.slice(0, prev.shown.length + 2) };
-      });
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-    }, 22);
-    return () => clearTimeout(timer);
-  }, [streamingMsg]);
 
   useEffect(() => {
     if (messages.length === 0) return;
