@@ -84,7 +84,8 @@ function useGamification(skills) {
 
   // Current score includes completed task points with weighting
   // Lower base scores get more benefit from tasks (fairness factor)
-  const fairnessMultiplier = Math.max(1, (100 - avgScore) / 50); // 1x at score 50, up to 2x at score 0
+  // < 40%: tasks give more points; > 60%: tasks give fewer (but still meaningful)
+  const fairnessMultiplier = avgScore < 40 ? 2 : avgScore > 60 ? 0.6 : 1;
   const weightedCompletedPoints = Math.round(completedPoints * fairnessMultiplier);
   const currentScore = Math.min(100, avgScore + weightedCompletedPoints);
   const projectedScore = Math.min(100, avgScore + weightedCompletedPoints + Math.round(potentialPoints * fairnessMultiplier));
@@ -449,6 +450,7 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
         <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible relative">
           <RadarChart skills={skills} size={280} />
+          <p className="text-center text-[9px] text-[#3a3a42] mt-1 tracking-wide">KI-Schätzung</p>
           {isAnalyzing && (
             <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: "rgba(6,6,8,0.55)" }}>
               <svg className="animate-spin w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none">
@@ -501,7 +503,7 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
                 <Target className="w-3 h-3 text-[#505058]" />
               )}
               <span className={`text-[11px] font-medium ${goalReached ? "text-emerald-400" : "text-[#505058]"}`}>
-                {goalReached ? "Ziel erreicht (85%)" : `Ziel: 85% · noch ${85 - currentScore}%`}
+                {goalReached ? "Ziel erreicht (85%)" : "Ziel: 85%"}
               </span>
             </div>
           </div>
