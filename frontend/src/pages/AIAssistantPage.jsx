@@ -499,30 +499,26 @@ export default function AIAssistantPage() {
     <div className="h-[calc(100svh-156px)] md:h-[calc(100svh-64px)] flex flex-col animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8">
 
       {/* ── Global header ──────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 md:px-5 py-3 border-b border-[#171a21] bg-[#05060a]">
-        <div className="flex items-center gap-2 min-w-0">
-          <button
-            onClick={() => setSidebarOpen((v) => !v)}
-            className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-white/5 transition-colors flex-shrink-0"
-          >
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 md:px-5 py-2.5 border-b border-[#171a21] bg-[#05060a]">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setSidebarOpen((v) => !v)} className="md:hidden p-1.5 rounded-xl text-slate-500 hover:bg-white/5 transition-colors flex-shrink-0">
             <MessageSquare className="w-4 h-4" />
           </button>
-          <h1 className="text-sm font-bold text-white truncate">KI-Bewerbungsassistent</h1>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <Bot className="w-3.5 h-3.5 text-indigo-400" />
+            </div>
+            <span className="text-sm font-semibold text-white hidden sm:block">KI-Assistent</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <ResumeDropdown resumes={uploadedResumes} selectedId={selectedResumeId} onSelect={setSelectedResumeId} />
-          <button
-            onClick={handleNewChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors shadow-sm shadow-blue-500/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Neues Gespräch</span>
-          </button>
-        </div>
+        <button onClick={handleNewChat} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors">
+          <Plus className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Neu</span>
+        </button>
       </div>
 
       {/* ── Body: sidebar + chat ────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[300px_1fr]">
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[320px_1fr]">
 
         {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
         <aside className="hidden md:flex flex-col border-r border-[#171a21] bg-[#05060a] overflow-hidden">
@@ -586,6 +582,28 @@ export default function AIAssistantPage() {
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
         <div className="flex flex-col overflow-hidden bg-black min-h-0">
 
+          {/* Chat panel header — resume select + conversation title */}
+          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-2 border-b border-[#171a21] bg-[#080a0f]">
+            <div className="flex items-center gap-2 min-w-0">
+              <button onClick={() => setSidebarOpen((v) => !v)} className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-white/5 flex-shrink-0">
+                <Clock className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs text-slate-500 truncate hidden sm:block">
+                {activeId ? (conversations.find(c => c.id === activeId)?.title || "Gespräch") : "Neues Gespräch"}
+              </span>
+            </div>
+            <select
+              value={selectedResumeId || ""}
+              onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
+              className="px-2.5 py-1 rounded-lg border border-[#1C2333] bg-[#131C2C] text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 max-w-[180px] cursor-pointer"
+            >
+              <option value="">Kein Lebenslauf</option>
+              {uploadedResumes.map((r) => (
+                <option key={r.id} value={r.id}>{r.filename || `Lebenslauf ${r.id}`}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Simulation mode banner */}
           {simulationMode && (
             <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
@@ -641,8 +659,8 @@ export default function AIAssistantPage() {
               /* ── Empty-state ─────────────────────────────────────────── */
               <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-1">
 
-                {/* Hero — Nächster Schritt */}
-                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
+                {/* Hero — Nächster Schritt — desktop only */}
+                <div className="hidden md:block relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
                   <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
                   <div className="relative flex items-start gap-3">
@@ -669,59 +687,35 @@ export default function AIAssistantPage() {
                   </div>
                 </div>
 
-                {/* Mobile-only horizontal quick actions */}
-                <div className="md:hidden">
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Schnell-Aktionen</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [&::-webkit-scrollbar]:hidden">
-                    {!chatAtLimit && (
-                      <button onClick={startSimulation} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-[#131C2C] px-3 py-2 text-xs font-medium text-blue-300 whitespace-nowrap">
-                        <MessageSquare className="w-3.5 h-3.5" /> Interview-Sim.
-                      </button>
-                    )}
-                    <button onClick={() => setAssessmentDisclaimerOpen(true)} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 text-xs font-medium text-slate-300 whitespace-nowrap">
-                      <ClipboardList className="w-3.5 h-3.5 text-blue-400" /> Stärkenanalyse
-                    </button>
-                    {SUGGESTIONS.map((s) => {
-                      const locked = s.requiresResume && uploadedResumes.length === 0;
-                      return (
-                        <button key={s.label} onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
-                          className={`flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 text-xs font-medium whitespace-nowrap ${locked ? "text-slate-500 opacity-50" : "text-slate-300"}`}>
-                          {locked ? <Lock className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5 text-slate-400" />}
-                          {s.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {/* Mission cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Mission cards — desktop only, mobile uses h-scroll above */}
+                <div className="hidden md:grid grid-cols-2 gap-3">
                   {!chatAtLimit && (
                     <button onClick={startSimulation}
-                      className="group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.10)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30">
+                      className="group relative overflow-hidden rounded-xl border border-indigo-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(99,102,241,0.12),0_4px_24px_rgba(99,102,241,0.10)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-900/30">
                       <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
                       <div className="relative">
-                        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
+                        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-500/30">
                           <MessageSquare className="h-4 w-4 text-white" />
                         </div>
                         <h4 className="text-sm font-bold text-white">Interview-Simulation</h4>
                         <p className="mt-1 text-xs leading-relaxed text-slate-400">Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.</p>
-                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-blue-500/12 px-2.5 py-1.5 text-xs font-semibold text-blue-100">
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1.5 text-xs font-semibold text-indigo-200">
                           <Sparkles className="h-3 w-3" /> Starten
                         </div>
                       </div>
                     </button>
                   )}
                   <button onClick={() => setAssessmentDisclaimerOpen(true)}
-                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-4 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20">
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl transition-all group-hover:bg-blue-400/20" />
+                    className="group relative overflow-hidden rounded-xl border border-emerald-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_24px_rgba(16,185,129,0.06)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/20">
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl transition-all group-hover:bg-emerald-400/20" />
                     <div className="relative">
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
+                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 shadow-md shadow-emerald-500/30">
                         <ClipboardList className="h-4 w-4 text-white" />
                       </div>
                       <h4 className="text-sm font-bold text-white">Stärkenanalyse</h4>
                       <p className="mt-1 text-xs leading-relaxed text-slate-400">Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.</p>
-                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-blue-500/12 px-2.5 py-1.5 text-xs font-semibold text-blue-100">
+                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200">
                         <ClipboardList className="h-3 w-3" /> Starten
                       </div>
                     </div>
@@ -743,15 +737,15 @@ export default function AIAssistantPage() {
                       </div>
                     )}
                     <div className={`max-w-[82%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-3 overflow-hidden rounded-xl
+                      <div className={`px-4 py-3 overflow-hidden rounded-xl backdrop-blur-sm
                         ${msg.role === "user"
-                          ? "bg-blue-500 text-white rounded-br-sm text-sm leading-relaxed font-medium"
+                          ? "bg-indigo-600/90 text-white rounded-br-sm text-sm leading-relaxed font-medium"
                           : msg.isError
                             ? "bg-red-500/10 border border-red-500/30 text-red-200 rounded-bl-sm text-sm leading-relaxed"
-                            : "bg-[#0d1117] border border-[#1e2a3a] text-slate-200 rounded-bl-sm text-sm leading-relaxed"
+                            : "bg-[#0d1117]/90 border border-[#1e2a3a] text-slate-200 rounded-bl-sm text-sm leading-relaxed"
                         }`}
                         style={msg.role === "user"
-                          ? { boxShadow: "0 2px 20px rgba(59,130,246,0.35)" }
+                          ? { boxShadow: "0 2px 20px rgba(99,102,241,0.40)" }
                           : !msg.isError
                             ? { boxShadow: "0 2px 16px rgba(91,79,232,0.15), inset 0 1px 0 rgba(255,255,255,0.04)" }
                             : {}
@@ -789,7 +783,7 @@ export default function AIAssistantPage() {
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                     <div className="max-w-[82%] items-start">
-                      <div className="bg-[#0d1117] border border-[#1e2a3a] text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden"
+                      <div className="bg-[#0d1117]/90 border border-[#1e2a3a] text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden backdrop-blur-sm"
                         style={{ boxShadow: "0 2px 16px rgba(91,79,232,0.15), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
                         <MarkdownMessage text={streamingMsg.shown} />
                         <span className="inline-block w-0.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
@@ -801,6 +795,31 @@ export default function AIAssistantPage() {
                 <div ref={messagesEndRef} />
               </div>
             )}
+          </div>
+
+          {/* ── Mobile persistent quick-actions strip ───────────────────── */}
+          <div className="md:hidden flex-shrink-0 border-t border-[#171a21] bg-[#05060a]">
+            <div className="flex gap-2 overflow-x-auto px-3 py-2 [&::-webkit-scrollbar]:hidden">
+              {!chatAtLimit && (
+                <button onClick={startSimulation} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-indigo-500/25 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-300 whitespace-nowrap">
+                  <MessageSquare className="w-3.5 h-3.5" /> Interview-Sim.
+                </button>
+              )}
+              <button onClick={() => setAssessmentDisclaimerOpen(true)} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 whitespace-nowrap">
+                <ClipboardList className="w-3.5 h-3.5" /> Stärkenanalyse
+              </button>
+              {SUGGESTIONS.map((s) => {
+                const locked = s.requiresResume && uploadedResumes.length === 0;
+                return (
+                  <button key={s.label} onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
+                    disabled={chatAtLimit}
+                    className={`flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[#1C2333] bg-[#0d1117] px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-40 ${locked ? "text-slate-500 opacity-50" : "text-slate-300"}`}>
+                    {locked ? <Lock className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5 text-slate-400" />}
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── EU AI Act micro-disclaimer ──────────────────────────────── */}
