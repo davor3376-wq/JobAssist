@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
-  BellOff,
   Briefcase,
   ChevronLeft,
   Mail,
@@ -166,13 +165,6 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
               >
                 {isRunning ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                 Jetzt ausführen
-              </button>
-              <button
-                onClick={() => onToggle(alert.id, !alert.is_active)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#334155] bg-transparent px-2.5 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500/30 hover:text-blue-300"
-              >
-                {alert.is_active ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
-                {alert.is_active ? "Pausieren" : "Aktivieren"}
               </button>
               <button
                 onClick={() => onEdit(alert)}

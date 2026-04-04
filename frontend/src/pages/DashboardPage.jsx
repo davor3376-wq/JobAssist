@@ -174,7 +174,7 @@ function ActivityChart({ data }) {
       viewBox={`0 0 ${W} ${H}`}
       width="100%"
       height="100%"
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       style={{ display: 'block' }}
     >
       <defs>
@@ -267,6 +267,11 @@ export default function DashboardPage() {
     queryKey: ['resumes'],
     queryFn: () => resumeApi.list().then(r => r.data),
   });
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    staleTime: 1000 * 60 * 3,
+    initialData: () => { try { const r = localStorage.getItem('profile'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
+  });
 
   // Derived stats
   const analyzed      = jobs.filter(j => j.match_score != null).length;
@@ -310,12 +315,29 @@ export default function DashboardPage() {
   ];
 
   // Profile strength — Lebenslauf from real resumes
+  const prefsSet = [
+    (profile?.desired_locations?.length > 0),
+    (profile?.job_types?.length > 0),
+    (!!profile?.experience_level),
+  ].filter(Boolean).length;
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
-    { label: 'Präferenzen', complete: false,           icon: Zap,      sub: '2 / 3' },
+    { label: 'Präferenzen', complete: prefsSet >= 2,  icon: Zap,      sub: `${prefsSet} / 3` },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
+
+  // Dynamic scores computed from real data
+  const avgMatchScore = analyzed > 0
+    ? Math.round(jobs.filter(j => j.match_score != null).reduce((s, j) => s + j.match_score, 0) / analyzed)
+    : 0;
+  const marketScore = total === 0 ? 0 : Math.min(99, Math.round(avgMatchScore * 0.6 + applyRate * 0.4));
+  const leistungsIndex = Math.min(99, Math.round(
+    (analyzed >= 5 ? 35 : analyzed * 7) +
+    (topMatches > 0 ? 20 : 0) +
+    (appliedCount >= 3 ? 25 : appliedCount * 8) +
+    (interviewingCount > 0 ? 20 : 0)
+  ));
 
   // Weekly goals — dynamic
   const weeklyGoals = [
@@ -368,7 +390,7 @@ export default function DashboardPage() {
                   className="text-[26px] font-semibold leading-none tabular-nums"
                   style={{ color: C.textPrimary, letterSpacing: '-0.03em' }}
                 >
-                  63
+                  {marketScore}
                 </span>
                 <span className="text-[14px] mb-0.5" style={{ color: C.textDeep }}>%</span>
               </div>
@@ -409,9 +431,9 @@ export default function DashboardPage() {
                   className="text-[26px] font-semibold leading-none tabular-nums"
                   style={{ color: C.textPrimary, letterSpacing: '-0.03em' }}
                 >
-                  87
+                  {leistungsIndex}
                 </span>
-                <span className="text-[11px] font-semibold" style={{ color: C.emerald }}>↑12%</span>
+                <span className="text-[11px] font-semibold" style={{ color: leistungsIndex >= 50 ? C.emerald : C.amber }}>{leistungsIndex >= 50 ? '↑' : '↓'}{leistungsIndex}%</span>
               </div>
               <div className="mt-2 relative">
                 <div
@@ -421,7 +443,7 @@ export default function DashboardPage() {
                   <div
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{
-                      width: '75%',
+                      width: `${Math.max(0, leistungsIndex - 12)}%`,
                       background: `${C.emerald}22`,
                       boxShadow: `0 0 10px ${C.emeraldGlow}`,
                     }}
@@ -429,7 +451,7 @@ export default function DashboardPage() {
                   <div
                     className="h-full rounded-full relative"
                     style={{
-                      width: '87%',
+                      width: `${leistungsIndex}%`,
                       background: `linear-gradient(90deg, ${C.emerald}CC, ${C.emerald})`,
                       boxShadow: `0 0 8px ${C.emeraldGlow}`,
                     }}
@@ -446,7 +468,7 @@ export default function DashboardPage() {
                   style={{ background: C.emerald, boxShadow: `0 0 5px ${C.emeraldGlow}` }}
                 />
                 <span className="text-xs font-medium" style={{ color: C.textSub }}>
-                  Vergleichswert: <span style={{ color: C.emerald }}>Top 5%</span>
+                  <span style={{ color: C.emerald }}>Top {leistungsIndex >= 80 ? '5%' : leistungsIndex >= 60 ? '20%' : '50%'}</span>
                 </span>
               </div>
             </Tile>

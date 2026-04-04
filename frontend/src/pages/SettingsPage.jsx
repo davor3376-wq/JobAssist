@@ -295,7 +295,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-3 items-start">
 
           {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
-          <div className="space-y-2.5">
+          <div className="flex flex-col gap-2.5">
 
             {/* Profilfoto */}
             <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
@@ -430,7 +430,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Danger Zone - moves to bottom on mobile */}
-            <div className="order-last md:order-none">
+            <div className="order-last lg:order-none">
               <DeleteAccountSection />
             </div>
           </div>
@@ -596,7 +596,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => field.onChange(!field.value)}
-                      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+                      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors overflow-hidden ${
                         field.value ? "bg-[#3b82f6]" : "bg-[#1f2937]"
                       }`}
                     >

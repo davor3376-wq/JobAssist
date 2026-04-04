@@ -446,7 +446,6 @@ function DocumentIntelligence({ resume, skills, gamification }) {
   const [hoveredTile, setHoveredTile] = useState(null);
 
   const sorted = useMemo(() => [...skills].sort((a, b) => b.value - a.value), [skills]);
-  const strengths = sorted.slice(0, 3);
   const potentials = sorted.slice(-2);
 
 
@@ -595,29 +594,8 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
       </div>
 
-      {/* ── 4. Stärken — frameless, no borders, glowing dots ──────── */}
-      <div className="col-span-12 sm:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-          Stärken
-        </span>
-        <div className="mt-5 space-y-4">
-          {strengths.map((s) => (
-            <div key={s.key} className="flex items-start gap-3">
-              <div
-                className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
-                style={{ background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.6)" }}
-              />
-              <div>
-                <span className="text-[12px] font-medium text-[#e0e0e8]">{s.label}</span>
-                <span className="text-[11px] text-[#505058] ml-2">{s.value}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 5. Wachstums-Potenziale — interactive hover tiles ────── */}
-      <div className="col-span-12 sm:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+      {/* ── 4. Wachstums-Potenziale — interactive hover tiles ────── */}
+      <div className="col-span-12 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
         <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Wachstums-Potenziale
         </span>
@@ -816,7 +794,7 @@ export default function ResumePage() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                <span className="block text-[11px] font-medium tracking-[0.18em] uppercase text-[#3a3a42] px-1">
+                <span className="block text-xs font-medium tracking-[0.14em] uppercase text-[#505058] px-1">
                   Dokumente ({resumes.length})
                 </span>
                 {(showAllResumes ? resumes : resumes.slice(0, RESUME_PAGE_SIZE)).map(resume => (
@@ -833,7 +811,7 @@ export default function ResumePage() {
                 {resumes.length > RESUME_PAGE_SIZE && (
                   <button
                     onClick={() => setShowAllResumes(v => !v)}
-                    className="w-full text-center text-[11px] font-medium text-slate-500 hover:text-slate-300 py-2 transition-colors"
+                    className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300 py-2 transition-colors"
                   >
                     {showAllResumes ? 'Weniger anzeigen' : `Alle ${resumes.length} anzeigen`}
                   </button>

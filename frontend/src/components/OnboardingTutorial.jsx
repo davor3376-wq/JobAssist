@@ -225,28 +225,28 @@ export default function OnboardingTutorial() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismiss} />
 
       {/* Card */}
-      <div className={`relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-250 ${closing ? "scale-95" : "scale-100"}`}>
+      <div className={`relative w-full max-w-md bg-[#111827] border border-[#1f2937] rounded-3xl shadow-2xl shadow-black/60 overflow-hidden transition-all duration-250 ${closing ? "scale-95" : "scale-100"}`}>
         {/* Close */}
         <button
           onClick={dismiss}
-          className="absolute top-4 right-4 z-10 p-1.5 rounded-xl text-gray-400 hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 z-10 p-1.5 rounded-xl text-slate-400 hover:bg-white/5 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Illustration area */}
-        <div className="bg-gradient-to-br from-slate-50 to-gray-100 pt-8 pb-2">
+        <div className="bg-gradient-to-br from-[#0f172a] to-[#111827] pt-8 pb-2">
           {current.illustration}
         </div>
 
         {/* Content */}
         <div className="px-7 pt-5 pb-7">
           {/* Tag + title */}
-          <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-brand-500 mb-2">
+          <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">
             {current.tag}
           </span>
-          <h2 className="text-xl font-extrabold text-gray-900 mb-2 leading-tight">{current.title}</h2>
-          <p className="text-sm text-gray-500 leading-relaxed mb-6">{current.description}</p>
+          <h2 className="text-xl font-extrabold text-slate-100 mb-2 leading-tight">{current.title}</h2>
+          <p className="text-sm text-slate-400 leading-relaxed mb-6">{current.description}</p>
 
           {/* Step dots */}
           <div className="flex items-center justify-center gap-1.5 mb-6">
@@ -255,7 +255,7 @@ export default function OnboardingTutorial() {
                 key={i}
                 onClick={() => setStep(i)}
                 className={`rounded-full transition-all duration-200 ${
-                  i === step ? "w-6 h-2 bg-brand-500" : "w-2 h-2 bg-gray-200 hover:bg-gray-300"
+                  i === step ? "w-6 h-2 bg-blue-500" : "w-2 h-2 bg-[#1f2937] hover:bg-[#2d3748]"
                 }`}
               />
             ))}
@@ -266,14 +266,14 @@ export default function OnboardingTutorial() {
             {current.cta && (
               <button
                 onClick={() => handleCta(current.cta.path)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-brand-200 bg-brand-50 text-brand-700 text-sm font-bold hover:bg-brand-100 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-sm font-bold hover:bg-blue-500/15 transition-colors"
               >
                 {current.cta.label}
               </button>
             )}
             <button
               onClick={handleNext}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-brand-500 to-purple-600 text-white text-sm font-bold shadow-lg shadow-brand-200 hover:from-brand-600 hover:to-purple-700 transition-all ${current.cta ? "px-5" : "flex-1"}`}
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold shadow-lg shadow-blue-900/40 hover:from-blue-500 hover:to-violet-500 transition-all ${current.cta ? "px-5" : "flex-1"}`}
             >
               {isLast ? (
                 <><Check className="w-4 h-4" /> Los geht's!</>
@@ -285,7 +285,7 @@ export default function OnboardingTutorial() {
 
           <button
             onClick={dismiss}
-            className="w-full mt-3 text-center text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
+            className="w-full mt-3 text-center text-xs text-slate-500 hover:text-slate-300 transition-colors py-1"
           >
             Tutorial überspringen
           </button>

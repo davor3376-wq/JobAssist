@@ -808,14 +808,6 @@ const [savingJobId, setSavingJobId] = useState(null);
                               {savedJobIds.has(result.source_id) ? "Gespeichert" : "Speichern"}
                             </button>
                             <button
-                              onClick={() => handleAnalyzeJob(result, index)}
-                              disabled={analyzingJobId === index}
-                              className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-blue-400 transition-colors disabled:opacity-50"
-                            >
-                              <Sparkles size={12} />
-                              {analyzingJobId === index ? "Analyse…" : "Analysieren"}
-                            </button>
-                            <button
                               onClick={() => handleResearch(result)}
                               className="flex items-center gap-1.5 text-[11px] font-medium text-[#505058] hover:text-emerald-400 transition-colors"
                             >

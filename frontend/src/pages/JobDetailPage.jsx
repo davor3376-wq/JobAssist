@@ -390,9 +390,9 @@ function ActionBtn({ pending, disabled, onClick, icon, pendingLabel, label, vari
 }
 
 function DownloadBtn({ kind, onClick, variant = "default" }) {
-  const cls = variant === "red" ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-    : variant === "blue" ? "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100"
-    : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100";
+  const cls = variant === "red" ? "border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/15"
+    : variant === "blue" ? "border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/15"
+    : "border-[#1f2937] bg-[#0b1220] text-slate-300 hover:border-blue-500/30";
   return (
     <button onClick={onClick} className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold min-h-[44px] ${cls}`}>
       <Download className="h-3.5 w-3.5" />{kind}

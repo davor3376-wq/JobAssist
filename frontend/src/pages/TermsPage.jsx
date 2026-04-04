@@ -18,7 +18,7 @@ export default function TermsPage() {
             <p>
               Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Plattform <strong>JobAssist</strong>
               {" "} (nachfolgend „Dienst"), betrieben von JobAssist (siehe{" "}
-              <Link to="/impressum" className="text-blue-600 hover:underline">
+              <Link to="/impressum" className="text-blue-400 hover:underline">
                 Impressum
               </Link>
               ). Der Dienst richtet sich an Nutzer in Österreich und unterstützt bei der Stellensuche auf dem österreichischen Arbeitsmarkt.
@@ -127,7 +127,7 @@ export default function TermsPage() {
             </p>
             <p className="mt-2">
               Online-Streitbeilegung gemäß Art. 14 Abs. 1 ODR-VO: Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit:{" "}
-              <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
                 https://ec.europa.eu/consumers/odr
               </a>
             </p>

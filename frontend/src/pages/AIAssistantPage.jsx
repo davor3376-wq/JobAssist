@@ -530,31 +530,31 @@ export default function AIAssistantPage() {
           <div className="flex-shrink-0 px-2 pt-3 pb-2 border-b border-[#171a21]">
             <p className="px-2 pb-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">Missionen</p>
             {!chatAtLimit && (
-              <button onClick={startSimulation} className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-indigo-500/10 text-left transition-colors">
+              <button onClick={startSimulation} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/15 text-left transition-colors mb-1">
                 <MessageSquare className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
-                <span className="text-xs text-slate-200">Interview-Simulation</span>
+                <span className="text-xs font-semibold text-indigo-300">Interview-Simulation</span>
               </button>
             )}
-            <button onClick={() => setAssessmentDisclaimerOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-white/5 text-left transition-colors">
-              <ClipboardList className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-              <span className="text-xs text-slate-200">Karriere-Analyse</span>
+            <button onClick={() => setAssessmentDisclaimerOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/15 text-left transition-colors mb-1">
+              <ClipboardList className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span className="text-xs font-semibold text-emerald-300">Karriere-Analyse</span>
             </button>
             <button
               onClick={() => { if (uploadedResumes.length === 0) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(SUGGESTIONS[0].prompt); }}
               disabled={chatAtLimit}
-              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-white/5 text-left transition-colors disabled:opacity-40"
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-violet-500/20 bg-violet-500/10 hover:bg-violet-500/15 text-left transition-colors disabled:opacity-40 mb-1"
             >
-              <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${uploadedResumes.length === 0 ? "text-slate-600" : "text-slate-400"}`} />
-              <span className={`text-xs flex-1 ${uploadedResumes.length === 0 ? "text-slate-500" : "text-slate-200"}`}>Lebenslauf analysieren</span>
+              <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${uploadedResumes.length === 0 ? "text-slate-600" : "text-violet-400"}`} />
+              <span className={`text-xs font-semibold flex-1 ${uploadedResumes.length === 0 ? "text-slate-500" : "text-violet-300"}`}>Lebenslauf analysieren</span>
               {uploadedResumes.length === 0 && <Lock className="w-3 h-3 text-slate-600 flex-shrink-0" />}
             </button>
             <button
               onClick={() => handleSend(SUGGESTIONS[1].prompt)}
               disabled={chatAtLimit}
-              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-white/5 text-left transition-colors disabled:opacity-40"
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/15 text-left transition-colors disabled:opacity-40"
             >
-              <Briefcase className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span className="text-xs text-slate-200">Bewerbungsstrategie</span>
+              <Briefcase className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span className="text-xs font-semibold text-amber-300">Bewerbungsstrategie</span>
             </button>
           </div>
 
@@ -582,50 +582,40 @@ export default function AIAssistantPage() {
         {/* ── Center Chat ──────────────────────────────────────────────────── */}
         <div className="flex flex-col overflow-hidden bg-black min-h-0">
 
-          {/* Simulation mode banner */}
+          {/* Simulation mode compact indicator */}
           {simulationMode && (
-            <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Interview-Simulator</p>
-                  <p className="mt-0.5 text-xs text-slate-300">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {simulatorActions.map((action) => (
-                    <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors">
-                      {action.label}
-                    </button>
-                  ))}
-                  <button onClick={() => setSimulationMode(false)}
-                    className="rounded-full border border-[#273244] bg-[#111827] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
-                    Beenden
+            <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-[#171a21] bg-indigo-500/10">
+              <span className="text-xs font-bold text-indigo-300">Interview-Simulator aktiv</span>
+              <div className="flex flex-wrap gap-1 ml-auto">
+                {simulatorActions.map((action) => (
+                  <button key={action.label} onClick={() => handleSend(action.prompt)}
+                    className="rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 transition-colors">
+                    {action.label}
                   </button>
-                </div>
+                ))}
+                <button onClick={() => setSimulationMode(false)}
+                  className="rounded-full border border-[#273244] px-2 py-0.5 text-xs font-semibold text-slate-400 hover:text-slate-300 transition-colors">
+                  ✕
+                </button>
               </div>
             </div>
           )}
 
-          {/* Assessment mode banner */}
+          {/* Assessment mode compact indicator */}
           {assessmentMode && (
-            <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Stärkenanalyse</p>
-                  <p className="mt-0.5 text-xs text-slate-300">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {assessmentActions.map((action) => (
-                    <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors">
-                      {action.label}
-                    </button>
-                  ))}
-                  <button onClick={() => setAssessmentMode(false)}
-                    className="rounded-full border border-[#273244] bg-[#111827] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
-                    Beenden
+            <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-[#171a21] bg-emerald-500/10">
+              <span className="text-xs font-bold text-emerald-300">Stärkenanalyse aktiv</span>
+              <div className="flex flex-wrap gap-1 ml-auto">
+                {assessmentActions.map((action) => (
+                  <button key={action.label} onClick={() => handleSend(action.prompt)}
+                    className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors">
+                    {action.label}
                   </button>
-                </div>
+                ))}
+                <button onClick={() => setAssessmentMode(false)}
+                  className="rounded-full border border-[#273244] px-2 py-0.5 text-xs font-semibold text-slate-400 hover:text-slate-300 transition-colors">
+                  ✕
+                </button>
               </div>
             </div>
           )}
@@ -837,27 +827,53 @@ export default function AIAssistantPage() {
           </div>
 
           {/* Schnell-Aktionen — kompakte Liste */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="flex-shrink-0 px-2 py-2 border-b border-[#171a21]">
             <p className="px-2 pb-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">Schnell-Aktionen</p>
             <div className="space-y-0.5">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
+                const colorCls = s.iconCls || "text-blue-400 bg-blue-500/10";
+                const [iconColor] = colorCls.split(" ");
                 return (
                   <button
                     key={s.label}
                     onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
                     disabled={chatAtLimit}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/5 text-left transition-colors disabled:opacity-40 group"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/5 text-left transition-colors disabled:opacity-40 group cursor-pointer"
                   >
                     {locked
                       ? <Lock className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
-                      : <s.icon className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                      : <s.icon className={`w-3.5 h-3.5 flex-shrink-0 ${iconColor}`} />
                     }
                     <span className="text-xs text-slate-300 group-hover:text-slate-100 transition-colors leading-tight flex-1">{s.label}</span>
                   </button>
                 );
               })}
             </div>
+          </div>
+
+          {/* Gesprächsverlauf — für PC-Nutzer */}
+          <div className="flex-1 overflow-y-auto px-2 py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+            <p className="px-2 pb-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">Verlauf</p>
+            {conversations.length === 0 ? (
+              <p className="px-2 py-3 text-xs text-slate-500 text-center">Noch keine Gespräche</p>
+            ) : (
+              <div className="space-y-0.5">
+                {conversations.slice(0, 15).map((conv) => (
+                  <button
+                    key={conv.id}
+                    onClick={() => handleSelectConversation(conv)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg transition-colors text-xs truncate ${
+                      conv.id === activeId
+                        ? "bg-indigo-500/15 text-indigo-200 border border-indigo-500/25"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                    }`}
+                  >
+                    {conv.title}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
 
