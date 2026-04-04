@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from "react";
-import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -182,6 +182,7 @@ function VerificationBanner({ me }) {
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [animClass] = useState(() => (sessionStorage.getItem("app-loaded") ? "page-ready" : "page-enter"));
+  const location = useLocation();
 
   useEffect(() => {
     sessionStorage.setItem("app-loaded", "1");
@@ -273,7 +274,7 @@ export default function Layout() {
 
         <main className="flex-1">
           {/* P3: pb-16 md:pb-0 — Platz für die mobile Bottom-Nav */}
-          <div className={`max-w-7xl mx-auto px-4 py-5 pb-20 text-slate-100 md:px-8 md:py-8 md:pb-8 bg-transparent ${animClass}`}>
+          <div key={location.key} className={`max-w-7xl mx-auto px-4 py-5 pb-20 text-slate-100 md:px-8 md:py-8 md:pb-8 bg-transparent animate-slide-up ${animClass}`}>
             <VerificationBanner me={me} />
             <Suspense fallback={<PageLoader />}>
               <Outlet />
