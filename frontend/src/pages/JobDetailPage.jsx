@@ -3,7 +3,7 @@
  * Primary: #2D5BFF | Desktop: 40/60 split | Mobile: single-column stack
  * Touch targets: min 44×44px | Body: 16px / leading-relaxed
  */
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -320,16 +320,21 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
   const active = currentIdx >= 0 ? currentIdx : 0;
   return (
     <div className="space-y-3 w-full">
-      <div className="flex items-center gap-0 w-full">
+      <div className="flex items-start w-full">
         {STATUS_STEPS.map((step, i) => {
           const done = i < active;
           const current = i === active;
           return (
-            <div key={step.key} className="flex items-center flex-1 min-w-0">
+            <Fragment key={step.key}>
+              {i > 0 && (
+                <div className={`flex-1 h-0.5 mt-[5px] mx-1 rounded-full transition-all duration-[20ms] ${
+                  i <= active ? "" : "bg-[#1e293b]"
+                }`} style={i <= active ? { backgroundColor: PRIMARY } : undefined} />
+              )}
               <button
                 onClick={() => !current && !isPending && onStatusChange?.(step.key)}
                 disabled={current || isPending}
-                className="flex flex-col items-center flex-1 w-full group disabled:cursor-default"
+                className="flex flex-col items-center group disabled:cursor-default"
               >
                 <div
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-[20ms] ${
@@ -343,12 +348,7 @@ function StatusProgressBar({ status, onStatusChange, isPending }) {
                   {step.label}
                 </span>
               </button>
-              {i < STATUS_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all duration-[20ms] ${
-                  i < active ? "" : "bg-[#1e293b]"
-                }`} style={i < active ? { backgroundColor: PRIMARY } : undefined} />
-              )}
-            </div>
+            </Fragment>
           );
         })}
       </div>
@@ -759,13 +759,15 @@ export default function JobDetailPage() {
             {/* ── Secondary Action Grid 3×3 ──────────────────────────────────── */}
             <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-4 mb-4">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Aktionen</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "8px" }}>
 
+              {/* Group 1 — KI-Generierung */}
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-400/70 mb-1.5">KI-Analyse</p>
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 {/* 1 – Match Analysis */}
                 <button
                   disabled={!resumeId || matchMutation.isPending}
                   onClick={() => matchMutation.mutate()}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-violet-700/50 bg-violet-950/60 px-3 py-[8.5px] text-sm font-semibold text-violet-300 transition-all hover:bg-violet-900/70 hover:text-violet-100 disabled:opacity-40"
                 >
                   {matchMutation.isPending ? <LoadingSpinner /> : <Zap className="h-4 w-4 flex-shrink-0" />}
                   Eignungs-Analyse
@@ -775,57 +777,66 @@ export default function JobDetailPage() {
                 <button
                   disabled={!resumeId || coverLetterMutation.isPending || !!job.cover_letter}
                   onClick={() => coverLetterMutation.mutate()}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-violet-700/50 bg-violet-950/60 px-3 py-[8.5px] text-sm font-semibold text-violet-300 transition-all hover:bg-violet-900/70 hover:text-violet-100 disabled:opacity-40"
                 >
                   {coverLetterMutation.isPending ? <LoadingSpinner /> : <FileText className="h-4 w-4 flex-shrink-0" />}
                   Anschreiben erstellen
-                </button>
-
-                {/* 3 – View Cover Letter */}
-                <button
-                  disabled={!job.cover_letter}
-                  onClick={() => setCoverLetterModalOpen(true)}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
-                >
-                  <BookOpen className="h-4 w-4 flex-shrink-0" />
-                  Anschreiben ansehen
                 </button>
 
                 {/* 4 – Create Interview Prep */}
                 <button
                   disabled={!resumeId || interviewMutation.isPending || !!job.interview_qa}
                   onClick={() => interviewMutation.mutate()}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-violet-700/50 bg-violet-950/60 px-3 py-[8.5px] text-sm font-semibold text-violet-300 transition-all hover:bg-violet-900/70 hover:text-violet-100 disabled:opacity-40"
                 >
                   {interviewMutation.isPending ? <LoadingSpinner /> : <MessageSquare className="h-4 w-4 flex-shrink-0" />}
                   Gespräch erstellen
                 </button>
+              </div>
 
-                {/* 5 – View Interview Prep */}
-                <button
-                  disabled={!job.interview_qa}
-                  onClick={() => setActiveTab("interview")}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
-                >
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  Gespräch ansehen
-                </button>
+              {/* Group 2 — Ergebnisse ansehen */}
+              <div className="border-t border-[#1e293b] pt-3 mb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-teal-400/70 mb-1.5">Ergebnisse</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {/* 3 – View Cover Letter */}
+                  <button
+                    disabled={!job.cover_letter}
+                    onClick={() => setCoverLetterModalOpen(true)}
+                    className="min-h-[44px] flex items-center gap-2 rounded-xl border border-teal-700/50 bg-teal-950/50 px-3 py-[8.5px] text-sm font-semibold text-teal-300 transition-all hover:bg-teal-900/60 hover:text-teal-100 disabled:opacity-40"
+                  >
+                    <BookOpen className="h-4 w-4 flex-shrink-0" />
+                    Anschreiben ansehen
+                  </button>
 
-                {/* 6 – Company Research */}
-                <button
-                  disabled={!job?.company}
-                  onClick={handleResearch}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
-                >
-                  <SearchCheck className="h-4 w-4 flex-shrink-0" />
-                  {job?.research_data ? "Recherche ansehen" : "Recherche starten"}
-                </button>
+                  {/* 5 – View Interview Prep */}
+                  <button
+                    disabled={!job.interview_qa}
+                    onClick={() => setActiveTab("interview")}
+                    className="min-h-[44px] flex items-center gap-2 rounded-xl border border-teal-700/50 bg-teal-950/50 px-3 py-[8.5px] text-sm font-semibold text-teal-300 transition-all hover:bg-teal-900/60 hover:text-teal-100 disabled:opacity-40"
+                  >
+                    <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                    Gespräch ansehen
+                  </button>
 
+                  {/* 6 – Company Research */}
+                  <button
+                    disabled={!job?.company}
+                    onClick={handleResearch}
+                    className="min-h-[44px] flex items-center gap-2 rounded-xl border border-teal-700/50 bg-teal-950/50 px-3 py-[8.5px] text-sm font-semibold text-teal-300 transition-all hover:bg-teal-900/60 hover:text-teal-100 disabled:opacity-40"
+                  >
+                    <SearchCheck className="h-4 w-4 flex-shrink-0" />
+                    {job?.research_data ? "Recherche ansehen" : "Recherche starten"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Group 3 — Verwaltung + Löschen */}
+              <div className="border-t border-[#1e293b] pt-3 flex flex-wrap gap-2">
                 {/* 7 – Open Job Posting */}
                 <button
                   disabled={!job.url}
                   onClick={() => window.open(job.url, "_blank", "noopener,noreferrer")}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-[8.5px] text-sm font-semibold text-slate-300 transition-all hover:bg-slate-700/50 hover:text-slate-100 disabled:opacity-40"
                 >
                   <ExternalLink className="h-4 w-4 flex-shrink-0" />
                   Stellenanzeige öffnen
@@ -834,22 +845,23 @@ export default function JobDetailPage() {
                 {/* 8 – Manage Resume */}
                 <button
                   onClick={() => navigate("/resume")}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-[8.5px] text-sm font-semibold text-slate-300 transition-all hover:bg-slate-700/50 hover:text-slate-100"
                 >
                   <FileText className="h-4 w-4 flex-shrink-0" />
                   Lebenslauf verwalten
                 </button>
 
+                <div className="flex-1" />
+
                 {/* 9 – Delete Job */}
                 <button
                   disabled={deleteMutation.isPending}
                   onClick={() => deleteMutation.mutate()}
-                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-blue-800/50 bg-blue-950/60 px-3 py-[8.5px] text-sm font-semibold text-blue-300 transition-all hover:bg-blue-900/70 hover:text-blue-100 disabled:opacity-40"
+                  className="min-h-[44px] flex items-center gap-2 rounded-xl border border-red-800/50 bg-red-950/50 px-3 py-[8.5px] text-sm font-semibold text-red-400 transition-all hover:bg-red-900/60 hover:text-red-200 disabled:opacity-40"
                 >
                   {deleteMutation.isPending ? <LoadingSpinner /> : <Trash2 className="h-4 w-4 flex-shrink-0" />}
                   Stelle löschen
                 </button>
-
               </div>
             </div>
 
