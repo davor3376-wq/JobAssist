@@ -330,6 +330,9 @@ export default function DashboardPage() {
     return { day, val: Math.min(count, 3), max: 3, label: count > 0 ? `${count} Job${count !== 1 ? 's' : ''}` : '—' };
   });
   const weekTotal  = dailyActivity.reduce((s, d) => s + d.val, 0);
+  const accountWeek = profile?.created_at
+    ? Math.max(1, Math.ceil((today - new Date(profile.created_at)) / (7 * 24 * 60 * 60 * 1000)))
+    : null;
   const todayIdx   = dow === 0 ? 6 : dow - 1;
   const todayCount = dailyActivity[todayIdx]?.val ?? 0;
   const dailyGoalFilled = Math.min(todayCount, 3);
@@ -558,7 +561,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2 text-xs" style={{ color: C.textDim }}>
                   <span>
                     Woche:{' '}
-                    <b className="font-semibold" style={{ color: C.textPrimary }}>{weekTotal}</b>
+                    <b className="font-semibold" style={{ color: C.textPrimary }}>{accountWeek ?? '—'}</b>
                   </span>
                   <span style={{ color: C.textDeep }}>·</span>
                   <span>

@@ -58,7 +58,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
             onClick={onNavClick}
             className={({ isActive }) =>
               clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0",
                 isActive
                   ? "bg-blue-500/15 text-blue-300"
                   : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
@@ -69,7 +69,7 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
               <>
                 <div
                   className={clsx(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200",
                     isActive ? "bg-blue-500/25 text-blue-400" : "bg-white/5 text-slate-500"
                   )}
                 >
@@ -224,8 +224,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden">
-      <aside className="hidden md:flex w-[260px] bg-black border-r border-[#171a21] flex-col flex-shrink-0">
+    <div className="flex min-h-screen bg-black">
+      <aside className="hidden md:flex sticky top-0 self-start h-screen w-[260px] bg-black border-r border-[#171a21] flex-col flex-shrink-0">
         <SidebarContent me={me} profile={profile} t={t} handleLogout={handleLogout} onNavClick={undefined} />
       </aside>
 
@@ -255,7 +255,7 @@ export default function Layout() {
         />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_28%),linear-gradient(180deg,_#000000_0%,_#020304_52%,_#000000_100%)]">
+      <div className="flex-1 flex flex-col min-w-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_28%),linear-gradient(180deg,_#000000_0%,_#020304_52%,_#000000_100%)]">
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-black border-b border-[#171a21] flex-shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
@@ -271,7 +271,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1">
           {/* P3: pb-16 md:pb-0 — Platz für die mobile Bottom-Nav */}
           <div className={`max-w-7xl mx-auto px-4 py-5 pb-20 text-slate-100 md:px-8 md:py-8 md:pb-8 ${animClass}`}>
             <VerificationBanner me={me} />

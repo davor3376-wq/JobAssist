@@ -257,6 +257,7 @@ export default function AIAssistantPage() {
   const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewState, setViewState] = useState("discovery"); // "discovery" | "exiting-discovery" | "conversation"
+  const [heroSticky, setHeroSticky] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -275,6 +276,12 @@ export default function AIAssistantPage() {
     initialData: () => loadStoredResumes(),
     staleTime: 1000 * 60 * 2,
   });
+
+  useEffect(() => {
+    const onScroll = () => setHeroSticky(window.scrollY > 100);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -540,10 +547,10 @@ export default function AIAssistantPage() {
   return (
     <>
     {/* Full-height container */}
-    <div className="h-[calc(100svh-156px)] lg:h-[calc(100svh-64px)] flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative overflow-hidden">
+    <div className="flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-[#020408] relative">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
-      <aside className={`hidden md:flex flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-[width,border-width] duration-300 ease-in-out ${verlaufCollapsed ? "w-0 border-r-0" : "w-60"}`}>
+      <aside className={`hidden lg:flex sticky top-0 self-start h-screen flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-[width,border-width] duration-300 ease-in-out ${verlaufCollapsed ? "w-0 border-r-0" : "w-60"}`}>
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.05]">
           {!verlaufCollapsed && (
             <div className="flex items-center gap-2">
@@ -594,14 +601,14 @@ export default function AIAssistantPage() {
       </aside>
 
       {/* ── Main column ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="flex-shrink-0 flex items-center gap-2 px-3 md:px-5 py-1.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           title="Gesprächsverlauf"
-          className="flex-shrink-0 md:hidden p-1.5 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 transition-all"
+          className="flex-shrink-0 lg:hidden p-1.5 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 transition-all"
         >
           <MessageSquare className="w-4 h-4" />
         </button>
@@ -609,7 +616,7 @@ export default function AIAssistantPage() {
           <button
             onClick={() => setVerlaufCollapsed(false)}
             title="Verlauf anzeigen"
-            className="hidden md:flex flex-shrink-0 p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all"
+            className="hidden lg:flex flex-shrink-0 p-1.5 rounded-xl text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all"
           >
             <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
           </button>
@@ -651,7 +658,7 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Chat Stage — full width ─────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="px-4 py-6 sm:px-6">
         {viewState !== "conversation" ? (
 
           /* ── Discovery state ─────────────────────────────────────────────── */
@@ -671,6 +678,17 @@ export default function AIAssistantPage() {
               style={{
                 background: "radial-gradient(ellipse at top right, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.08) 40%, transparent 70%), linear-gradient(160deg, rgba(17,24,39,0.92) 0%, rgba(5,6,10,0.97) 100%)",
                 boxShadow: "0 8px 40px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+                transition: "transform 0.35s ease, opacity 0.35s ease",
+                ...(heroSticky ? {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  transform: "scale(0.2)",
+                  transformOrigin: "top center",
+                  pointerEvents: "none",
+                } : {}),
               }}
             >
               <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl" />
@@ -852,7 +870,7 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
+      <div className="sticky bottom-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div
           className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)", minHeight: "56px" }}

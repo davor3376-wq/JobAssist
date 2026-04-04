@@ -272,7 +272,7 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
 
       {/* ─── Row-based list — transaction style ─── */}
       <div
-        className="rounded-2xl overflow-hidden max-h-[520px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full"
+        className="rounded-2xl overflow-hidden"
         style={{
           background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
           boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
@@ -288,46 +288,51 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
-              className="group flex items-center gap-4 px-5 transition-all duration-200 hover:bg-[#080808]"
-              style={{
-                height: "72px",
-                ...(i > 0
+              className="group grid grid-cols-[40px_1fr_auto_auto] items-center gap-x-4 px-5 py-3 transition-all duration-200 hover:bg-[#080808]"
+              style={
+                i > 0
                   ? {
                       borderTop: "1px solid transparent",
                       borderImage:
                         "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.04) 80%, transparent 100%) 1",
                     }
-                  : {}),
-              }}
+                  : {}
+              }
             >
-              {/* 40x40 Logo field */}
-              <LogoField company={job.company} status={job.status || "bookmarked"} />
-
-              {/* Title + Company — full focus on title */}
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-white truncate leading-tight">
-                  {job.role}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] text-[#505058] truncate">
-                    {job.company}
-                  </span>
-                  {/* Status dot */}
-                  <span
-                    className="flex-shrink-0 h-1 w-1 rounded-full"
-                    style={{
-                      background: statusCfg.color,
-                      boxShadow: `0 0 4px ${statusCfg.color}40`,
-                    }}
-                  />
-                  <span className="text-[9px] tracking-[0.14em] uppercase text-[#3a3a42] flex-shrink-0">
-                    {statusCfg.label}
-                  </span>
-                </div>
+              {/* Col 1 (row-span 2): Logo */}
+              <div className="row-span-2 self-center">
+                <LogoField company={job.company} status={job.status || "bookmarked"} />
               </div>
 
-              {/* Muted metadata — location + date */}
-              <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
+              {/* Row 1, col 2: Title */}
+              <p className="text-[13px] font-medium text-white truncate leading-tight">
+                {job.role}
+              </p>
+
+              {/* Row 1, col 3: Match ring */}
+              <NeonMatchRing score={score} />
+
+              {/* Row 1, col 4: Chevron */}
+              <ChevronRight
+                size={14}
+                className="text-[#1a1a22] transition-colors group-hover:text-[#3a3a42]"
+              />
+
+              {/* Row 2, col 2-4: Company + Status + Date + Quick actions */}
+              <div className="col-span-3 flex items-center gap-2 flex-wrap mt-0.5">
+                <span className="text-[11px] text-[#505058] truncate">
+                  {job.company}
+                </span>
+                <span
+                  className="flex-shrink-0 h-1 w-1 rounded-full"
+                  style={{
+                    background: statusCfg.color,
+                    boxShadow: `0 0 4px ${statusCfg.color}40`,
+                  }}
+                />
+                <span className="text-[9px] tracking-[0.14em] uppercase text-[#3a3a42] flex-shrink-0">
+                  {statusCfg.label}
+                </span>
                 {job.location && (
                   <span className="text-[10px] text-[#3a3a42] truncate max-w-[100px]">
                     {job.location}
@@ -338,38 +343,27 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
                     {dateLabel}
                   </span>
                 )}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-auto">
+                  <span
+                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                    title="Anzeige öffnen"
+                  >
+                    <ExternalLink size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                  </span>
+                  <span
+                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                    title="Anschreiben"
+                  >
+                    <FileText size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                  </span>
+                  <span
+                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                    title="Analysieren"
+                  >
+                    <Sparkles size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                  </span>
+                </div>
               </div>
-
-              {/* Quick-action icons — glass hover reveal */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
-                <span
-                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                  title="Anzeige öffnen"
-                >
-                  <ExternalLink size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                </span>
-                <span
-                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                  title="Anschreiben"
-                >
-                  <FileText size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                </span>
-                <span
-                  className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                  title="Analysieren"
-                >
-                  <Sparkles size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                </span>
-              </div>
-
-              {/* Thin neon match ring — visual highlight */}
-              <NeonMatchRing score={score} />
-
-              {/* Chevron */}
-              <ChevronRight
-                size={14}
-                className="text-[#1a1a22] transition-colors group-hover:text-[#3a3a42] flex-shrink-0"
-              />
             </Link>
           );
         })}
