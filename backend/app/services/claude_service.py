@@ -424,12 +424,20 @@ Gib exakt dieses JSON zurück:
         }
 
 
+_SKILL_NAMES = {
+    "tech": "Technische Fähigkeiten",
+    "exp": "Berufserfahrung",
+    "edu": "Ausbildung",
+    "soft": "Soft Skills",
+    "lang": "Sprachkenntnisse",
+}
+
+
 def analyze_resume_skills(raw_text: str, parsed_json: dict = None) -> dict:
     """Analyze resume and return per-category skill scores (0–100) + German summary."""
     system = (
         "Du bist ein erfahrener Karriere-Analyst. "
-        "Antworte AUSSCHLIESSLICH mit gültigem JSON — kein Markdown, keine Erklärungen. "
-        "Alle Texte auf Deutsch."
+        "Antworte AUSSCHLIESSLICH mit gültigem JSON — kein Markdown, keine Erklärungen."
     )
     skills_hint = ""
     if parsed_json and parsed_json.get("skills"):
@@ -444,21 +452,21 @@ Kategorien:
 - soft: Soft Skills, Kommunikation, Teamarbeit, Leadership
 - lang: Sprachkenntnisse (Anzahl und Niveau der Sprachen)
 
-Bewertungsrichtlinien:
-- 0–30: Keine oder kaum Hinweise
-- 31–55: Grundlegende Kenntnisse vorhanden
-- 56–75: Gute Kenntnisse erkennbar
-- 76–90: Starke Qualifikation
-- 91–100: Experten-Niveau
+Strenge Bewertungsrichtlinien (sei konservativ):
+- 0–20: Keine berufliche Relevanz — z.B. nur Babysitting, Kindergartenbetreuung, Hobbys
+- 21–35: Sehr wenig oder kaum Nachweise
+- 36–55: Erste Ansätze oder Grundkenntnisse
+- 56–75: Gute Kenntnisse, mehrere Jahre relevante Erfahrung
+- 76–90: Starke Qualifikation, breite Expertise
+- 91–100: Experten-Niveau, langjährige tiefe Spezialisierung
 
-Gib exakt dieses JSON zurück:
+Gib exakt dieses JSON zurück (kein "summary"-Feld):
 {{
   "tech": <0-100>,
   "exp": <0-100>,
   "edu": <0-100>,
   "soft": <0-100>,
-  "lang": <0-100>,
-  "summary": "<1-2 prägnante Sätze auf Deutsch: nenne den stärksten Bereich mit Score, dann den größten Hebel für Verbesserung>"
+  "lang": <0-100>
 }}
 
 Lebenslauf:
@@ -466,14 +474,18 @@ Lebenslauf:
 {raw_text[:3000]}
 \"\"\"
 """
-    result = _call_groq(prompt, system=system, max_tokens=512, temperature=0.2)
+    result = _call_groq(prompt, system=system, max_tokens=256, temperature=0.2)
     try:
         data = json.loads(_strip_code_fences(result))
-        for key in ("tech", "exp", "edu", "soft", "lang"):
-            data[key] = max(0, min(100, int(data.get(key, 50))))
-        if "summary" not in data:
-            data["summary"] = ""
-        return data
+        scores = {k: max(0, min(100, int(data.get(k, 50)))) for k in _SKILL_NAMES}
+        # Build summary from actual scores — never trust LLM to state numbers correctly
+        best = max(scores, key=scores.__getitem__)
+        worst = min(scores, key=scores.__getitem__)
+        summary = f"Der stärkste Bereich ist {_SKILL_NAMES[best]} mit {scores[best]} Punkten."
+        if worst != best:
+            summary += f" Das größte Verbesserungspotenzial liegt in {_SKILL_NAMES[worst]} ({scores[worst]} Punkte)."
+        scores["summary"] = summary
+        return scores
     except (json.JSONDecodeError, ValueError):
         return {"tech": 50, "exp": 50, "edu": 50, "soft": 50, "lang": 50, "summary": "Analyse konnte nicht durchgeführt werden."}
 
