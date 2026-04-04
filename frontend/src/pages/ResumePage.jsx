@@ -76,13 +76,27 @@ function useGamification(skills) {
     return Math.round(skills.reduce((a, b) => a + b.value, 0) / skills.length);
   }, [skills]);
 
-  const tasks = useMemo(() => [
-    { id: "keywords", label: "Keywords aus Stellenanzeige einfügen", points: 3, icon: Target },
-    { id: "length", label: "Lebenslauf auf 1-2 Seiten kürzen", points: 2, icon: FileText },
-    { id: "achievements", label: "Messbare Erfolge hinzufügen", points: 4, icon: TrendingUp },
-    { id: "format", label: "ATS-freundliches Format wählen", points: 2, icon: CheckCircle },
-    { id: "contact", label: "Kontaktdaten vervollständigen", points: 2, icon: CheckCircle },
-  ], []);
+  const GOAL_SCORE = 85;
+
+  const tasks = useMemo(() => {
+    const baseTasks = [
+      { id: "keywords", label: "Keywords aus Stellenanzeige einfügen", baseWeight: 3, icon: Target },
+      { id: "length",   label: "Lebenslauf auf 1-2 Seiten kürzen",     baseWeight: 2, icon: FileText },
+      { id: "achievements", label: "Messbare Erfolge hinzufügen",       baseWeight: 4, icon: TrendingUp },
+      { id: "format",   label: "ATS-freundliches Format wählen",         baseWeight: 2, icon: CheckCircle },
+      { id: "contact",  label: "Kontaktdaten vervollständigen",          baseWeight: 2, icon: CheckCircle },
+    ];
+    // Scale points so completing all tasks always bridges avgScore → GOAL_SCORE.
+    // fairnessMultiplier doubles the effective value for low scores, reduces for high.
+    const fm = avgScore < 40 ? 2 : avgScore > 60 ? 0.6 : 1;
+    const gap = Math.max(0, GOAL_SCORE - avgScore);
+    const totalBaseWeight = baseTasks.reduce((s, t) => s + t.baseWeight, 0);
+    const targetRawPoints = gap / fm; // fm * targetRawPoints = gap
+    return baseTasks.map(t => ({
+      ...t,
+      points: Math.max(1, Math.round(t.baseWeight / totalBaseWeight * targetRawPoints)),
+    }));
+  }, [avgScore]);
 
   const completedPoints = useMemo(() => {
     return tasks
@@ -629,7 +643,7 @@ export default function ResumePage() {
       {/* ── Page header ──────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 mb-2">
         <h1 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-white leading-none">
-          Lebenslauf-Dossier
+          Lebenslauf
         </h1>
         <p className="mt-2 text-[11px] tracking-[0.18em] uppercase text-[#3a3a42]">
           KI-gestützte Dokumentenanalyse

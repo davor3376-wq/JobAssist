@@ -60,7 +60,8 @@
       "Bash(claude mcp:*)",
       "Bash(npx -y vibe-annotations-server)",
       "Bash(npx -y vibe-annotations-server start)",
-      "Bash(cygpath -w /tmp/sse3.txt)"
+      "Bash(cygpath -w /tmp/sse3.txt)",
+      "Bash(find /c/Users/TEMP/Downloads/SaaS_Project/backend/app/api/routes -type f -name \"*.py\" -exec basename {} \\\\;)"
     ],
     "ask": []
   },

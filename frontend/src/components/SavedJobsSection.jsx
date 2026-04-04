@@ -289,7 +289,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
       {/* ── Sticky section header + filter bar ── */}
       <div
-        className="sticky top-0 z-30 pb-4"
+        className="sticky top-0 z-30 pb-4 rounded-2xl px-2"
         style={{
           background: "rgba(8, 8, 8, 0.92)",
           backdropFilter: "blur(10px)",

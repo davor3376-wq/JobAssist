@@ -695,22 +695,27 @@ const [savingJobId, setSavingJobId] = useState(null);
         {/* === Search Results skeleton while loading === */}
         {searchLoading && searchResults.length === 0 && (
           <div className="col-span-12 mt-1">
-            <Tile>
-              {[0, 1, 2].map((i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-4 py-3.5 animate-pulse"
-                  style={i > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
+                  className="rounded-xl p-4 animate-pulse"
+                  style={{
+                    background: 'linear-gradient(180deg, #0c0c0e 0%, #080808 100%)',
+                    boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04)',
+                  }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-white/[0.05] flex-shrink-0" />
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="h-3 bg-white/[0.07] rounded-md w-3/5" />
-                    <div className="h-2.5 bg-white/[0.04] rounded-md w-2/5" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/[0.05] flex-shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-3 bg-white/[0.07] rounded-md w-4/5" />
+                      <div className="h-2.5 bg-white/[0.04] rounded-md w-2/5" />
+                      <div className="h-2 bg-white/[0.03] rounded-md w-3/5" />
+                    </div>
                   </div>
-                  <div className="w-3.5 h-3.5 bg-white/[0.03] rounded flex-shrink-0" />
                 </div>
               ))}
-            </Tile>
+            </div>
           </div>
         )}
 
@@ -740,21 +745,25 @@ const [savingJobId, setSavingJobId] = useState(null);
                 </select>
               </div>
 
-              {/* Results list — transaction style */}
-              <div className="space-y-0">
-                {searchResults.slice(0, visibleCount).map((result, index) => {
+              {/* Results grid — 2 per row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {searchResults.map((result, index) => {
                   const isExpanded = expandedJob === index;
                   const analysis = jobAnalyses[index];
                   const matchScore = analysis?.match_score ?? analysis?.matching_score ?? analysis?.score ?? null;
 
                   return (
-                    <div key={`${result.source_id}-${index}`}>
-                      {/* Collapsed row — always visible */}
+                    <div
+                      key={`${result.source_id}-${index}`}
+                      className="rounded-xl overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(180deg, #0c0c0e 0%, #080808 100%)',
+                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      {/* Card header — always visible */}
                       <button
-                        className={`w-full flex items-center gap-4 py-3.5 text-left transition-colors hover:bg-white/[0.02] ${
-                          isExpanded ? 'bg-white/[0.01]' : ''
-                        }`}
-                        style={index > 0 ? { borderTop: '1px solid rgba(255,255,255,0.03)' } : undefined}
+                        className={`w-full p-4 text-left transition-colors hover:bg-white/[0.02] ${isExpanded ? 'bg-white/[0.01]' : ''}`}
                         onClick={() => {
                           const newExpanded = isExpanded ? null : index;
                           if (newExpanded !== null && expandedJob !== null && expandedJob !== newExpanded) {
@@ -763,33 +772,35 @@ const [savingJobId, setSavingJobId] = useState(null);
                           setExpandedJob(newExpanded);
                         }}
                       >
-                        <MiniMatchRing score={matchScore} />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold text-white truncate leading-tight">
-                            {result.title || "Ohne Titel"}
-                          </p>
-                          <p className="text-[11px] text-[#505058] truncate mt-0.5">
-                            {result.company || "Unbekannt"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 flex-shrink-0">
-                          {result.location && (
-                            <span className="text-[10px] text-[#3a3a42] hidden sm:block">{result.location}</span>
-                          )}
-                          {result.updated && (
-                            <span className="text-[10px] text-[#3a3a42] hidden sm:block tabular-nums">
-                              {new Date(result.updated).toLocaleDateString("de-AT")}
-                            </span>
-                          )}
-                          <ChevronDown size={14} className={`text-[#2a2a32] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        <div className="flex items-start gap-3">
+                          <MiniMatchRing score={matchScore} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-semibold text-white leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {result.title || "Ohne Titel"}
+                            </p>
+                            <p className="text-[11px] text-[#505058] truncate mt-0.5">
+                              {result.company || "Unbekannt"}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {result.location && (
+                                <span className="text-[10px] text-[#3a3a42]">{result.location}</span>
+                              )}
+                              {result.updated && (
+                                <span className="text-[10px] text-[#3a3a42] tabular-nums">
+                                  {new Date(result.updated).toLocaleDateString("de-AT")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronDown size={14} className={`text-[#2a2a32] transition-transform duration-200 flex-shrink-0 mt-0.5 ${isExpanded ? 'rotate-180' : ''}`} />
                         </div>
                       </button>
 
                       {/* Expanded detail panel */}
                       {isExpanded && (
                         <div
-                          className="pb-5 pt-2 pl-12 pr-2 space-y-4"
-                          style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}
+                          className="px-4 pb-4 space-y-4"
+                          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
                         >
                           {/* Description */}
                           {result.description && (
@@ -902,22 +913,6 @@ const [savingJobId, setSavingJobId] = useState(null);
                 })}
               </div>
 
-              {/* Infinite scroll sentinel */}
-              {visibleCount < searchResults.length && (
-                <div ref={loadMoreSentinelRef} className="h-4" />
-              )}
-              {/* Collapse — only shown when user has expanded beyond default */}
-              {visibleCount > 5 && (
-                <div className="mt-4 flex justify-center" style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setVisibleCount(5)}
-                    className="text-[0.6875rem] font-medium text-[#3a3a42] hover:text-[#505058] transition-colors"
-                  >
-                    Weniger
-                  </button>
-                </div>
-              )}
             </Tile>
           </div>
         )}
