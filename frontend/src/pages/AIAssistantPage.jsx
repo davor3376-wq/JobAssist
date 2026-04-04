@@ -256,6 +256,7 @@ export default function AIAssistantPage() {
   const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
   const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [viewState, setViewState] = useState("discovery"); // "discovery" | "exiting-discovery" | "conversation"
 
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
@@ -321,6 +322,18 @@ export default function AIAssistantPage() {
       return updated;
     });
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Discovery → Conversation view transition
+  useEffect(() => {
+    if (messages.length === 0) { setViewState("discovery"); return; }
+    setViewState((prev) => prev === "discovery" ? "exiting-discovery" : prev);
+  }, [messages.length]); // eslint-disable-line
+
+  useEffect(() => {
+    if (viewState !== "exiting-discovery") return;
+    const t = setTimeout(() => setViewState("conversation"), 350);
+    return () => clearTimeout(t);
+  }, [viewState]);
 
   const handleSend = useCallback((text) => {
     const message = (text ?? input).trim();
@@ -639,10 +652,18 @@ export default function AIAssistantPage() {
 
       {/* ── Chat Stage — full width ─────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
-        {messages.length === 0 ? (
+        {viewState !== "conversation" ? (
 
-          /* ── Empty state ─────────────────────────────────────────────────── */
-          <div className="flex flex-col gap-4 max-w-[800px] mx-auto py-2">
+          /* ── Discovery state ─────────────────────────────────────────────── */
+          <div
+            className="flex flex-col gap-4 max-w-[800px] mx-auto py-2"
+            style={viewState === "exiting-discovery" ? {
+              transform: "translateY(-28px)",
+              opacity: 0,
+              transition: "transform 0.32s ease-in, opacity 0.28s ease-in",
+              pointerEvents: "none",
+            } : {}}
+          >
 
             {/* Hero card — "Dein nächster Schritt" */}
             <div
@@ -718,8 +739,8 @@ export default function AIAssistantPage() {
 
         ) : (
 
-          /* ── Message bubbles ─────────────────────────────────────────────── */
-          <div className="max-w-5xl mx-auto space-y-5">
+          /* ── Conversation state ──────────────────────────────────────────── */
+          <div className={`${verlaufCollapsed ? "" : "max-w-5xl mx-auto"} space-y-5`}>
             {messages.map((msg, i) => (
               <div key={i} className={`flex items-end gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
@@ -833,47 +854,59 @@ export default function AIAssistantPage() {
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div
-          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 py-2 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
-          style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" }}
+          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
+          style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)", minHeight: "56px" }}
         >
-          {/* Mobile: single + menu (< sm) */}
-          <div className="relative flex-shrink-0 flex sm:hidden">
+          {/* Icons inside field — left side */}
+          <div className="flex items-end gap-0.5 flex-shrink-0 pb-0.5">
+            {/* Mobile: + opens dropdown */}
+            <div className="relative flex sm:hidden">
+              <button
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all ${mobileMenuOpen ? "bg-white/[0.08] text-slate-200" : "text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"}`}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              {mobileMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMobileMenuOpen(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.08] bg-[#060b14]/98 backdrop-blur-xl shadow-xl p-1.5 min-w-[150px]">
+                    <button
+                      onClick={() => { setActionDrawerOpen(true); setMobileMenuOpen(false); }}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-white/[0.06] transition-colors text-left"
+                    >
+                      <Plus className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      Aktionen
+                    </button>
+                    <button
+                      onClick={() => { setActiveTray((v) => v === "wand" ? null : "wand"); setMobileMenuOpen(false); }}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${activeTray === "wand" ? "text-blue-300 bg-blue-500/10" : "text-slate-200 hover:bg-white/[0.06]"}`}
+                    >
+                      <Wand2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                      Vorschläge
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Desktop: + opens drawer */}
             <button
-              onClick={() => setMobileMenuOpen((v) => !v)}
-              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${mobileMenuOpen ? "bg-white/[0.08] text-slate-200" : "text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"}`}
+              onClick={() => setActionDrawerOpen(true)}
+              title="Aktionen"
+              className="hidden sm:flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-white/[0.06] hover:text-slate-300 transition-all"
             >
               <Plus className="h-4 w-4" />
             </button>
-            {mobileMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMobileMenuOpen(false)} />
-                <div className="absolute bottom-full left-0 mb-2 z-20 flex flex-col gap-0.5 rounded-xl border border-white/[0.08] bg-[#060b14]/98 backdrop-blur-xl shadow-xl p-1.5 min-w-[150px]">
-                  <button
-                    onClick={() => { setActionDrawerOpen(true); setMobileMenuOpen(false); }}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-white/[0.06] transition-colors text-left"
-                  >
-                    <Plus className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                    Aktionen
-                  </button>
-                  <button
-                    onClick={() => { setActiveTray((v) => v === "wand" ? null : "wand"); setMobileMenuOpen(false); }}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${activeTray === "wand" ? "text-blue-300 bg-blue-500/10" : "text-slate-200 hover:bg-white/[0.06]"}`}
-                  >
-                    <Wand2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                    Vorschläge
-                  </button>
-                </div>
-              </>
-            )}
+            {/* Desktop: wand suggestions */}
+            <button
+              onClick={() => setActiveTray((v) => v === "wand" ? null : "wand")}
+              title="Vorschläge"
+              className={`hidden sm:flex h-7 w-7 items-center justify-center rounded-lg transition-all ${activeTray === "wand" ? "bg-blue-500/15 text-blue-300" : "text-slate-500 hover:bg-white/[0.06] hover:text-blue-300"}`}
+            >
+              <Wand2 className="h-4 w-4" />
+            </button>
           </div>
-          {/* Desktop: separate buttons (≥ sm) */}
-          <button
-            onClick={() => setActionDrawerOpen(true)}
-            title="Aktionen"
-            className="hidden sm:flex flex-shrink-0 h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 text-slate-500 hover:bg-white/[0.06] hover:text-slate-300"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          {/* Textarea */}
           <textarea
             ref={inputRef}
             value={input}
@@ -881,16 +914,10 @@ export default function AIAssistantPage() {
             onKeyDown={handleKeyDown}
             placeholder="Schreib direkt oder wähle eine Aktion…"
             rows={1}
-            className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[1rem] sm:text-[0.875rem] leading-relaxed max-h-32 text-slate-200 placeholder:text-slate-600 py-1.5"
-            style={{ minHeight: "2.25rem" }}
+            className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[1rem] sm:text-[0.875rem] leading-relaxed max-h-40 text-slate-200 placeholder:text-slate-600 py-0.5"
+            style={{ minHeight: "1.75rem" }}
           />
-          <button
-            onClick={() => setActiveTray((v) => v === "wand" ? null : "wand")}
-            title="Vorschläge"
-            className={`hidden sm:flex flex-shrink-0 h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${activeTray === "wand" ? "bg-blue-500/15 text-blue-300" : "text-slate-500 hover:bg-white/[0.06] hover:text-blue-300"}`}
-          >
-            <Wand2 className="h-4 w-4" />
-          </button>
+          {/* Send */}
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isStreaming || !!streamingMsg}
