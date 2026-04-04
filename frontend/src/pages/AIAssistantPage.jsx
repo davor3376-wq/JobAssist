@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import {
   Bot, Send, Sparkles, FileText, Briefcase, GraduationCap,
   Euro, Lightbulb, Trash2, Lock, Plus, MessageSquare, Clock,
-  ClipboardList, Search, ChevronLeft, Shield, X,
+  ClipboardList, Search, ChevronLeft, ChevronDown, Shield, X,
   Wand2, Target, Zap, ArrowRight,
 } from "lucide-react";
 import { resumeApi } from "../services/api";
@@ -163,6 +163,52 @@ function MarkdownMessage({ text }) {
   });
   flushList("end");
   return <div className="space-y-0.5">{elements}</div>;
+}
+
+// ─── Resume Dropdown ─────────────────────────────────────────────────────────
+
+function ResumeDropdown({ resumes, selectedId, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = resumes.find((r) => r.id === selectedId);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] text-xs text-slate-300 hover:border-blue-500/30 transition-colors max-w-[160px]"
+      >
+        <FileText className="w-3 h-3 text-blue-400 flex-shrink-0" />
+        <span className="truncate flex-1 min-w-0">{selected ? selected.filename : "Kein Lebenslauf"}</span>
+        <ChevronDown className={`w-3 h-3 text-slate-500 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-60 rounded-xl border border-[#1C2333] bg-[#0D1117] shadow-xl shadow-black/50 z-50 overflow-hidden py-1">
+          <button
+            onClick={() => { onSelect(null); setOpen(false); }}
+            className={`w-full px-3 py-2.5 text-left text-xs transition-colors ${!selectedId ? "text-blue-300 bg-blue-500/10" : "text-slate-400 hover:bg-white/5"}`}
+          >
+            Kein Lebenslauf
+          </button>
+          {resumes.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => { onSelect(r.id); setOpen(false); }}
+              className={`w-full px-3 py-2.5 text-left text-xs truncate transition-colors ${selectedId === r.id ? "text-blue-300 bg-blue-500/10" : "text-slate-300 hover:bg-white/5"}`}
+            >
+              {r.filename || `Lebenslauf ${r.id}`}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -383,38 +429,88 @@ export default function AIAssistantPage() {
     "Was kann ich als Berufseinsteiger in Österreich an Gehalt erwarten?",
   ];
 
+  // ── Shared: conversation list renderer ──────────────────────────────────────
+  const renderConvList = () => {
+    if (filteredConversations.length === 0 && conversations.length > 0)
+      return <p className="px-2 py-4 text-center text-xs text-slate-400">Keine Treffer</p>;
+    const now = Date.now();
+    const today = new Date().setHours(0, 0, 0, 0);
+    const yesterday = today - 86400000;
+    const weekAgo = today - 604800000;
+    const groups = {
+      today:     { label: "Heute",        convs: [] },
+      yesterday: { label: "Gestern",      convs: [] },
+      thisWeek:  { label: "Diese Woche",  convs: [] },
+      older:     { label: "Älter",        convs: [] },
+    };
+    filteredConversations.forEach((conv) => {
+      const d = new Date(conv.updatedAt).setHours(0, 0, 0, 0);
+      if (d === today) groups.today.convs.push(conv);
+      else if (d === yesterday) groups.yesterday.convs.push(conv);
+      else if (conv.updatedAt > weekAgo) groups.thisWeek.convs.push(conv);
+      else groups.older.convs.push(conv);
+    });
+    return Object.entries(groups).map(([key, group]) => {
+      if (!group.convs.length) return null;
+      return (
+        <div key={key} className="mb-2">
+          <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
+          {group.convs.map((conv) => {
+            const cat = getConvCategory(conv);
+            return (
+              <button
+                key={conv.id}
+                title={conv.title}
+                onClick={() => handleSelectConversation(conv)}
+                className={`group w-full text-left px-3 py-2.5 rounded-xl transition-all duration-200 mb-0.5
+                  ${conv.id === activeId
+                    ? "bg-blue-500/15 border border-blue-500/30"
+                    : "border border-transparent hover:bg-white/[0.03] hover:border-[#1C2333]"
+                  }`}
+              >
+                <div className="flex items-start gap-2 mb-1">
+                  <span className={`mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>{cat.label}</span>
+                  <button
+                    onClick={(e) => handleDeleteConversation(e, conv.id)}
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all ml-auto"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+                <p className="truncate text-xs font-medium text-slate-200 leading-snug mb-1">{conv.title}</p>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <Clock className="w-2.5 h-2.5 flex-shrink-0" />
+                  <span>{relativeTime(conv.updatedAt)}</span>
+                  <span className="opacity-40">·</span>
+                  <span>{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      );
+    });
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="mx-auto h-[calc(100svh-64px)] sm:h-[calc(100svh-120px)] max-w-[1520px] flex flex-col animate-slide-up px-2 sm:px-4 xl:px-0">
+    {/* Full-height chat container — escapes Layout padding via negative margins */}
+    <div className="h-[calc(100svh-156px)] md:h-[calc(100svh-64px)] flex flex-col animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8">
 
-      {/* ── Page header ───────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+      {/* ── Global header ──────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 md:px-5 py-3 border-b border-[#171a21] bg-[#05060a]">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors flex-shrink-0"
+            className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-white/5 transition-colors flex-shrink-0"
           >
-            <MessageSquare className="w-5 h-5" />
+            <MessageSquare className="w-4 h-4" />
           </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
-              KI-Bewerbungsassistent
-            </h1>
-          </div>
+          <h1 className="text-sm font-bold text-white truncate">KI-Bewerbungsassistent</h1>
         </div>
-
         <div className="flex items-center gap-2 flex-shrink-0">
-          <select
-            value={selectedResumeId || ""}
-            onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-            className="hidden sm:block px-3 py-1.5 border border-[#1C2333] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-[#1C2333] text-slate-300"
-          >
-            <option value="">Kein Lebenslauf</option>
-            {uploadedResumes.map((r) => (
-              <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
-            ))}
-          </select>
+          <ResumeDropdown resumes={uploadedResumes} selectedId={selectedResumeId} onSelect={setSelectedResumeId} />
           <button
             onClick={handleNewChat}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors shadow-sm shadow-blue-500/20"
@@ -425,175 +521,88 @@ export default function AIAssistantPage() {
         </div>
       </div>
 
-      {/* ── Main layout: sidebar + chat + context panel ─────────────────── */}
-      <div className="flex-1 flex gap-4 min-h-0 relative">
+      {/* ── Body: sidebar + chat ────────────────────────────────────────────── */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[300px_1fr]">
 
-        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <aside className={`
-          absolute inset-y-0 left-0 z-30 w-full sm:w-72 flex flex-col bg-[#08090c] shadow-xl overflow-hidden transition-transform duration-200 rounded-none
-          md:relative md:w-[232px] xl:w-[248px] md:flex-shrink-0 md:translate-x-0 md:shadow-none md:border-0 md:border-r md:border-[#171a21] md:z-auto
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}>
-          {/* Sidebar header - project system colors */}
-          <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-[#171a21] bg-[#08090c]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="md:hidden p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <div className="flex items-center gap-1.5">
-                  <Target className="w-3.5 h-3.5 text-violet-500" />
-                  <span className="text-xs font-bold text-slate-200 tracking-wide">
-                    {conversations.length === 0 ? "Starter Missionen" : "Aktive Missionen"}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleNewChat}
-                className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
-              >
-                <Plus className="w-3 h-3" /> Neu
+        {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
+        <aside className="hidden md:flex flex-col border-r border-[#171a21] bg-[#05060a] overflow-hidden">
+
+          {/* Schnell-Aktionen — flat list */}
+          <div className="flex-shrink-0 px-2 pt-3 pb-2 border-b border-[#171a21]">
+            <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Schnell-Aktionen</p>
+            {!chatAtLimit && (
+              <button onClick={startSimulation} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-blue-500/10 text-left transition-colors group">
+                <MessageSquare className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                <span className="text-xs font-medium text-slate-200 flex-1">Interview-Simulation</span>
+                <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors flex-shrink-0" />
               </button>
-            </div>
+            )}
+            <button onClick={() => setAssessmentDisclaimerOpen(true)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group">
+              <ClipboardList className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+              <span className="text-xs font-medium text-slate-200 flex-1">Stärkenanalyse</span>
+              <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
+            </button>
+            {SUGGESTIONS.map((s) => {
+              const locked = s.requiresResume && uploadedResumes.length === 0;
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
+                  disabled={chatAtLimit}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group disabled:opacity-40"
+                >
+                  <s.icon className={`w-3.5 h-3.5 flex-shrink-0 ${locked ? "text-slate-600" : "text-slate-400"}`} />
+                  <span className={`text-xs font-medium flex-1 truncate ${locked ? "text-slate-500" : "text-slate-300"}`}>{s.label}</span>
+                  {locked
+                    ? <Lock className="w-3 h-3 text-slate-600 flex-shrink-0" />
+                    : <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
+                  }
+                </button>
+              );
+            })}
           </div>
 
-          {/* Starter missions - only show when no active chat */}
-          {conversations.length === 0 && !activeId && (
-            <div className="flex-shrink-0 px-3 py-3 space-y-1.5 bg-[#08090c]">
-              {STARTER_MISSIONS.map((m, index) => (
-                <button
-                  key={m.label}
-                  onClick={() => { 
-                    if (index === 0) startSimulation();
-                    else if (index === 1) setAssessmentDisclaimerOpen(true);
-                    else if (index === 2) handleSend("Kannst du meinen Lebenslauf analysieren und Verbesserungsvorschläge machen?");
-                    else if (index === 3) handleSend("Was sind die wichtigsten Tipps für eine erfolgreiche Bewerbung in Österreich?");
-                    setSidebarOpen(false); 
-                  }}
-                  className={`w-full flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm ${m.color}`}
-                >
-                  <m.icon className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="text-xs font-semibold leading-snug">{m.label}</span>
-                  <ArrowRight className="w-3 h-3 ml-auto flex-shrink-0 opacity-50" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Conversation list with date grouping */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* History */}
+          <div className="flex-1 overflow-y-auto px-2 py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {conversations.length > 0 && (
-              <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
-                <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  placeholder="Gespräche suchen…"
-                  className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-500 focus:outline-none min-w-0"
-                />
-              </div>
+              <>
+                <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Verlauf</p>
+                <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
+                  <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    placeholder="Gespräche suchen…"
+                    className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-500 focus:outline-none min-w-0"
+                  />
+                </div>
+              </>
             )}
-            {filteredConversations.length === 0 && conversations.length > 0 ? (
-              <p className="px-2 py-4 text-center text-xs text-slate-400">Keine Treffer</p>
-            ) : (
-              (() => {
-                // Group conversations by date
-                const now = Date.now();
-                const today = new Date().setHours(0, 0, 0, 0);
-                const yesterday = today - 86400000;
-                const weekAgo = today - 604800000;
-                
-                const groups = {
-                  today: { label: "Heute", convs: [] },
-                  yesterday: { label: "Gestern", convs: [] },
-                  thisWeek: { label: "Diese Woche", convs: [] },
-                  older: { label: "Älter", convs: [] },
-                };
-                
-                filteredConversations.forEach((conv) => {
-                  const convDate = new Date(conv.updatedAt).setHours(0, 0, 0, 0);
-                  if (convDate === today) groups.today.convs.push(conv);
-                  else if (convDate === yesterday) groups.yesterday.convs.push(conv);
-                  else if (conv.updatedAt > weekAgo) groups.thisWeek.convs.push(conv);
-                  else groups.older.convs.push(conv);
-                });
-                
-                return Object.entries(groups).map(([key, group]) => {
-                  if (group.convs.length === 0) return null;
-                  return (
-                    <div key={key} className="mb-2">
-                      <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
-                      {group.convs.map((conv) => {
-                        const cat = getConvCategory(conv);
-                        return (
-                          <button
-                            key={conv.id}
-                            title={conv.title}
-                            onClick={() => handleSelectConversation(conv)}
-                            className={`group w-full text-left px-3 py-3 rounded-xl transition-all duration-200 mb-1
-                              ${conv.id === activeId
-                                ? "bg-blue-500/15 border border-blue-500/30 shadow-sm shadow-blue-500/10"
-                                : "border border-transparent hover:bg-white/[0.03] hover:border-[#1C2333]"
-                              }`}
-                          >
-                            <div className="flex items-start gap-2 mb-1.5">
-                              <span className={`mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>
-                                {cat.label}
-                              </span>
-                              <button
-                                onClick={(e) => handleDeleteConversation(e, conv.id)}
-                                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                            <p className="truncate text-xs font-medium text-slate-200 leading-snug mb-1.5">{conv.title}</p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                              <Clock className="w-2.5 h-2.5 flex-shrink-0" />
-                              <span>{relativeTime(conv.updatedAt)}</span>
-                              <span className="opacity-40">·</span>
-                              <span>{conv.messages.filter((m) => m.role === "user").length} Nachr.</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
-                });
-              })()
-            )}
+            {renderConvList()}
           </div>
         </aside>
 
-        {/* Mobile backdrop */}
-        {sidebarOpen && (
-          <div className="md:hidden fixed inset-0 z-20 bg-black/20" onClick={() => setSidebarOpen(false)} />
-        )}
-
         {/* ── Chat Panel ──────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 rounded-xl border border-[#171a21] bg-black shadow-sm overflow-hidden">
+        <div className="flex flex-col overflow-hidden bg-black min-h-0">
 
           {/* Simulation mode banner */}
           {simulationMode && (
             <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Interview-Simulator</p>
-                  <p className="mt-0.5 text-sm text-slate-300">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
+                  <p className="mt-0.5 text-xs text-slate-300">KI stellt dir Fragen wie in einem echten Probeinterview.</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {simulatorActions.map((action) => (
                     <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors shadow-sm">
+                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors">
                       {action.label}
                     </button>
                   ))}
                   <button onClick={() => setSimulationMode(false)}
-                    className="rounded-full border border-[#273244] bg-[#111827] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
+                    className="rounded-full border border-[#273244] bg-[#111827] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
                     Beenden
                   </button>
                 </div>
@@ -604,20 +613,20 @@ export default function AIAssistantPage() {
           {/* Assessment mode banner */}
           {assessmentMode && (
             <div className="flex-shrink-0 border-b border-[#171a21] bg-[#111827] px-4 py-3">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Stärkenanalyse</p>
-                  <p className="mt-0.5 text-sm text-slate-300">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
+                  <p className="mt-0.5 text-xs text-slate-300">Strukturierte Analyse deiner Stärken, Fähigkeiten und Potenziale.</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {assessmentActions.map((action) => (
                     <button key={action.label} onClick={() => handleSend(action.prompt)}
-                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors shadow-sm">
+                      className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors">
                       {action.label}
                     </button>
                   ))}
                   <button onClick={() => setAssessmentMode(false)}
-                    className="rounded-full border border-[#273244] bg-[#111827] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
+                    className="rounded-full border border-[#273244] bg-[#111827] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-[#172033] transition-colors">
                     Beenden
                   </button>
                 </div>
@@ -625,15 +634,15 @@ export default function AIAssistantPage() {
             </div>
           )}
 
-          {/* Messages area */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* ── Messages area ─────────────────────────────────────────────── */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {messages.length === 0 ? (
 
-              /* ── Empty-state launchpad ──────────────────────────────────── */
-              <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-1">
+              /* ── Empty-state ─────────────────────────────────────────── */
+              <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-1">
 
-                {/* Hero — action-oriented */}
-                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-3 sm:px-4 py-4">
+                {/* Hero — Nächster Schritt */}
+                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
                   <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
                   <div className="relative flex items-start gap-3">
@@ -645,8 +654,8 @@ export default function AIAssistantPage() {
                       <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
                         Wähle eine Mission oder schreib direkt — ich kenne deinen Bewerbungsstand.
                       </p>
-                      <div className="mt-2.5 flex flex-wrap gap-2">
-                        {contextJob && (
+                      {contextJob && (
+                        <div className="mt-2.5">
                           <button
                             onClick={() => handleSend(`Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.`)}
                             className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-400 transition-colors shadow-sm shadow-blue-500/20"
@@ -654,193 +663,136 @@ export default function AIAssistantPage() {
                             <Zap className="h-3 w-3" />
                             Interview: {contextJob.role}
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Feature mission cards — 12-col grid for mobile */}
-                <div className="grid grid-cols-12 gap-3">
-
-                  {/* Interview Simulation — hidden when limit reached */}
-                  {!chatAtLimit && <button
-                    onClick={startSimulation}
-                    className="col-span-12 sm:col-span-6 group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-3 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.12)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30"
-                  >
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
-                    {/* Undraw-style interview illustration */}
-                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-[0.28] pointer-events-none">
-                      <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="15" y="60" width="110" height="6" rx="3" fill="#4f46e5"/>
-                        <rect x="40" y="20" width="60" height="40" rx="4" fill="#4f46e5"/>
-                        <rect x="43" y="23" width="54" height="34" rx="2" fill="#6366f1"/>
-                        <circle cx="70" cy="40" r="9" fill="#ddd6fe"/>
-                        <polyline points="48.5,33 51,35.5 55.5,29.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
-                        <rect x="62" y="30" width="34" height="2.5" rx="1.25" fill="#ddd6fe"/>
-                        <circle cx="52" cy="50" r="6" fill="#ddd6fe"/>
-                        <polyline points="48.5,50 51,52.5 55.5,46.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
-                        <rect x="62" y="47" width="28" height="2.5" rx="1.25" fill="#ddd6fe"/>
-                        <circle cx="52" cy="67" r="6" fill="#ede9fe"/>
-                        <rect x="62" y="64" width="22" height="2.5" rx="1.25" fill="#ede9fe"/>
-                        <circle cx="115" cy="78" r="14" fill="#e0e7ff"/>
-                        <circle cx="115" cy="66" r="10" fill="#fde68a"/>
-                        <circle cx="111" cy="65" r="1.5" fill="#1e293b"/>
-                        <circle cx="119" cy="65" r="1.5" fill="#1e293b"/>
-                      </svg>
-                    </div>
-                    <div className="relative">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
-                        <MessageSquare className="h-5 w-5 text-white" />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">Interview-Simulation</h4>
-                      <p className="mt-1 text-xs leading-[1.5] text-slate-400">
-                        Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.
-                      </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Starten
-                      </div>
-                    </div>
-                  </button>}
-
-                  {/* Stärkenanalyse */}
-                  <button
-                    onClick={() => setAssessmentDisclaimerOpen(true)}
-                    className="col-span-12 sm:col-span-6 group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-3 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
-                  >
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl transition-all group-hover:bg-blue-400/20" />
-                    {/* Undraw-style assessment illustration */}
-                    <div className="absolute bottom-0 right-0 w-28 h-20 opacity-[0.28] pointer-events-none">
-                      <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="35" y="10" width="70" height="82" rx="6" fill="white" stroke="#ddd6fe" strokeWidth="1.5"/>
-                        <rect x="52" y="6" width="36" height="10" rx="5" fill="#7c3aed"/>
-                        <circle cx="52" cy="33" r="6" fill="#ddd6fe"/>
-                        <polyline points="48.5,33 51,35.5 55.5,29.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
-                        <rect x="62" y="30" width="34" height="2.5" rx="1.25" fill="#ddd6fe"/>
-                        <circle cx="52" cy="50" r="6" fill="#ddd6fe"/>
-                        <polyline points="48.5,50 51,52.5 55.5,46.5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"/>
-                        <rect x="62" y="47" width="28" height="2.5" rx="1.25" fill="#ddd6fe"/>
-                        <circle cx="52" cy="67" r="6" fill="#ede9fe"/>
-                        <rect x="62" y="64" width="22" height="2.5" rx="1.25" fill="#ede9fe"/>
-                        <circle cx="115" cy="78" r="14" fill="#e0e7ff"/>
-                        <circle cx="115" cy="66" r="10" fill="#fde68a"/>
-                        <circle cx="111" cy="65" r="1.5" fill="#1e293b"/>
-                        <circle cx="119" cy="65" r="1.5" fill="#1e293b"/>
-                      </svg>
-                    </div>
-                    <div className="relative">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
-                        <ClipboardList className="h-5 w-5 text-white" />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">Stärkenanalyse</h4>
-                      <p className="mt-1 text-xs leading-[1.5] text-slate-400">
-                        Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.
-                      </p>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/20 bg-blue-500/12 px-3 py-2 text-xs font-semibold text-blue-100 transition-colors group-hover:bg-blue-500/18">
-                        <ClipboardList className="h-3.5 w-3.5" />
-                        Starten
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Schnell-Aktionen grid */}
-                <div>
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnell-Aktionen</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-                    {SUGGESTIONS.map((s, idx) => {
+                {/* Mobile-only horizontal quick actions */}
+                <div className="md:hidden">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Schnell-Aktionen</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [&::-webkit-scrollbar]:hidden">
+                    {!chatAtLimit && (
+                      <button onClick={startSimulation} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-[#131C2C] px-3 py-2 text-xs font-medium text-blue-300 whitespace-nowrap">
+                        <MessageSquare className="w-3.5 h-3.5" /> Interview-Sim.
+                      </button>
+                    )}
+                    <button onClick={() => setAssessmentDisclaimerOpen(true)} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 text-xs font-medium text-slate-300 whitespace-nowrap">
+                      <ClipboardList className="w-3.5 h-3.5 text-blue-400" /> Stärkenanalyse
+                    </button>
+                    {SUGGESTIONS.map((s) => {
                       const locked = s.requiresResume && uploadedResumes.length === 0;
                       return (
-                        <button
-                          key={s.label}
-                          onClick={() => {
-                            if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                            handleSend(s.prompt);
-                          }}
-                          className={`group flex flex-col gap-1.5 rounded-xl border p-3 text-left transition-all duration-300
-                            ${locked
-                              ? "cursor-not-allowed border-[#1C2333] bg-white/[0.02] opacity-50"
-                              : "border-[#1C2333] bg-[#131C2C] shadow-sm hover:-translate-y-0.5 hover:border-blue-500/20 hover:shadow-md hover:shadow-blue-500/5"
-                            }`}
-                          style={{ animationDelay: `${idx * 50}ms` }}
-                        >
-                          <span className={`flex h-8 w-8 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 ${locked ? "bg-slate-100" : s.iconCls}`}>
-                            {locked
-                              ? <Lock className="h-3.5 w-3.5 text-slate-300" />
-                              : <s.icon className="h-4 w-4" />
-                            }
-                          </span>
-                          <span className={`text-xs font-semibold leading-snug line-clamp-2 ${locked ? "text-slate-500" : "text-slate-200"}`}>
-                            {s.label}
-                          </span>
-                          {s.sub && (
-                            <span className={`text-[11px] leading-[1.5] ${locked ? "text-slate-200" : "text-slate-400"}`}>
-                              {s.sub}
-                            </span>
-                          )}
+                        <button key={s.label} onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
+                          className={`flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 text-xs font-medium whitespace-nowrap ${locked ? "text-slate-500 opacity-50" : "text-slate-300"}`}>
+                          {locked ? <Lock className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5 text-slate-400" />}
+                          {s.label}
                         </button>
                       );
                     })}
                   </div>
                 </div>
+
+                {/* Mission cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {!chatAtLimit && (
+                    <button onClick={startSimulation}
+                      className="group relative overflow-hidden rounded-xl border border-blue-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(59,130,246,0.12),0_4px_24px_rgba(59,130,246,0.10)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/30">
+                      <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
+                      <div className="relative">
+                        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
+                          <MessageSquare className="h-4 w-4 text-white" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white">Interview-Simulation</h4>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-400">Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.</p>
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-blue-500/12 px-2.5 py-1.5 text-xs font-semibold text-blue-100">
+                          <Sparkles className="h-3 w-3" /> Starten
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                  <button onClick={() => setAssessmentDisclaimerOpen(true)}
+                    className="group relative overflow-hidden rounded-xl border border-[#171a21] bg-[#08090c] p-4 text-left shadow-md shadow-black/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20">
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl transition-all group-hover:bg-blue-400/20" />
+                    <div className="relative">
+                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 shadow-md shadow-blue-500/20">
+                        <ClipboardList className="h-4 w-4 text-white" />
+                      </div>
+                      <h4 className="text-sm font-bold text-white">Stärkenanalyse</h4>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-400">Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.</p>
+                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-blue-500/20 bg-blue-500/12 px-2.5 py-1.5 text-xs font-semibold text-blue-100">
+                        <ClipboardList className="h-3 w-3" /> Starten
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
               </div>
 
             ) : (
 
-              /* ── Message bubbles ──────────────────────────────────────── */
-              <div className="space-y-4">
+              /* ── Message bubbles with glow ───────────────────────────── */
+              <div className="space-y-4 max-w-3xl mx-auto">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex items-end gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     {msg.role === "assistant" && (
-                      <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
+                      <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-0.5"
+                        style={{ boxShadow: "0 0 14px rgba(91,79,232,0.45)" }}>
                         <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-[80%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-3 overflow-hidden
+                    <div className={`max-w-[82%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                      <div className={`px-4 py-3 overflow-hidden rounded-xl
                         ${msg.role === "user"
-                          ? "bg-blue-500 text-white rounded-xl rounded-br-sm shadow-sm text-sm leading-relaxed font-medium"
+                          ? "bg-blue-500 text-white rounded-br-sm text-sm leading-relaxed font-medium"
                           : msg.isError
-                            ? "bg-red-500/10 border border-red-500/30 shadow-sm text-red-200 rounded-xl rounded-bl-sm text-sm leading-relaxed"
-                            : "bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm text-sm leading-relaxed"
+                            ? "bg-red-500/10 border border-red-500/30 text-red-200 rounded-bl-sm text-sm leading-relaxed"
+                            : "bg-[#0d1117] border border-[#1e2a3a] text-slate-200 rounded-bl-sm text-sm leading-relaxed"
                         }`}
-                      >
-                        {msg.role === "user"
-                          ? msg.content
-                          : <MarkdownMessage text={msg.content} />
+                        style={msg.role === "user"
+                          ? { boxShadow: "0 2px 20px rgba(59,130,246,0.35)" }
+                          : !msg.isError
+                            ? { boxShadow: "0 2px 16px rgba(91,79,232,0.15), inset 0 1px 0 rgba(255,255,255,0.04)" }
+                            : {}
                         }
+                      >
+                        {msg.role === "user" ? msg.content : <MarkdownMessage text={msg.content} />}
                       </div>
                     </div>
                   </div>
                 ))}
 
-                {/* Typing dots — only while API is loading, before streaming starts */}
+                {/* Typing dots */}
                 {isStreaming && !streamingMsg && (
                   <div className="flex items-end gap-2.5 justify-start">
-                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center"
+                      style={{ boxShadow: "0 0 14px rgba(91,79,232,0.45)" }}>
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="bg-[#111827] rounded-xl rounded-bl-sm px-4 py-3 border border-[#273244]">
+                    <div className="bg-[#0d1117] rounded-xl rounded-bl-sm px-4 py-3 border border-[#1e2a3a]"
+                      style={{ boxShadow: "0 2px 16px rgba(91,79,232,0.15)" }}>
                       <div className="flex items-center gap-1">
                         {[0, 150, 300].map((delay) => (
-                          <div key={delay} className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
+                          <div key={delay} className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
                         ))}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Streaming message — typewriter reveal with scroll */}
+                {/* Streaming message */}
                 {streamingMsg && (
                   <div className="flex items-end gap-2.5 justify-start">
-                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm mb-0.5">
+                    <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-0.5"
+                      style={{ boxShadow: "0 0 14px rgba(91,79,232,0.45)" }}>
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="max-w-[80%] flex flex-col gap-1 items-start">
-                      <div className="bg-[#111827] border border-[#273244] shadow-sm text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden">
+                    <div className="max-w-[82%] items-start">
+                      <div className="bg-[#0d1117] border border-[#1e2a3a] text-slate-200 rounded-xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed overflow-hidden"
+                        style={{ boxShadow: "0 2px 16px rgba(91,79,232,0.15), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
                         <MarkdownMessage text={streamingMsg.shown} />
-                        <span className="inline-block w-0.5 h-3.5 bg-blue-400 animate-pulse ml-0.5 align-middle" />
+                        <span className="inline-block w-0.5 h-3.5 bg-indigo-400 animate-pulse ml-0.5 align-middle" />
                       </div>
                     </div>
                   </div>
@@ -851,58 +803,35 @@ export default function AIAssistantPage() {
             )}
           </div>
 
-          {/* ── EU AI Act micro-disclaimer ────────────────────────────────── */}
+          {/* ── EU AI Act micro-disclaimer ──────────────────────────────── */}
           {!disclaimerDismissed && (
             <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-[#1C2333] bg-[#131C2C] px-3 py-1.5">
               <Shield className="w-3 h-3 text-slate-400 flex-shrink-0" />
               <p className="flex-1 text-[11px] text-slate-400 leading-relaxed">
-                <strong className="text-slate-300">KI-Transparenz</strong> Dieses System arbeitet KI-gestützt und kann im Einzelfall ungenaue Einschätzungen liefern. Hinweis gemäß Art. 50 EU AI Act.
+                <strong className="text-slate-300">KI-Transparenz</strong> Dieses System arbeitet KI-gestützt. Hinweis gemäß Art. 50 EU AI Act.
               </p>
-              <button onClick={() => setDisclaimerDismissed(true)} className="flex-shrink-0 text-slate-300 hover:text-slate-500 transition-colors">
+              <button onClick={() => setDisclaimerDismissed(true)} className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors">
                 <X className="w-3 h-3" />
               </button>
             </div>
           )}
 
-          {/* ── Input Bar ─────────────────────────────────────────────────── */}
-          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-black/90 backdrop-blur-sm border-t border-[#171a21]">
-            {uploadedResumes.length > 0 && (
-              <div className="sm:hidden mb-2">
-                <select
-                  value={selectedResumeId || ""}
-                  onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-1.5 border border-[#1C2333] rounded-xl text-xs focus:outline-none bg-[#131C2C] text-slate-300"
-                >
-                  <option value="">Kein Lebenslauf</option>
-                  {uploadedResumes.map((r) => (
-                    <option key={r.id} value={r.id}>{r.filename || r.name || `Lebenslauf ${r.id}`}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Wand suggestion pills */}
+          {/* ── Sticky Input Bar ────────────────────────────────────────── */}
+          <div className="flex-shrink-0 px-3 pb-3 pt-2 bg-black/95 backdrop-blur-sm border-t border-[#171a21]">
             {wandOpen && (
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {WAND_SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setInput(s); setWandOpen(false); inputRef.current?.focus(); }}
-                    className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors text-left leading-snug"
-                  >
+                  <button key={s} onClick={() => { setInput(s); setWandOpen(false); inputRef.current?.focus(); }}
+                    className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-colors text-left leading-snug">
                     {s.length > 60 ? s.slice(0, 60) + "…" : s}
                   </button>
                 ))}
               </div>
             )}
-
-            <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-2xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.1)] transition-all focus-within:border-blue-500/40 focus-within:ring-2 focus-within:ring-blue-500/10">
-              {/* Wand button */}
-              <button
-                onClick={() => setWandOpen((v) => !v)}
-                title="Vorschläge einblenden"
-                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-blue-500/15 text-blue-300" : "text-slate-400 hover:bg-white/5 hover:text-blue-300"}`}
-              >
+            <div className="flex items-end gap-2 rounded-2xl border border-[#1C2333] bg-[#131C2C] px-3 py-2 transition-all focus-within:border-blue-500/40 focus-within:ring-2 focus-within:ring-blue-500/10"
+              style={{ boxShadow: "inset 0 1px 3px rgba(0,0,0,0.2)" }}>
+              <button onClick={() => setWandOpen((v) => !v)} title="Vorschläge"
+                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all mb-0.5 ${wandOpen ? "bg-blue-500/15 text-blue-300" : "text-slate-400 hover:bg-white/5 hover:text-blue-300"}`}>
                 <Wand2 className="h-4 w-4" />
               </button>
               <textarea
@@ -910,99 +839,52 @@ export default function AIAssistantPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Deine Anfrage an JobAssist formulieren…"
+                placeholder="Schreib direkt oder wähle eine Aktion…"
                 rows={1}
                 className="flex-1 resize-none bg-transparent border-0 focus:outline-none text-[16px] sm:text-sm leading-relaxed max-h-32 text-slate-200 placeholder:text-slate-500 py-1.5"
                 style={{ minHeight: "36px" }}
               />
-              <button
-                onClick={() => handleSend()}
-                disabled={!input.trim() || isStreaming || !!streamingMsg}
-                title="Senden"
-                className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm shadow-blue-500/20 transition-all hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
-              >
+              <button onClick={() => handleSend()} disabled={!input.trim() || isStreaming || !!streamingMsg} title="Senden"
+                className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition-all hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed mb-0.5"
+                style={{ boxShadow: "0 0 12px rgba(59,130,246,0.3)" }}>
                 <Send className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Right Context Panel (desktop only) ────────────────────────── */}
-        <aside className="hidden xl:flex w-[272px] flex-shrink-0 flex-col gap-3">
-
-          {/* Kontext-Fenster header */}
-          <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1C2333]">
-              <div className="w-6 h-6 rounded-lg bg-blue-500/12 flex items-center justify-center">
-                <Target className="w-3.5 h-3.5 text-blue-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-200">Kontext-Fenster</span>
-            </div>
-
-            {contextJob ? (
-              <div className="p-4 space-y-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Aktive Stelle</p>
-                  <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5">
-                    <p className="text-sm font-bold text-white leading-snug">{contextJob.role || "Ohne Titel"}</p>
-                    <p className="text-xs text-slate-300 mt-1">{contextJob.company || "Unbekannt"}</p>
-                    {contextJob.status && (
-                      <span className={`mt-3 inline-block text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                        contextJob.status === "interviewing" ? "bg-blue-500/15 text-blue-300" :
-                        contextJob.status === "applied" ? "bg-emerald-500/15 text-emerald-300" :
-                        "bg-white/5 text-slate-300"
-                      }`}>
-                        {contextJob.status === "interviewing" ? "Gespräch" : contextJob.status === "applied" ? "Beworben" : "Gespeichert"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Schnellaktionen</p>
-                  {[
-                    { label: "Interview vorbereiten", prompt: `Bereite mich auf das Interview für "${contextJob.role}" bei ${contextJob.company} vor.` },
-                    { label: "Bewerbung optimieren", prompt: `Optimiere meine Bewerbung für "${contextJob.role}" bei ${contextJob.company}.` },
-                    { label: "Stellenanforderungen", prompt: `Welche Qualifikationen sind typisch für die Stelle "${contextJob.role}"?` },
-                  ].map((a) => (
-                    <button
-                      key={a.label}
-                      onClick={() => handleSend(a.prompt)}
-                      className="w-full flex items-center gap-2.5 rounded-xl border border-[#1C2333] bg-[#0D1117] px-3 py-2.5 text-left text-xs font-semibold text-slate-200 hover:bg-blue-500/10 hover:border-blue-500/20 hover:text-blue-200 transition-colors"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-blue-400" />
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 text-center">
-                <Briefcase className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                <p className="text-xs text-slate-400">Keine aktive Stelle gefunden.</p>
-                <p className="text-[11px] text-slate-300 mt-1">Speichere eine Stelle unter „Bewerbungen" um sie hier zu sehen.</p>
-              </div>
-            )}
-          </div>
-
-          {/* Resume context */}
-          {contextResume && (
-            <div className="rounded-2xl border border-[#1C2333] bg-[#131C2C] shadow-sm p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Lebenslauf</p>
-              <div className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
-                  <FileText className="w-5 h-5 text-blue-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-slate-100 truncate">{contextResume.filename || "Lebenslauf"}</p>
-                  <p className="text-[11px] text-blue-300/80">Aktiv für Analysen</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
-
       </div>
     </div>
+
+    {/* ── Mobile history slide-in ─────────────────────────────────────────── */}
+    {sidebarOpen && (
+      <div className="md:hidden fixed inset-0 z-40 flex">
+        <aside className="w-72 flex flex-col bg-[#05060a] border-r border-[#171a21] overflow-hidden">
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#171a21]">
+            <div className="flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-violet-500" />
+              <span className="text-xs font-bold text-slate-200">Verlauf</span>
+            </div>
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-xl text-slate-400 hover:bg-white/5">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-2 py-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+            {conversations.length > 0 && (
+              <div className="flex items-center gap-2 bg-[#131C2C] border border-[#1C2333] rounded-xl px-3 py-2 mx-1 mb-2">
+                <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <input type="text" value={historySearch} onChange={(e) => setHistorySearch(e.target.value)}
+                  placeholder="Gespräche suchen…"
+                  className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-500 focus:outline-none min-w-0" />
+              </div>
+            )}
+            {renderConvList()}
+          </div>
+        </aside>
+        <div className="flex-1 bg-black/40" onClick={() => setSidebarOpen(false)} />
+      </div>
+    )}
+
     {/* ── EU AI Act Transparency Disclaimer Modal ───────────────────────── */}
     {assessmentDisclaimerOpen && (
       <div
