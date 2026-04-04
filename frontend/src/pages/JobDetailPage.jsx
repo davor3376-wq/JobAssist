@@ -855,8 +855,8 @@ export default function JobDetailPage() {
                           </div>
                           <h3 className="text-sm font-bold text-white">Stärken</h3>
                         </div>
-                        <div className="divide-y divide-[#1e293b]">
-                          {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} index={i} />)}
+                        <div className="flex flex-wrap gap-2">
+                          {matchFeedback.strengths.map((s, i) => <StrengthItem key={i} text={s} />)}
                         </div>
                       </div>
                     )}
