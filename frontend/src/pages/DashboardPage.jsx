@@ -175,7 +175,7 @@ function ActivityChart({ data }) {
       width="100%"
       height="100%"
       preserveAspectRatio="none"
-      style={{ overflow: 'visible', display: 'block' }}
+      style={{ overflow: 'hidden', display: 'block' }}
     >
       <defs>
         <filter id="lineGlow" x="-20%" y="-100%" width="140%" height="300%">
@@ -518,7 +518,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0" style={{ minHeight: '90px' }}>
+            <div className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: '90px' }}>
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
@@ -673,7 +673,7 @@ export default function DashboardPage() {
               ))}
             </div>
             <div
-              className="mt-3.5 rounded-xl px-3 py-2 flex items-center justify-between gap-2"
+              className="mt-3.5 rounded-xl px-3 py-2.5 flex flex-col gap-1"
               style={{
                 background: C.indigoSoft,
                 border: `1px solid rgba(91,79,232,0.15)`,
@@ -686,8 +686,8 @@ export default function DashboardPage() {
                 />
                 <span className="text-[11px]" style={{ color: C.textSub }}>Konversionsrate</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[14px] font-semibold tabular-nums leading-none" style={{ color: C.indigoMid }}>4,8%</span>
+              <div className="flex items-center gap-1.5 pl-3">
+                <span className="text-[15px] font-semibold tabular-nums leading-none" style={{ color: C.indigoMid }}>4,8%</span>
                 <span className="text-[11px]" style={{ color: C.textDim }}>→ Interview</span>
               </div>
             </div>
