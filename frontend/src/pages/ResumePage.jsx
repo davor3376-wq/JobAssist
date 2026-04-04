@@ -482,7 +482,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
           <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#3a3a42]">
             Dokumenten-Analyse
           </span>
-          <h2 className="text-[22px] font-semibold text-white leading-tight mt-1 truncate max-w-md">
+          <h2 className="text-lg font-semibold text-white leading-tight mt-1 truncate max-w-md">
             {resume.filename?.replace(/\.[^.]+$/, "")}
           </h2>
           <p className="text-[11px] text-[#3a3a42] mt-0.5">
@@ -491,8 +491,8 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
 
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
-        <div className="my-2 w-full max-w-[380px] mx-auto hidden lg:block">
-          <RadarChart skills={skills} size={380} />
+        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-hidden">
+          <RadarChart skills={skills} size={280} />
         </div>
 
         {/* Score ring + goal below radar */}
@@ -567,7 +567,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
       </div>
 
       {/* ── 3. Fachkenntnisse: ultra-thin 2px bars with end-glow ── */}
-      <div className="col-span-12 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+      <div className="col-span-12 lg:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
         <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Fachkenntnisse
         </span>
@@ -595,7 +595,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
       </div>
 
       {/* ── 4. Wachstums-Potenziale — interactive hover tiles ────── */}
-      <div className="col-span-12 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+      <div className="col-span-12 lg:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
         <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
           Wachstums-Potenziale
         </span>
@@ -610,10 +610,11 @@ function DocumentIntelligence({ resume, skills, gamification }) {
                 className="rounded-xl p-3.5 transition-all duration-300 cursor-default"
                 style={{
                   background: isHovered
-                    ? "linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.015) 100%)"
-                    : "rgba(255,255,255,0.015)",
+                    ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.05) 100%)"
+                    : "rgba(245,158,11,0.07)",
+                  border: "1px solid rgba(245,158,11,0.25)",
                   boxShadow: isHovered
-                    ? "inset 0 1px 0 0 rgba(255,255,255,0.04), 0 0 20px rgba(251,191,36,0.06)"
+                    ? "inset 0 1px 0 0 rgba(255,255,255,0.04), 0 0 20px rgba(251,191,36,0.12)"
                     : "none",
                   transform: isHovered ? "translateY(-1px)" : "none",
                 }}
@@ -819,18 +820,20 @@ export default function ResumePage() {
               </div>
             )}
 
-            {/* Checklist */}
-            {selectedResume && <Checklist gamification={gamification} />}
           </div>
 
           {/* ── CENTER: Document Intelligence ──────────────────────────────── */}
-          {/* P2: lg:col-span-9 gibt der rechten Seite mehr Platz */}
-          <div className="col-span-12 lg:col-span-9 min-h-[500px]">
+          <div className="col-span-12 lg:col-span-6 min-h-[500px]">
             <DocumentIntelligence
               resume={selectedResume}
               skills={skills}
               gamification={gamification}
             />
+          </div>
+
+          {/* ── RIGHT: Optimierungs-Tipps Sidebar ──────────────────────────── */}
+          <div className="col-span-12 lg:col-span-3 lg:sticky lg:top-4 lg:self-start">
+            {selectedResume && <Checklist gamification={gamification} />}
           </div>
         </div>
       )}
