@@ -174,7 +174,7 @@ function ActivityChart({ data }) {
       viewBox={`0 0 ${W} ${H}`}
       width="100%"
       height="100%"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="none"
       style={{ display: 'block' }}
     >
       <defs>
