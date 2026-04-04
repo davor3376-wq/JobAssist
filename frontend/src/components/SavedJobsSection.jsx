@@ -37,7 +37,6 @@ function LogoField({ company, status, url }) {
 
   const sources = domain ? [
     `https://logo.clearbit.com/${domain}`,
-    `https://www.google.com/s2/favicons?sz=128&domain_url=https://${domain}`,
   ] : [];
 
   const [srcIndex, setSrcIndex] = useState(0);
@@ -290,7 +289,12 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
       {/* ── Sticky section header + filter bar ── */}
       <div
-        className="sticky top-0 z-10 pb-4"
+        className="sticky top-0 z-30 pb-4"
+        style={{
+          background: "rgba(8, 8, 8, 0.92)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+        }}
       >
         <div className="flex items-end justify-between pt-4 mb-4">
           <div>
