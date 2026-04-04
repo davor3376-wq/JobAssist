@@ -841,7 +841,8 @@ export default function AIAssistantPage() {
 
       {/* ── EU AI Act micro-disclaimer ───────────────────────────────────────── */}
       {!disclaimerDismissed && (
-        <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm px-3 py-1.5 overflow-hidden">
+        <div className="flex-shrink-0 px-3 mb-2">
+        <div className={`${viewState !== "conversation" ? "max-w-[800px]" : verlaufCollapsed ? "" : "max-w-5xl"} mx-auto flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm px-3 py-1.5 overflow-hidden`}>
           <Shield className="w-3 h-3 text-slate-500 flex-shrink-0" />
           <p className="flex-1 text-xs text-slate-500 whitespace-nowrap overflow-hidden">
             <strong className="text-slate-400">KI-Transparenz</strong> · Dieses System arbeitet KI-gestützt. Hinweis gemäß Art. 50 EU AI Act.
@@ -849,6 +850,7 @@ export default function AIAssistantPage() {
           <button onClick={() => setDisclaimerDismissed(true)} className="flex-shrink-0 text-slate-600 hover:text-slate-400 transition-colors">
             <X className="w-3 h-3" />
           </button>
+        </div>
         </div>
       )}
 
