@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { jobApi, resumeApi, settingsApi } from '../services/api';
+import { jobApi, resumeApi, settingsApi, jobAlertsApi } from '../services/api';
 import {
   Search,
   Sparkles,
@@ -279,6 +279,11 @@ export default function DashboardPage() {
     staleTime: 1000 * 60 * 3,
     initialData: () => { try { const r = localStorage.getItem('profile'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
+  const { data: jobAlerts = [] } = useQuery({
+    queryKey: ['jobAlerts'],
+    queryFn: () => jobAlertsApi.list().then(r => r.data),
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Derived stats
   const analyzed      = jobs.filter(j => j.match_score != null).length;
@@ -322,19 +327,12 @@ export default function DashboardPage() {
     { label: 'Interview',  value: String(interviewingCount), barWidth: interviewPct, color: C.amber, glow: 'rgba(245,158,11,0.35)', note: interviewingCount > 0 ? 'Aktiv' : undefined },
   ];
 
-  // Profile strength — Lebenslauf from real resumes
-  const prefsSet = [
-    (profile?.desired_locations?.length > 0),
-    (profile?.job_types?.length > 0),
-    (!!profile?.experience_level),
-    (profile?.salary_min != null || profile?.salary_max != null),
-    (profile?.industries?.length > 0),
-  ].filter(Boolean).length;
-  const prefsSub = `${prefsSet}/5`;
+  // Profile strength
+  const hasJobAlert = jobAlerts.length > 0;
   const profileItems = [
-    { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
-    { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
-    { label: 'Präferenzen', complete: prefsSet >= 1,  icon: Zap,      sub: prefsSub, alwaysShowSub: true },
+    { label: 'Lebenslauf',  complete: hasResume,    icon: FileText, sub: null                                          },
+    { label: 'Fähigkeiten', complete: analyzed > 0, icon: Star,     sub: null                                          },
+    { label: 'Job-Alert',   complete: hasJobAlert,  icon: Zap,      sub: `${hasJobAlert ? 1 : 0}/1`, alwaysShowSub: true },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
