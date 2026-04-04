@@ -691,8 +691,7 @@ export default function AIAssistantPage() {
                     key={s.label}
                     onClick={() => {
                       if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
-                      setInput(s.prompt);
-                      inputRef.current?.focus();
+                      handleSend(s.prompt);
                     }}
                     className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm hover:!opacity-100 ${
                       locked
@@ -834,7 +833,7 @@ export default function AIAssistantPage() {
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div
-          className="flex items-end gap-2 max-w-5xl mx-auto rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 py-2 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
+          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 py-2 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" }}
         >
           {/* Mobile: single + menu (< sm) */}
