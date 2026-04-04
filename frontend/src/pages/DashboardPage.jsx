@@ -345,15 +345,20 @@ export default function DashboardPage() {
     ? Math.round(jobs.filter(j => j.match_score != null).slice(0, -1).reduce((s, j) => s + j.match_score, 0) / (analyzed - 1))
     : 0;
   const marketDelta = analyzed > 1 ? marketScore - prevMarketScore : 0;
-  const leistungsDelta = weekTotal >= 3
-    ? Math.min(15, Math.round(weekTotal * 2.5))
-    : -(3 - Math.min(weekTotal, 3)) * 4;
-  const leistungsIndex = Math.min(99, Math.round(
+  const leistungsIndex = Math.min(96, Math.round(
     (analyzed >= 5 ? 35 : analyzed * 7) +
     (topMatches > 0 ? 20 : 0) +
     (appliedCount >= 3 ? 25 : appliedCount * 8) +
     (interviewingCount > 0 ? 20 : 0)
   ));
+  const prevAnalyzed = Math.max(0, analyzed - weekTotal);
+  const prevLeistungsIndex = Math.min(96, Math.round(
+    (prevAnalyzed >= 5 ? 35 : prevAnalyzed * 7) +
+    (topMatches > 0 ? 20 : 0) +
+    (appliedCount >= 3 ? 25 : appliedCount * 8) +
+    (interviewingCount > 0 ? 20 : 0)
+  ));
+  const leistungsDelta = leistungsIndex - prevLeistungsIndex;
   const meilensteinLabel = leistungsIndex >= 80 ? 'Meister' : leistungsIndex >= 55 ? 'Experte' : leistungsIndex >= 30 ? 'Fortgeschritten' : 'Einsteiger';
   const meilensteinMax = leistungsIndex >= 80 ? 100 : leistungsIndex >= 55 ? 90 : leistungsIndex >= 30 ? 60 : 30;
   const meilensteinPct = Math.round((leistungsIndex / meilensteinMax) * 100);
