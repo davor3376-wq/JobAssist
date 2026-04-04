@@ -59,7 +59,7 @@ function makeId() { return Date.now().toString(36) + Math.random().toString(36).
 function makeTitle(messages) {
   const first = messages.find((m) => m.role === "user");
   if (!first) return "Neues Gespräch";
-  const text = first.content.slice(0, 40);
+  const text = first.content.replace(/\s*generate_document\s*\([^)]*\)\.?/g, "").trim().slice(0, 40);
   return text.length < first.content.length ? text + "…" : text;
 }
 
@@ -746,7 +746,7 @@ export default function AIAssistantPage() {
                         : {}
                     }
                   >
-                    {msg.role === "user" ? msg.content : <MarkdownMessage text={msg.content} />}
+                    {msg.role === "user" ? msg.content.replace(/\s*generate_document\s*\([^)]*\)\.?/g, "").trim() : <MarkdownMessage text={msg.content} />}
                   </div>
                 </div>
               </div>
