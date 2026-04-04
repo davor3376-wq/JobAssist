@@ -732,10 +732,10 @@ export default function AIAssistantPage() {
                       if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; }
                       handleSend(s.prompt);
                     }}
-                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200 backdrop-blur-sm hover:!opacity-100 ${
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-300 ease-out backdrop-blur-sm hover:!opacity-100 ${
                       locked
                         ? "border-white/[0.06] bg-white/[0.03] cursor-not-allowed opacity-40"
-                        : "border-indigo-500/20 bg-slate-900/60 hover:bg-indigo-950/70 hover:border-indigo-400/50 cursor-pointer hover:shadow-[0_4px_24px_rgba(99,102,241,0.18),inset_0_1px_0_rgba(99,102,241,0.12)]"
+                        : "border-indigo-500/20 bg-slate-900/60 hover:bg-indigo-950/70 hover:border-indigo-400/50 cursor-pointer active:scale-[0.98] hover:shadow-[0_4px_24px_rgba(99,102,241,0.18),inset_0_1px_0_rgba(99,102,241,0.12)]"
                     }`}
                     style={!locked ? { boxShadow: "0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)" } : undefined}
                   >
@@ -747,7 +747,7 @@ export default function AIAssistantPage() {
                       <p className={`text-sm font-semibold ${locked ? "text-slate-500" : "text-slate-100"}`}>{s.label}</p>
                       <p className="text-xs text-slate-400 mt-0.5 truncate">{s.sub}</p>
                     </div>
-                    {!locked && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 self-center ml-auto text-indigo-400/50 group-hover:text-indigo-300 transition-colors" />}
+                    {!locked && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 self-center ml-auto text-indigo-400/50 group-hover:text-indigo-300 group-hover:translate-x-0.5 transition-all duration-300 ease-out" />}
                   </button>
                 );
               })}
