@@ -510,6 +510,9 @@ export default function AIAssistantPage() {
             </div>
             <span className="text-sm font-semibold text-white hidden sm:block">KI-Assistent</span>
           </div>
+          <span className="hidden md:block text-xs text-slate-500 truncate max-w-xs">
+            {activeId ? (conversations.find(c => c.id === activeId)?.title || "Gespräch") : "Neues Gespräch"}
+          </span>
         </div>
         <button onClick={handleNewChat} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors">
           <Plus className="w-3.5 h-3.5" />
@@ -517,45 +520,48 @@ export default function AIAssistantPage() {
         </button>
       </div>
 
-      {/* ── Body: sidebar + chat ────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[320px_1fr]">
+      {/* ── Body: 3-column terminal ─────────────────────────────────────────── */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[280px_1fr_300px]">
 
-        {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
+        {/* ── Left sidebar: Starter Missionen + History ───────────────────── */}
         <aside className="hidden md:flex flex-col border-r border-[#171a21] bg-[#05060a] overflow-hidden">
 
-          {/* Schnell-Aktionen — flat list */}
+          {/* Starter Missionen */}
           <div className="flex-shrink-0 px-2 pt-3 pb-2 border-b border-[#171a21]">
-            <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Schnell-Aktionen</p>
+            <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Starter Missionen</p>
             {!chatAtLimit && (
-              <button onClick={startSimulation} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-blue-500/10 text-left transition-colors group">
-                <MessageSquare className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-slate-200 flex-1">Interview-Simulation</span>
-                <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+              <button onClick={startSimulation} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-indigo-500/10 text-left transition-colors group">
+                <MessageSquare className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                <span className="text-xs font-medium text-slate-200 flex-1">Interview-Simulation starten</span>
+                <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
               </button>
             )}
             <button onClick={() => setAssessmentDisclaimerOpen(true)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group">
               <ClipboardList className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-              <span className="text-xs font-medium text-slate-200 flex-1">Stärkenanalyse</span>
+              <span className="text-xs font-medium text-slate-200 flex-1">Karriere-Analyse starten</span>
               <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
             </button>
-            {SUGGESTIONS.map((s) => {
-              const locked = s.requiresResume && uploadedResumes.length === 0;
-              return (
-                <button
-                  key={s.label}
-                  onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
-                  disabled={chatAtLimit}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group disabled:opacity-40"
-                >
-                  <s.icon className={`w-3.5 h-3.5 flex-shrink-0 ${locked ? "text-slate-600" : "text-slate-400"}`} />
-                  <span className={`text-xs font-medium flex-1 truncate ${locked ? "text-slate-500" : "text-slate-300"}`}>{s.label}</span>
-                  {locked
-                    ? <Lock className="w-3 h-3 text-slate-600 flex-shrink-0" />
-                    : <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
-                  }
-                </button>
-              );
-            })}
+            <button
+              onClick={() => { if (uploadedResumes.length === 0) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(SUGGESTIONS[0].prompt); }}
+              disabled={chatAtLimit}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group disabled:opacity-40"
+            >
+              <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${uploadedResumes.length === 0 ? "text-slate-600" : "text-slate-400"}`} />
+              <span className={`text-xs font-medium flex-1 ${uploadedResumes.length === 0 ? "text-slate-500" : "text-slate-200"}`}>Lebenslauf analysieren</span>
+              {uploadedResumes.length === 0
+                ? <Lock className="w-3 h-3 text-slate-600 flex-shrink-0" />
+                : <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
+              }
+            </button>
+            <button
+              onClick={() => handleSend(SUGGESTIONS[1].prompt)}
+              disabled={chatAtLimit}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/5 text-left transition-colors group disabled:opacity-40"
+            >
+              <Briefcase className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span className="text-xs font-medium text-slate-200 flex-1">Bewerbungsstrategie öffnen</span>
+              <ArrowRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0" />
+            </button>
           </div>
 
           {/* History */}
@@ -579,30 +585,8 @@ export default function AIAssistantPage() {
           </div>
         </aside>
 
-        {/* ── Chat Panel ──────────────────────────────────────────────────── */}
+        {/* ── Center Chat ──────────────────────────────────────────────────── */}
         <div className="flex flex-col overflow-hidden bg-black min-h-0">
-
-          {/* Chat panel header — resume select + conversation title */}
-          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-2 border-b border-[#171a21] bg-[#080a0f]">
-            <div className="flex items-center gap-2 min-w-0">
-              <button onClick={() => setSidebarOpen((v) => !v)} className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-white/5 flex-shrink-0">
-                <Clock className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-xs text-slate-500 truncate hidden sm:block">
-                {activeId ? (conversations.find(c => c.id === activeId)?.title || "Gespräch") : "Neues Gespräch"}
-              </span>
-            </div>
-            <select
-              value={selectedResumeId || ""}
-              onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
-              className="px-2.5 py-1 rounded-lg border border-[#1C2333] bg-[#131C2C] text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 max-w-[180px] cursor-pointer"
-            >
-              <option value="">Kein Lebenslauf</option>
-              {uploadedResumes.map((r) => (
-                <option key={r.id} value={r.id}>{r.filename || `Lebenslauf ${r.id}`}</option>
-              ))}
-            </select>
-          </div>
 
           {/* Simulation mode banner */}
           {simulationMode && (
@@ -653,14 +637,12 @@ export default function AIAssistantPage() {
           )}
 
           {/* ── Messages area ─────────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
             {messages.length === 0 ? (
 
               /* ── Empty-state ─────────────────────────────────────────── */
-              <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-1">
-
-                {/* Hero — Nächster Schritt — desktop only */}
-                <div className="hidden md:block relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
+              <div className="flex flex-col gap-4 py-1">
+                <div className="relative overflow-hidden rounded-xl border border-[#171a21] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] px-4 py-4">
                   <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full bg-indigo-400/10 blur-2xl" />
                   <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
                   <div className="relative flex items-start gap-3">
@@ -686,48 +668,12 @@ export default function AIAssistantPage() {
                     </div>
                   </div>
                 </div>
-
-
-                {/* Mission cards — desktop only, mobile uses h-scroll above */}
-                <div className="hidden md:grid grid-cols-2 gap-3">
-                  {!chatAtLimit && (
-                    <button onClick={startSimulation}
-                      className="group relative overflow-hidden rounded-xl border border-indigo-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(99,102,241,0.12),0_4px_24px_rgba(99,102,241,0.10)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-900/30">
-                      <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl transition-all group-hover:bg-indigo-400/20" />
-                      <div className="relative">
-                        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-500/30">
-                          <MessageSquare className="h-4 w-4 text-white" />
-                        </div>
-                        <h4 className="text-sm font-bold text-white">Interview-Simulation</h4>
-                        <p className="mt-1 text-xs leading-relaxed text-slate-400">Übe realistische Fragen im Probeinterview und erhalte direktes Feedback.</p>
-                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1.5 text-xs font-semibold text-indigo-200">
-                          <Sparkles className="h-3 w-3" /> Starten
-                        </div>
-                      </div>
-                    </button>
-                  )}
-                  <button onClick={() => setAssessmentDisclaimerOpen(true)}
-                    className="group relative overflow-hidden rounded-xl border border-emerald-500/20 bg-[#08090c] p-4 text-left shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_4px_24px_rgba(16,185,129,0.06)] transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/20">
-                    <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl transition-all group-hover:bg-emerald-400/20" />
-                    <div className="relative">
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 shadow-md shadow-emerald-500/30">
-                        <ClipboardList className="h-4 w-4 text-white" />
-                      </div>
-                      <h4 className="text-sm font-bold text-white">Stärkenanalyse</h4>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-400">Analysiere deine Stärken, Fähigkeiten und Karrierepotenziale strukturiert.</p>
-                      <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200">
-                        <ClipboardList className="h-3 w-3" /> Starten
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
               </div>
 
             ) : (
 
-              /* ── Message bubbles with glow ───────────────────────────── */
-              <div className="space-y-4 max-w-3xl mx-auto">
+              /* ── Message bubbles ─────────────────────────────────────── */
+              <div className="space-y-4">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex items-end gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     {msg.role === "assistant" && (
@@ -871,6 +817,55 @@ export default function AIAssistantPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Right sidebar: Resume + Schnell-Aktionen ─────────────────────── */}
+        <aside className="hidden md:flex flex-col border-l border-[#171a21] bg-[#05060a] overflow-hidden">
+
+          {/* Resume select */}
+          <div className="flex-shrink-0 px-3 pt-3 pb-3 border-b border-[#171a21]">
+            <p className="pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Lebenslauf wählen</p>
+            <select
+              value={selectedResumeId || ""}
+              onChange={(e) => setSelectedResumeId(e.target.value ? Number(e.target.value) : null)}
+              className="w-full px-2.5 py-1.5 rounded-xl border border-[#1C2333] bg-[#131C2C] text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 cursor-pointer"
+            >
+              <option value="">Kein Lebenslauf</option>
+              {uploadedResumes.map((r) => (
+                <option key={r.id} value={r.id}>{r.filename || `Lebenslauf ${r.id}`}</option>
+              ))}
+            </select>
+            {selectedResumeId && (
+              <p className="mt-1.5 text-[10px] text-emerald-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                Aktiv im Kontext
+              </p>
+            )}
+          </div>
+
+          {/* Schnell-Aktionen als Icon-Grid */}
+          <div className="flex-1 overflow-y-auto px-3 py-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1C2333] [&::-webkit-scrollbar-thumb]:rounded-full">
+            <p className="pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Schnell-Aktionen</p>
+            <div className="grid grid-cols-3 gap-2">
+              {SUGGESTIONS.map((s) => {
+                const locked = s.requiresResume && uploadedResumes.length === 0;
+                return (
+                  <button
+                    key={s.label}
+                    onClick={() => { if (locked) { toast("Lade zuerst einen Lebenslauf hoch.", { icon: "📄" }); return; } handleSend(s.prompt); }}
+                    disabled={chatAtLimit}
+                    title={s.label}
+                    className="group flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-[#1C2333] bg-[#0d1117] hover:border-blue-500/30 hover:bg-blue-500/5 transition-all disabled:opacity-40"
+                  >
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${locked ? "bg-[#131C2C]" : s.iconCls}`}>
+                      {locked ? <Lock className="w-3.5 h-3.5 text-slate-600" /> : <s.icon className="w-3.5 h-3.5" />}
+                    </div>
+                    <span className="text-[10px] text-center leading-tight text-slate-400 group-hover:text-slate-200 transition-colors line-clamp-2">{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
 
       </div>
     </div>
