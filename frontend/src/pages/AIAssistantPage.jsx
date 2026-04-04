@@ -683,17 +683,6 @@ export default function AIAssistantPage() {
               style={{
                 background: "radial-gradient(ellipse at top right, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.08) 40%, transparent 70%), linear-gradient(160deg, rgba(17,24,39,0.92) 0%, rgba(5,6,10,0.97) 100%)",
                 boxShadow: "0 8px 40px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
-                transition: "transform 0.35s ease, opacity 0.35s ease",
-                ...(heroSticky ? {
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 50,
-                  transform: "scale(0.2)",
-                  transformOrigin: "top center",
-                  pointerEvents: "none",
-                } : {}),
               }}
             >
               <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl" />
@@ -880,11 +869,10 @@ export default function AIAssistantPage() {
       <div className="sticky bottom-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div className="max-w-[900px] mx-auto">
         <div
-          className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all duration-200 focus-within:border-indigo-500/60 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] focus-within:shadow-[0_0_0_2px_rgba(99,102,241,0.25),0_0_20px_rgba(99,102,241,0.15),0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]"
-          style={{ minHeight: "56px" }}
+          className="flex items-center sm:items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] sm:min-h-[56px] transition-all duration-200 focus-within:border-indigo-500/60 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] focus-within:shadow-[0_0_0_2px_rgba(99,102,241,0.25),0_0_20px_rgba(99,102,241,0.15),0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]"
         >
           {/* Icons inside field — left side */}
-          <div className="flex items-end gap-0.5 flex-shrink-0 pb-0.5">
+          <div className="flex items-center gap-0.5 flex-shrink-0 sm:pb-0.5">
             {/* Mobile: + opens dropdown */}
             <div className="relative flex sm:hidden">
               <button
@@ -949,7 +937,7 @@ export default function AIAssistantPage() {
             onClick={() => handleSend()}
             disabled={!input.trim() || isStreaming || !!streamingMsg}
             title="Senden"
-            className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-all duration-200 hover:bg-indigo-500 active:scale-95 disabled:opacity-20 disabled:scale-90 disabled:cursor-not-allowed mb-0.5"
+            className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-all duration-200 hover:bg-indigo-500 active:scale-95 disabled:opacity-20 disabled:scale-90 disabled:cursor-not-allowed sm:mb-0.5"
             style={{ boxShadow: (!input.trim() || isStreaming || !!streamingMsg) ? 'none' : '0 0 20px rgba(99,102,241,0.55)' }}
           >
             <Send className="h-4 w-4" />
