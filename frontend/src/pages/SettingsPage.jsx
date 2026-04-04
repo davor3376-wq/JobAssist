@@ -298,7 +298,7 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-2.5">
 
             {/* Profilfoto */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
               <div className="mb-2 flex items-center gap-2">
                 <User className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Profilfoto</h2>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Basis-Konfiguration */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
               <div className="mb-2 flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <div>
@@ -435,7 +435,7 @@ export default function SettingsPage() {
           <div className="space-y-2.5 flex flex-col lg:row-span-2">
 
             {/* Jobsuche — Orte + Gehalt combined */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3 space-y-2.5">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 space-y-2.5">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Jobsuche</h2>
@@ -485,7 +485,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Stellenarten + Erfahrung + Branchen combined */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3 space-y-3">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 space-y-3">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <h2 className="font-semibold text-white">Präferenzen</h2>
@@ -577,7 +577,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Umzugsbereitschaft */}
-            <div className="rounded-xl border border-[#1f2937] bg-[#111827] px-3 py-2.5">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5">
               <Controller
                 name="is_open_to_relocation"
                 control={control}
@@ -655,7 +655,7 @@ function DeleteAccountSection() {
   };
 
   return (
-    <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
       <div className="mb-2 flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
         <div>
