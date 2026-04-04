@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -231,8 +231,22 @@ const [savingJobId, setSavingJobId] = useState(null);
   const [submittedCustomParams, setSubmittedCustomParams] = useState(null);
   const [recommendedEnabled, setRecommendedEnabled] = useState(false);
   const { data: _initData } = useQuery({ queryKey: ["init"] });
+  const loadMoreSentinelRef = useRef(null);
 
-  const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj, isFetching: _jobsFetching } = useQuery({
+  // Restore scroll position on mount; save it on unmount
+  useEffect(() => {
+    const savedY = sessionStorage.getItem("jobsPageScrollY");
+    if (savedY) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: parseInt(savedY, 10), behavior: "instant" });
+      });
+    }
+    return () => {
+      sessionStorage.setItem("jobsPageScrollY", String(window.scrollY));
+    };
+  }, []);
+
+  const { data: savedJobs = [], isError: jobsError, error: jobsErrorObj, isFetching: jobsFetching } = useQuery({
     queryKey: ["jobs"],
     queryFn: () => {
       console.log("[JobsPage] Fetching saved jobs from API...");

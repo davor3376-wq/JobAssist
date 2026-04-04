@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ExternalLink, FileText, Sparkles } from "lucide-react";
+import { ChevronRight, ExternalLink, FileText, Sparkles, RefreshCw } from "lucide-react";
 
-/**
- * Status configuration for saved-job pipeline stages.
- * @type {Record<string, {label: string, color: string}>}
- */
 const STATUS_CFG = {
   bookmarked:   { label: "Gespeichert",  color: "#94a3b8" },
   applied:      { label: "Beworben",     color: "#10b981" },
@@ -14,22 +10,15 @@ const STATUS_CFG = {
   rejected:     { label: "Abgelehnt",    color: "#ef4444" },
 };
 
-/**
- * Tabs displayed in the glassmorphism filter bar.
- * @type {Array<{key: string, label: string}>}
- */
 const FILTER_TABS = [
   { key: "all",        label: "Alle" },
   { key: "bookmarked", label: "Gespeichert" },
   { key: "applied",    label: "Beworben" },
 ];
 
-/**
- * 40x40 rounded logo placeholder showing company initial + accent color.
- * @param {object} props
- * @param {string} props.company
- * @param {string} props.status
- */
+const PULL_THRESHOLD = 60;
+const PAGE_SIZE = 12;
+
 function LogoField({ company, status }) {
   const initial = (company || "?").charAt(0).toUpperCase();
   const cfg = STATUS_CFG[status] || STATUS_CFG.bookmarked;
@@ -41,18 +30,13 @@ function LogoField({ company, status }) {
         boxShadow: `inset 0 0 0 1px ${cfg.color}18`,
       }}
     >
-      <span className="text-[14px] font-semibold" style={{ color: cfg.color }}>
+      <span className="text-[0.875rem] font-semibold" style={{ color: cfg.color }}>
         {initial}
       </span>
     </div>
   );
 }
 
-/**
- * Thin neon match-score ring (36px) — Apple Wallet style.
- * @param {object} props
- * @param {number|null} props.score
- */
 function NeonMatchRing({ score }) {
   const normalized = Number.isFinite(score)
     ? Math.max(0, Math.min(100, Math.round(score)))
@@ -95,7 +79,7 @@ function NeonMatchRing({ score }) {
         />
       </svg>
       <span
-        className="absolute inset-0 flex items-center justify-center text-[9px] font-semibold tabular-nums"
+        className="absolute inset-0 flex items-center justify-center text-[0.5625rem] font-semibold tabular-nums"
         style={{ color }}
       >
         {normalized != null ? normalized : "—"}
@@ -104,11 +88,6 @@ function NeonMatchRing({ score }) {
   );
 }
 
-/**
- * Time-ago helper — returns a short German string.
- * @param {string|null} dateStr
- * @returns {string|null}
- */
 function timeAgo(dateStr) {
   if (!dateStr) return null;
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -118,50 +97,44 @@ function timeAgo(dateStr) {
   return `Vor ${days}T`;
 }
 
+function SkeletonRow({ style }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-3.5 animate-pulse" style={style}>
+      <div className="flex-shrink-0 w-10 h-10 rounded-[10px] bg-white/[0.05]" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="h-3 bg-white/[0.07] rounded-md w-3/5" />
+        <div className="h-2.5 bg-white/[0.04] rounded-md w-2/5" />
+      </div>
+      <div className="w-9 h-9 rounded-full bg-white/[0.04] flex-shrink-0" />
+      <div className="w-3.5 h-3.5 bg-white/[0.03] rounded flex-shrink-0" />
+    </div>
+  );
+}
+
 /**
  * Premium "Gespeicherte Stellen" section — row-based transaction list.
  *
- * Apple Wallet / Revolut design language:
- * - 72px rows, deep black, 1px gradient separators
- * - 40x40 logo field, thin neon match ring
- * - Glass hover with quick-action icons
- * - 12-col CSS Grid
- *
  * @param {object} props
- * @param {Array} props.jobs - Array of saved job objects
- * @param {string} [props.className]
+ * @param {Array}   props.jobs      - Array of saved job objects
+ * @param {boolean} [props.loading] - Show skeleton rows while fetching
+ * @param {Function} [props.onRefresh] - Async callback for pull-to-refresh
+ * @param {string}  [props.className]
  */
-export default function SavedJobsSection({ jobs = [], className = "" }) {
-  const [activeTab, setActiveTab] = useState("all");
-  const [sortBy, setSortBy] = useState("score");
+export default function SavedJobsSection({ jobs = [], loading = false, onRefresh, className = "" }) {
+  const [activeTab, setActiveTab]   = useState("all");
+  const [sortBy, setSortBy]         = useState("score");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [pullDist, setPullDist]     = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  if (!jobs.length) {
-    return (
-      <section className={`col-span-12 ${className}`}>
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <span className="block text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-              Kuratierte Auswahl
-            </span>
-            <h2 className="mt-1 text-[22px] sm:text-[26px] font-semibold text-white tracking-tight leading-none">
-              Gespeicherte Stellen
-            </h2>
-          </div>
-        </div>
-        <div
-          className="rounded-2xl p-8 text-center"
-          style={{
-            background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
-            boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
-          }}
-        >
-          <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
-          <p className="text-[13px] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
-          <p className="text-[10px] text-[#3a3a42] mt-1">Suche unten nach Jobs und speichere deine Favoriten</p>
-        </div>
-      </section>
-    );
-  }
+  const sentinelRef  = useRef(null);
+  const touchStartY  = useRef(0);
+  const sectionRef   = useRef(null);
+
+  // Reset pagination when filter/sort changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeTab, sortBy]);
 
   /* --- Filtering --- */
   const tabFilter = (job) => {
@@ -181,96 +154,194 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
              new Date(a.updated_at || a.created_at || 0);
     return (a.status || "").localeCompare(b.status || "");
   });
-  const visible = sorted.slice(0, 12);
+  const visible = sorted.slice(0, visibleCount);
+  const hasMore = visibleCount < sorted.length;
 
   /* --- Tab counts --- */
   const counts = {
-    all: jobs.length,
+    all:       jobs.length,
     bookmarked: jobs.filter((j) => !j.status || j.status === "bookmarked").length,
-    applied: jobs.filter((j) =>
+    applied:   jobs.filter((j) =>
       ["applied", "interviewing", "offered"].includes(j.status)
     ).length,
   };
 
-  return (
-    <section className={`col-span-12 ${className}`}>
-      {/* ─── Section header ─── */}
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <span className="block text-[10px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-            Kuratierte Auswahl
-          </span>
-          <h2 className="mt-1 text-[22px] sm:text-[26px] font-semibold text-white tracking-tight leading-none">
-            Gespeicherte Stellen
-          </h2>
-        </div>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-lg bg-transparent text-[#505058] focus:outline-none appearance-none cursor-pointer"
-        >
-          <option value="score">Match ↓</option>
-          <option value="date">Datum</option>
-          <option value="status">Status</option>
-        </select>
-      </div>
+  // IntersectionObserver — auto-load next page when sentinel scrolls into view
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((c) => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount]); // sentinel position changes with visibleCount
 
-      {/* ─── Glassmorphism filter bar ─── */}
+  // Pull-to-refresh touch handlers
+  const handleTouchStart = useCallback((e) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (window.scrollY > 5 || !onRefresh) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0) {
+      setPullDist(Math.min(delta * 0.4, PULL_THRESHOLD));
+    }
+  }, [onRefresh]);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDist >= PULL_THRESHOLD - 5 && onRefresh) {
+      setIsRefreshing(true);
+      try { await onRefresh(); } finally { setIsRefreshing(false); }
+    }
+    setPullDist(0);
+  }, [pullDist, onRefresh]);
+
+  // ── Empty / initial state ───────────────────────────────────────────────
+  if (!jobs.length && !loading) {
+    return (
+      <section className={`col-span-12 ${className}`}>
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <span className="block text-[0.625rem] font-medium tracking-[0.18em] uppercase text-[#505058]">
+              Kuratierte Auswahl
+            </span>
+            <h2 className="mt-1 text-[1.375rem] sm:text-[1.625rem] font-semibold text-white tracking-tight leading-none">
+              Gespeicherte Stellen
+            </h2>
+          </div>
+        </div>
+        <div
+          className="rounded-2xl p-8 text-center"
+          style={{
+            background: "linear-gradient(180deg, #080808 0%, #030303 100%)",
+            boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+          }}
+        >
+          <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
+          <p className="text-[0.8125rem] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
+          <p className="text-[0.625rem] text-[#3a3a42] mt-1">
+            Suche unten nach Jobs und speichere deine Favoriten
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`col-span-12 ${className}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* ── Pull-to-refresh indicator ── */}
+      {(pullDist > 0 || isRefreshing) && (
+        <div
+          className="flex items-center justify-center overflow-hidden transition-all duration-150"
+          style={{ height: isRefreshing ? 40 : pullDist }}
+        >
+          <RefreshCw
+            size={16}
+            className={`text-[#505058] transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+            style={{ transform: isRefreshing ? undefined : `rotate(${(pullDist / PULL_THRESHOLD) * 180}deg)` }}
+          />
+        </div>
+      )}
+
+      {/* ── Sticky section header + filter bar ── */}
       <div
-        className="inline-flex gap-1 p-1 rounded-xl mb-6"
+        className="sticky top-0 z-10 pb-4"
         style={{
-          background: "rgba(255,255,255,0.03)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          background: "rgba(0,0,0,0.92)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
         }}
       >
-        {FILTER_TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="relative px-4 py-2 rounded-lg transition-all duration-200"
-              style={
-                isActive
-                  ? {
-                      background:
-                        "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
-                      boxShadow:
-                        "inset 0 1px 0 0 rgba(255,255,255,0.08), 0 0 12px rgba(59,130,246,0.08)",
-                    }
-                  : {}
-              }
-            >
-              <span
-                className={`text-[10px] font-medium tracking-[0.14em] uppercase transition-colors ${
-                  isActive ? "text-white" : "text-[#3a3a42] hover:text-[#606068]"
-                }`}
+        <div className="flex items-end justify-between pt-4 mb-4">
+          <div>
+            <span className="block text-[0.625rem] font-medium tracking-[0.18em] uppercase text-[#505058]">
+              Kuratierte Auswahl
+            </span>
+            <h2 className="mt-1 text-[1.375rem] sm:text-[1.625rem] font-semibold text-white tracking-tight leading-none">
+              Gespeicherte Stellen
+            </h2>
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="text-[0.625rem] tracking-[0.14em] uppercase px-3 py-1.5 rounded-lg bg-transparent text-[#505058] focus:outline-none appearance-none cursor-pointer"
+          >
+            <option value="score">Match ↓</option>
+            <option value="date">Datum</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+
+        {/* Filter tabs */}
+        <div
+          className="inline-flex gap-1 p-1 rounded-xl"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+        >
+          {FILTER_TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="relative px-4 py-2 rounded-lg transition-all duration-200 min-h-[44px]"
+                style={
+                  isActive
+                    ? {
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                        boxShadow:
+                          "inset 0 1px 0 0 rgba(255,255,255,0.08), 0 0 12px rgba(59,130,246,0.08)",
+                      }
+                    : {}
+                }
               >
-                {tab.label}
-              </span>
-              <span
-                className={`ml-1.5 text-[10px] tabular-nums ${
-                  isActive ? "text-[#606068]" : "text-[#2a2a32]"
-                }`}
-              >
-                {counts[tab.key]}
-              </span>
-              {isActive && (
                 <span
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full"
-                  style={{
-                    background: "linear-gradient(90deg, #3b82f6, #60a5fa)",
-                    boxShadow: "0 0 8px rgba(59,130,246,0.5)",
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
+                  className={`text-[0.625rem] font-medium tracking-[0.14em] uppercase transition-colors ${
+                    isActive ? "text-white" : "text-[#3a3a42] hover:text-[#606068]"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+                <span
+                  className={`ml-1.5 text-[0.625rem] tabular-nums ${
+                    isActive ? "text-[#606068]" : "text-[#2a2a32]"
+                  }`}
+                >
+                  {counts[tab.key]}
+                </span>
+                {isActive && (
+                  <span
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full"
+                    style={{
+                      background: "linear-gradient(90deg, #3b82f6, #60a5fa)",
+                      boxShadow: "0 0 8px rgba(59,130,246,0.5)",
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ─── Row-based list — transaction style ─── */}
+      {/* ── Row-based list ── */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{
@@ -278,103 +349,123 @@ export default function SavedJobsSection({ jobs = [], className = "" }) {
           boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
         }}
       >
-        {visible.map((job, i) => {
-          const score =
-            job.match_score != null ? Math.round(job.match_score) : null;
-          const dateLabel = timeAgo(job.updated_at || job.created_at);
-          const statusCfg = STATUS_CFG[job.status] || STATUS_CFG.bookmarked;
-
-          return (
-            <Link
-              key={job.id}
-              to={`/jobs/${job.id}`}
-              className="group grid grid-cols-[40px_1fr_auto_auto] items-center gap-x-4 px-5 py-3 transition-all duration-200 hover:bg-[#080808]"
-              style={
-                i > 0
-                  ? {
-                      borderTop: "1px solid transparent",
-                      borderImage:
-                        "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.04) 80%, transparent 100%) 1",
-                    }
-                  : {}
-              }
-            >
-              {/* Col 1 (row-span 2): Logo */}
-              <div className="row-span-2 self-center">
-                <LogoField company={job.company} status={job.status || "bookmarked"} />
-              </div>
-
-              {/* Row 1, col 2: Title */}
-              <p className="text-[13px] font-medium text-white truncate leading-tight">
-                {job.role}
-              </p>
-
-              {/* Row 1, col 3: Match ring */}
-              <NeonMatchRing score={score} />
-
-              {/* Row 1, col 4: Chevron */}
-              <ChevronRight
-                size={14}
-                className="text-[#1a1a22] transition-colors group-hover:text-[#3a3a42]"
+        {/* Initial skeleton while loading with no data */}
+        {loading && !visible.length
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonRow
+                key={i}
+                style={i > 0 ? { borderTop: "1px solid rgba(255,255,255,0.04)" } : undefined}
               />
+            ))
+          : visible.map((job, i) => {
+              const score      = job.match_score != null ? Math.round(job.match_score) : null;
+              const dateLabel  = timeAgo(job.updated_at || job.created_at);
+              const statusCfg  = STATUS_CFG[job.status] || STATUS_CFG.bookmarked;
 
-              {/* Row 2, col 2-4: Company + Status + Date + Quick actions */}
-              <div className="col-span-3 flex items-center gap-2 flex-wrap mt-0.5">
-                <span className="text-[11px] text-[#505058] truncate">
-                  {job.company}
-                </span>
-                <span
-                  className="flex-shrink-0 h-1 w-1 rounded-full"
-                  style={{
-                    background: statusCfg.color,
-                    boxShadow: `0 0 4px ${statusCfg.color}40`,
-                  }}
-                />
-                <span className="text-[9px] tracking-[0.14em] uppercase text-[#3a3a42] flex-shrink-0">
-                  {statusCfg.label}
-                </span>
-                {job.location && (
-                  <span className="text-[10px] text-[#3a3a42] truncate max-w-[100px]">
-                    {job.location}
-                  </span>
-                )}
-                {dateLabel && (
-                  <span className="text-[10px] text-[#2a2a32] tabular-nums">
-                    {dateLabel}
-                  </span>
-                )}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-auto">
-                  <span
-                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                    title="Anzeige öffnen"
-                  >
-                    <ExternalLink size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                  </span>
-                  <span
-                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                    title="Anschreiben"
-                  >
-                    <FileText size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                  </span>
-                  <span
-                    className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
-                    title="Analysieren"
-                  >
-                    <Sparkles size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  key={job.id}
+                  to={`/jobs/${job.id}`}
+                  className="group flex items-start gap-3 px-5 py-3.5 transition-all duration-200 hover:bg-white/[0.02] active:bg-white/[0.04]"
+                  style={
+                    i > 0
+                      ? {
+                          borderTop: "1px solid transparent",
+                          borderImage:
+                            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.04) 80%, transparent 100%) 1",
+                        }
+                      : {}
+                  }
+                >
+                  {/* Logo */}
+                  <div className="flex-shrink-0 mt-0.5">
+                    <LogoField company={job.company} status={job.status || "bookmarked"} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[0.8125rem] font-medium text-white truncate leading-tight">
+                      {job.role}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[0.6875rem] text-[#505058] truncate">
+                        {job.company}
+                      </span>
+                      <span
+                        className="flex-shrink-0 h-1 w-1 rounded-full"
+                        style={{
+                          background: statusCfg.color,
+                          boxShadow: `0 0 4px ${statusCfg.color}40`,
+                        }}
+                      />
+                      <span className="text-[0.5625rem] tracking-[0.14em] uppercase text-[#3a3a42] flex-shrink-0">
+                        {statusCfg.label}
+                      </span>
+                      {job.location && (
+                        <span className="text-[0.625rem] text-[#3a3a42] truncate max-w-[100px]">
+                          {job.location}
+                        </span>
+                      )}
+                      {dateLabel && (
+                        <span className="text-[0.625rem] text-[#2a2a32] tabular-nums">
+                          {dateLabel}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Score ring — mobile only, below company row */}
+                    <div className="mt-2 sm:hidden">
+                      <NeonMatchRing score={score} />
+                    </div>
+
+                    {/* Quick actions — desktop hover only */}
+                    <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1">
+                      <span
+                        className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                        title="Anzeige öffnen"
+                      >
+                        <ExternalLink size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                      </span>
+                      <span
+                        className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                        title="Anschreiben"
+                      >
+                        <FileText size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                      </span>
+                      <span
+                        className="grid place-items-center w-7 h-7 rounded-lg transition-colors hover:bg-white/[0.04]"
+                        title="Analysieren"
+                      >
+                        <Sparkles size={13} className="text-[#3a3a42] group-hover:text-[#505058]" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right side: score ring (desktop) + chevron */}
+                  <div className="flex items-center gap-2 flex-shrink-0 self-center">
+                    <div className="hidden sm:block">
+                      <NeonMatchRing score={score} />
+                    </div>
+                    <ChevronRight
+                      size={14}
+                      className="text-[#1a1a22] transition-colors group-hover:text-[#3a3a42]"
+                    />
+                  </div>
+                </Link>
+              );
+            })}
+
+        {/* Trailing skeletons while fetching more */}
+        {loading && visible.length > 0 && (
+          <>
+            <SkeletonRow style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }} />
+            <SkeletonRow style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }} />
+          </>
+        )}
       </div>
 
-      {/* Overflow note */}
-      {sorted.length > 12 && (
-        <p className="text-center text-[10px] tracking-[0.14em] uppercase text-[#3a3a42] mt-6">
-          +{sorted.length - 12} weitere Stellen
-        </p>
-      )}
+      {/* Infinite scroll sentinel — triggers next page load */}
+      {hasMore && <div ref={sentinelRef} className="h-1" />}
     </section>
   );
 }

@@ -9,6 +9,7 @@
 
   body {
     @apply bg-black text-slate-100 antialiased font-sans;
+    scrollbar-gutter: stable;
   }
 }
 
