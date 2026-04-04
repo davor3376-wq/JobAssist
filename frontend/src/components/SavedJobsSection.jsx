@@ -190,11 +190,11 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
   /* --- Tab counts --- */
   const counts = {
-    all:       jobs.length,
-    bookmarked: jobs.filter((j) => !j.status || j.status === "bookmarked").length,
-    applied:   jobs.filter((j) =>
-      ["applied", "interviewing", "offered"].includes(j.status)
-    ).length,
+    all:          jobs.length,
+    bookmarked:   jobs.filter((j) => !j.status || j.status === "bookmarked").length,
+    applied:      jobs.filter((j) => ["applied", "interviewing", "offered"].includes(j.status)).length,
+    interviewing: jobs.filter((j) => j.status === "interviewing").length,
+    offered:      jobs.filter((j) => j.status === "offered").length,
   };
 
   // IntersectionObserver — auto-load next page when sentinel scrolls into view
