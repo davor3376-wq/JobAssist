@@ -22,28 +22,35 @@ const PULL_THRESHOLD = 60;
 const PAGE_SIZE = 12;
 
 function LogoField({ company, status, url }) {
-  const [imgError, setImgError] = useState(false);
   const initial = (company || "?").charAt(0).toUpperCase();
   const cfg = STATUS_CFG[status] || STATUS_CFG.bookmarked;
 
-  const logoSrc = (() => {
-    if (imgError) return null;
-    let domain = null;
+  const domain = (() => {
     if (url) {
-      try { domain = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+      try { return new URL(url).hostname.replace(/^www\./, ""); } catch {}
     }
-    if (!domain && company) {
-      domain = company.toLowerCase().replace(/\s+(gmbh|ag|inc|ltd|llc|corp|se|kg|kg|mbh|co\.?)$/i, "").replace(/[^a-z0-9]/g, "") + ".com";
+    if (company) {
+      return company.toLowerCase().replace(/\s+(gmbh|ag|inc|ltd|llc|corp|se|kg|mbh|co\.?)$/i, "").replace(/[^a-z0-9]/g, "") + ".com";
     }
-    return domain ? `https://www.google.com/s2/favicons?sz=128&domain_url=https://${domain}` : null;
+    return null;
   })();
+
+  const sources = domain ? [
+    `https://logo.clearbit.com/${domain}`,
+    `https://www.google.com/s2/favicons?sz=128&domain_url=https://${domain}`,
+  ] : [];
+
+  const [srcIndex, setSrcIndex] = useState(0);
+  useEffect(() => { setSrcIndex(0); }, [domain]);
+
+  const logoSrc = srcIndex < sources.length ? sources[srcIndex] : null;
 
   return (
     <div
       className="flex-shrink-0 w-10 h-10 rounded-[10px] flex items-center justify-center overflow-hidden"
       style={{
-        background: imgError || !logoSrc ? `${cfg.color}12` : "rgba(255,255,255,0.04)",
-        boxShadow: `inset 0 0 0 1px ${imgError || !logoSrc ? `${cfg.color}18` : "rgba(255,255,255,0.06)"}`,
+        background: !logoSrc ? `${cfg.color}12` : "rgba(255,255,255,0.04)",
+        boxShadow: `inset 0 0 0 1px ${!logoSrc ? `${cfg.color}18` : "rgba(255,255,255,0.06)"}`,
       }}
     >
       {logoSrc ? (
@@ -51,7 +58,7 @@ function LogoField({ company, status, url }) {
           src={logoSrc}
           alt={company || ""}
           className="w-7 h-7 object-contain"
-          onError={() => setImgError(true)}
+          onError={() => setSrcIndex(i => i + 1)}
         />
       ) : (
         <span className="text-[0.875rem] font-semibold" style={{ color: cfg.color }}>
