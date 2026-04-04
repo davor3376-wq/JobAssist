@@ -355,7 +355,7 @@ export default function BillingPage() {
       </div>
 
       {/* ── Plan hero card ───────────────────────────────────────────────────── */}
-      <div className={`relative overflow-hidden rounded-2xl border bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#000000_100%)] p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] ${currentPlan.borderCls}`}>
+      <div className={`relative overflow-hidden rounded-2xl border bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_30%),linear-gradient(180deg,rgba(17,24,39,0.55)_0%,rgba(0,0,0,0.55)_100%)] p-5 sm:p-6 backdrop-blur-sm ${currentPlan.borderCls}`}>
         {/* Gradient glow */}
         <div className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${currentPlan.iconCls} opacity-10 blur-3xl`} />
 
@@ -414,7 +414,7 @@ export default function BillingPage() {
 
       {/* ── Usage: donut gauges ───────────────────────────────────────────────── */}
       {usage.length > 0 && (
-        <div className="rounded-2xl border border-[#1C2333] bg-[#0D1117] shadow-[0_20px_60px_rgba(0,0,0,0.28)] overflow-hidden">
+        <div className="rounded-2xl border border-[#1C2333] bg-[#0D1117]/60 backdrop-blur-sm shadow-[0_20px_60px_rgba(0,0,0,0.28)] overflow-hidden">
           {/* Section header with health bar */}
           <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-[#1C2333]">
             <div className="flex items-start justify-between gap-3">
