@@ -396,8 +396,6 @@ const GROWTH_RECS = {
 function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqSummary }) {
   const { currentScore } = gamification || {};
   const goalReached = currentScore >= 85;
-  const summary = useMemo(() => generateAISummary(skills), [skills]);
-
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
