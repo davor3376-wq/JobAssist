@@ -6,6 +6,14 @@ const ls = {
   remove: (key) => { try { localStorage.removeItem(key); } catch {} },
 };
 
+function clearUserCache() {
+  const staticKeys = ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research", "resume_optimization_tasks"];
+  for (const k of staticKeys) localStorage.removeItem(k);
+  // Clear dynamic resume_analysis_* keys
+  const dynamicKeys = Object.keys(localStorage).filter(k => k.startsWith("resume_analysis_"));
+  for (const k of dynamicKeys) localStorage.removeItem(k);
+}
+
 const useAuthStore = create((set) => ({
   token: localStorage.getItem("access_token") || null,
   user: ls.get("auth_user"),
@@ -13,10 +21,7 @@ const useAuthStore = create((set) => ({
 
   login: (accessToken, refreshToken) => {
     if (!accessToken) return;
-    // Clear ALL previous user's cached data before storing new credentials
-    for (const k of ["auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research"]) {
-      localStorage.removeItem(k);
-    }
+    clearUserCache();
     localStorage.setItem("access_token", accessToken);
     if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
     set({ token: accessToken, user: null, isHydrated: true });
@@ -28,9 +33,9 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    for (const k of ["access_token", "refresh_token", "auth_user", "init", "settings_profile", "billing", "dashboard_jobs", "jobs", "resumes", "job_alerts", "ai_chat_history", "profile", "preferences", "job-search-research"]) {
-      localStorage.removeItem(k);
-    }
+    clearUserCache();
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     set({ token: null, user: null, isHydrated: true });
   },
 
