@@ -491,7 +491,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
 
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
-        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-hidden">
+        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block">
           <RadarChart skills={skills} size={280} />
         </div>
 
@@ -817,6 +817,79 @@ export default function ResumePage() {
                     {showAllResumes ? 'Weniger anzeigen' : `Alle ${resumes.length} anzeigen`}
                   </button>
                 )}
+              </div>
+            )}
+
+            {/* ── Wachstums-Potenziale (left sidebar) ─────────────────── */}
+            {selectedResume && skills.length > 0 && (() => {
+              const potentials = [...skills].sort((a, b) => a.value - b.value).slice(0, 2);
+              return (
+                <div className="px-1 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+                  <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+                    Wachstums-Potenziale
+                  </span>
+                  <div className="mt-3 space-y-2">
+                    {potentials.map((s) => (
+                      <div
+                        key={s.key}
+                        className="rounded-xl p-3 transition-all duration-300"
+                        style={{
+                          background: "rgba(245,158,11,0.07)",
+                          border: "1px solid rgba(245,158,11,0.25)",
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
+                            style={{ background: "#f59e0b", boxShadow: "0 0 6px rgba(245,158,11,0.4)" }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[11px] font-medium text-[#e0e0e8] truncate">{s.label}</span>
+                              <span className="text-[11px] text-[#505058] tabular-nums flex-shrink-0">{s.value}%</span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Sparkles className="w-2.5 h-2.5 text-amber-400/70 flex-shrink-0" />
+                              <p className="text-[10px] leading-relaxed text-[#808088] line-clamp-2">
+                                {GROWTH_RECS[s.key] || "Gezielte Weiterbildung kann deinen Score steigern."}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── Fachkenntnisse (left sidebar) ───────────────────────── */}
+            {selectedResume && skills.length > 0 && (
+              <div className="px-1 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+                <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
+                  Fachkenntnisse
+                </span>
+                <div className="mt-3 space-y-3">
+                  {skills.map((s) => (
+                    <div key={s.key}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] text-[#b0b0b8]">{s.label}</span>
+                        <span className="text-[11px] font-medium text-white tabular-nums">{s.value}%</span>
+                      </div>
+                      <div className="h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${s.value}%`,
+                            background: `linear-gradient(90deg, ${s.color}20, ${s.color}90, ${s.color})`,
+                            boxShadow: `4px 0 12px ${s.color}60, 0 0 6px ${s.color}30`,
+                            transition: "width 0.8s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
