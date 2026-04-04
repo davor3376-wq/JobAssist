@@ -326,7 +326,7 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="h-screen px-4 py-4 font-sans overflow-hidden flex flex-col"
+      className="min-h-screen px-4 py-4 font-sans flex flex-col"
       style={{
         background: 'radial-gradient(ellipse at 18% 15%, #0d0d1a 0%, #090909 45%, #050505 100%)',
         fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
@@ -351,11 +351,11 @@ export default function DashboardPage() {
       {/* ── Main Grid ──────────────────────────────────────────── */}
       {/* P0: grid-cols-1 auf Mobile, md:grid-cols-12 auf Desktop   */}
       {/* overflow-y-auto auf Mobile erlaubt Scrollen im Grid       */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 flex-1">
 
         {/* ── LEFT COLUMN ──────────────────────────────────────── */}
         {/* P0: col-span-1 Mobile / md:col-span-9 Desktop           */}
-        <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5 min-h-0">
+        <div className="col-span-1 md:col-span-9 flex flex-col gap-2.5">
 
           {/* Row 1 — Hero Metrics */}
           {/* shrink-0: Row 1 schrumpft nie — nur Aktivität gibt Platz ab */}
@@ -485,7 +485,7 @@ export default function DashboardPage() {
 
           {/* Row 2 — Aktivität                                              */}
           {/* P0: min-h-[200px] auf Mobile (kein flex-1 ohne fixe Höhe)     */}
-          <Tile className="min-h-[200px] md:flex-1 md:min-h-[180px] p-3.5 flex flex-col overflow-hidden">
+          <Tile className="h-[220px] p-3.5 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <Label>Aktivität</Label>
@@ -662,7 +662,7 @@ export default function DashboardPage() {
 
         {/* ── RIGHT SIDEBAR ─────────────────────────────────────── */}
         {/* P0: col-span-1 Mobile / md:col-span-3 Desktop            */}
-        <div className="col-span-1 md:col-span-3 flex flex-col gap-2.5 min-h-0">
+        <div className="col-span-1 md:col-span-3 flex flex-col gap-2.5">
 
           {/* Bewerbungsreise */}
           <Tile className="p-3.5">
@@ -698,7 +698,7 @@ export default function DashboardPage() {
           </Tile>
 
           {/* Profil-Stärke */}
-          <Tile className="flex-1 p-3.5">
+          <Tile className="p-3.5">
             <div className="flex items-center justify-between mb-3">
               <Label>Profil-Stärke</Label>
               <span
