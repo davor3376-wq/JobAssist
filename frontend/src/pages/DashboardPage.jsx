@@ -321,10 +321,18 @@ export default function DashboardPage() {
     (profile?.job_types?.length > 0),
     (!!profile?.experience_level),
   ].filter(Boolean).length;
+  const _prefParts = [
+    ...(profile?.job_types ?? []),
+    ...(profile?.desired_locations ?? []),
+    ...(profile?.experience_level ? [profile.experience_level] : []),
+  ];
+  const prefsSub = _prefParts.length > 0
+    ? _prefParts.slice(0, 2).join(', ') + (_prefParts.length > 2 ? ` +${_prefParts.length - 2}` : '')
+    : `${prefsSet} / 3`;
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
-    { label: 'Präferenzen', complete: prefsSet >= 1,  icon: Zap,      sub: `${prefsSet} / 3`, alwaysShowSub: true },
+    { label: 'Präferenzen', complete: prefsSet >= 1,  icon: Zap,      sub: prefsSub, alwaysShowSub: true },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
