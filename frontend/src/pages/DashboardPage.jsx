@@ -516,7 +516,7 @@ export default function DashboardPage() {
 
           {/* Row 2 — Aktivität                                              */}
           {/* P0: min-h-[200px] auf Mobile (kein flex-1 ohne fixe Höhe)     */}
-          <Tile className="h-[210px] p-3 flex flex-col overflow-hidden">
+          <Tile className="h-[270px] p-3 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <Label>Aktivität</Label>
@@ -553,7 +553,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: '100px' }}>
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
