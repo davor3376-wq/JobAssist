@@ -254,7 +254,7 @@ export default function AIAssistantPage() {
   const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
   const [activeTray, setActiveTray] = useState(null); // "wand" | null
   const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
-  const [verlaufCollapsed, setVerlaufCollapsed] = useState(false);
+  const [verlaufCollapsed, setVerlaufCollapsed] = useState(() => loadHistory().length === 0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewState, setViewState] = useState("discovery"); // "discovery" | "exiting-discovery" | "conversation"
   const [heroSticky, setHeroSticky] = useState(false);
@@ -601,7 +601,7 @@ export default function AIAssistantPage() {
       </aside>
 
       {/* ── Main column ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="flex-shrink-0 flex items-center gap-2 px-3 md:px-5 py-1.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
@@ -722,7 +722,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="[&:hover>button]:opacity-50 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
@@ -871,6 +871,7 @@ export default function AIAssistantPage() {
 
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
+        <div className={`${viewState !== "conversation" ? "max-w-[800px]" : verlaufCollapsed ? "" : "max-w-5xl"} mx-auto`}>
         <div
           className="flex items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-4 py-3 transition-all focus-within:border-indigo-500/40 focus-within:ring-2 focus-within:ring-indigo-500/10"
           style={{ boxShadow: "0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)", minHeight: "56px" }}
@@ -946,6 +947,7 @@ export default function AIAssistantPage() {
             <Send className="h-4 w-4" />
           </button>
         </div>
+        </div>{/* end input spine container */}
       </div>
 
       </div>{/* end main column */}
