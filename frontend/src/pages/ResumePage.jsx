@@ -113,22 +113,6 @@ function useGamification(skills) {
   return { avgScore, currentScore, tasks, completedTasks, potentialPoints, projectedScore, toggleTask };
 }
 
-// ─── AI Summary Generator ─────────────────────────────────────────────────────
-
-function generateAISummary(skills) {
-  const sorted = [...skills].sort((a, b) => b.value - a.value);
-  const topStrength = sorted[0];
-  const topPotential = sorted[sorted.length - 1];
-  return {
-    strength: topStrength,
-    potential: topPotential,
-    insights: [
-      { label: "Stärke", text: topStrength.label, value: topStrength.value, color: topStrength.color },
-      { label: "Potenzial", text: topPotential.label, value: topPotential.value, color: topPotential.color },
-    ],
-  };
-}
-
 // ─── Radar Chart ──────────────────────────────────────────────────────────────
 
 function RadarChart({ skills, size = 520 }) {
@@ -458,7 +442,7 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
         <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible relative">
           <RadarChart skills={skills} size={280} />
-          <p className="text-center text-[9px] text-[#3a3a42] mt-1 tracking-wide">KI-Schätzung</p>
+          <p className="text-center text-[9px] text-[#3a3a42] mt-1 tracking-wide">KI-Schätzung · Werte können abweichen</p>
           {isAnalyzing && (
             <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{ background: "rgba(6,6,8,0.55)" }}>
               <svg className="animate-spin w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none">
@@ -537,20 +521,8 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
         ) : groqSummary ? (
           <p className="text-[13px] leading-relaxed text-[#b0b0b8]">{groqSummary}</p>
         ) : (
-          <p className="text-[13px] leading-relaxed text-[#b0b0b8]">
-            Dein Profil zeigt eine{" "}
-            <span className="text-white font-semibold">
-              {summary.strength.value >= 75 ? "starke" : summary.strength.value >= 55 ? "solide" : "ausbaufähige"}
-            </span>{" "}
-            Passung im Bereich{" "}
-            <span style={{ color: summary.strength.color }} className="font-semibold">
-              {summary.strength.label}
-            </span>{" "}
-            ({summary.strength.value}%). Der größte Hebel liegt bei{" "}
-            <span style={{ color: summary.potential.color }} className="font-semibold">
-              {summary.potential.label}
-            </span>{" "}
-            — hier kannst du deinen Gesamtscore signifikant steigern.
+          <p className="text-[13px] leading-relaxed text-[#505058]">
+            Analyse wird geladen…
           </p>
         )}
       </div>
@@ -562,14 +534,11 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-const RESUME_PAGE_SIZE = 5;
-
 export default function ResumePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [showAllResumes, setShowAllResumes] = useState(false);
   const { guardedRun } = useUsageGuard("cv_analysis");
 
   const { data: initData } = useQuery({
@@ -703,29 +672,23 @@ export default function ResumePage() {
                 <p className="text-xs font-semibold text-slate-400">Noch keine Dokumente</p>
               </div>
             ) : (
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <span className="block text-xs font-medium tracking-[0.14em] uppercase text-[#505058] px-1">
                   Dokumente ({resumes.length})
                 </span>
-                {(showAllResumes ? resumes : resumes.slice(0, RESUME_PAGE_SIZE)).map(resume => (
-                  <FileCard
-                    key={resume.id}
-                    resume={resume}
-                    selected={selectedId === resume.id}
-                    onSelect={setSelectedId}
-                    onDelete={(id) => deleteMutation.mutate(id)}
-                    matchScore={avgMatchScore}
-                    deleteLoading={deleteMutation.isPending && deleteMutation.variables === resume.id}
-                  />
-                ))}
-                {resumes.length > RESUME_PAGE_SIZE && (
-                  <button
-                    onClick={() => setShowAllResumes(v => !v)}
-                    className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300 py-2 transition-colors"
-                  >
-                    {showAllResumes ? 'Weniger anzeigen' : `Alle ${resumes.length} anzeigen`}
-                  </button>
-                )}
+                <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-0.5">
+                  {resumes.map(resume => (
+                    <FileCard
+                      key={resume.id}
+                      resume={resume}
+                      selected={selectedId === resume.id}
+                      onSelect={setSelectedId}
+                      onDelete={(id) => deleteMutation.mutate(id)}
+                      matchScore={avgMatchScore}
+                      deleteLoading={deleteMutation.isPending && deleteMutation.variables === resume.id}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
