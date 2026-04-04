@@ -429,6 +429,9 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Danger Zone */}
+            <DeleteAccountSection />
+
           </div>
 
           {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
@@ -621,10 +624,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Danger Zone — always last (below all content on mobile) */}
-        <div className="lg:w-[320px] mt-2.5">
-          <DeleteAccountSection />
-        </div>
       </form>
     </div>
   );
@@ -655,7 +654,7 @@ function DeleteAccountSection() {
   };
 
   return (
-    <div className="border-t border-[#1f2937] pt-3">
+    <div className="rounded-xl border border-[#1f2937] bg-[#111827] p-3">
       <div className="mb-2 flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
         <div>
