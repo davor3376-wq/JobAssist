@@ -534,7 +534,7 @@ export default function JobAlertsPage() {
 
   if (alerts.length === 0) {
     return (
-      <div className="animate-slide-up rounded-2xl border border-[#1f2937] bg-black p-10 text-center">
+      <div className="animate-slide-up rounded-2xl border border-[#1f2937] bg-black/80 p-10 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-500/20 bg-[#111827]">
           <Bell className="h-8 w-8 text-blue-400" />
         </div>
@@ -561,7 +561,7 @@ export default function JobAlertsPage() {
   }
 
   return (
-    <div className="animate-slide-up overflow-hidden rounded-2xl border border-[#1f2937] bg-black">
+    <div className="animate-slide-up overflow-hidden rounded-2xl border border-[#1f2937] bg-black/80">
       <div className="flex items-center justify-between gap-3 border-b border-[#1f2937] p-2 sm:p-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.15)]">
