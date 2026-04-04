@@ -154,7 +154,7 @@ function ActivityChart({ data }) {
   const padT = 12;
   const padB = 6;
   const avail = H - padT - padB;
-  const max = 3;
+  const max = Math.max(...data.map(d => d.val), 1);
   const n = data.length;
 
   const pts = data.map((d, i) => ({
@@ -451,25 +451,28 @@ export default function DashboardPage() {
             </Tile>
 
             {/* Meilenstein */}
-            <Tile className="p-3.5">
+            <Tile className="p-3.5 flex flex-col">
               <Label>Meilenstein</Label>
-              <div className="mt-2 flex items-center gap-3">
-                <CircularGauge progress={80} size={72} />
-                <div className="flex-1">
+              <div className="mt-2 flex items-center gap-2 flex-1">
+                <CircularGauge progress={80} size={58} />
+                <div className="flex-1 min-w-0">
                   <div
-                    className="text-[18px] font-semibold leading-tight"
+                    className="text-[15px] font-semibold leading-tight truncate"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
                   >
                     Experte
                   </div>
-                  <div className="mt-0.5 text-xs" style={{ color: C.textDim }}>
+                  <div className="mt-1 text-[11px]" style={{ color: C.textDim }}>
                     72 / 90 Punkte
                   </div>
-                  <div
-                    className="mt-1.5 text-[11px] font-semibold tabular-nums"
-                    style={{ color: C.violet }}
-                  >
-                    80%
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <div className="flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: C.textDeep }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: '80%', background: `linear-gradient(90deg, ${C.violet}, ${C.indigoMid})`, boxShadow: `0 0 6px ${C.violetGlow}` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: C.violet }}>80%</span>
                   </div>
                 </div>
               </div>
@@ -515,7 +518,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0" style={{ minHeight: '60px' }}>
+            <div className="flex-1 min-h-0" style={{ minHeight: '90px' }}>
               <ActivityChart data={dailyActivity} />
             </div>
             <div className="flex justify-between mt-2 px-0.5">
@@ -670,23 +673,23 @@ export default function DashboardPage() {
               ))}
             </div>
             <div
-              className="mt-3.5 rounded-xl px-3 py-2.5 flex items-center gap-2"
+              className="mt-3.5 rounded-xl px-3 py-2 flex items-center justify-between gap-2"
               style={{
                 background: C.indigoSoft,
                 border: `1px solid rgba(91,79,232,0.15)`,
               }}
             >
-              <div
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ background: C.indigo, boxShadow: `0 0 8px ${C.indigoGlow}` }}
-              />
-              {/* P0: text-xs statt text-[10px] */}
-              <span className="text-xs" style={{ color: C.textSub }}>
-                Konversionsrate:{' '}
-                <span className="font-semibold" style={{ color: C.indigoMid }}>
-                  4,8% → Interview
-                </span>
-              </span>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: C.indigo, boxShadow: `0 0 8px ${C.indigoGlow}` }}
+                />
+                <span className="text-[11px]" style={{ color: C.textSub }}>Konversionsrate</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[14px] font-semibold tabular-nums leading-none" style={{ color: C.indigoMid }}>4,8%</span>
+                <span className="text-[11px]" style={{ color: C.textDim }}>→ Interview</span>
+              </div>
             </div>
           </Tile>
 
