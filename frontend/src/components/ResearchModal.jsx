@@ -56,7 +56,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
       <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl bg-[#0f172a] shadow-2xl shadow-black/60 border border-[#1e293b]">
         <div className="flex items-start justify-between gap-3 border-b border-[#1e293b] px-4 py-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
-            <Building2 className="h-5 w-5 flex-shrink-0 text-blue-400" />
+            <Building2 className="h-5 w-5 flex-shrink-0 text-indigo-400" />
             <h2 className="truncate text-base font-bold text-white">{companyName} - Recherche</h2>
           </div>
           <button
@@ -72,7 +72,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
           <AIDisclosureBanner feature="company_research" />
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-400">
-              <Loader2 className="h-7 w-7 animate-spin text-blue-400" />
+              <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
               <p className="text-sm">Recherche läuft...</p>
             </div>
           ) : data ? (
@@ -80,11 +80,11 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
               {hasContactInfo && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold text-slate-200">Kontakt</h3>
-                  <div className="space-y-2 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4 text-sm">
+                  <div className="space-y-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 p-4 text-sm">
                     {data.contact_info.email && (
                       <a
                         href={`mailto:${data.contact_info.email}`}
-                        className="flex items-center gap-2 break-all text-blue-400 hover:text-blue-300"
+                        className="flex items-center gap-2 break-all text-indigo-400 hover:text-indigo-300"
                       >
                         <Mail className="h-4 w-4 flex-shrink-0" />
                         <span>{data.contact_info.email}</span>
@@ -110,7 +110,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
                         href={data.contact_info.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 break-all text-blue-400 hover:text-blue-300"
+                        className="flex items-center gap-2 break-all text-indigo-400 hover:text-indigo-300"
                       >
                         <Globe className="h-4 w-4 flex-shrink-0" />
                         <span>{data.contact_info.website}</span>
@@ -183,13 +183,13 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
               {data.smart_questions?.length > 0 && (
                 <div>
                   <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-200">
-                    <MessageCircle className="h-4 w-4 text-blue-400" />
+                    <MessageCircle className="h-4 w-4 text-indigo-400" />
                     Clevere Fragen fürs Interview
                   </h3>
                   <ul className="space-y-2">
                     {data.smart_questions.map((question, i) => (
-                      <li key={i} className="flex items-start gap-2 rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-2 text-sm text-slate-300">
-                        <span className="flex-shrink-0 font-semibold text-blue-400">{i + 1}.</span>
+                      <li key={i} className="flex items-start gap-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-3 py-2 text-sm text-slate-300">
+                        <span className="flex-shrink-0 font-semibold text-indigo-400">{i + 1}.</span>
                         {question}
                       </li>
                     ))}
@@ -208,10 +208,10 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
               <button
                 onClick={onRefresh}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-60 sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                recherche_aktualisieren (Die Unternehmensdaten neu abrufen)
+                Aktualisieren
               </button>
             )}
             {jobId && data && !loading && (
@@ -227,7 +227,7 @@ export default function ResearchModal({ companyName, data, loading, onClose, job
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saved ? "Sicher hinterlegt" : "recherche_sichern (Die Erkenntnisse in deiner Stelle hinterlegen)"}
+                {saved ? "Sicher hinterlegt" : "Recherche sichern"}
               </button>
             )}
           </div>
