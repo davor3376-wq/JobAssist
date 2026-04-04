@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { jobApi, resumeApi, settingsApi } from '../services/api';
@@ -262,11 +263,18 @@ export default function DashboardPage() {
   const { data: jobs = [] } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => jobApi.list().then(r => r.data),
+    staleTime: 1000 * 60 * 2,
+    initialData: () => { try { const r = localStorage.getItem('dashboard_jobs'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
   const { data: resumes = [] } = useQuery({
     queryKey: ['resumes'],
     queryFn: () => resumeApi.list().then(r => r.data),
+    staleTime: 1000 * 60 * 5,
+    initialData: () => { try { const r = localStorage.getItem('dashboard_resumes'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
+
+  useEffect(() => { try { localStorage.setItem('dashboard_jobs', JSON.stringify(jobs)); } catch {} }, [jobs]);
+  useEffect(() => { try { localStorage.setItem('dashboard_resumes', JSON.stringify(resumes)); } catch {} }, [resumes]);
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: () => settingsApi.getProfile().then(r => r.data),
@@ -321,14 +329,7 @@ export default function DashboardPage() {
     (profile?.job_types?.length > 0),
     (!!profile?.experience_level),
   ].filter(Boolean).length;
-  const _prefParts = [
-    ...(profile?.job_types ?? []),
-    ...(profile?.desired_locations ?? []),
-    ...(profile?.experience_level ? [profile.experience_level] : []),
-  ];
-  const prefsSub = _prefParts.length > 0
-    ? _prefParts.slice(0, 2).join(', ') + (_prefParts.length > 2 ? ` +${_prefParts.length - 2}` : '')
-    : `${prefsSet} / 3`;
+  const prefsSub = `${prefsSet}/3`;
   const profileItems = [
     { label: 'Lebenslauf',  complete: hasResume,      icon: FileText, sub: null    },
     { label: 'Fähigkeiten', complete: analyzed > 0,   icon: Star,     sub: null    },
