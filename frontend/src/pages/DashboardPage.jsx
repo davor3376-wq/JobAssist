@@ -175,10 +175,13 @@ function ActivityChart({ data }) {
       width="100%"
       height="100%"
       preserveAspectRatio="none"
-      style={{ overflow: 'hidden', display: 'block' }}
+      style={{ display: 'block' }}
     >
       <defs>
-        <filter id="lineGlow" x="-20%" y="-100%" width="140%" height="300%">
+        <clipPath id="chartClip">
+          <rect x="0" y="0" width={W} height={H} />
+        </clipPath>
+        <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="2" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
@@ -186,20 +189,21 @@ function ActivityChart({ data }) {
           </feMerge>
         </filter>
       </defs>
-      {/* Area-Fill entfernt — repräsentierte keine echten Fortschrittsdaten */}
-      <path d={linePath} fill="none" stroke={C.indigo} strokeWidth="1.4" filter="url(#lineGlow)" />
-      {pts.map((p, i) =>
-        data[i].val > 0 ? (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r="2.8"
-            fill={C.indigoMid}
-            style={{ filter: `drop-shadow(0 0 5px ${C.indigo})` }}
-          />
-        ) : null
-      )}
+      <g clipPath="url(#chartClip)">
+        <path d={linePath} fill="none" stroke={C.indigo} strokeWidth="1.4" filter="url(#lineGlow)" />
+        {pts.map((p, i) =>
+          data[i].val > 0 ? (
+            <circle
+              key={i}
+              cx={p.x}
+              cy={p.y}
+              r="2.8"
+              fill={C.indigoMid}
+              style={{ filter: `drop-shadow(0 0 5px ${C.indigo})` }}
+            />
+          ) : null
+        )}
+      </g>
     </svg>
   );
 }
