@@ -609,7 +609,7 @@ export default function ResumePage() {
       try { const s = localStorage.getItem(`resume_analysis_${selectedId}`); return s ? JSON.parse(s) : undefined; } catch { return undefined; }
     },
     enabled: !!selectedId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: 1,
   });
 
