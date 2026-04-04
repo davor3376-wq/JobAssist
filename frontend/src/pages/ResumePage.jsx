@@ -415,7 +415,7 @@ function Checklist({ gamification }) {
               </div>
               <div className="flex-1 min-w-0">
                 {/* P0: text-xs statt text-[10px] */}
-              <p className={`text-xs font-medium truncate ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
+              <p className={`text-xs font-medium leading-snug ${isCompleted ? "text-emerald-300 line-through" : "text-slate-300"}`}>
                   {task.label}
                 </p>
               </div>
@@ -443,11 +443,6 @@ function DocumentIntelligence({ resume, skills, gamification }) {
   const { currentScore } = gamification || {};
   const goalReached = currentScore >= 85;
   const summary = useMemo(() => generateAISummary(skills), [skills]);
-  const [hoveredTile, setHoveredTile] = useState(null);
-
-  const sorted = useMemo(() => [...skills].sort((a, b) => b.value - a.value), [skills]);
-  const potentials = sorted.slice(-2);
-
 
   if (!resume) {
     return (
@@ -491,7 +486,7 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </div>
 
         {/* Radar nur auf Desktop — auf Mobile zu klein und labels overflow */}
-        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block">
+        <div className="my-2 w-full max-w-[280px] max-h-[300px] mx-auto hidden lg:block overflow-visible">
           <RadarChart skills={skills} size={280} />
         </div>
 
@@ -566,95 +561,6 @@ function DocumentIntelligence({ resume, skills, gamification }) {
         </p>
       </div>
 
-      {/* ── 3. Fachkenntnisse: ultra-thin 2px bars with end-glow ── */}
-      <div className="col-span-12 lg:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-          Fachkenntnisse
-        </span>
-        <div className="mt-5 space-y-5">
-          {skills.map((s) => (
-            <div key={s.key}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[#b0b0b8]">{s.label}</span>
-                <span className="text-[11px] font-medium text-white tabular-nums">{s.value}%</span>
-              </div>
-              <div className="h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${s.value}%`,
-                    background: `linear-gradient(90deg, ${s.color}20, ${s.color}90, ${s.color})`,
-                    boxShadow: `4px 0 12px ${s.color}60, 0 0 6px ${s.color}30`,
-                    transition: "width 0.8s ease",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 4. Wachstums-Potenziale — interactive hover tiles ────── */}
-      <div className="col-span-12 lg:col-span-6 px-1 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-          Wachstums-Potenziale
-        </span>
-        <div className="mt-5 space-y-3">
-          {potentials.map((s) => {
-            const isHovered = hoveredTile === s.key;
-            return (
-              <div
-                key={s.key}
-                onMouseEnter={() => setHoveredTile(s.key)}
-                onMouseLeave={() => setHoveredTile(null)}
-                className="rounded-xl p-3.5 transition-all duration-300 cursor-default"
-                style={{
-                  background: isHovered
-                    ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.05) 100%)"
-                    : "rgba(245,158,11,0.07)",
-                  border: "1px solid rgba(245,158,11,0.25)",
-                  boxShadow: isHovered
-                    ? "inset 0 1px 0 0 rgba(255,255,255,0.04), 0 0 20px rgba(251,191,36,0.12)"
-                    : "none",
-                  transform: isHovered ? "translateY(-1px)" : "none",
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
-                    style={{ background: "#f59e0b", boxShadow: isHovered ? "0 0 10px rgba(245,158,11,0.7)" : "0 0 6px rgba(245,158,11,0.4)" }}
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-medium text-[#e0e0e8]">{s.label}</span>
-                      <span className="text-[11px] text-[#505058] tabular-nums">{s.value}%</span>
-                    </div>
-                    <div
-                      className="overflow-hidden transition-all duration-300"
-                      style={{
-                        maxHeight: isHovered ? "80px" : "0px",
-                        opacity: isHovered ? 1 : 0,
-                      }}
-                    >
-                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Sparkles className="w-3 h-3 text-amber-400/70" />
-                          <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-amber-400/60">
-                            KI-Empfehlung
-                          </span>
-                        </div>
-                        <p className="text-[11px] leading-relaxed text-[#808088]">
-                          {GROWTH_RECS[s.key] || "Gezielte Weiterbildung kann deinen Score in diesem Bereich deutlich steigern."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
     </div>
   );
@@ -764,7 +670,7 @@ export default function ResumePage() {
 
           {/* ── LEFT: Slim Sidebar ─────────────────────────────────────── */}
           {/* P2: lg:col-span-3 statt 2 — Checklist-Text trunciert nicht mehr */}
-          <div className="col-span-12 lg:col-span-3 flex flex-col gap-3 lg:max-h-[calc(100vh-180px)] lg:overflow-y-auto lg:pr-1">
+          <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
 
             {/* Elegant AI Cover Letter CTA */}
             <button
@@ -820,78 +726,6 @@ export default function ResumePage() {
               </div>
             )}
 
-            {/* ── Wachstums-Potenziale (left sidebar) ─────────────────── */}
-            {selectedResume && skills.length > 0 && (() => {
-              const potentials = [...skills].sort((a, b) => a.value - b.value).slice(0, 2);
-              return (
-                <div className="px-1 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-                  <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-                    Wachstums-Potenziale
-                  </span>
-                  <div className="mt-3 space-y-2">
-                    {potentials.map((s) => (
-                      <div
-                        key={s.key}
-                        className="rounded-xl p-3 transition-all duration-300"
-                        style={{
-                          background: "rgba(245,158,11,0.07)",
-                          border: "1px solid rgba(245,158,11,0.25)",
-                        }}
-                      >
-                        <div className="flex items-start gap-2">
-                          <div
-                            className="mt-1.5 h-[6px] w-[6px] rounded-full flex-shrink-0"
-                            style={{ background: "#f59e0b", boxShadow: "0 0 6px rgba(245,158,11,0.4)" }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-[11px] font-medium text-[#e0e0e8] truncate">{s.label}</span>
-                              <span className="text-[11px] text-[#505058] tabular-nums flex-shrink-0">{s.value}%</span>
-                            </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Sparkles className="w-2.5 h-2.5 text-amber-400/70 flex-shrink-0" />
-                              <p className="text-[10px] leading-relaxed text-[#808088] line-clamp-2">
-                                {GROWTH_RECS[s.key] || "Gezielte Weiterbildung kann deinen Score steigern."}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* ── Fachkenntnisse (left sidebar) ───────────────────────── */}
-            {selectedResume && skills.length > 0 && (
-              <div className="px-1 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-                <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#505058]">
-                  Fachkenntnisse
-                </span>
-                <div className="mt-3 space-y-3">
-                  {skills.map((s) => (
-                    <div key={s.key}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] text-[#b0b0b8]">{s.label}</span>
-                        <span className="text-[11px] font-medium text-white tabular-nums">{s.value}%</span>
-                      </div>
-                      <div className="h-[2px] w-full rounded-full bg-[#111114] overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${s.value}%`,
-                            background: `linear-gradient(90deg, ${s.color}20, ${s.color}90, ${s.color})`,
-                            boxShadow: `4px 0 12px ${s.color}60, 0 0 6px ${s.color}30`,
-                            transition: "width 0.8s ease",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
 

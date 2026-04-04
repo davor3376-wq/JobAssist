@@ -54,8 +54,24 @@
       "Bash(grep -E \"\\\\.\\(jsx|tsx\\)$\")",
       "Bash(find C:UsersTEMPDownloadsSaaS_Project/frontend/src -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx -o -name *.js -o -name *.css -o -name *.scss \\\\\\))",
       "Bash(grep:*)",
-      "Bash(sed 's/@router\\\\.//')"
+      "Bash(sed 's/@router\\\\.//')",
+      "Bash(npx vibe-annotations-server:*)",
+      "Bash(curl:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npx -y vibe-annotations-server)",
+      "Bash(npx -y vibe-annotations-server start)"
     ],
     "ask": []
+  },
+  "mcpServers": {
+    "vibe-annotations": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "vibe-annotations-server"
+      ]
+    }
   }
 }
