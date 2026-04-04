@@ -65,7 +65,17 @@ async def list_jobs(
     result = await db.execute(
         select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
     )
-    return result.scalars().all()
+    all_jobs = result.scalars().all()
+    seen_urls: set[str] = set()
+    unique_jobs = []
+    for job in all_jobs:
+        if job.url:
+            if job.url not in seen_urls:
+                seen_urls.add(job.url)
+                unique_jobs.append(job)
+        else:
+            unique_jobs.append(job)
+    return unique_jobs
 
 
 # ── Static routes BEFORE /{job_id} to avoid Starlette path conflicts ──────────
