@@ -294,12 +294,12 @@ function StrengthItem({ text }) {
 function TransparencyFooter({ visible }) {
   if (!visible) return null;
   return (
-    <div className="sticky bottom-0 left-0 right-0 z-40 w-full border-t border-[#1e293b] bg-[#030712]/95 backdrop-blur-sm px-4 py-2">
-      <div className="flex items-center justify-center gap-2">
-        <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-        <p className="text-xs text-slate-400 leading-snug">
-          <strong className="text-slate-300">EU AI Act Art. 13:</strong> KI-Analyse zur Orientierung — keine automatisierte Endentscheidung.
-        </p>
+    <div className="fixed bottom-4 right-4 z-40 group">
+      <div className="w-9 h-9 rounded-full bg-[#030712]/95 backdrop-blur-sm border border-[#1e293b] flex items-center justify-center cursor-default shadow-lg">
+        <Info className="w-4 h-4 text-blue-400" />
+      </div>
+      <div className="absolute bottom-11 right-0 w-64 rounded-xl border border-[#1e293b] bg-[#030712]/95 backdrop-blur-sm px-3 py-2 text-xs text-slate-400 leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <strong className="text-slate-300">EU AI Act Art. 13:</strong> KI-Analyse zur Orientierung — keine automatisierte Endentscheidung.
       </div>
     </div>
   );
