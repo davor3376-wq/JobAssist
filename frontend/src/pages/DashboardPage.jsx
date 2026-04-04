@@ -150,16 +150,18 @@ function CircularGauge({ progress = 80, size = 76 }) {
 
 // ─── Activity Chart ────────────────────────────────────────────────────────────
 function ActivityChart({ data }) {
-  const W = 300;
-  const H = 100;
-  const padT = 12;
-  const padB = 6;
+  const W = 676;
+  const H = 188;
+  const padT = 20;
+  const padB = 10;
+  const padL = 8;
+  const padR = 8;
   const avail = H - padT - padB;
   const max = Math.max(...data.map(d => d.val), 1);
   const n = data.length;
 
   const pts = data.map((d, i) => ({
-    x: parseFloat(((i / (n - 1)) * W).toFixed(2)),
+    x: parseFloat((padL + (i / (n - 1)) * (W - padL - padR)).toFixed(2)),
     y: parseFloat((H - padB - (d.val / max) * avail).toFixed(2)),
   }));
 
@@ -180,7 +182,7 @@ function ActivityChart({ data }) {
     >
       <defs>
         <clipPath id="chartClip">
-          <rect x="0" y="0" width={W} height={H} />
+          <rect x={-padL} y="0" width={W + padL + padR} height={H} />
         </clipPath>
         {/* Outer glow: stdDeviation halved (2→1) + gamma falloff for non-linear fade */}
         <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
