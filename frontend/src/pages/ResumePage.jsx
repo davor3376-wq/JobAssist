@@ -683,11 +683,14 @@ function DocumentIntelligence({ resume, skills, gamification }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const RESUME_PAGE_SIZE = 5;
+
 export default function ResumePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [showAllResumes, setShowAllResumes] = useState(false);
   const { guardedRun } = useUsageGuard("cv_analysis");
 
   const { data: initData } = useQuery({
@@ -814,9 +817,9 @@ export default function ResumePage() {
             ) : (
               <div className="space-y-1.5">
                 <span className="block text-[11px] font-medium tracking-[0.18em] uppercase text-[#3a3a42] px-1">
-                  Dokumente
+                  Dokumente ({resumes.length})
                 </span>
-                {resumes.map(resume => (
+                {(showAllResumes ? resumes : resumes.slice(0, RESUME_PAGE_SIZE)).map(resume => (
                   <FileCard
                     key={resume.id}
                     resume={resume}
@@ -827,6 +830,14 @@ export default function ResumePage() {
                     deleteLoading={deleteMutation.isPending && deleteMutation.variables === resume.id}
                   />
                 ))}
+                {resumes.length > RESUME_PAGE_SIZE && (
+                  <button
+                    onClick={() => setShowAllResumes(v => !v)}
+                    className="w-full text-center text-[11px] font-medium text-slate-500 hover:text-slate-300 py-2 transition-colors"
+                  >
+                    {showAllResumes ? 'Weniger anzeigen' : `Alle ${resumes.length} anzeigen`}
+                  </button>
+                )}
               </div>
             )}
 
