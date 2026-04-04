@@ -264,7 +264,7 @@ export default function DashboardPage() {
     queryKey: ['jobs'],
     queryFn: () => jobApi.list().then(r => r.data),
     staleTime: 1000 * 60 * 2,
-    initialData: () => { try { const r = localStorage.getItem('dashboard_jobs'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
+    initialData: () => { try { const r = localStorage.getItem('jobs'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
   const { data: resumes = [] } = useQuery({
     queryKey: ['resumes'],
@@ -272,8 +272,6 @@ export default function DashboardPage() {
     staleTime: 1000 * 60 * 5,
     initialData: () => { try { const r = localStorage.getItem('dashboard_resumes'); return r ? JSON.parse(r) : undefined; } catch { return undefined; } },
   });
-
-  useEffect(() => { try { localStorage.setItem('dashboard_jobs', JSON.stringify(jobs)); } catch {} }, [jobs]);
   useEffect(() => { try { localStorage.setItem('dashboard_resumes', JSON.stringify(resumes)); } catch {} }, [resumes]);
   const { data: profile } = useQuery({
     queryKey: ['profile'],
