@@ -351,10 +351,13 @@ export default function DashboardPage() {
 
   // Profile strength
   const hasJobAlert = jobAlerts.length > 0;
+  const hasSkillsAnalysis = resumes.some(r => {
+    try { return !!localStorage.getItem(`resume_analysis_${r.id}`); } catch { return false; }
+  });
   const profileItems = [
-    { label: 'Lebenslauf',  complete: hasResume,    icon: FileText, sub: null                                          },
-    { label: 'Fähigkeiten', complete: analyzed > 0, icon: Star,     sub: null                                          },
-    { label: 'Job-Alert',   complete: hasJobAlert,  icon: Zap,      sub: null },
+    { label: 'Lebenslauf',  complete: hasResume,          icon: FileText, sub: null },
+    { label: 'Fähigkeiten', complete: hasSkillsAnalysis,  icon: Star,     sub: null },
+    { label: 'Job-Alert',   complete: hasJobAlert,        icon: Zap,      sub: null },
   ];
   const profileStrength = Math.round((profileItems.filter(x => x.complete).length / profileItems.length) * 100);
 
