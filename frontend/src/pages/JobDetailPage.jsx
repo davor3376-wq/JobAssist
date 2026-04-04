@@ -294,9 +294,9 @@ function StrengthItem({ text }) {
 function TransparencyFooter({ visible }) {
   if (!visible) return null;
   return (
-    <div className="sticky bottom-0 left-0 right-0 z-40 px-4 py-3 flex justify-center pointer-events-none">
-      <div className="pointer-events-auto inline-flex items-start gap-2 rounded-2xl border border-[#1e293b] bg-[#030712]/95 backdrop-blur-sm px-4 py-2.5 shadow-lg max-w-lg">
-        <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+    <div className="sticky bottom-0 left-0 right-0 z-40 w-full border-t border-[#1e293b] bg-[#030712]/95 backdrop-blur-sm px-4 py-2">
+      <div className="flex items-center justify-center gap-2">
+        <Info className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
         <p className="text-xs text-slate-400 leading-snug">
           <strong className="text-slate-300">EU AI Act Art. 13:</strong> KI-Analyse zur Orientierung — keine automatisierte Endentscheidung.
         </p>
@@ -846,7 +846,7 @@ export default function JobDetailPage() {
 
                 {/* Stärken + Lücken side-by-side */}
                 {(matchFeedback?.strengths?.length > 0 || matchFeedback?.gaps?.length > 0) && (
-                  <div className={`grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                  <div className={`grid gap-4 ${matchFeedback?.strengths?.length > 0 && matchFeedback?.gaps?.length > 0 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
                     {matchFeedback?.strengths?.length > 0 && (
                       <div className="rounded-2xl border border-[#1e293b] bg-[#0f172a] p-5">
                         <div className="flex items-center gap-2 mb-4">
