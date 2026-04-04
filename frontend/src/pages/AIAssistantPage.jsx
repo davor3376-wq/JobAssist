@@ -592,7 +592,18 @@ export default function AIAssistantPage() {
             )}
             <div className="flex-1 overflow-y-auto px-2 py-2 mt-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
               {conversations.length === 0
-                ? <p className="px-3 py-6 text-center text-xs text-slate-600">Noch keine Gespräche</p>
+                ? (
+                  <div className="flex flex-col items-center justify-center h-full px-3 py-10 animate-fade-in">
+                    <div className="relative mb-4">
+                      <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-lg" />
+                      <div className="relative w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center animate-float">
+                        <MessageSquare className="w-4 h-4 text-slate-500" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium text-slate-500 text-center">Noch keine Gespräche</p>
+                    <p className="text-[10px] text-slate-700 text-center mt-1 leading-relaxed">Starte ein neues Gespräch</p>
+                  </div>
+                )
                 : renderConvList()
               }
             </div>
@@ -983,7 +994,18 @@ export default function AIAssistantPage() {
           )}
           <div className="flex-1 overflow-y-auto px-2 py-2 mt-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full">
             {conversations.length === 0
-              ? <p className="px-3 py-6 text-center text-xs text-slate-600">Noch keine Gespräche</p>
+              ? (
+                <div className="flex flex-col items-center justify-center h-full px-3 py-10 animate-fade-in">
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-lg" />
+                    <div className="relative w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center animate-float">
+                      <MessageSquare className="w-4 h-4 text-slate-500" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 text-center">Noch keine Gespräche</p>
+                  <p className="text-[10px] text-slate-700 text-center mt-1 leading-relaxed">Starte ein neues Gespräch</p>
+                </div>
+              )
               : renderConvList()
             }
           </div>
