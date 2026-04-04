@@ -119,7 +119,7 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
   const configItems = [
     { icon: MapPin, label: "Ort", value: alert.location || "Kein Ortsfilter" },
     { icon: Briefcase, label: "Stellenart", value: typeLabel },
-    { icon: Clock3, label: "Rhythmus", value: freqLabel },
+    { icon: Clock3, label: "Frequenz", value: freqLabel },
     { icon: Mail, label: "E-Mail", value: alert.email },
   ];
 
