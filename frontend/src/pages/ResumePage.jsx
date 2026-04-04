@@ -511,6 +511,13 @@ function DocumentIntelligence({ resume, skills, gamification, isAnalyzing, groqS
             KI-Zusammenfassung
           </span>
         </div>
+        {groqSummary ? (
+          <p className="text-[13px] leading-relaxed text-slate-300">{groqSummary}</p>
+        ) : (
+          <p className="text-[12px] text-[#3a3a42] italic">
+            Nicht verfügbar — lade einen Lebenslauf hoch, um eine KI-Analyse zu erhalten.
+          </p>
+        )}
       </div>
 
 
@@ -594,7 +601,13 @@ export default function ResumePage() {
 
   const { data: analysisData, isFetching: isAnalyzing } = useQuery({
     queryKey: ["resume-analysis", selectedId],
-    queryFn: () => resumeApi.analyze(selectedId).then(r => r.data),
+    queryFn: () => resumeApi.analyze(selectedId).then(r => {
+      try { localStorage.setItem(`resume_analysis_${selectedId}`, JSON.stringify(r.data)); } catch {}
+      return r.data;
+    }),
+    initialData: () => {
+      try { const s = localStorage.getItem(`resume_analysis_${selectedId}`); return s ? JSON.parse(s) : undefined; } catch { return undefined; }
+    },
     enabled: !!selectedId,
     staleTime: 5 * 60 * 1000,
     retry: 1,

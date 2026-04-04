@@ -198,14 +198,14 @@ export default function SettingsPage() {
 
       const newAvatar = avatar ?? null;
       queryClient.setQueryData(["profile"], (old) =>
-        old ? { ...old, avatar: newAvatar } : old
+        old ? { ...old, ...profilePayload, avatar: newAvatar } : old
       );
       queryClient.setQueryData(["init"], (old) =>
-        old ? { ...old, profile: { ...(old.profile || {}), avatar: newAvatar } } : old
+        old ? { ...old, profile: { ...(old.profile || {}), ...profilePayload, avatar: newAvatar } } : old
       );
       try {
         const raw = localStorage.getItem("profile");
-        if (raw) localStorage.setItem("profile", JSON.stringify({ ...JSON.parse(raw), avatar: newAvatar }));
+        if (raw) localStorage.setItem("profile", JSON.stringify({ ...JSON.parse(raw), ...profilePayload, avatar: newAvatar }));
       } catch {}
       try {
         const raw = localStorage.getItem("init");

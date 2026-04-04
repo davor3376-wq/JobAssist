@@ -497,29 +497,29 @@ export default function DashboardPage() {
               </div>
             </Tile>
 
-            {/* Meilenstein */}
+            {/* Bewerbungen */}
             <Tile className="p-3 flex flex-col">
-              <Label>Meilenstein</Label>
+              <Label>Bewerbungen</Label>
               <div className="mt-2 flex items-center gap-2 flex-1">
-                <CircularGauge progress={meilensteinPct} size={58} />
+                <CircularGauge progress={applyRate} size={58} />
                 <div className="flex-1 min-w-0">
                   <div
                     className="text-[15px] font-semibold leading-tight truncate"
                     style={{ color: C.textPrimary, letterSpacing: '-0.02em' }}
                   >
-                    {meilensteinLabel}
+                    {appliedCount} beworben
                   </div>
                   <div className="mt-1 text-[11px]" style={{ color: C.textDim }}>
-                    {leistungsIndex} / {meilensteinMax} Punkte
+                    {interviewingCount > 0 ? `${interviewingCount} Interview${interviewingCount !== 1 ? 's' : ''}` : 'Noch kein Interview'}
                   </div>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <div className="flex-1 h-[3px] rounded-full overflow-hidden" style={{ background: C.textDeep }}>
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${meilensteinPct}%`, background: `linear-gradient(90deg, ${C.violet}, ${C.indigoMid})`, boxShadow: `0 0 6px ${C.violetGlow}` }}
+                        style={{ width: `${applyRate}%`, background: `linear-gradient(90deg, ${C.indigo}, ${C.indigoMid})`, boxShadow: `0 0 6px ${C.indigoGlow}` }}
                       />
                     </div>
-                    <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: C.violet }}>{meilensteinPct}%</span>
+                    <span className="text-[11px] font-semibold tabular-nums flex-shrink-0" style={{ color: C.indigo }}>{applyRate}%</span>
                   </div>
                 </div>
               </div>
