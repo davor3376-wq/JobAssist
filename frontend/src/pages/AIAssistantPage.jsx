@@ -698,7 +698,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="[&:hover>button]:opacity-50 grid grid-cols-2 gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
@@ -720,7 +720,7 @@ export default function AIAssistantPage() {
                       : <s.icon className={`w-4 h-4 flex-shrink-0 ${s.iconCls}`} />
                     }
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold ${locked ? "text-slate-500" : "text-slate-100"}`}>{s.label}</p>
+                      <p className={`text-sm font-semibold truncate ${locked ? "text-slate-500" : "text-slate-100"}`}>{s.label}</p>
                       <p className="text-xs text-slate-400 mt-0.5 truncate">{s.sub}</p>
                     </div>
                     {!locked && <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 self-center ml-auto text-indigo-400/50 group-hover:text-indigo-300 group-hover:translate-x-0.5 transition-all duration-300 ease-out" />}
