@@ -258,8 +258,9 @@ export default function AIAssistantPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewState, setViewState] = useState("discovery"); // "discovery" | "exiting-discovery" | "conversation"
 
-  const messagesEndRef = useRef(null);
-  const inputRef       = useRef(null);
+  const messagesEndRef    = useRef(null);
+  const chatContainerRef  = useRef(null);
+  const inputRef          = useRef(null);
   const { guardedRun, atLimit: chatAtLimit } = useUsageGuard("ai_chat");
   const [streamingMsg, setStreamingMsg] = useState(null);
   const [assessmentDisclaimerOpen, setAssessmentDisclaimerOpen] = useState(false);
@@ -282,8 +283,8 @@ export default function AIAssistantPage() {
   }, [messages]);
 
   useEffect(() => {
-    if (streamingMsg) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
+    if (streamingMsg && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [streamingMsg?.shown]);
 
@@ -645,7 +646,7 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Chat Stage — full width ─────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto flex flex-col px-4 py-6 sm:px-6">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto flex flex-col px-4 py-6 sm:px-6">
         {viewState !== "conversation" ? (
 
           /* ── Discovery state ─────────────────────────────────────────────── */
