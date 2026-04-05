@@ -185,6 +185,15 @@ async def lifespan(app: FastAPI):
         await conn.execute(
             text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_counts_reset_at TIMESTAMP")
         )
+        # jobs table — columns added after initial schema
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS notes TEXT"))
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS deadline TIMESTAMPTZ"))
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'bookmarked'"))
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()"))
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS category VARCHAR"))
+        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS research_data TEXT"))
+        # user_profiles table — columns added after initial schema
+        await conn.execute(text("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS avatar TEXT"))
     cleanup_task = asyncio.create_task(stale_user_cleanup_loop())
     alert_task = asyncio.create_task(job_alert_scheduler_loop())
     reset_task = asyncio.create_task(daily_count_reset_loop())
