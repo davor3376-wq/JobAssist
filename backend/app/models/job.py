@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Text, Float, ForeignKey, DateTime, func
+from sqlalchemy import Index, Integer, String, Text, Float, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional
@@ -7,6 +7,10 @@ from app.core.database import Base
 
 class Job(Base):
     __tablename__ = "jobs"
+    __table_args__ = (
+        Index("idx_job_user_status", "user_id", "status"),
+        Index("idx_job_user_created", "user_id", "created_at"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)

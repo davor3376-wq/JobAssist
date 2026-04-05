@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""
     SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/jobassist"
+    # Database — must be set via environment variable (no insecure default)
+    DATABASE_URL: str
 
     # Auth (JWT)
     SECRET_KEY: str = "change-me-in-production"

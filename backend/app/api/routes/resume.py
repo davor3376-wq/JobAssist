@@ -17,6 +17,7 @@ from app.services.claude_service import parse_resume, analyze_resume_skills
 router = APIRouter()
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_RAW_TEXT_LENGTH = 100_000  # 100k chars — prevents unbounded DB growth
 
 
 @router.post("/upload", response_model=ResumeOut)
@@ -26,9 +27,6 @@ async def upload_resume(
     current_user: User = Depends(get_current_user),
     _usage=Depends(require_usage("cv_analysis")),
 ):
-    if file.content_type not in ("application/pdf", "text/plain"):
-        raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
-
     # Chunked read — abort as soon as bytes exceed the limit to save RAM.
     # This prevents a malicious client from forcing the server to buffer a huge file.
     CHUNK = 64 * 1024  # 64 KB
@@ -44,10 +42,25 @@ async def upload_resume(
         chunks.append(chunk)
     file_bytes = b"".join(chunks)
 
+    # Validate actual file content — content_type header is client-controlled and untrustworthy
+    is_pdf = file_bytes[:4] == b"%PDF"
+    is_text = False
+    if not is_pdf:
+        try:
+            file_bytes.decode("utf-8")
+            is_text = True
+        except UnicodeDecodeError:
+            pass
+    if not is_pdf and not is_text:
+        raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
+
     try:
         raw_text = extract_resume_text(file.filename, file_bytes)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    if len(raw_text) > MAX_RAW_TEXT_LENGTH:
+        raise HTTPException(status_code=400, detail=f"Resume text too long (max {MAX_RAW_TEXT_LENGTH:,} characters after extraction)")
 
     # Parse with Claude
     parsed = parse_resume(raw_text)

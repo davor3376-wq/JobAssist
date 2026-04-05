@@ -1,3 +1,4 @@
+import json as _json
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional
@@ -33,7 +34,18 @@ class JobOut(BaseModel):
 
 
 class JobResearchUpdate(BaseModel):
-    research_data: Optional[str] = None
+    research_data: Optional[str] = Field(None, max_length=50000)
+
+    @field_validator("research_data")
+    @classmethod
+    def validate_json(cls, v):
+        if v is None:
+            return v
+        try:
+            _json.loads(v)
+        except _json.JSONDecodeError as e:
+            raise ValueError(f"research_data must be valid JSON: {e}")
+        return v
 
 
 class MatchRequest(BaseModel):

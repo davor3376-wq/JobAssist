@@ -22,7 +22,8 @@ from app.services.job_search import search_jobs
 
 
 def _make_unsubscribe_token(alert_id: int) -> str:
-    payload = {"alert_id": alert_id, "purpose": "unsubscribe"}
+    expire = datetime.now(timezone.utc) + timedelta(days=365)
+    payload = {"alert_id": alert_id, "purpose": "unsubscribe", "exp": expire}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -183,10 +184,10 @@ async def update_alert(
     )
 
     if is_rewrite:
-        now = get_naive_now()
+        now = datetime.now(timezone.utc)
         last_changed = alert.updated_at or alert.created_at
-        if last_changed and last_changed.tzinfo is not None:
-            last_changed = last_changed.replace(tzinfo=None)
+        if last_changed and last_changed.tzinfo is None:
+            last_changed = last_changed.replace(tzinfo=timezone.utc)
 
         if last_changed and (now - last_changed) < timedelta(hours=REWRITE_WINDOW_HOURS):
             remaining_seconds = int(

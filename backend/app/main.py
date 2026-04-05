@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+import hmac
 import logging
 import time
 
@@ -19,6 +20,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 from app.core.config import settings
 from app.core.monitoring import configure_sentry
+from app.core.startup_migrations import run_startup_migrations
 from app.core.logging import configure_logging, elapsed_ms, new_request_id, reset_request_id, set_request_id
 from app.core.provider_health import get_provider_health
 from sqlalchemy import select, text
@@ -69,62 +71,74 @@ async def run_due_job_alerts():
     from app.services.email_service import send_job_alert_email
     from sqlalchemy import select as _select
 
-    now = datetime.utcnow()
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            _select(JobAlert).where(JobAlert.is_active.is_(True))
-        )
-        alerts = result.scalars().all()
+    from datetime import timezone as _tz
+    now = datetime.now(_tz.utc)
+    _BATCH = 100
+    offset = 0
 
-    for alert in alerts:
-        try:
-            # Determine if this alert is due
-            last = alert.last_sent_at
-            if last and last.tzinfo is not None:
-                last = last.replace(tzinfo=None)
-
-            if alert.frequency == "daily":
-                due = last is None or (now - last).total_seconds() >= 86_400
-            elif alert.frequency == "weekly":
-                due = last is None or (now - last).total_seconds() >= 604_800
-            else:
-                due = False
-
-            if not due:
-                continue
-
-            results = await search_jobs(
-                keywords=alert.keywords,
-                location=alert.location or "",
-                job_type=alert.job_type or "",
-                page=1,
+    while True:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                _select(JobAlert)
+                .where(JobAlert.is_active.is_(True))
+                .order_by(JobAlert.id)
+                .limit(_BATCH)
+                .offset(offset)
             )
-            jobs = results.get("jobs", [])
-            if jobs:
-                from app.api.routes.job_alerts import _make_unsubscribe_token
-                token = _make_unsubscribe_token(alert.id)
-                app_url = getattr(settings, "FRONTEND_URL", "https://jobassist.tech")
-                unsubscribe_url = f"{app_url}/unsubscribe?token={token}"
-                await asyncio.to_thread(
-                    send_job_alert_email,
-                    to_email=alert.email,
+            alerts = result.scalars().all()
+        if not alerts:
+            break
+        offset += len(alerts)
+
+        for alert in alerts:
+            try:
+                # Determine if this alert is due
+                last = alert.last_sent_at
+                if last and last.tzinfo is None:
+                    last = last.replace(tzinfo=_tz.utc)
+
+                if alert.frequency == "daily":
+                    due = last is None or (now - last).total_seconds() >= 86_400
+                elif alert.frequency == "weekly":
+                    due = last is None or (now - last).total_seconds() >= 604_800
+                else:
+                    due = False
+
+                if not due:
+                    continue
+
+                results = await search_jobs(
                     keywords=alert.keywords,
                     location=alert.location or "",
-                    jobs=jobs,
-                    unsubscribe_url=unsubscribe_url,
+                    job_type=alert.job_type or "",
+                    page=1,
                 )
-                # Update last_sent_at
-                async with AsyncSessionLocal() as session:
-                    res = await session.execute(
-                        _select(JobAlert).where(JobAlert.id == alert.id)
+                jobs = results.get("jobs", [])
+                if jobs:
+                    from app.api.routes.job_alerts import _make_unsubscribe_token
+                    token = _make_unsubscribe_token(alert.id)
+                    app_url = getattr(settings, "FRONTEND_URL", "https://jobassist.tech")
+                    unsubscribe_url = f"{app_url}/unsubscribe?token={token}"
+                    await asyncio.to_thread(
+                        send_job_alert_email,
+                        to_email=alert.email,
+                        keywords=alert.keywords,
+                        location=alert.location or "",
+                        jobs=jobs,
+                        unsubscribe_url=unsubscribe_url,
                     )
-                    a = res.scalar_one_or_none()
-                    if a:
-                        a.last_sent_at = now
-                        await session.commit()
-                logger.info("Job alert sent: id=%s keywords=%s jobs=%s", alert.id, alert.keywords, len(jobs))
-        except Exception:
-            traceback.print_exc()
+                    # Update last_sent_at
+                    async with AsyncSessionLocal() as session:
+                        res = await session.execute(
+                            _select(JobAlert).where(JobAlert.id == alert.id)
+                        )
+                        a = res.scalar_one_or_none()
+                        if a:
+                            a.last_sent_at = now
+                            await session.commit()
+                    logger.info("Job alert sent: id=%s job_count=%s", alert.id, len(jobs))
+            except Exception:
+                traceback.print_exc()
 
 
 async def job_alert_scheduler_loop():
@@ -171,29 +185,7 @@ async def lifespan(app: FastAPI):
     # Startup: create DB tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all) # (This command generates the database tables based on your SQLAlchemy models)
-        # Add is_verified column if missing (for existing databases)
-        await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE")
-        )
-        # Daily alert usage counters (user-level, immune to alert deletion)
-        await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_manual_run_count INTEGER NOT NULL DEFAULT 0")
-        )
-        await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_creation_count INTEGER NOT NULL DEFAULT 0")
-        )
-        await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_counts_reset_at TIMESTAMP")
-        )
-        # jobs table — columns added after initial schema
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS notes TEXT"))
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS deadline TIMESTAMPTZ"))
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'bookmarked'"))
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()"))
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS category VARCHAR"))
-        await conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS research_data TEXT"))
-        # user_profiles table — columns added after initial schema
-        await conn.execute(text("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS avatar TEXT"))
+        await run_startup_migrations(conn)
     cleanup_task = asyncio.create_task(stale_user_cleanup_loop())
     alert_task = asyncio.create_task(job_alert_scheduler_loop())
     reset_task = asyncio.create_task(daily_count_reset_loop())
@@ -317,11 +309,14 @@ async def health_check(request: Request):
 @app.post("/api/admin/reset-usage")
 async def admin_reset_usage(request: Request, db: AsyncSession = Depends(get_db)):
     """Reset all usage_tracking counts to zero. Requires X-Admin-Secret header."""
+    from fastapi import HTTPException as _HTTPException
+    from app.models.usage import UsageRecord
+    from sqlalchemy import delete as _delete
+
     secret = request.headers.get("x-admin-secret", "")
-    if not settings.ADMIN_SECRET or secret != settings.ADMIN_SECRET:
-        from fastapi import HTTPException as _HTTPException
+    if not settings.ADMIN_SECRET or not hmac.compare_digest(secret, settings.ADMIN_SECRET):
         raise _HTTPException(status_code=403, detail="Forbidden")
-    await db.execute(text("DELETE FROM usage_tracking"))
+    await db.execute(_delete(UsageRecord))
     await db.commit()
     logger.info("Admin: usage_tracking table cleared")
     return {"status": "ok", "message": "All usage records deleted"}

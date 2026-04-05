@@ -1,20 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 
 class JobAlertCreate(BaseModel):
-    keywords: str
-    location: Optional[str] = None
-    job_type: Optional[str] = None
+    keywords: str = Field(..., min_length=1, max_length=200)
+    location: Optional[str] = Field(None, max_length=100)
+    job_type: Optional[str] = Field(None, max_length=50)
     email: str
     frequency: str = "daily"  # daily, weekly
 
 
 class JobAlertUpdate(BaseModel):
-    keywords: Optional[str] = None
-    location: Optional[str] = None
-    job_type: Optional[str] = None
+    keywords: Optional[str] = Field(None, min_length=1, max_length=200)
+    location: Optional[str] = Field(None, max_length=100)
+    job_type: Optional[str] = Field(None, max_length=50)
     email: Optional[str] = None
     frequency: Optional[str] = None
     is_active: Optional[bool] = None

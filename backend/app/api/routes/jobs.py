@@ -66,13 +66,19 @@ async def create_job(
     return job
 
 
+MAX_JOBS_PER_USER = 500  # hard cap to prevent unbounded loads
+
+
 @router.get("/", response_model=list[JobOut])
 async def list_jobs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     result = await db.execute(
-        select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
+        select(Job)
+        .where(Job.user_id == current_user.id)
+        .order_by(Job.created_at.desc())
+        .limit(MAX_JOBS_PER_USER)
     )
     all_jobs = result.scalars().all()
     seen_keys: set[str] = set()
@@ -95,7 +101,9 @@ async def match_job(
 ):
     """Run resume-to-job match scoring via Claude."""
     result = await db.execute(
-        select(Job).where(Job.id == payload.job_id, Job.user_id == current_user.id)
+        select(Job)
+        .where(Job.id == payload.job_id, Job.user_id == current_user.id)
+        .with_for_update()
     )
     job = result.scalar_one_or_none()
     if not job:
@@ -118,7 +126,10 @@ async def get_pipeline_stats(
 ):
     """Get application pipeline statistics."""
     result = await db.execute(
-        select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
+        select(Job)
+        .where(Job.user_id == current_user.id)
+        .order_by(Job.created_at.desc())
+        .limit(MAX_JOBS_PER_USER)
     )
     all_jobs = result.scalars().all()
     seen_keys: set[str] = set()
@@ -142,7 +153,7 @@ async def get_pipeline_stats(
 
 @router.get("/search/recommended", response_model=dict)
 async def search_recommended_jobs(
-    page: int = Query(1, ge=1, le=50),
+    page: int = Query(1, ge=1, le=10),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     _usage=Depends(require_usage("job_search")),
@@ -179,7 +190,7 @@ async def search_custom_jobs(
     keywords: str = Query(..., description="Job title or keywords", min_length=1, max_length=200),
     location: str = Query("", description="City/location", max_length=100),
     job_type: str = Query("", description="Job type (Full-time, Remote, etc.)", max_length=50),
-    page: int = Query(1, ge=1, le=50),
+    page: int = Query(1, ge=1, le=10),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     _usage=Depends(require_usage("job_search")),

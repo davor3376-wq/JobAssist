@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Date, UniqueConstraint, func
+from sqlalchemy import Index, Integer, String, Date, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import date
 
@@ -16,4 +16,5 @@ class UsageRecord(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "feature", "period_start", name="uq_user_feature_period"),
+        Index("idx_usage_period_feature", "period_start", "feature"),
     )

@@ -54,7 +54,7 @@ def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperatur
             )
             content = response.choices[0].message.content
             if not content:
-                raise HTTPException(status_code=502, detail="KI hat keine Antwort zurückgegeben. Bitte erneut versuchen.")
+                raise HTTPException(status_code=502, detail="AI returned an empty response. Please try again.")
             return content.strip()
         except HTTPException:
             raise
@@ -64,10 +64,10 @@ def _call_groq(prompt: str, system: str = "", max_tokens: int = 2048, temperatur
                 last_err = e
                 continue
             if "api key" in err or "authentication" in err or "401" in err:
-                raise HTTPException(status_code=503, detail="KI-Dienst temporär nicht verfügbar.")
-            raise HTTPException(status_code=502, detail="Fehler beim KI-Dienst. Bitte erneut versuchen.")
+                raise HTTPException(status_code=503, detail="AI service temporarily unavailable.")
+            raise HTTPException(status_code=502, detail="AI service error. Please try again.")
 
-    raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte in einigen Sekunden erneut versuchen.")
+    raise HTTPException(status_code=429, detail="Too many requests. Please try again in a few seconds.")
 
 
 def _strip_code_fences(text: str) -> str:
