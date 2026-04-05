@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ExternalLink, FileText, Sparkles, RefreshCw } from "lucide-react";
+import {
+  ChevronRight, ExternalLink, FileText, Sparkles, RefreshCw,
+  Stethoscope, Code2, GraduationCap, ChefHat, Scale, TrendingUp,
+  Palette, Megaphone, Truck, Wrench, Building2, ShieldCheck,
+  HeartPulse, FlaskConical, Landmark, Leaf, Dumbbell, Camera,
+  Music, Gavel, Plane, ShoppingCart, Cpu, BriefcaseBusiness,
+} from "lucide-react";
 
 const STATUS_CFG = {
   bookmarked:   { label: "Gespeichert",  color: "#94a3b8" },
@@ -22,8 +28,42 @@ const FILTER_TABS = [
 const PULL_THRESHOLD = 60;
 const PAGE_SIZE = 12;
 
-function LogoField({ company, status, url }) {
-  const initial = (company || "?").charAt(0).toUpperCase();
+const JOB_ICON_MAP = [
+  { icon: Stethoscope,     rx: /\b(arzt|ärztin|doctor|physician|medizin|medical|zahnarzt|dentist|psychiater|psychiatrist|radiolog|orthopäd)/i },
+  { icon: HeartPulse,      rx: /\b(pflege|nursing|nurse|krankenpflege|pflegekraft|altenpflege|pflegeassistenz|sanitäter|paramedic)/i },
+  { icon: FlaskConical,    rx: /\b(labor|chemiker|chemist|pharma|biochem|biolog|scientist|forscher|researcher|analytiker|analyst)/i },
+  { icon: Code2,           rx: /\b(entwickler|developer|software|engineer|programmer|devops|backend|frontend|fullstack|web|mobile|cloud|data scientist|machine learning|ki|ai)/i },
+  { icon: Cpu,             rx: /\b(elektronik|elektrotechnik|electrical|hardware|embedded|firmware|chip|semiconductor)/i },
+  { icon: GraduationCap,   rx: /\b(lehrer|lehrerin|teacher|pädagog|erzieher|erzieherin|ausbilder|trainer|dozent|professor|tutor|nachhilfe)/i },
+  { icon: ChefHat,         rx: /\b(koch|köchin|chef|küche|baker|bäcker|catering|gastro|restaurant|konditor)/i },
+  { icon: Scale,           rx: /\b(jurist|lawyer|attorney|legal|recht|anwalt|anwältin|richter|notar|compliance|steuerberater|auditor)/i },
+  { icon: TrendingUp,      rx: /\b(finance|finanz|accountant|buchhalter|controlling|treasury|investment|banking|versicherung|insurance|fondsmanager)/i },
+  { icon: Palette,         rx: /\b(design|designer|graphic|grafik|ux|ui|creative|illustrator|art director|brand|motion)/i },
+  { icon: Megaphone,       rx: /\b(marketing|seo|content|social media|pr|public relations|kommunikation|werbung|advertising|copywriter)/i },
+  { icon: ShoppingCart,    rx: /\b(sales|vertrieb|verkauf|account manager|kundenberater|handel|retail|ecommerce|e-commerce)/i },
+  { icon: Truck,           rx: /\b(logistik|logistics|fahrer|driver|transport|lager|warehouse|supply chain|zusteller|kurier|courier|spedition)/i },
+  { icon: Wrench,          rx: /\b(mechanic|mechaniker|techniker|instandhaltung|monteur|service technician|wartung|reparatur|installateur)/i },
+  { icon: Building2,       rx: /\b(immobilien|real estate|architektur|architect|bauleiter|bauingenieur|construction|facility)/i },
+  { icon: ShieldCheck,     rx: /\b(security|sicherheit|schutz|guard|wachmann|it security|cybersecurity|datenschutz|risikomanagement)/i },
+  { icon: Landmark,        rx: /\b(verwaltung|administration|behörde|öffentlich|government|politik|staatlich|beamter)/i },
+  { icon: Leaf,            rx: /\b(umwelt|environmental|sustainability|nachhaltig|garten|landwirtschaft|agriculture|forst|forestry)/i },
+  { icon: Dumbbell,        rx: /\b(sport|fitness|trainer|coach|physiotherap|ergotherap|athletic)/i },
+  { icon: Camera,          rx: /\b(fotograf|photographer|video|kamera|media|journalist|redakteur|editor|film)/i },
+  { icon: Music,           rx: /\b(musik|musiker|musician|sound|audio|entertainer|veranstaltung|event)/i },
+  { icon: Gavel,           rx: /\b(richter|judge|staatsanwalt|prosecutor|kriminolog)/i },
+  { icon: Plane,           rx: /\b(pilot|aviation|luftfahrt|airline|flugbegleiter|cabin crew|reise|travel)/i },
+  { icon: BriefcaseBusiness, rx: /\b(manager|management|geschäftsführer|ceo|cto|cfo|direktor|director|leiter|head of)/i },
+];
+
+function getJobIcon(role) {
+  if (!role) return null;
+  for (const { icon, rx } of JOB_ICON_MAP) {
+    if (rx.test(role)) return icon;
+  }
+  return null;
+}
+
+function LogoField({ company, status, url, role }) {
   const cfg = STATUS_CFG[status] || STATUS_CFG.bookmarked;
 
   const domain = (() => {
@@ -60,11 +100,12 @@ function LogoField({ company, status, url }) {
           className="w-7 h-7 object-contain"
           onError={() => setSrcIndex(i => i + 1)}
         />
-      ) : (
-        <span className="text-[0.875rem] font-semibold" style={{ color: cfg.color }}>
-          {initial}
-        </span>
-      )}
+      ) : (() => {
+        const JobIcon = getJobIcon(role);
+        return JobIcon
+          ? <JobIcon size={20} style={{ color: cfg.color }} strokeWidth={1.5} />
+          : <span className="text-[0.875rem] font-semibold" style={{ color: cfg.color }}>{(company || "?").charAt(0).toUpperCase()}</span>;
+      })()}
     </div>
   );
 }
@@ -289,7 +330,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
       {/* ── Sticky section header + filter bar ── */}
       <div
-        className="sticky top-0 z-30 pb-4 rounded-2xl px-2"
+        className="sticky top-0 z-30 pb-4 rounded-t-2xl px-2"
         style={{
           background: "rgba(8, 8, 8, 0.92)",
           backdropFilter: "blur(10px)",
@@ -412,7 +453,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
                 >
                   {/* Logo */}
                   <div className="flex-shrink-0 mt-0.5">
-                    <LogoField company={job.company} status={job.status || "bookmarked"} url={job.url} />
+                    <LogoField company={job.company} status={job.status || "bookmarked"} url={job.url} role={job.role} />
                   </div>
 
                   {/* Content */}
