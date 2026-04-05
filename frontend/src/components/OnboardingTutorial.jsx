@@ -186,18 +186,16 @@ export default function OnboardingTutorial() {
     const done = localStorage.getItem(LS_KEY);
     if (!done) {
       // Small delay so the main app loads first
-      const t = setTimeout(() => setVisible(true), 800);
-      return () => clearTimeout(t);
+      setVisible(true);
+      return undefined;
     }
   }, [token]);
 
   const dismiss = () => {
     setClosing(true);
-    setTimeout(() => {
-      setVisible(false);
-      setClosing(false);
-      localStorage.setItem(LS_KEY, "1");
-    }, 250);
+    setVisible(false);
+    setClosing(false);
+    localStorage.setItem(LS_KEY, "1");
   };
 
   const handleNext = () => {

@@ -31,10 +31,10 @@ export default {
         'glow': '0 0 20px rgba(99, 102, 241, 0.15)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        'slide-in': 'slideIn 0.3s ease-out',
-        'float': 'float 3s ease-in-out infinite',
+        'fade-in': 'fadeIn 0s ease-out',
+        'slide-up': 'slideUp 0s ease-out',
+        'slide-in': 'slideIn 0s ease-out',
+        'float': 'float 0s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {

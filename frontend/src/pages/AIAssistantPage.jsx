@@ -315,8 +315,8 @@ export default function AIAssistantPage() {
 
   useEffect(() => {
     if (viewState !== "exiting-discovery") return;
-    const t = setTimeout(() => setViewState("conversation"), 350);
-    return () => clearTimeout(t);
+    setViewState("conversation");
+    return undefined;
   }, [viewState]);
 
   const handleSend = useCallback((text) => {
@@ -782,8 +782,8 @@ export default function AIAssistantPage() {
                   style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.4)" }}
                 >
                   <div className="flex items-center gap-1.5">
-                    {[0, 150, 300].map((delay) => (
-                      <div key={delay} className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
+                    {[0, 0, 0].map((delay, i) => (
+                      <div key={i} className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: `${delay}ms` }} />
                     ))}
                   </div>
                 </div>

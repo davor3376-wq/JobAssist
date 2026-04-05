@@ -159,7 +159,7 @@ export default function PricingPage() {
 
         <div
           className="grid animate-slide-up grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
-          style={{ animationDelay: "100ms" }}
+          style={{  }}
         >
           {plans.map((plan) => {
             const isCurrent = currentPlan === plan.key;
