@@ -488,13 +488,6 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
               );
             })}
 
-        {/* Trailing skeletons while fetching more */}
-        {loading && visible.length > 0 && (
-          <>
-            <SkeletonRow style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }} />
-            <SkeletonRow style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }} />
-          </>
-        )}
       </div>
 
       {/* Infinite scroll sentinel — triggers next page load */}

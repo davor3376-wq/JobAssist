@@ -118,9 +118,16 @@ async def get_pipeline_stats(
 ):
     """Get application pipeline statistics."""
     result = await db.execute(
-        select(Job).where(Job.user_id == current_user.id)
+        select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
     )
-    jobs = result.scalars().all()
+    all_jobs = result.scalars().all()
+    seen_keys: set[str] = set()
+    jobs = []
+    for job in all_jobs:
+        key = job.url if job.url else f"{(job.company or '').lower()}|{(job.role or '').lower()}"
+        if key not in seen_keys:
+            seen_keys.add(key)
+            jobs.append(job)
 
     stats = {
         "bookmarked": sum(1 for j in jobs if j.status == "bookmarked"),
