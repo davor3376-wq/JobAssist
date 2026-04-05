@@ -32,4 +32,4 @@ class User(Base):
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
-    alerts = relationship("JobAlert", cascade="all, delete-orphan", passive_deletes=True)
+    alerts = relationship("JobAlert", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)

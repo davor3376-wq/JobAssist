@@ -63,13 +63,6 @@ async def list_alerts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(JobAlert)
-        .where(JobAlert.user_id == current_user.id)
-        .order_by(JobAlert.created_at.desc())
-    )
-    alerts = result.scalars().all()
-
     plan = await get_user_plan(db, current_user.id)
     run_limit = get_limit(plan, "daily_manual_runs")
     creation_limit = get_limit(plan, "daily_alert_edits")
@@ -78,6 +71,14 @@ async def list_alerts(
     _ensure_daily_reset(current_user)
     await db.commit()
     await db.refresh(current_user)
+
+    # Fetch alerts after commit so they aren't expired during serialization
+    result = await db.execute(
+        select(JobAlert)
+        .where(JobAlert.user_id == current_user.id)
+        .order_by(JobAlert.created_at.desc())
+    )
+    alerts = result.scalars().all()
 
     return JobAlertListResponse(
         alerts=alerts,
