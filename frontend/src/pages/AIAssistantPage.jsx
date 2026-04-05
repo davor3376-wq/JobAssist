@@ -699,7 +699,7 @@ export default function AIAssistantPage() {
             </div>
 
             {/* Suggestion widgets */}
-            <div className="[&:hover>button]:opacity-50 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="[&:hover>button]:opacity-50 grid grid-cols-2 gap-2">
               {SUGGESTIONS.map((s) => {
                 const locked = s.requiresResume && uploadedResumes.length === 0;
                 return (
