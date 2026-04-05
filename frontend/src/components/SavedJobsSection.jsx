@@ -275,8 +275,8 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
     setPullDist(0);
   }, [pullDist, onRefresh]);
 
-  // ── Empty / initial state ───────────────────────────────────────────────
-  if (!jobs.length && !loading) {
+  // ── Empty / loading state (no saved jobs) ──────────────────────────────
+  if (!jobs.length) {
     return (
       <section className={`col-span-12 ${className}`}>
         <div className="flex items-end justify-between mb-6">
@@ -296,11 +296,28 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
             boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
           }}
         >
-          <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
-          <p className="text-[0.8125rem] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
-          <p className="text-[0.625rem] text-[#3a3a42] mt-1">
-            Suche unten nach Jobs und speichere deine Favoriten
-          </p>
+          {loading ? (
+            <div className="flex flex-col items-center gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="w-full flex items-center gap-3 animate-pulse">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-[10px] bg-white/[0.05]" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-white/[0.07] rounded-md w-3/5" />
+                    <div className="h-2.5 bg-white/[0.04] rounded-md w-2/5" />
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-white/[0.04] flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
+              <p className="text-[0.8125rem] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
+              <p className="text-[0.625rem] text-[#3a3a42] mt-1">
+                Suche unten nach Jobs und speichere deine Favoriten
+              </p>
+            </>
+          )}
         </div>
       </section>
     );
@@ -431,6 +448,16 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
                 style={i > 0 ? { borderTop: "1px solid rgba(255,255,255,0.04)" } : undefined}
               />
             ))
+          : !visible.length
+          ? (
+            <div className="p-8 text-center">
+              <Sparkles size={24} className="text-[#3a3a42] mx-auto mb-3" />
+              <p className="text-[0.8125rem] font-medium text-[#505058]">Noch keine Stellen gespeichert</p>
+              <p className="text-[0.625rem] text-[#3a3a42] mt-1">
+                Suche unten nach Jobs und speichere deine Favoriten
+              </p>
+            </div>
+          )
           : visible.map((job, i) => {
               const score      = job.match_score != null ? Math.round(job.match_score) : null;
               const dateLabel  = timeAgo(job.updated_at || job.created_at);
