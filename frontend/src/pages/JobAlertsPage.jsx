@@ -441,14 +441,14 @@ export default function JobAlertsPage() {
   const me = initData?.me;
   const { guardedRun } = useUsageGuard("job_alerts");
 
-  const { data: alertsData, isLoading } = useQuery({
+  const { data: alertsData, isFetching } = useQuery({
     queryKey: ["job-alerts"],
     queryFn: () =>
       jobAlertsApi.list().then((r) => {
         syncStoredAlerts(r.data);
         return r.data;
       }),
-    initialData: () => queryClient.getQueryData(["job-alerts"]) ?? loadStoredAlerts(),
+    initialData: () => queryClient.getQueryData(["job-alerts"]) ?? loadStoredAlerts() ?? { alerts: [] },
     staleTime: 1000 * 60 * 2,
   });
 
@@ -641,11 +641,10 @@ export default function JobAlertsPage() {
   const activeCount = alerts.filter((a) => a.is_active).length;
   const selectedAlert = alerts.find((a) => a.id === selectedAlertId) || null;
 
-  if (isLoading) {
-    return <div className="animate-slide-up"><ListSkeleton rows={4} /></div>;
-  }
-
   if (alerts.length === 0) {
+    if (isFetching) {
+      return <div className="animate-slide-up"><ListSkeleton rows={4} /></div>;
+    }
     return (
       <div className="animate-slide-up rounded-2xl border border-[#1f2937] bg-black/80 p-10 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-500/20 bg-[#111827]">
