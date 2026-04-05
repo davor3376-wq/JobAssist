@@ -332,12 +332,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
       {/* ── Sticky section header + filter bar ── */}
       <div
-        className="sticky top-0 z-30 pb-4 rounded-t-2xl px-2"
-        style={{
-          background: "rgba(8, 8, 8, 0.92)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-        }}
+        className="sticky top-0 z-30 pb-4 rounded-t-2xl px-2 bg-[#080808] sm:bg-[rgba(8,8,8,0.92)] sm:backdrop-blur-[10px]"
       >
         <div className="flex items-end justify-between pt-4 mb-4">
           <div>
@@ -362,12 +357,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
         {/* Filter tabs */}
         <div className="overflow-x-auto -mx-1 px-1 pb-0.5 no-scrollbar">
         <div
-          className="inline-flex gap-1 p-1 rounded-xl"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-          }}
+          className="inline-flex gap-1 p-1 rounded-xl bg-white/[0.03]"
         >
           {FILTER_TABS.map((tab) => {
             const isActive = activeTab === tab.key;
