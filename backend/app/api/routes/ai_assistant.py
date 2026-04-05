@@ -167,7 +167,6 @@ async def chat_stream(
     _usage=Depends(require_usage("ai_chat")),
 ):
     import json as _json
-    from groq import Groq as _Groq
     from app.core.config import settings as _settings
 
     resume_context = ""
@@ -202,20 +201,25 @@ async def chat_stream(
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": payload.message})
 
-    def generate():
-        groq_client = _Groq(api_key=_settings.GROQ_API_KEY)
-        stream = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.5,
-            stream=True,
-        )
-        for chunk in stream:
-            content = chunk.choices[0].delta.content
-            if content:
-                yield f"data: {_json.dumps({'text': content})}\n\n"
-        yield "data: [DONE]\n\n"
+    async def generate():
+        from groq import AsyncGroq as _AsyncGroq
+        groq_client = _AsyncGroq(api_key=_settings.GROQ_API_KEY)
+        try:
+            stream = await groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                max_tokens=1024,
+                temperature=0.5,
+                stream=True,
+            )
+            async for chunk in stream:
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield f"data: {_json.dumps({'text': content})}\n\n"
+        except Exception as e:
+            yield f"data: {_json.dumps({'error': str(e)})}\n\n"
+        finally:
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(
         generate(),
