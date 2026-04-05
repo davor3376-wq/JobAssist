@@ -523,7 +523,7 @@ export default function AIAssistantPage() {
   return (
     <>
     {/* Full-height container */}
-    <div className="flex animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-transparent relative">
+    <div className="flex h-screen animate-slide-up -mx-4 md:-mx-8 -mt-5 md:-mt-8 bg-transparent relative">
 
       {/* ── Persistent Left Sidebar (desktop) ──────────────────────────────── */}
       <aside className={`hidden lg:flex sticky top-0 self-start h-screen flex-shrink-0 flex-col bg-[#030609] border-r border-white/[0.06] overflow-hidden transition-[width,border-width] duration-300 ease-in-out ${verlaufCollapsed ? "w-0 border-r-0" : "w-60"}`}>
@@ -588,7 +588,7 @@ export default function AIAssistantPage() {
       </aside>
 
       {/* ── Main column ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 transition-all duration-300 ease-in-out">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="flex-shrink-0 flex items-center gap-2 px-3 md:px-5 py-1.5 border-b border-white/[0.06] bg-black/70 backdrop-blur-2xl z-10">
@@ -645,12 +645,12 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Chat Stage — full width ─────────────────────────────────────────── */}
-      <div className="px-4 py-6 sm:px-6">
+      <div className="flex-1 overflow-y-auto flex flex-col px-4 py-6 sm:px-6">
         {viewState !== "conversation" ? (
 
           /* ── Discovery state ─────────────────────────────────────────────── */
           <div
-            className="flex flex-col gap-4 max-w-[800px] mx-auto py-2"
+            className="flex flex-col gap-4 max-w-[800px] mx-auto py-4 my-auto"
             style={viewState === "exiting-discovery" ? {
               transform: "translateY(-28px)",
               opacity: 0,
@@ -848,7 +848,7 @@ export default function AIAssistantPage() {
       )}
 
       {/* ── Sticky Input Bar ─────────────────────────────────────────────────── */}
-      <div className="sticky bottom-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
+      <div className="flex-shrink-0 z-20 px-3 pb-3 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/[0.05]">
         <div className="max-w-[900px] mx-auto">
         <div
           className="flex items-center sm:items-end gap-2 w-full rounded-2xl border border-white/[0.10] bg-white/[0.04] backdrop-blur-xl px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] sm:min-h-[56px] transition-all duration-200 focus-within:border-indigo-500/60 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] focus-within:shadow-[0_0_0_2px_rgba(99,102,241,0.25),0_0_20px_rgba(99,102,241,0.15),0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]"
