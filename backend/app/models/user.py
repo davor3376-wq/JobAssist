@@ -17,9 +17,11 @@ class User(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
-    # Job alert manual refresh tracking (per-user so deleting alerts can't reset the limit)
-    alert_refresh_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
-    alert_refresh_window_start: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    # Daily job-alert usage counters — reset at 00:00 UTC by the scheduler.
+    # Stored on the user so that deleting/recreating alerts cannot reset the limits.
+    daily_manual_run_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    daily_creation_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    daily_counts_reset_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # User preferences
     currency: Mapped[str] = mapped_column(String, default="USD", nullable=False)  # USD, EUR, GBP, etc.

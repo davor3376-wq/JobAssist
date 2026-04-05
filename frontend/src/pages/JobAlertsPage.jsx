@@ -5,6 +5,7 @@ import {
   Bell,
   Briefcase,
   ChevronLeft,
+  Lock,
   Mail,
   MapPin,
   MoreHorizontal,
@@ -23,7 +24,7 @@ import { ListSkeleton } from "../components/PageSkeleton";
 import useUsageGuard from "../hooks/useUsageGuard";
 import { jobAlertsApi } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiError";
-import { getRewriteState, updateUsageList } from "../utils/jobAlertsState";
+import { getRewriteState, getRunState, getCreationState, updateUsageList } from "../utils/jobAlertsState";
 
 const JOB_TYPES = [
   { value: "", label: "Alle" },
@@ -52,15 +53,18 @@ function bumpJobAlertUsageCaches(queryClient, delta) {
 function loadStoredAlerts() {
   try {
     const raw = localStorage.getItem("job_alerts");
-    return raw ? JSON.parse(raw) : undefined;
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    // Handle both old array format and new object format
+    return Array.isArray(parsed) ? { alerts: parsed } : parsed;
   } catch {
     return undefined;
   }
 }
 
-function syncStoredAlerts(alerts) {
+function syncStoredAlerts(responseData) {
   try {
-    localStorage.setItem("job_alerts", JSON.stringify(alerts));
+    localStorage.setItem("job_alerts", JSON.stringify(responseData));
   } catch {}
 }
 
@@ -111,10 +115,15 @@ function AlertListCard({ alert, isSelected, onSelect }) {
   );
 }
 
-function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning }) {
+function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunning, runState, creationState }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const typeLabel = JOB_TYPES.find((t) => t.value === alert.job_type)?.label || "Alle Stellenarten";
   const freqLabel = FREQUENCIES.find((f) => f.value === alert.frequency)?.label || alert.frequency;
+
+  const runDisabled = isRunning || runState.atLimit;
+  const runTitle = runState.atLimit
+    ? `Tageslimit erreicht (${runState.used}/${runState.limit}). Reset um 00:00 Uhr UTC.`
+    : "Jetzt ausführen";
 
   const configItems = [
     { icon: MapPin, label: "Ort", value: alert.location || "Kein Ortsfilter" },
@@ -125,6 +134,28 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
 
   return (
     <div className="flex h-full flex-col gap-2">
+      {/* Run-limit banner */}
+      {runState.atLimit && (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+          <Lock className="h-3.5 w-3.5 flex-shrink-0" />
+          <span>
+            Tageslimit für manuelle Ausführungen erreicht ({runState.used}/{runState.limit}).
+            Reset um 00:00 Uhr UTC.
+          </span>
+        </div>
+      )}
+
+      {/* Creation-limit banner */}
+      {creationState.atLimit && (
+        <div className="flex items-center gap-2 rounded-xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
+          <Lock className="h-3.5 w-3.5 flex-shrink-0" />
+          <span>
+            Tageslimit für Erstellungen/Bearbeitungen erreicht ({creationState.used}/{creationState.limit}).{" "}
+            <span className="font-semibold underline cursor-pointer">Upgrade auf Pro</span> für mehr Kapazität.
+          </span>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-[#1f2937] bg-[#111827]">
         <div className="h-px w-full bg-gradient-to-r from-[#3b82f6] via-blue-400/60 to-transparent" />
         <div className="p-3">
@@ -154,21 +185,32 @@ function AlertDetailPanel({ alert, onToggle, onDelete, onRunNow, onEdit, isRunni
             </div>
             <div className="flex flex-wrap gap-1.5">
               <button
-                onClick={() => onRunNow(alert.id)}
-                disabled={isRunning}
-                title="Jetzt ausführen"
+                onClick={() => !runDisabled && onRunNow(alert.id)}
+                disabled={runDisabled}
+                title={runTitle}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-                  isRunning
+                  runDisabled
                     ? "cursor-not-allowed bg-slate-800 text-slate-500"
                     : "bg-[#3b82f6] text-white hover:bg-blue-500"
                 }`}
               >
-                {isRunning ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                {isRunning ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : runState.atLimit ? <Lock className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                 Jetzt ausführen
+                {!runState.unlimited && !runState.atLimit && (
+                  <span className="ml-0.5 rounded-full bg-blue-700/50 px-1.5 py-0.5 text-[10px]">
+                    {runState.remaining} übrig
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => onEdit(alert)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#334155] bg-transparent px-2.5 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500/30 hover:text-blue-300"
+                disabled={creationState.atLimit}
+                title={creationState.atLimit ? `Tageslimit für Bearbeitungen erreicht (${creationState.used}/${creationState.limit})` : "Bearbeiten"}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                  creationState.atLimit
+                    ? "cursor-not-allowed border-slate-800 bg-transparent text-slate-600"
+                    : "border-[#334155] bg-transparent text-slate-200 hover:border-blue-500/30 hover:text-blue-300"
+                }`}
               >
                 <Pencil className="h-3.5 w-3.5" />
                 Bearbeiten
@@ -399,7 +441,7 @@ export default function JobAlertsPage() {
   const me = initData?.me;
   const { guardedRun } = useUsageGuard("job_alerts");
 
-  const { data: alerts = [], isLoading } = useQuery({
+  const { data: alertsData, isLoading } = useQuery({
     queryKey: ["job-alerts"],
     queryFn: () =>
       jobAlertsApi.list().then((r) => {
@@ -409,6 +451,11 @@ export default function JobAlertsPage() {
     initialData: () => queryClient.getQueryData(["job-alerts"]) ?? loadStoredAlerts(),
     staleTime: 1000 * 60 * 2,
   });
+
+  // alertsData is now { alerts, daily_manual_run_count, daily_creation_count, daily_manual_run_limit, daily_creation_limit }
+  const alerts = alertsData?.alerts ?? [];
+  const runState = getRunState(alertsData ?? {});
+  const creationState = getCreationState(alertsData ?? {});
 
   useEffect(() => {
     if (!alerts.length) {
@@ -421,8 +468,8 @@ export default function JobAlertsPage() {
   const createMutation = useMutation({
     mutationFn: (data) => jobAlertsApi.create(data),
     onSuccess: (res) => {
-      queryClient.setQueryData(["job-alerts"], (old = []) => {
-        const next = [res.data, ...old];
+      queryClient.setQueryData(["job-alerts"], (old) => {
+        const next = { ...(old ?? {}), alerts: [res.data, ...(old?.alerts ?? [])] };
         syncStoredAlerts(next);
         return next;
       });
@@ -435,8 +482,14 @@ export default function JobAlertsPage() {
       toast.success("Alert erstellt!");
     },
     onError: (err) => {
-      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
-      if (err.response?.status === 429) return;
+      if (err.response?.status === 403) {
+        const detail = err.response?.data?.detail;
+        if (detail?.error === "usage_limit") return;
+        if (detail?.error === "daily_creation_limit") {
+          toast.error(`Tageslimit erreicht (${detail.used}/${detail.limit}). Reset um 00:00 Uhr UTC.`);
+          return;
+        }
+      }
       toast.error(getApiErrorMessage(err, "Fehler beim Erstellen des Alerts"));
     },
   });
@@ -446,8 +499,13 @@ export default function JobAlertsPage() {
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: ["job-alerts"] });
       const prev = queryClient.getQueryData(["job-alerts"]);
-      queryClient.setQueryData(["job-alerts"], (old = []) => {
-        const next = old.map((a) => (a.id === id ? { ...a, ...data, updated_at: new Date().toISOString() } : a));
+      queryClient.setQueryData(["job-alerts"], (old) => {
+        const next = {
+          ...(old ?? {}),
+          alerts: (old?.alerts ?? []).map((a) =>
+            a.id === id ? { ...a, ...data, updated_at: new Date().toISOString() } : a
+          ),
+        };
         syncStoredAlerts(next);
         return next;
       });
@@ -458,11 +516,19 @@ export default function JobAlertsPage() {
         queryClient.setQueryData(["job-alerts"], ctx.prev);
         syncStoredAlerts(ctx.prev);
       }
+      if (err.response?.status === 403 && err.response?.data?.detail?.error === "daily_creation_limit") {
+        const detail = err.response.data.detail;
+        toast.error(`Tageslimit erreicht (${detail.used}/${detail.limit}). Reset um 00:00 Uhr UTC.`);
+        return;
+      }
       toast.error(getApiErrorMessage(err, "Fehler beim Aktualisieren"));
     },
     onSuccess: (res) => {
-      queryClient.setQueryData(["job-alerts"], (old = []) => {
-        const next = old.map((a) => (a.id === res.data.id ? res.data : a));
+      queryClient.setQueryData(["job-alerts"], (old) => {
+        const next = {
+          ...(old ?? {}),
+          alerts: (old?.alerts ?? []).map((a) => (a.id === res.data.id ? res.data : a)),
+        };
         syncStoredAlerts(next);
         return next;
       });
@@ -485,8 +551,8 @@ export default function JobAlertsPage() {
         billing: queryClient.getQueryData(["billing-overview"]),
         init: queryClient.getQueryData(["init"]),
       };
-      queryClient.setQueryData(["job-alerts"], (old = []) => {
-        const next = old.filter((a) => a.id !== id);
+      queryClient.setQueryData(["job-alerts"], (old) => {
+        const next = { ...(old ?? {}), alerts: (old?.alerts ?? []).filter((a) => a.id !== id) };
         syncStoredAlerts(next);
         return next;
       });
@@ -511,18 +577,65 @@ export default function JobAlertsPage() {
   });
 
   const handleRunNow = async (id) => {
-    if (runningId) return; // Guard against double-clicks
+    if (runningId) return;
+    if (runState.atLimit) {
+      toast.error(`Tageslimit erreicht (${runState.used}/${runState.limit}). Reset um 00:00 Uhr UTC.`);
+      return;
+    }
     setRunningId(id);
     try {
       await jobAlertsApi.runNow(id);
+      // Optimistically bump the run count in local cache so button disables immediately
+      queryClient.setQueryData(["job-alerts"], (old) =>
+        old
+          ? { ...old, daily_manual_run_count: (old.daily_manual_run_count ?? 0) + 1 }
+          : old
+      );
       toast.success("Suche gestartet. Du erhältst bald eine E-Mail.", { duration: 5000 });
     } catch (err) {
-      if (err.response?.status === 429) return;
-      if (err.response?.status === 403 && err.response?.data?.detail?.error === "usage_limit") return;
+      if (err.response?.status === 403) {
+        const detail = err.response?.data?.detail;
+        if (detail?.error === "daily_run_limit") {
+          toast.error(`Tageslimit erreicht (${detail.used}/${detail.limit}). Reset um 00:00 Uhr UTC.`);
+          // Sync accurate count into cache
+          queryClient.setQueryData(["job-alerts"], (old) =>
+            old ? { ...old, daily_manual_run_count: detail.used } : old
+          );
+          return;
+        }
+        if (detail?.error === "usage_limit") return;
+      }
       toast.error(getApiErrorMessage(err, "Fehler beim Starten der Suche"));
     } finally {
       setRunningId(null);
     }
+  };
+
+  const handleOpenCreate = () => {
+    if (creationState.atLimit) {
+      toast.error(
+        `Tageslimit für Erstellungen erreicht (${creationState.used}/${creationState.limit}). Upgrade auf Pro oder warte bis 00:00 Uhr UTC.`,
+        { duration: 6000 }
+      );
+      return;
+    }
+    guardedRun(() => setShowCreate(true));
+  };
+
+  const handleOpenEdit = (current) => {
+    if (creationState.atLimit) {
+      toast.error(
+        `Tageslimit für Bearbeitungen erreicht (${creationState.used}/${creationState.limit}). Upgrade auf Pro oder warte bis 00:00 Uhr UTC.`,
+        { duration: 6000 }
+      );
+      return;
+    }
+    const { canRewrite, remainingMin } = getRewriteState(current);
+    if (!canRewrite) {
+      toast.error(`Du kannst diesen Alert in ${remainingMin} Minuten erneut bearbeiten.`);
+      return;
+    }
+    setEditingAlert(current);
   };
 
   const activeCount = alerts.filter((a) => a.is_active).length;
@@ -543,8 +656,14 @@ export default function JobAlertsPage() {
           Erstelle deinen ersten Alert und lasse passende Stellen automatisch an deine E-Mail-Adresse senden.
         </p>
         <button
-          onClick={() => guardedRun(() => setShowCreate(true))}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+          onClick={handleOpenCreate}
+          disabled={creationState.atLimit}
+          title={creationState.atLimit ? `Tageslimit erreicht (${creationState.used}/${creationState.limit})` : undefined}
+          className={`mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+            creationState.atLimit
+              ? "cursor-not-allowed bg-slate-800 text-slate-500"
+              : "bg-[#3b82f6] text-white hover:bg-blue-500"
+          }`}
         >
           <Plus className="h-4 w-4" />
           Such-Agent einrichten (Automatisierte Jobsuche starten)
@@ -572,10 +691,16 @@ export default function JobAlertsPage() {
           </span>
         </div>
         <button
-          onClick={() => guardedRun(() => setShowCreate(true))}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#3b82f6] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-500"
+          onClick={handleOpenCreate}
+          disabled={creationState.atLimit}
+          title={creationState.atLimit ? `Tageslimit erreicht (${creationState.used}/${creationState.limit})` : undefined}
+          className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
+            creationState.atLimit
+              ? "cursor-not-allowed bg-slate-800 text-slate-500"
+              : "bg-[#3b82f6] text-white hover:bg-blue-500"
+          }`}
         >
-          <Plus className="h-4 w-4" />
+          {creationState.atLimit ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           <span className="hidden sm:inline">Such-Agent einrichten</span>
           <span className="sm:hidden">Neu</span>
         </button>
@@ -627,15 +752,10 @@ export default function JobAlertsPage() {
                   setMobileView("list");
                 }}
                 onRunNow={handleRunNow}
-                onEdit={(current) => {
-                  const { canRewrite, remainingMin } = getRewriteState(current);
-                  if (!canRewrite) {
-                    toast.error(`Du kannst diesen Alert in ${remainingMin} Minuten erneut bearbeiten.`);
-                    return;
-                  }
-                  setEditingAlert(current);
-                }}
+                onEdit={handleOpenEdit}
                 isRunning={runningId === selectedAlert.id}
+                runState={runState}
+                creationState={creationState}
               />
             )}
           </div>

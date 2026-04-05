@@ -16,7 +16,7 @@ from app.core.usage import get_user_plan
 from app.main import limiter
 from app.models.job_alert import JobAlert
 from app.models.user import User
-from app.schemas.job_alert import JobAlertCreate, JobAlertOut, JobAlertUpdate
+from app.schemas.job_alert import JobAlertCreate, JobAlertOut, JobAlertUpdate, JobAlertListResponse
 from app.services.email_service import send_job_alert_email
 from app.services.job_search import search_jobs
 
@@ -44,7 +44,21 @@ def get_naive_now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-@router.get("/", response_model=list[JobAlertOut])
+def _ensure_daily_reset(user: User) -> None:
+    """Reset daily counters if we've crossed midnight UTC since the last reset.
+    Mutates the user object in-place; caller must commit."""
+    now = get_naive_now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    reset_at = user.daily_counts_reset_at
+    if reset_at and reset_at.tzinfo is not None:
+        reset_at = reset_at.replace(tzinfo=None)
+    if reset_at is None or reset_at < today_start:
+        user.daily_manual_run_count = 0
+        user.daily_creation_count = 0
+        user.daily_counts_reset_at = today_start
+
+
+@router.get("/", response_model=JobAlertListResponse)
 async def list_alerts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -56,11 +70,22 @@ async def list_alerts(
     )
     alerts = result.scalars().all()
 
-    for alert in alerts:
-        alert.manual_refresh_count = current_user.alert_refresh_count
-        alert.manual_refresh_window_start = current_user.alert_refresh_window_start
+    plan = await get_user_plan(db, current_user.id)
+    run_limit = get_limit(plan, "daily_manual_runs")
+    creation_limit = get_limit(plan, "daily_alert_edits")
 
-    return alerts
+    # Apply any missed midnight reset before reading counts
+    _ensure_daily_reset(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+
+    return JobAlertListResponse(
+        alerts=alerts,
+        daily_manual_run_count=current_user.daily_manual_run_count,
+        daily_creation_count=current_user.daily_creation_count,
+        daily_manual_run_limit=run_limit,
+        daily_creation_limit=creation_limit,
+    )
 
 
 @router.post("/", response_model=JobAlertOut, status_code=201)
@@ -69,11 +94,15 @@ async def create_alert(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    await db.execute(select(User).where(User.id == current_user.id).with_for_update())
+    locked_user_result = await db.execute(
+        select(User).where(User.id == current_user.id).with_for_update()
+    )
+    locked_user = locked_user_result.scalar_one()
 
     plan = await get_user_plan(db, current_user.id)
-    limit = get_limit(plan, "job_alerts")
 
+    # --- Plan alert-count limit ---
+    limit = get_limit(plan, "job_alerts")
     if limit != -1:
         count_result = await db.execute(
             select(sa_func.count()).where(JobAlert.user_id == current_user.id)
@@ -92,6 +121,26 @@ async def create_alert(
                 },
             )
 
+    # --- Daily creation limit ---
+    _ensure_daily_reset(locked_user)
+    creation_limit = get_limit(plan, "daily_alert_edits")
+    if creation_limit != -1 and locked_user.daily_creation_count >= creation_limit:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "daily_creation_limit",
+                "used": locked_user.daily_creation_count,
+                "limit": creation_limit,
+                "message": (
+                    f"Tages-Limit für Erstellungen/Bearbeitungen erreicht "
+                    f"({locked_user.daily_creation_count}/{creation_limit}). "
+                    f"Morgen um 00:00 Uhr zurückgesetzt."
+                ),
+            },
+        )
+
+    locked_user.daily_creation_count += 1
+
     alert = JobAlert(
         user_id=current_user.id,
         keywords=payload.keywords,
@@ -99,15 +148,10 @@ async def create_alert(
         job_type=payload.job_type,
         email=current_user.email,
         frequency=payload.frequency,
-        manual_refresh_count=current_user.alert_refresh_count,
-        manual_refresh_window_start=current_user.alert_refresh_window_start,
     )
     db.add(alert)
     await db.commit()
     await db.refresh(alert)
-
-    alert.manual_refresh_count = current_user.alert_refresh_count
-    alert.manual_refresh_window_start = current_user.alert_refresh_window_start
     return alert
 
 
@@ -157,6 +201,31 @@ async def update_alert(
                 ),
             )
 
+        # Lock user row and enforce daily creation limit
+        locked_user_result = await db.execute(
+            select(User).where(User.id == current_user.id).with_for_update()
+        )
+        locked_user = locked_user_result.scalar_one()
+        plan = await get_user_plan(db, current_user.id)
+
+        _ensure_daily_reset(locked_user)
+        creation_limit = get_limit(plan, "daily_alert_edits")
+        if creation_limit != -1 and locked_user.daily_creation_count >= creation_limit:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "daily_creation_limit",
+                    "used": locked_user.daily_creation_count,
+                    "limit": creation_limit,
+                    "message": (
+                        f"Tages-Limit für Erstellungen/Bearbeitungen erreicht "
+                        f"({locked_user.daily_creation_count}/{creation_limit}). "
+                        f"Morgen um 00:00 Uhr zurückgesetzt."
+                    ),
+                },
+            )
+        locked_user.daily_creation_count += 1
+
     if "email" in update_data:
         update_data["email"] = current_user.email
 
@@ -186,10 +255,6 @@ async def delete_alert(
     await db.commit()
 
 
-REFRESH_WINDOW_HOURS = 4
-REFRESH_MAX = 3
-
-
 @router.post("/{alert_id}/run", response_model=dict)
 async def run_alert_now(
     alert_id: int,
@@ -210,32 +275,28 @@ async def run_alert_now(
     )
     locked_user = locked_user_result.scalar_one()
 
-    now = get_naive_now()
-    window_start = locked_user.alert_refresh_window_start
-    if window_start and window_start.tzinfo is not None:
-        window_start = window_start.replace(tzinfo=None)
+    plan = await get_user_plan(db, current_user.id)
+    run_limit = get_limit(plan, "daily_manual_runs")
 
-    window_expired = window_start is None or (now - window_start) >= timedelta(hours=REFRESH_WINDOW_HOURS)
-    if window_expired:
-        locked_user.alert_refresh_count = 0
-        locked_user.alert_refresh_window_start = now
-        window_start = now
+    _ensure_daily_reset(locked_user)
 
-    if locked_user.alert_refresh_count >= REFRESH_MAX:
-        reset_at = window_start + timedelta(hours=REFRESH_WINDOW_HOURS)
-        seconds_left = int((reset_at - now).total_seconds())
-        hours_left = max(0, seconds_left // 3600)
-        minutes_left = max(0, (seconds_left % 3600) // 60)
+    if run_limit != -1 and locked_user.daily_manual_run_count >= run_limit:
         await db.rollback()
         raise HTTPException(
-            status_code=429,
-            detail=(
-                f"Maximale Aktualisierungen erreicht ({REFRESH_MAX}/{REFRESH_WINDOW_HOURS}h). "
-                f"Verfügbar in {hours_left}h {minutes_left}min."
-            ),
+            status_code=403,
+            detail={
+                "error": "daily_run_limit",
+                "used": locked_user.daily_manual_run_count,
+                "limit": run_limit,
+                "message": (
+                    f"Tages-Limit für manuelle Ausführungen erreicht "
+                    f"({locked_user.daily_manual_run_count}/{run_limit}). "
+                    f"Morgen um 00:00 Uhr zurückgesetzt."
+                ),
+            },
         )
 
-    locked_user.alert_refresh_count += 1
+    locked_user.daily_manual_run_count += 1
     await db.commit()
     await db.refresh(locked_user)
 
@@ -248,10 +309,11 @@ async def run_alert_now(
         alert.email,
     )
 
+    remaining = (run_limit - locked_user.daily_manual_run_count) if run_limit != -1 else -1
     return {
         "message": "Suche gestartet. Du erhältst in Kürze eine E-Mail.",
-        "refreshes_used": locked_user.alert_refresh_count,
-        "refreshes_remaining": REFRESH_MAX - locked_user.alert_refresh_count,
+        "runs_used": locked_user.daily_manual_run_count,
+        "runs_remaining": max(0, remaining) if remaining != -1 else -1,
     }
 
 

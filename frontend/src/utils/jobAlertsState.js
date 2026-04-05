@@ -1,26 +1,54 @@
-export const REFRESH_MAX = 3;
-export const REFRESH_WINDOW_MS = 4 * 60 * 60 * 1000;
+// Default limits match the "basic" plan. The real limits are always returned
+// by the backend in the JobAlertListResponse and should be preferred.
+export const DEFAULT_DAILY_RUN_LIMIT = 3;
+export const DEFAULT_DAILY_CREATION_LIMIT = 3;
 export const REWRITE_WINDOW_MS = 3 * 60 * 60 * 1000;
 
-export function getRefreshState(refreshState, now = Date.now()) {
-  const windowStart = refreshState?.manual_refresh_window_start
-    ? new Date(refreshState.manual_refresh_window_start)
-    : null;
-  const windowExpired = !windowStart || (now - windowStart.getTime()) >= REFRESH_WINDOW_MS;
-  const used = windowExpired ? 0 : (refreshState?.manual_refresh_count || 0);
-  const atLimit = used >= REFRESH_MAX;
-  let resetInMin = null;
-
-  if (atLimit && windowStart) {
-    const resetAt = windowStart.getTime() + REFRESH_WINDOW_MS;
-    resetInMin = Math.ceil((resetAt - now) / 60000);
-  }
-
-  return { used, remaining: REFRESH_MAX - used, atLimit, resetInMin };
+/**
+ * Derive run-button state from the list-response usage object.
+ * @param {{ daily_manual_run_count?: number, daily_manual_run_limit?: number }} usage
+ */
+export function getRunState(usage = {}) {
+  const used = usage.daily_manual_run_count ?? 0;
+  const limit = usage.daily_manual_run_limit ?? DEFAULT_DAILY_RUN_LIMIT;
+  const unlimited = limit === -1;
+  const atLimit = !unlimited && used >= limit;
+  return {
+    used,
+    limit,
+    remaining: unlimited ? -1 : Math.max(0, limit - used),
+    atLimit,
+    unlimited,
+  };
 }
 
+/**
+ * Derive create/edit button state from the list-response usage object.
+ * @param {{ daily_creation_count?: number, daily_creation_limit?: number }} usage
+ */
+export function getCreationState(usage = {}) {
+  const used = usage.daily_creation_count ?? 0;
+  const limit = usage.daily_creation_limit ?? DEFAULT_DAILY_CREATION_LIMIT;
+  const unlimited = limit === -1;
+  const atLimit = !unlimited && used >= limit;
+  return {
+    used,
+    limit,
+    remaining: unlimited ? -1 : Math.max(0, limit - used),
+    atLimit,
+    unlimited,
+  };
+}
+
+/**
+ * Check whether a 3-hour per-alert cooldown still applies before the next edit.
+ */
 export function getRewriteState(alert, now = Date.now()) {
-  const base = alert?.updated_at ? new Date(alert.updated_at) : alert?.created_at ? new Date(alert.created_at) : null;
+  const base = alert?.updated_at
+    ? new Date(alert.updated_at)
+    : alert?.created_at
+    ? new Date(alert.created_at)
+    : null;
   if (!base) return { canRewrite: true, remainingMin: 0 };
   const remainingMs = base.getTime() + REWRITE_WINDOW_MS - now;
   return remainingMs <= 0
@@ -28,6 +56,7 @@ export function getRewriteState(alert, now = Date.now()) {
     : { canRewrite: false, remainingMin: Math.ceil(remainingMs / 60000) };
 }
 
+/** Optimistically adjust the job_alerts used/remaining counts in billing caches. */
 export function updateUsageList(usage = [], delta) {
   return usage.map((item) => {
     if (item.feature !== "job_alerts") return item;

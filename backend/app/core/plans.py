@@ -7,6 +7,8 @@ PLAN_LIMITS = {
         "job_alerts": 2,
         "ai_chat": 15,
         "job_search": 5,
+        "daily_manual_runs": 3,   # manual "Run Now" clicks per day
+        "daily_alert_edits": 3,   # alert creates + edits per day
     },
     "pro": {
         "cv_analysis": 15,
@@ -14,6 +16,8 @@ PLAN_LIMITS = {
         "job_alerts": 10,
         "ai_chat": 200,
         "job_search": 20,
+        "daily_manual_runs": 10,
+        "daily_alert_edits": 10,
     },
     "max": {
         "cv_analysis": -1,  # unlimited
@@ -21,6 +25,8 @@ PLAN_LIMITS = {
         "job_alerts": -1,
         "ai_chat": -1,
         "job_search": -1,
+        "daily_manual_runs": -1,
+        "daily_alert_edits": -1,
     },
     "enterprise": {
         "cv_analysis": -1,
@@ -28,6 +34,8 @@ PLAN_LIMITS = {
         "job_alerts": -1,
         "ai_chat": -1,
         "job_search": -1,
+        "daily_manual_runs": -1,
+        "daily_alert_edits": -1,
     },
 }
 

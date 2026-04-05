@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
@@ -29,9 +29,17 @@ class JobAlertOut(BaseModel):
     frequency: str
     is_active: bool
     last_sent_at: Optional[datetime]
-    manual_refresh_count: int = 0
-    manual_refresh_window_start: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class JobAlertListResponse(BaseModel):
+    """Wraps the alert list with user-level daily usage so the frontend can
+    enforce limits without a second round-trip."""
+    alerts: list[JobAlertOut]
+    daily_manual_run_count: int
+    daily_creation_count: int
+    daily_manual_run_limit: int   # -1 = unlimited
+    daily_creation_limit: int     # -1 = unlimited

@@ -137,6 +137,35 @@ async def job_alert_scheduler_loop():
         await asyncio.sleep(60 * 60)
 
 
+# ── Daily usage-counter reset ─────────────────────────────────────────────────
+async def reset_daily_alert_counts():
+    """Set daily_manual_run_count and daily_creation_count to 0 for every user."""
+    from sqlalchemy import update as _update
+    now = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    async with AsyncSessionLocal() as session:
+        await session.execute(
+            _update(User).values(
+                daily_manual_run_count=0,
+                daily_creation_count=0,
+                daily_counts_reset_at=now,
+            )
+        )
+        await session.commit()
+    logger.info("Daily alert usage counts reset for all users")
+
+
+async def daily_count_reset_loop():
+    """Sleep until the next 00:00 UTC, reset daily counts, then repeat."""
+    while True:
+        now = datetime.utcnow()
+        next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        await asyncio.sleep((next_midnight - now).total_seconds())
+        try:
+            await reset_daily_alert_counts()
+        except Exception:
+            traceback.print_exc()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create DB tables
@@ -146,19 +175,23 @@ async def lifespan(app: FastAPI):
         await conn.execute(
             text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE")
         )
-        # Add per-user alert refresh tracking (moved from job_alerts table)
+        # Daily alert usage counters (user-level, immune to alert deletion)
         await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_count INTEGER DEFAULT 0")
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_manual_run_count INTEGER NOT NULL DEFAULT 0")
         )
         await conn.execute(
-            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS alert_refresh_window_start TIMESTAMP")
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_creation_count INTEGER NOT NULL DEFAULT 0")
+        )
+        await conn.execute(
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_counts_reset_at TIMESTAMP")
         )
     cleanup_task = asyncio.create_task(stale_user_cleanup_loop())
     alert_task = asyncio.create_task(job_alert_scheduler_loop())
+    reset_task = asyncio.create_task(daily_count_reset_loop())
     try:
         yield
     finally:
-        for task in (cleanup_task, alert_task):
+        for task in (cleanup_task, alert_task, reset_task):
             task.cancel()
             try:
                 await task
@@ -349,8 +382,9 @@ async def init(
             "currency": current_user.currency,
             "location": current_user.location,
             "language": current_user.language,
-            "alert_refresh_count": current_user.alert_refresh_count or 0,
-            "alert_refresh_window_start": current_user.alert_refresh_window_start,
+            "daily_manual_run_count": current_user.daily_manual_run_count or 0,
+            "daily_creation_count": current_user.daily_creation_count or 0,
+            "daily_counts_reset_at": current_user.daily_counts_reset_at,
         },
         "profile": {
             "id": profile.id,
