@@ -19,7 +19,6 @@ import {
 import { authApi, settingsApi } from "../services/api";
 import useAuthStore from "../hooks/useAuthStore";
 import { useI18n } from "../context/I18nContext";
-import { FormSkeleton } from "../components/PageSkeleton";
 import { getApiErrorMessage } from "../utils/apiError";
 
 const loadStored = (key) => {
@@ -269,18 +268,6 @@ export default function SettingsPage() {
       toast.error("Bild konnte nicht verarbeitet werden");
     }
   };
-
-  if (profileLoading || preferencesLoading) {
-    return (
-      <div className="animate-slide-up">
-        <div className="mb-3">
-          <div className="h-7 w-48 rounded-xl bg-[#111827] animate-pulse mb-2" />
-          <div className="h-4 w-64 rounded-xl bg-[#111827] animate-pulse" />
-        </div>
-        <FormSkeleton fields={6} />
-      </div>
-    );
-  }
 
   return (
     <div className="animate-slide-up">

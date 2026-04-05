@@ -131,14 +131,6 @@ function SidebarContent({ me, profile, t, handleLogout, onNavClick }) {
   );
 }
 
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center py-16">
-      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-}
-
 function VerificationBanner({ me }) {
   const [sending, setSending] = useState(false);
 
@@ -276,7 +268,7 @@ export default function Layout() {
           {/* P3: pb-16 md:pb-0 — Platz für die mobile Bottom-Nav */}
           <div key={location.key} className={`max-w-7xl mx-auto px-4 py-5 pb-20 text-slate-100 md:px-8 md:py-8 md:pb-8 bg-transparent animate-slide-up ${animClass}`}>
             <VerificationBanner me={me} />
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={null}>
               <Outlet />
             </Suspense>
           </div>

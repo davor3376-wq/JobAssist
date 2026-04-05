@@ -107,11 +107,11 @@ export default function App() {
     const warm = () => preloaders.forEach((load) => load().catch(() => {}));
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(warm, { timeout: 1200 });
+      const id = window.requestIdleCallback(warm, { timeout: 0 });
       return () => window.cancelIdleCallback(id);
     }
 
-    const timer = window.setTimeout(warm, 300);
+    const timer = window.setTimeout(warm, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
