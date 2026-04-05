@@ -651,7 +651,7 @@ export default function AIAssistantPage() {
 
           /* ── Discovery state ─────────────────────────────────────────────── */
           <div
-            className="flex flex-col gap-4 max-w-[800px] mx-auto py-4 my-auto"
+            className="flex flex-col gap-3 max-w-[800px] mx-auto pb-2 pt-3 mt-auto"
             style={viewState === "exiting-discovery" ? {
               transform: "translateY(-28px)",
               opacity: 0,
@@ -670,7 +670,7 @@ export default function AIAssistantPage() {
             >
               <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-violet-400/8 blur-2xl" />
-              <div className="relative flex items-start gap-4 px-5 py-5">
+              <div className="relative flex items-start gap-4 px-5 py-4">
                 <div
                   className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600"
                   style={{ boxShadow: "0 4px 24px rgba(99,102,241,0.5)" }}
