@@ -211,7 +211,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
   /* --- Filtering --- */
   const tabFilter = (job) => {
-    if (activeTab === "all") return job.status !== "rejected";
+    if (activeTab === "all") return true;
     if (activeTab === "bookmarked") return !job.status || job.status === "bookmarked";
     return job.status === activeTab;
   };
@@ -230,7 +230,7 @@ export default function SavedJobsSection({ jobs = [], loading = false, onRefresh
 
   /* --- Tab counts --- */
   const counts = {
-    all:          jobs.filter((j) => j.status !== "rejected").length,
+    all:          jobs.length,
     bookmarked:   jobs.filter((j) => !j.status || j.status === "bookmarked").length,
     applied:      jobs.filter((j) => j.status === "applied").length,
     interviewing: jobs.filter((j) => j.status === "interviewing").length,
