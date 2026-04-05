@@ -8,6 +8,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    fingerprint: Optional[str] = None  # browser fingerprint for abuse prevention
 
     @field_validator("password")
     @classmethod

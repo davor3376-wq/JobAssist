@@ -13,6 +13,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str] = mapped_column(String, nullable=True)
+    fingerprint: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

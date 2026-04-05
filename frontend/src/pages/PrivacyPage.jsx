@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-3xl font-extrabold text-white mb-2">Datenschutzerklärung</h1>
-        <p className="text-sm text-slate-500 mb-10">Stand: 23. März 2026 — gemäß DSGVO (EU-Datenschutz-Grundverordnung)</p>
+        <p className="text-sm text-slate-500 mb-10">Stand: 5. April 2026 — gemäß DSGVO (EU-Datenschutz-Grundverordnung)</p>
 
         <div className="prose prose-gray max-w-none space-y-8 text-[15px] leading-relaxed text-slate-300">
           <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
@@ -46,6 +46,11 @@ export default function PrivacyPage() {
               <li>Zeitpunkt des letzten Logins</li>
             </ul>
 
+            <h3 className="text-base font-semibold text-white mt-4 mb-2">d) Geräte-Fingerabdruck (bei Registrierung)</h3>
+            <p>
+              Bei der Registrierung erstellen wir einen anonymisierten Geräte-Fingerabdruck aus technischen Browser-Merkmalen (z.&nbsp;B. Bildschirmauflösung, installierte Schriftarten, Grafikkarten-Rendering, Zeitzone). Daraus wird ein eindeutiger Hash-Wert generiert und gespeichert. Es werden <strong>keine personenbezogenen Daten</strong> wie Name, IP-Adresse oder Cookies für den Fingerabdruck verwendet. Der Fingerabdruck dient ausschließlich der Missbrauchsprävention (Verhinderung mehrerer Gratiskonten pro Gerät) und wird nicht für Werbezwecke genutzt.
+            </p>
+
             <h3 className="text-base font-semibold text-white mt-4 mb-2">d) Zahlungsdaten</h3>
             <p>
               Zahlungsinformationen (Kreditkarte, IBAN) werden <strong>ausschließlich von Stripe</strong> verarbeitet und gespeichert. Wir haben keinen Zugriff auf deine vollständigen Zahlungsdaten. Wir speichern lediglich die Stripe-Kunden-ID und den Abonnementstatus.
@@ -78,8 +83,12 @@ export default function PrivacyPage() {
                   <td className="py-2 pr-4">Job-Alert E-Mails</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)</td>
                 </tr>
-                <tr>
+                <tr className="border-b border-[#1e293b]">
                   <td className="py-2 pr-4">Missbrauchsprävention</td>
+                  <td className="py-2">Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse)</td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-4">Geräte-Fingerabdruck (Verhinderung von Mehrfachkonten)</td>
                   <td className="py-2">Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse)</td>
                 </tr>
               </tbody>
@@ -151,8 +160,34 @@ export default function PrivacyPage() {
             </p>
           </section>
 
+          <section className="bg-[#111827] rounded-xl border border-[#1e293b] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-white mb-3">10. Geräte-Fingerabdruck</h2>
+            <p>
+              Um Missbrauch (z.&nbsp;B. mehrfache Gratiskonten) zu verhindern, setzen wir bei der Registrierung ein clientseitiges Fingerprinting-Verfahren ein (<strong>FingerprintJS Open Source</strong>). Dabei werden folgende Browser- und Geräteeigenschaften lokal im Browser ausgewertet:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 mt-3">
+              <li>Canvas- und WebGL-Rendering-Eigenschaften der Grafikkarte</li>
+              <li>Bildschirmauflösung und Farbtiefe</li>
+              <li>Systemschriftarten und installierte Plugins</li>
+              <li>Zeitzone und Spracheinstellung</li>
+              <li>Browser-Version und Betriebssystem</li>
+            </ul>
+            <p className="mt-3">
+              Aus diesen Merkmalen wird ein anonymisierter Hash-Wert (Fingerabdruck) berechnet und bei Kontoerstellung gespeichert. Dieser Hash enthält <strong>keine direkt personenbezogenen Daten</strong> und lässt keinen Rückschluss auf deine Identität zu.
+            </p>
+            <p className="mt-3">
+              <strong>Zweck:</strong> Verhinderung von Mehrfachregistrierungen auf demselben Gerät zur Umgehung von Nutzungslimits.<br />
+              <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).<br />
+              <strong>Drittanbieter:</strong> Keiner — das Fingerprinting läuft vollständig im Browser, es werden keine Daten an externe Dienste übermittelt.<br />
+              <strong>Speicherdauer:</strong> Der Fingerabdruck wird zusammen mit deinem Konto gespeichert und bei Kontolöschung entfernt.
+            </p>
+            <p className="mt-3 text-slate-400 text-sm">
+              Du kannst der Verarbeitung widersprechen, indem du uns unter <strong className="text-white">info@jobassist.tech</strong> kontaktierst. In diesem Fall kann die Nutzung des Dienstes eingeschränkt sein.
+            </p>
+          </section>
+
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">10. Beschwerderecht</h2>
+            <h2 className="text-lg font-bold text-white mb-3">11. Beschwerderecht</h2>
             <p>
               Du hast das Recht, eine Beschwerde bei der zuständigen Datenschutzbehörde einzureichen:
             </p>
